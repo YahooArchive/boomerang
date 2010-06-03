@@ -189,6 +189,8 @@ BMR.plugins.RT = {
 			// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 	cookie: 'BRT',	//! Name of the cookie that stores the start time and referrer
 	cookie_exp:600,	//! Cookie expiry in seconds
+
+	_complete: false,	// set when this plugin has completed
 	
 	// Methods
 
@@ -249,7 +251,9 @@ BMR.plugins.RT = {
 		this.endTimer("t_done");
 
 		// initiate the bandwidth test at this point so that it will complete at some point near when we need it
-		BMR.plugins.BW.checkBandwidth();
+		if(typeof BMR.plugins.BW !== "undefined") {
+			BMR.plugins.BW.run();
+		}
 
 		// A beacon may be fired automatically on page load or if the page dev fires it
 		// manually with their own timers.  It may not always contain a referrer (eg: XHR calls)
@@ -261,7 +265,7 @@ BMR.plugins.RT = {
 		var subcookies = BMR.utils.getSubCookies(getCookie(this.cookie));
 		BMR.utils.removeCookie(this.cookie);
 
-		if(subcookies !== null) {
+		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
 			t_start = parseInt(subcookies.s, 10);
 			r = subcookies.r;
 		}
@@ -313,9 +317,13 @@ BMR.plugins.RT = {
 			this.addVar("r2", r2);
 		}
 
+		this._complete = true;
+
 		BMR.sendBeacon();
 		return this;
 	},
+
+	is_complete: function() { return this._complete; },
 
 	addHandlers: function() {
 		BMR.addListener(w, "load", function() { BMR.RT.done(); });
