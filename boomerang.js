@@ -179,11 +179,17 @@ BMR.init = function(config) {
 		}
 	}
 
-	this.utils.addListener(w, "load", function() { _fireEvent("page_load"); });
+	// The developer can override onload by setting autorun to false
+	if(typeof config.autorun === "undefined" || config.autorun !== false) {
+		this.utils.addListener(w, "load", function() { _fireEvent("page_load"); });
+	}
 	this.utils.addListener(w, "beforeunload", function() { _fireEvent("page_unload"); });
 
 	return this;
 };
+
+// The page dev calls this method when they determine the page is usable.  Only call this if autorun is explicitly set to false
+BMR.page_loaded = function() { _fireEvent("page_load"); };
 
 BMR.subscribe = function(e, fn, cb_data, cb_scope) {
 	if(_bmr_events.hasOwnProperty(e)) {
@@ -193,8 +199,20 @@ BMR.subscribe = function(e, fn, cb_data, cb_scope) {
 	return this;
 };
 
+// This function might be called multiple times as multiple plugins complete,
+// but the beacon should only be sent once for each set values
+var _bcn_defer_timeout=null;
 BMR.sendBeacon = function() {
 	var i, k, url, img;
+
+	// This means we already have a deferred sendBeacon call, so don't allow any others to run
+	// This will only work correctly in a single-threaded JS engine.  In a multi-threaded engine,
+	// there is a chance that the timeout and another call of sendBeacon might fire concurrently
+	// and we'll end up with two beacons.  I'll get a better solution later.
+	if(_bcn_defer_timeout) {
+		return;
+	}
+
 	var that=this;
 
 	// At this point the base is ready to send the beacon.
@@ -203,7 +221,7 @@ BMR.sendBeacon = function() {
 		if(this.plugins.hasOwnProperty(k)) {
 			var plugin_complete = this.plugins[k].is_complete();
 			if(plugin_complete === false) {
-				setTimeout(function() { that.sendBeacon(); that=null; }, 100);
+				_bcn_defer_timeout = setTimeout(function() { _bcn_defer_timeout = null; that.sendBeacon(); that=null; }, 100);
 				return;
 			}
 			else if(plugin_complete === "abort") {
@@ -294,6 +312,10 @@ BMR.plugins.RT = {
 	done: function() {
 		var t_start, u, r, r2, t_other=[];
 
+		if(this._complete) {
+			return this;
+		}
+
 		this.endTimer("t_done");
 
 		// initiate the bandwidth test at this point so that it will complete at some point near when we need it
@@ -380,3 +402,16 @@ BMR.plugins.RT = {
 
 _fireEvent("script_load");
 }(this, this.document));	// end of beaconing section
+
+
+/*
+The boomerang story... or how this works.
+
+We have a BMR namespace/object, which contains a bunch of things...
+- utility functions to deal with cookies and events
+- variables to be beaconed
+- developer defined parameters for the current page/site
+
+The BMR object exports its own evets for page_load, page_unload, script_load and before_beacon.
+Plugins may subscribe to these events using the BMR.subscribe method.
+*/
