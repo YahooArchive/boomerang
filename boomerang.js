@@ -58,6 +58,13 @@ BMR.log = log;
 BMR.vars = {};
 BMR.plugins = {};
 
+var _bmr_events = {
+	"script_load": [],
+	"page_load": [],
+	"page_unload": [],
+	"before_beacon": []
+};
+
 
 /*
 	Utility functions
@@ -148,6 +155,44 @@ BMR.utils = {
 	}
 };
 
+var _fireEvent = function(e) {
+	var i;
+	if(_bmr_events.hasOwnProperty(e)) {
+		for(i=0; i<_bmr_events[e].length; i++) {
+			_bmr_events[e][i][0].call(_bmr_events[e][i][1], _bmr_events[e][i][2]);
+		}
+	}
+};
+
+BMR.init = function(config) {
+	var i, k, properties = ["beacon_url", "site_domain", "user_ip"];
+
+	for(i=0; i<properties.length; i++) {
+		if(typeof config[properties[i]] !== "undefined") {
+			BMR[properties[i]] = config[properties[i]];
+		}
+	}
+
+	for(k in this.plugins) {
+		if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {
+			this.plugins[k].init(config);
+		}
+	}
+
+	this.utils.addListener(w, "load", function() { _fireEvent("page_load"); });
+	this.utils.addListener(w, "beforeunload", function() { _fireEvent("page_unload"); });
+
+	return this;
+};
+
+BMR.subscribe = function(e, fn, cb_data, cb_scope) {
+	if(_bmr_events.hasOwnProperty(e)) {
+		_bmr_events[e].push([ fn, cb_data || {}, cb_scope || null ])
+	};
+
+	return this;
+};
+
 BMR.sendBeacon = function() {
 	var i, k, url, img;
 	var that=this;
@@ -175,6 +220,7 @@ BMR.sendBeacon = function() {
 		}
 	}
 
+	_fireEvent("before_beacon");
 	img = new Image();
 	img.src=url;
 };
@@ -325,24 +371,12 @@ BMR.plugins.RT = {
 
 	is_complete: function() { return this._complete; },
 
-	addHandlers: function() {
-		BMR.addListener(w, "load", function() { BMR.RT.done(); });
-		BMR.addListener(w, "beforeunload", function() { BMR.RT.start(); });
-	},
-
-	removeHandler: function(el, sType, fn) {
-		if (w.removeEventListener) {
-			el.removeEventListener(sType, fn, false);
-		}
-		else if (w.detachEvent) {
-			el.detachEvent("on" + sType, fn);
-		}
-	},
-
-	init: function() {
-		this.addHandlers();
+	init: function(config) {
+		BMR.subscribe("page_load", BMR.RT.done, null, BMR.RT);
+		BMR.subscribe("page_unload", BMR.RT.start, BMR.RT);
 	}
 };
 
 
+_fireEvent("script_load");
 }(this, this.document));	// end of beaconing section
