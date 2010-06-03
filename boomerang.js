@@ -43,7 +43,7 @@ BMR.user_ip = '';		//! User's ip address determined on the server
 // create a logger - we'll try to use the YUI logger if it exists or firebug if it exists, or just fall back to nothing.
 var log = function(m,l,s) {};
 
-if(typeof YAHOO.log !== "undefined") {
+if(typeof YAHOO !== "undefined" && typeof YAHOO.log !== "undefined") {
 	log = YAHOO.log;
 }
 else if(typeof Y !== "undefined" && typeof Y.log !== "undefined") {
@@ -135,7 +135,7 @@ BMR.utils = {
 	},
 	
 	removeCookie: function(name) {
-		return setCookie(name, {}, 0, "/", site_domain);
+		return setCookie(name, {}, 0, "/", BMR.site_domain);
 	},
 	
 	addListener: function(el, sType, fn, capture) {
@@ -149,9 +149,11 @@ BMR.utils = {
 };
 
 BMR.sendBeacon = function() {
-	var i, k, url = this.beacon_url + '?v=' + encodeURIComponent(bmr_version);
+	var i, k, url, img;
 	var that=this;
 
+	// At this point the base is ready to send the beacon.
+	// We now have to wait for all plugins to finish what they're supposed to do
 	for(k in this.plugins) {
 		if(this.plugins.hasOwnProperty(k)) {
 			var plugin_complete = this.plugins[k].is_complete();
@@ -165,13 +167,15 @@ BMR.sendBeacon = function() {
 		}
 	}
 
+	// If we reach here, all plugins have completed
+	url = this.beacon_url + '?v=' + encodeURIComponent(bmr_version);
 	for(k in this.vars) {
 		if(this.vars.hasOwnProperty(k)) {
 			url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(this.vars[k]);
 		}
 	}
 
-	var img = new Image();
+	img = new Image();
 	img.src=url;
 };
 
@@ -187,6 +191,8 @@ BMR.plugins.RT = {
 	cookie_exp:600,	//! Cookie expiry in seconds
 	
 	// Methods
+
+	// The start method is fired on page unload
 	start: function() {
 		var t_start = new Date().getTime();
 
@@ -216,7 +222,7 @@ BMR.plugins.RT = {
 	},
 
 	endTimer: function(timer_name, time_value) {
-		if(typeof this.timers[timer_name] == "undefined") {
+		if(typeof this.timers[timer_name] === "undefined") {
 			this.timers[timer_name] = {};
 		}
 		this.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
@@ -235,12 +241,14 @@ BMR.plugins.RT = {
 		return this;
 	},
 
+	// Called when the page has reached a "loaded" state.  This may be when the onload event fires,
+	// or it could be at some other moment during/after page load when the page is usable by the user
 	done: function() {
 		var t_start, u, r, r2, t_other=[];
 
 		this.endTimer("t_done");
 
-		// initiate the bandwidth test at the point so that it will complete at some point near when we need it
+		// initiate the bandwidth test at this point so that it will complete at some point near when we need it
 		BMR.plugins.BW.checkBandwidth();
 
 		// A beacon may be fired automatically on page load or if the page dev fires it
