@@ -435,18 +435,17 @@ BMR.subscribe("page_unload", BMR.RT.start, null, BMR.RT);
 }(this, this.document));
 // End of RT plugin
 
+// This is the BW plugin
+// the two parameters are the window and document objects
+(function(w, d) {
+
+
+
+}(this, this.document));
+// End of BW plugin
+
 
 BMR.fireEvent("script_load");
 
 
-/*
-The boomerang story... or how this works.
 
-We have a BMR namespace/object, which contains a bunch of things...
-- utility functions to deal with cookies and events
-- variables to be beaconed
-- developer defined parameters for the current page/site
-
-The BMR object exports its own evets for page_load, page_unload, script_load and before_beacon.
-Plugins may subscribe to these events using the BMR.subscribe method.
-*/
