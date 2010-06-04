@@ -13,253 +13,306 @@ Code licensed under the BSD License.  See the file LICENSE.txt
 for the full license text.
 */
 
-// Short namespace because I don't want to keep typing BOOMERANG
-
-if(typeof this.BMR === "undefined" || !this.BMR) {
-	var BMR = {};
-}
-
 // beaconing section
 // the two parameters are the window and document objects
 (function(w, d) {
 
-var bmr_version = "1.0";
+// don't allow this code to be included twice
+if(typeof BMR !== "undefined" && typeof BMR.version !== "undefined") {
+	return;
+}
 
-BMR.beacon_url = BMR.beacon_url || "";
-BMR.site_domain = BMR.site_domain || d.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase();	// strip out everything except last two parts of hostname.
-														// doesn't work with intl domains, but send a patch if you can fix it
-BMR.user_ip = '';		//! User's ip address determined on the server
+// Short namespace because I don't want to keep typing BOOMERANG
+if(typeof w.BMR === "undefined" || !w.BMR) {
+	BMR = {};
+}
+
+BMR.version = "1.0";
 
 
-// create a logger - we'll try to use the YUI logger if it exists or firebug if it exists, or just fall back to nothing.
-var log = function(m,l,s) {};
+// bmr is a private object not reachable from outside the impl
+// users can set properties by passing in to the init() method
+var bmr = {
+	// properties
+	beacon_url: "",
+	site_domain: d.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase(),	// strip out everything except last two parts of hostname.
+	user_ip: '',		//! User's ip address determined on the server
+
+	events: {
+		"script_load": [],
+		"page_load": [],
+		"page_unload": [],
+		"before_beacon": []
+	},
+
+	vars: {}
+
+};
+
+
+// O is the boomerang object.  We merge it into BMR later.  Do it this way so that plugins
+// may be defined before including the script.
+
+var O = {
+	// Utility functions
+	utils: {
+		getCookie: function(name) {
+			name = ' ' + name + '=';
+		
+			var i, cookies;
+			cookies = ' ' + d.cookie + ';';
+			if ( (i=cookies.indexOf(name)) >= 0 ) {
+				i += name.length;
+				cookies = cookies.substring(i, cookies.indexOf(';', i));
+				return cookies;
+			}
+		
+			return "";
+		},
+		
+		setCookie: function(name, subcookies, max_age, path, domain, sec) {
+			if(!name) {
+				return;
+			}
+		
+			var value = "";
+			for(var k in subcookies) {
+				if(subcookies.hasOwnProperty(k)) {
+					value += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(subcookies[k]);
+				}
+			}
+			value = value.replace(/^&/, '');
+		
+			var exp = "";
+			if(max_age) {
+				exp = new Date();
+				exp.setTime(exp.getTime() + max_age*1000);
+				exp = exp.toGMTString();
+			}
+		
+			var nameval = name + '=' + value;
+			var c = nameval +
+				((max_age) ? "; expires=" + exp : "" ) +
+				((path) ? "; path=" + path : "") +
+				((typeof domain !== "undefined") ? "; domain=" + (domain === null ? bmr.site_domain : domain) : "") +
+				((sec) ? "; secure" : "");
+		
+			if ( nameval.length < 4000 ) {
+				d.cookie = c;
+				return ( value === getCookie(name) );    // confirm it was set (could be blocked by user's settings, etc.)
+			}
+		
+			return false;
+		},
+		
+		getSubCookies: function(cookie) {
+			if(!cookie) {
+				return null;
+			}
+		
+			var cookies_a = cookie.split('&');
+		
+			if(cookies_a.length === 0) {
+				return null;
+			}
+		
+			var cookies = {};
+			for(var i=0, l=cookies_a.length; i<l; i++) {
+				var kv = cookies_a[i].split('=');
+				kv.push("");	// just in case there's no value
+				cookies[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
+			}
+		
+			return cookies;
+		},
+		
+		removeCookie: function(name) {
+			return setCookie(name, {}, 0, "/", null);
+		},
+		
+		addListener: function(el, sType, fn, capture) {
+			if(w.addEventListener) {
+				el.addEventListener(sType, fn, (capture));
+			}
+			else if(w.attachEvent) {
+				el.attachEvent("on" + sType, fn);
+			}
+		}
+	},
+
+	init: function(config) {
+		var i, k, properties = ["beacon_url", "site_domain", "user_ip"];
+	
+		for(i=0; i<properties.length; i++) {
+			if(typeof config[properties[i]] !== "undefined") {
+				bmr[properties[i]] = config[properties[i]];
+			}
+		}
+
+		if(typeof config.log  !== "undefined") {
+			this.log = config.log;
+		}
+	
+		for(k in this.plugins) {
+			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {
+				this.plugins[k].init(config);
+			}
+		}
+	
+		// The developer can override onload by setting autorun to false
+		if(typeof config.autorun === "undefined" || config.autorun !== false) {
+			this.utils.addListener(w, "load", function() { this.fireEvent("page_load"); });
+		}
+		this.utils.addListener(w, "beforeunload", function() { this.fireEvent("page_unload"); });
+	
+		return this;
+	},
+
+	// The page dev calls this method when they determine the page is usable.  Only call this if autorun is explicitly set to false
+	page_loaded: function() {
+		this.fireEvent("page_load");
+		return this;
+	},
+
+	subscribe: function(e, fn, cb_data, cb_scope) {
+		if(bmr.events.hasOwnProperty(e)) {
+			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null ])
+		}
+
+		return this;
+	},
+
+	fireEvent: function(e) {
+		var i;
+		if(bmr.events.hasOwnProperty(e)) {
+			for(i=0; i<bmr.events[e].length; i++) {
+				_fireEvent(e, i);
+			}
+		}
+	},
+
+	addVar: function(name, value) {
+		bmr.vars[name] = value;
+		return this;
+	},
+
+	removeVar: function(name) {
+		if(bmr.hasOwnProperty(name)) {
+			delete bmr.name
+		}
+
+		return this;
+	},
+
+	sendBeacon = function() {
+		var i, k, url, img;
+	
+		// At this point someone is ready to send the beacon.  We send
+		// the beacon only if all plugins have finished doing what they
+		// wanted to do
+		for(k in this.plugins) {
+			if(this.plugins.hasOwnProperty(k)) {
+				if(!this.plugins[k].is_complete()) {
+					return;
+				}
+			}
+		}
+	
+		// If we reach here, all plugins have completed
+		url = this.beacon_url + '?v=' + encodeURIComponent(BMR.version);
+		for(k in bmr.vars) {
+			if(bmr.vars.hasOwnProperty(k)) {
+				url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(bmr.vars[k]);
+			}
+		}
+	
+		this.fireEvent("before_beacon");
+		img = new Image();
+		img.src=url;
+	},
+
+	log: function(m,l,s) {} // create a logger - we'll try to use the YUI logger if it exists or firebug if it exists, or just fall back to nothing.
+};
 
 if(typeof YAHOO !== "undefined" && typeof YAHOO.log !== "undefined") {
-	log = YAHOO.log;
+	O.log = YAHOO.log;
 }
 else if(typeof Y !== "undefined" && typeof Y.log !== "undefined") {
-	log = Y.log;
+	O.log = Y.log;
 }
 else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
-	log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
+	O.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
 }
 
-BMR.log = log;
 
-BMR.vars = {};
-BMR.plugins = {};
-
-var _bmr_events = {
-	"script_load": [],
-	"page_load": [],
-	"page_unload": [],
-	"before_beacon": []
+// We fire events with a setTimeout so that they run asynchronously
+// and don't block each other.  This is most useful on a multi-threaded
+// JS engine
+var _fireEvent = function(e, i) {
+	setTimeout(function() { bmr.events[e][i][0].call(bmr.events[e][i][1], bmr.events[e][i][2]); }, 10);
 };
 
-
-/*
-	Utility functions
-*/
-
-BMR.utils = {
-	getCookie: function(name) {
-		name = ' ' + name + '=';
-	
-		var i, cookies;
-		cookies = ' ' + d.cookie + ';';
-		if ( (i=cookies.indexOf(name)) >= 0 ) {
-			i += name.length;
-			cookies = cookies.substring(i, cookies.indexOf(';', i));
-			return cookies;
-		}
-	
-		return "";
-	},
-	
-	setCookie: function(name, subcookies, max_age, path, domain, sec) {
-		if(!name) {
-			return;
-		}
-	
-		var value = "";
-		for(var k in subcookies) {
-			if(subcookies.hasOwnProperty(k)) {
-				value += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(subcookies[k]);
-			}
-		}
-		value = value.replace(/^&/, '');
-	
-		var exp = "";
-		if(max_age) {
-			exp = new Date();
-			exp.setTime(exp.getTime() + max_age*1000);
-			exp = exp.toGMTString();
-		}
-	
-		var nameval = name + '=' + value;
-		var c = nameval +
-			((max_age) ? "; expires=" + exp : "" ) +
-			((path) ? "; path=" + path : "") +
-			((domain) ? "; domain=" + domain : "") +
-			((sec) ? "; secure" : "");
-	
-		if ( nameval.length < 4000 ) {
-			d.cookie = c;
-			return ( value === getCookie(name) );    // confirm it was set (could be blocked by user's settings, etc.)
-		}
-	
-		return false;
-	},
-	
-	getSubCookies: function(cookie) {
-		if(!cookie) {
-			return null;
-		}
-	
-		var cookies_a = cookie.split('&');
-	
-		if(cookies_a.length === 0) {
-			return null;
-		}
-	
-		var cookies = {};
-		for(var i=0, l=cookies_a.length; i<l; i++) {
-			var kv = cookies_a[i].split('=');
-			kv.push("");	// just in case there's no value
-			cookies[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
-		}
-	
-		return cookies;
-	},
-	
-	removeCookie: function(name) {
-		return setCookie(name, {}, 0, "/", BMR.site_domain);
-	},
-	
-	addListener: function(el, sType, fn, capture) {
-		if(w.addEventListener) {
-			el.addEventListener(sType, fn, (capture));
-		}
-		else if(w.attachEvent) {
-			el.attachEvent("on" + sType, fn);
-		}
+for(var k in O) {
+	if(O.hasOwnProperty(k)) {
+		BMR[k] = O[k];
 	}
-};
+}
 
-var _fireEvent = function(e) {
-	var i;
-	if(_bmr_events.hasOwnProperty(e)) {
-		for(i=0; i<_bmr_events[e].length; i++) {
-			_bmr_events[e][i][0].call(_bmr_events[e][i][1], _bmr_events[e][i][2]);
-		}
-	}
-};
+if(typeof BMR.plugins === "undefined" || !BMR.plugins) {
+	BMR.plugins = {};
+}
 
-BMR.init = function(config) {
-	var i, k, properties = ["beacon_url", "site_domain", "user_ip"];
+}(this, this.document));
 
-	for(i=0; i<properties.length; i++) {
-		if(typeof config[properties[i]] !== "undefined") {
-			BMR[properties[i]] = config[properties[i]];
-		}
-	}
-
-	for(k in this.plugins) {
-		if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {
-			this.plugins[k].init(config);
-		}
-	}
-
-	// The developer can override onload by setting autorun to false
-	if(typeof config.autorun === "undefined" || config.autorun !== false) {
-		this.utils.addListener(w, "load", function() { _fireEvent("page_load"); });
-	}
-	this.utils.addListener(w, "beforeunload", function() { _fireEvent("page_unload"); });
-
-	return this;
-};
-
-// The page dev calls this method when they determine the page is usable.  Only call this if autorun is explicitly set to false
-BMR.page_loaded = function() { _fireEvent("page_load"); };
-
-BMR.subscribe = function(e, fn, cb_data, cb_scope) {
-	if(_bmr_events.hasOwnProperty(e)) {
-		_bmr_events[e].push([ fn, cb_data || {}, cb_scope || null ])
-	};
-
-	return this;
-};
-
-// This function might be called multiple times as multiple plugins complete,
-// but the beacon should only be sent once for each set values
-var _bcn_defer_timeout=null;
-BMR.sendBeacon = function() {
-	var i, k, url, img;
-
-	// This means we already have a deferred sendBeacon call, so don't allow any others to run
-	// This will only work correctly in a single-threaded JS engine.  In a multi-threaded engine,
-	// there is a chance that the timeout and another call of sendBeacon might fire concurrently
-	// and we'll end up with two beacons.  I'll get a better solution later.
-	if(_bcn_defer_timeout) {
-		return;
-	}
-
-	var that=this;
-
-	// At this point the base is ready to send the beacon.
-	// We now have to wait for all plugins to finish what they're supposed to do
-	for(k in this.plugins) {
-		if(this.plugins.hasOwnProperty(k)) {
-			var plugin_complete = this.plugins[k].is_complete();
-			if(plugin_complete === false) {
-				_bcn_defer_timeout = setTimeout(function() { _bcn_defer_timeout = null; that.sendBeacon(); that=null; }, 100);
-				return;
-			}
-			else if(plugin_complete === "abort") {
-				return;
-			}
-		}
-	}
-
-	// If we reach here, all plugins have completed
-	url = this.beacon_url + '?v=' + encodeURIComponent(bmr_version);
-	for(k in this.vars) {
-		if(this.vars.hasOwnProperty(k)) {
-			url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(this.vars[k]);
-		}
-	}
-
-	_fireEvent("before_beacon");
-	img = new Image();
-	img.src=url;
-};
+// end of boomerang beaconing section
+// Now we start built in plugins.  I might move them into separate source files at some point
 
 
+// This is the RT plugin
+// the two parameters are the window and document objects
+(function(w, d) {
 
-
-BMR.plugins.RT = {
-	// Properties
+// private object
+var rt = {
+	complete: false,//! Set when this plugin has completed
 
 	timers: {},	//! Custom timers that the developer can use
 			// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 	cookie: 'BRT',	//! Name of the cookie that stores the start time and referrer
 	cookie_exp:600,	//! Cookie expiry in seconds
 
-	_complete: false,	// set when this plugin has completed
-	
+};
+
+BMR.plugins.RT = {
 	// Methods
+
+	init: function(config) {
+		var i, properties = ["cookie", "cookie_exp"];
+
+		rt.complete = false;
+
+		if(typeof config === "undefined" || typeof config.RT === "undefined") {
+			return;
+		}
+
+		for(i=0; i<config.RT.length; i++) {
+			if(typeof config.RT[properties[i]] !== "undefined") {
+				rt[properties[i]] = config.RT[properties[i]];
+			}
+		}
+	},
 
 	// The start method is fired on page unload
 	start: function() {
 		var t_start = new Date().getTime();
 
-		BMR.utils.setCookie(this.cookie, { s: t_start, r: d.location }, this.cookie_exp, "/", BMR.site_domain);
+		BMR.utils.setCookie(rt.cookie, { s: t_start, r: d.location }, rt.cookie_exp, "/", null);
 
 		if(new Date().getTime() - t_start > 20) {
 			// It took > 20ms to set the cookie
 			// Most likely user has cookie prompting turned on so t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
-			removeCookie(this.cookie);
+			removeCookie(rt.cookie);
 
 			// at some point we may want to log this info on the server side
 		}
@@ -267,28 +320,23 @@ BMR.plugins.RT = {
 		return this;
 	},
 
-	addVar: function(name, value) {
-		BMR.vars[name] = value;
-		return this;
-	},
-
 	startTimer: function(timer_name) {
-		this.timers[timer_name] = { start: new Date().getTime() };
+		rt.timers[timer_name] = { start: new Date().getTime() };
 
 		return this;
 	},
 
 	endTimer: function(timer_name, time_value) {
-		if(typeof this.timers[timer_name] === "undefined") {
-			this.timers[timer_name] = {};
+		if(typeof rt.timers[timer_name] === "undefined") {
+			rt.timers[timer_name] = {};
 		}
-		this.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
+		rt.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
 
 		return this;
 	},
 
 	setTimer: function(timer_name, time_delta) {
-		this.timers[timer_name] = { delta: time_delta };
+		rt.timers[timer_name] = { delta: time_delta };
 
 		return this;
 	},
@@ -303,16 +351,11 @@ BMR.plugins.RT = {
 	done: function() {
 		var t_start, u, r, r2, t_other=[];
 
-		if(this._complete) {
+		if(rt.complete) {
 			return this;
 		}
 
 		this.endTimer("t_done");
-
-		// initiate the bandwidth test at this point so that it will complete at some point near when we need it
-		if(typeof BMR.plugins.BW !== "undefined") {
-			BMR.plugins.BW.run();
-		}
 
 		// A beacon may be fired automatically on page load or if the page dev fires it
 		// manually with their own timers.  It may not always contain a referrer (eg: XHR calls)
@@ -321,8 +364,8 @@ BMR.plugins.RT = {
 		u = d.location.href.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
-		var subcookies = BMR.utils.getSubCookies(getCookie(this.cookie));
-		BMR.utils.removeCookie(this.cookie);
+		var subcookies = BMR.utils.getSubCookies(BMR.utils.getCookie(rt.cookie));
+		BMR.utils.removeCookie(rt.cookie);
 
 		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
 			t_start = parseInt(subcookies.s, 10);
@@ -332,30 +375,30 @@ BMR.plugins.RT = {
 		var basic_timers = { t_done: 1, t_rtpage: 1, t_resp: 1 };
 
 		var ntimers = 0;
-		for(var timer in this.timers) {
-			if(!this.timers.hasOwnProperty(timer)) {
+		for(var timer in rt.timers) {
+			if(!rt.timers.hasOwnProperty(timer)) {
 				continue;
 			}
 
-			if(typeof this.timers[timer].delta !== "number") {
-				this.timers[timer].delta = this.timers[timer].end - ( typeof this.timers[timer].start === "number" ? this.timers[timer].start : t_start );
+			if(typeof rt.timers[timer].delta !== "number") {
+				rt.timers[timer].delta = rt.timers[timer].end - ( typeof rt.timers[timer].start === "number" ? rt.timers[timer].start : t_start );
 			}
 
-			if(isNaN(this.timers[timer].delta)) {
+			if(isNaN(rt.timers[timer].delta)) {
 				continue;
 			}
 
 			if(basic_timers[timer]) {
-				this.addVar(timer, this.timers[timer].delta);
+				BMR.addVar(timer, rt.timers[timer].delta);
 			}
 			else {
-				t_other.push(encodeURIComponent(timer) + "|" + encodeURIComponent(this.timers[timer].delta));
+				t_other.push(encodeURIComponent(timer) + "|" + encodeURIComponent(rt.timers[timer].delta));
 			}
 			ntimers++;
 		}
 
 		// make sure an old t_other doesn't stick around
-		delete BMR.vars.t_other;
+		BMR.removeVar('t_other');
 
 		// At this point we decide whether the beacon should be sent or not
 		if(ntimers === 0) {
@@ -363,36 +406,37 @@ BMR.plugins.RT = {
 		}
 
 		if(t_other.length > 0) {
-			this.addVar("t_other", t_other.join(","));
+			BMR.addVar("t_other", t_other.join(","));
 		}
 
-		this.timers = {};
+		rt.timers = {};
 
-		this.addVar("u", u);
-		this.addVar("r", r);
+		BMR.addVar("u", u);
+		BMR.addVar("r", r);
 
-		delete BMR.vars.r2;
+		BMR.removeVars('r2');
 		if(r2 !== r) {
-			this.addVar("r2", r2);
+			BMR.addVar("r2", r2);
 		}
 
-		this._complete = true;
+		rt.complete = true;
 
 		BMR.sendBeacon();
 		return this;
 	},
 
-	is_complete: function() { return this._complete; },
+	is_complete: function() { return rt.complete; },
 
-	init: function(config) {
-		BMR.subscribe("page_load", BMR.RT.done, null, BMR.RT);
-		BMR.subscribe("page_unload", BMR.RT.start, BMR.RT);
-	}
 };
 
+BMR.subscribe("page_load", BMR.RT.done, null, BMR.RT);
+BMR.subscribe("page_unload", BMR.RT.start, null, BMR.RT);
 
-_fireEvent("script_load");
-}(this, this.document));	// end of beaconing section
+}(this, this.document));
+// End of RT plugin
+
+
+BMR.fireEvent("script_load");
 
 
 /*
