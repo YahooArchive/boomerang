@@ -18,16 +18,16 @@ for the full license text.
 (function(w, d) {
 
 // don't allow this code to be included twice
-if(typeof BMR !== "undefined" && typeof BMR.version !== "undefined") {
+if(typeof BOOMR !== "undefined" && typeof BOOMR.version !== "undefined") {
 	return;
 }
 
 // Short namespace because I don't want to keep typing BOOMERANG
-if(typeof w.BMR === "undefined" || !w.BMR) {
-	BMR = {};
+if(typeof w.BOOMR === "undefined" || !w.BOOMR) {
+	BOOMR = {};
 }
 
-BMR.version = "1.0";
+BOOMR.version = "1.0";
 
 
 // bmr is a private object not reachable from outside the impl
@@ -50,7 +50,7 @@ var bmr = {
 };
 
 
-// O is the boomerang object.  We merge it into BMR later.  Do it this way so that plugins
+// O is the boomerang object.  We merge it into BOOMR later.  Do it this way so that plugins
 // may be defined before including the script.
 
 var O = {
@@ -226,7 +226,7 @@ var O = {
 		}
 	
 		// If we reach here, all plugins have completed
-		url = this.beacon_url + '?v=' + encodeURIComponent(BMR.version);
+		url = this.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
 		for(k in bmr.vars) {
 			if(bmr.vars.hasOwnProperty(k)) {
 				url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(bmr.vars[k]);
@@ -254,7 +254,7 @@ else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
 
 // We fire events with a setTimeout so that they run asynchronously
 // and don't block each other.  This is most useful on a multi-threaded
-// JS engine
+// JS engine.  Don't use this for onbeforeunload though
 var _fireEvent = function(e, i, data) {
 	setTimeout(function() {
 		bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
@@ -263,12 +263,12 @@ var _fireEvent = function(e, i, data) {
 
 for(var k in O) {
 	if(O.hasOwnProperty(k)) {
-		BMR[k] = O[k];
+		BOOMR[k] = O[k];
 	}
 }
 
-if(typeof BMR.plugins === "undefined" || !BMR.plugins) {
-	BMR.plugins = {};
+if(typeof BOOMR.plugins === "undefined" || !BOOMR.plugins) {
+	BOOMR.plugins = {};
 }
 
 }(this, this.document));
@@ -292,7 +292,7 @@ var rt = {
 
 };
 
-BMR.plugins.RT = {
+BOOMR.plugins.RT = {
 	// Methods
 
 	init: function(config) {
@@ -315,7 +315,7 @@ BMR.plugins.RT = {
 	start: function() {
 		var t_start = new Date().getTime();
 
-		BMR.utils.setCookie(rt.cookie, { s: t_start, r: d.location }, rt.cookie_exp, "/", null);
+		BOOMR.utils.setCookie(rt.cookie, { s: t_start, r: d.location }, rt.cookie_exp, "/", null);
 
 		if(new Date().getTime() - t_start > 20) {
 			// It took > 20ms to set the cookie
@@ -351,7 +351,7 @@ BMR.plugins.RT = {
 	},
 
 	error: function(msg) {
-		BMR.log(msg, "error", "boomerang.rt");
+		BOOMR.log(msg, "error", "boomerang.rt");
 		return this;
 	},
 
@@ -373,8 +373,8 @@ BMR.plugins.RT = {
 		u = d.location.href.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
-		var subcookies = BMR.utils.getSubCookies(BMR.utils.getCookie(rt.cookie));
-		BMR.utils.removeCookie(rt.cookie);
+		var subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(rt.cookie));
+		BOOMR.utils.removeCookie(rt.cookie);
 
 		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
 			t_start = parseInt(subcookies.s, 10);
@@ -398,7 +398,7 @@ BMR.plugins.RT = {
 			}
 
 			if(basic_timers[timer]) {
-				BMR.addVar(timer, rt.timers[timer].delta);
+				BOOMR.addVar(timer, rt.timers[timer].delta);
 			}
 			else {
 				t_other.push(encodeURIComponent(timer) + "|" + encodeURIComponent(rt.timers[timer].delta));
@@ -407,7 +407,7 @@ BMR.plugins.RT = {
 		}
 
 		// make sure an old t_other doesn't stick around
-		BMR.removeVar('t_other');
+		BOOMR.removeVar('t_other');
 
 		// At this point we decide whether the beacon should be sent or not
 		if(ntimers === 0) {
@@ -415,22 +415,22 @@ BMR.plugins.RT = {
 		}
 
 		if(t_other.length > 0) {
-			BMR.addVar("t_other", t_other.join(","));
+			BOOMR.addVar("t_other", t_other.join(","));
 		}
 
 		rt.timers = {};
 
-		BMR.addVar("u", u);
-		BMR.addVar("r", r);
+		BOOMR.addVar("u", u);
+		BOOMR.addVar("r", r);
 
-		BMR.removeVar('r2');
+		BOOMR.removeVar('r2');
 		if(r2 !== r) {
-			BMR.addVar("r2", r2);
+			BOOMR.addVar("r2", r2);
 		}
 
 		rt.complete = true;
 
-		BMR.sendBeacon();
+		BOOMR.sendBeacon();
 		return this;
 	},
 
@@ -438,8 +438,8 @@ BMR.plugins.RT = {
 
 };
 
-BMR.subscribe("page_load", BMR.plugins.RT.done, null, BMR.plugins.RT);
-BMR.subscribe("page_unload", BMR.plugins.RT.start, null, BMR.plugins.RT);
+BOOMR.subscribe("page_load", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
+BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 
 }(this, this.document));
 // End of RT plugin
@@ -455,7 +455,8 @@ var _bw = {
 	nruns: 5,
 	latency_runs: 10,
 	user_ip: '',
-	cookie_exp: 7*86400
+	cookie_exp: 7*86400,
+	cookie: 'BA'
 };
 
 // We choose image sizes so that we can narrow down on a bandwidth range as soon as possible
@@ -490,9 +491,9 @@ var results = [],
     test_start = null;
 
 
-BMR.plugins.BW = {
+BOOMR.plugins.BW = {
 	init: function(config) {
-		var i, properties = ["base_url", "timeout", "nruns"];
+		var i, properties = ["base_url", "timeout", "nruns", "cookie", "cookie_exp"];
 
 		if(typeof config !== "undefined" && typeof config.BW !== "undefined") {
 			for(i=0; i<properties.length; i++) {
@@ -516,8 +517,8 @@ BMR.plugins.BW = {
 		aborted = false;
 		test_start = null;
 
-		var bacookie = BMR.utils.getCookie("BA");
-		var cookies = BMR.utils.getSubCookies(bacookie);
+		var bacookie = BOOMR.utils.getCookie(_bw.cookie);
+		var cookies = BOOMR.utils.getSubCookies(bacookie);
 
 		if(cookies && cookies.ba) {
 			var ba = cookies.ba,
@@ -558,7 +559,7 @@ BMR.plugins.BW = {
 
 		running = true;
 
-		setTimeout(BMR.plugins.BW.abort, _bw.timeout);
+		setTimeout(BOOMR.plugins.BW.abort, _bw.timeout);
 
 		test_start = new Date().getTime();
 		defer(iterate);
@@ -600,7 +601,7 @@ var iqr = function(a)
 
 var debug = function(msg)
 {
-	BMR.log(msg, "debug", "boomerang.bw");
+	BOOMR.log(msg, "debug", "boomerang.bw");
 };
 
 var defer = function(method)
@@ -848,27 +849,27 @@ var finish = function()
 
 	for(var k in o) {
 		if(o.hasOwnProperty(k)) {
-			BMR.addVar(k, o[k]);
+			BOOMR.addVar(k, o[k]);
 		}
 	}
 
 	complete = true;
-	BMR.sendBeacon();
+	BOOMR.sendBeacon();
 
 	// If we have an IP address we can make the BA cookie persistent for a while because we'll
 	// recalculate it if necessary (when the user's IP changes).
-	BMR.utils.setCookie("BA", { ba: Math.round(o.bw/1024), l: o.lat, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
+	BOOMR.utils.setCookie(_bw.cookie, { ba: Math.round(o.bw/1024), l: o.lat, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
 
 	running = false;
 };
 
-BMR.subscribe("page_load", BMR.plugins.BW.run, null, BMR.plugins.BW);
+BOOMR.subscribe("page_load", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
 
 }(this, this.document));
 // End of BW plugin
 
 
-BMR.fireEvent("script_load");
+BOOMR.fireEvent("script_load");
 
 
 
