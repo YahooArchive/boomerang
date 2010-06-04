@@ -99,7 +99,7 @@ var O = {
 		
 			if ( nameval.length < 4000 ) {
 				d.cookie = c;
-				return ( value === getCookie(name) );    // confirm it was set (could be blocked by user's settings, etc.)
+				return ( value === this.getCookie(name) );    // confirm it was set (could be blocked by user's settings, etc.)
 			}
 		
 			return false;
@@ -127,7 +127,7 @@ var O = {
 		},
 		
 		removeCookie: function(name) {
-			return setCookie(name, {}, 0, "/", null);
+			return this.setCookie(name, {}, 0, "/", null);
 		},
 		
 		addListener: function(el, sType, fn, capture) {
@@ -143,6 +143,10 @@ var O = {
 	init: function(config) {
 		var i, k, properties = ["beacon_url", "site_domain", "user_ip"];
 	
+		if(!config) {
+			config = {};
+		}
+
 		for(i=0; i<properties.length; i++) {
 			if(typeof config[properties[i]] !== "undefined") {
 				bmr[properties[i]] = config[properties[i]];
@@ -159,9 +163,10 @@ var O = {
 			}
 		}
 	
+		var that=this;
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
-			this.utils.addListener(w, "load", function() { this.page_loaded(); });
+			this.utils.addListener(w, "load", function() { that.fireEvent("page_load"); that=null; });
 		}
 		this.utils.addListener(w, "beforeunload", function() { this.fireEvent("page_unload"); });
 	
@@ -241,7 +246,7 @@ else if(typeof Y !== "undefined" && typeof Y.log !== "undefined") {
 	O.log = Y.log;
 }
 else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
-	O.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
+	O.log = function(m,l,s) { console.log(s + ": [" + l + "] ", m); };
 }
 
 
@@ -249,7 +254,9 @@ else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
 // and don't block each other.  This is most useful on a multi-threaded
 // JS engine
 var _fireEvent = function(e, i) {
-	setTimeout(function() { bmr.events[e][i][0].call(bmr.events[e][i][1], bmr.events[e][i][2]); }, 10);
+	setTimeout(function() {
+		bmr.events[e][i][0].call(bmr.events[e][i][2], bmr.events[e][i][1]);
+	}, 10);
 };
 
 for(var k in O) {
@@ -440,7 +447,7 @@ BMR.subscribe("page_unload", BMR.plugins.RT.start, null, BMR.plugins.RT);
 (function(w, d) {
 
 // private object
-var bw = {
+var _bw = {
 	base_url: 'images/',
 	timeout: 15000,
 	nruns: 5,
@@ -472,7 +479,7 @@ images['l'] = { name: "image-l.gif", size: 35, timeout: 1000 };
 var results = [],
     latencies = [],
     latency = null,
-    runs_left = bw.nruns,
+    runs_left = _bw.nruns,
     aborted = false,
     complete = false,
     test_start = null;
@@ -480,18 +487,18 @@ var results = [],
 
 BMR.plugins.BW = {
 	init: function(config) {
-		var i, properties = ["base_url", "timeout", "nruns", "latency_runs"];
+		var i, properties = ["base_url", "timeout", "nruns"];
 
 		if(typeof config !== "undefined" && typeof config.BW !== "undefined") {
 			for(i=0; i<config.BW.length; i++) {
 				if(typeof config.BW[properties[i]] !== "undefined") {
-					bw[properties[i]] = config.BW[properties[i]];
+					_bw[properties[i]] = config.BW[properties[i]];
 				}
 			}
 		}
 
-		runs_left = bw.nruns;
-		latency_runs = 10;
+		runs_left = _bw.nruns;
+		_bw.latency_runs = 10;
 		smallest_image = 0;
 		results = [];
 		latencies = [];
@@ -502,7 +509,7 @@ BMR.plugins.BW = {
 	},
 
 	run: function() {
-		setTimeout(BMR.plugins.BW.abort, bw.timeout);
+		setTimeout(BMR.plugins.BW.abort, _bw.timeout);
 
 		test_start = new Date().getTime();
 		defer(iterate);
@@ -559,8 +566,8 @@ var iterate = function()
 	if(!runs_left) {
 		finish();
 	}
-	else if(latency_runs) {
-		load_img('l', latency_runs--, lat_loaded);
+	else if(_bw.latency_runs) {
+		load_img('l', _bw.latency_runs--, lat_loaded);
 	}
 	else {
 		results.push({r:[]});
@@ -570,7 +577,7 @@ var iterate = function()
 
 var load_img = function(i, run, callback)
 {
-	var url = base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
+	var url = _bw.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
 	var timer=0, tstart=0;
 	var img = new Image();
 
@@ -588,7 +595,7 @@ var load_img = function(i, run, callback)
 
 var lat_loaded = function(i, tstart, run, success)
 {
-	if(run != latency_runs+1)
+	if(run != _bw.latency_runs+1)
 		return;
 
 	if(success !== null) {
@@ -596,7 +603,7 @@ var lat_loaded = function(i, tstart, run, success)
 		latencies.push(lat);
 	}
 	// if we've got all the latency images at this point, we can calculate latency
-	if(latency_runs === 0) {
+	if(_bw.latency_runs === 0) {
 		latency = calc_latency();
 	}
 
@@ -608,11 +615,11 @@ var img_loaded = function(i, tstart, run, success)
 	if(run != runs_left+1)
 		return;
 
-	if(results[nruns-run].r[i])		// already called on this image
+	if(results[_bw.nruns-run].r[i])		// already called on this image
 		return;
 
 	if(success === null) {			// if timeout, then we set the next image to the end of loop marker
-		results[nruns-run].r[i+1] = {t:null, state: null, run: run};
+		results[_bw.nruns-run].r[i+1] = {t:null, state: null, run: run};
 		return;
 	}
 
@@ -620,14 +627,14 @@ var img_loaded = function(i, tstart, run, success)
 	if(success) {
 		result.t = result.end-result.start;
 	}
-	results[nruns-run].r[i] = result;
+	results[_bw.nruns-run].r[i] = result;
 
 	// we terminate if an image timed out because that means the connection is too slow to go to the next image
-	if(i >= nimages-1 || typeof results[nruns-run].r[i+1] !== 'undefined') {
-		debug(results[nruns-run]);
+	if(i >= nimages-1 || typeof results[_bw.nruns-run].r[i+1] !== 'undefined') {
+		debug(results[_bw.nruns-run]);
 		// First run is a pilot test to decide what the largest image that we can download is
 		// All following runs only try to download this image
-		if(run === nruns) {
+		if(run === _bw.nruns) {
 			smallest_image = i;
 		}
 		defer(iterate);
@@ -683,7 +690,7 @@ var calc_bw = function(latency)
 		amean, std_dev, std_err, median,
 		amean_corrected, std_dev_corrected, std_err_corrected, median_corrected;
 
-	for(i=0; i<nruns; i++) {
+	for(i=0; i<_bw.nruns; i++) {
 		if(!results[i] || !results[i].r) {
 			continue;
 		}
