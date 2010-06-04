@@ -161,7 +161,7 @@ var O = {
 	
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
-			this.utils.addListener(w, "load", this.page_loaded);
+			this.utils.addListener(w, "load", function() { this.page_loaded(); });
 		}
 		this.utils.addListener(w, "beforeunload", function() { this.fireEvent("page_unload"); });
 	
