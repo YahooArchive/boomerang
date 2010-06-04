@@ -187,11 +187,11 @@ var O = {
 		return this;
 	},
 
-	fireEvent: function(e) {
+	fireEvent: function(e, data) {
 		var i;
 		if(bmr.events.hasOwnProperty(e)) {
 			for(i=0; i<bmr.events[e].length; i++) {
-				_fireEvent(e, i);
+				_fireEvent(e, i, data);
 			}
 		}
 	},
@@ -231,7 +231,7 @@ var O = {
 			}
 		}
 	
-		this.fireEvent("before_beacon");
+		this.fireEvent("before_beacon", bmr.vars);
 		img = new Image();
 		img.src=url;
 	},
@@ -253,9 +253,9 @@ else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
 // We fire events with a setTimeout so that they run asynchronously
 // and don't block each other.  This is most useful on a multi-threaded
 // JS engine
-var _fireEvent = function(e, i) {
+var _fireEvent = function(e, i, data) {
 	setTimeout(function() {
-		bmr.events[e][i][0].call(bmr.events[e][i][2], bmr.events[e][i][1]);
+		bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
 	}, 10);
 };
 
@@ -302,7 +302,7 @@ BMR.plugins.RT = {
 			return;
 		}
 
-		for(i=0; i<config.RT.length; i++) {
+		for(i=0; i<properties.length; i++) {
 			if(typeof config.RT[properties[i]] !== "undefined") {
 				rt[properties[i]] = config.RT[properties[i]];
 			}
@@ -490,7 +490,7 @@ BMR.plugins.BW = {
 		var i, properties = ["base_url", "timeout", "nruns"];
 
 		if(typeof config !== "undefined" && typeof config.BW !== "undefined") {
-			for(i=0; i<config.BW.length; i++) {
+			for(i=0; i<properties.length; i++) {
 				if(typeof config.BW[properties[i]] !== "undefined") {
 					_bw[properties[i]] = config.BW[properties[i]];
 				}
