@@ -451,7 +451,9 @@ var _bw = {
 	base_url: 'images/',
 	timeout: 15000,
 	nruns: 5,
-	latency_runs: 10
+	latency_runs: 10,
+	user_ip: '',
+	cookie_exp: 7*86400
 };
 
 // We choose image sizes so that we can narrow down on a bandwidth range as soon as possible
@@ -482,6 +484,7 @@ var results = [],
     runs_left = _bw.nruns,
     aborted = false,
     complete = false,
+    running = false,
     test_start = null;
 
 
@@ -497,6 +500,10 @@ BMR.plugins.BW = {
 			}
 		}
 
+		if(config && config.user_ip) {
+			_bw.user_ip = config.user_ip;
+		}
+
 		runs_left = _bw.nruns;
 		_bw.latency_runs = 10;
 		smallest_image = 0;
@@ -506,13 +513,55 @@ BMR.plugins.BW = {
 		complete = false;
 		aborted = false;
 		test_start = null;
+
+		var bacookie = BMR.utils.getCookie("BA");
+		var cookies = BMR.utils.getSubCookies(bacookie);
+
+		if(cookies && cookies.ba) {
+			var ba = cookies.ba,
+			    lat = cookies.l || 0,
+			    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
+			    t = cookies.t,
+			    p_sn = _bw.user_ip.replace(/\.\d+$/, '0');
+
+			// We use the subnet instead of the IP address because some people
+			// on DHCP with the same ISP may get different IPs on the same subnet
+			// every time they log in
+
+			var t_now = Math.round((new Date().getTime())/1000);	// seconds
+
+			// If the subnet changes or the cookie is more than 7 days old,
+			// then we recheck the bandwidth, else we just use what's in the cookie
+			if(c_sn === p_sn && parseInt(t, 10) >= t_now - _bw.cookie_exp) {
+				complete = true;
+			}
+		}
+
 	},
 
 	run: function() {
+		if(running || complete) {
+			return true;
+		}
+
+		if(d.location.protocol === 'https:') {
+			// we don't run the test for https because SSL stuff will mess up b/w calculations
+			// we could run the test itself over HTTP, but then IE will complain about
+			// insecure resources, so the best is to just bail and hope that the user
+			// gets the cookie from some other Y! page
+
+			complete = true;
+			return false;
+		}
+
+		running = true;
+
 		setTimeout(BMR.plugins.BW.abort, _bw.timeout);
 
 		test_start = new Date().getTime();
 		defer(iterate);
+
+		return true;
 	},
 
 	abort: function() {
@@ -803,6 +852,12 @@ var finish = function()
 
 	complete = true;
 	BMR.sendBeacon();
+
+	// If we have an IP address we can make the BA cookie persistent for a while because we'll
+	// recalculate it if necessary (when the user's IP changes).
+	BMR.utils.setCookie("BA", { ba: Math.round(o.bw/1024), l: o.lat, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
+
+	running = false;
 };
 
 BMR.subscribe("page_load", BMR.plugins.BW.run, null, BMR.plugins.BW);
