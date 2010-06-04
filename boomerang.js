@@ -131,10 +131,10 @@ var O = {
 		},
 		
 		addListener: function(el, sType, fn, capture) {
-			if(w.addEventListener) {
+			if(el.addEventListener) {
 				el.addEventListener(sType, fn, (capture));
 			}
-			else if(w.attachEvent) {
+			else if(el.attachEvent) {
 				el.attachEvent("on" + sType, fn);
 			}
 		}
@@ -168,7 +168,6 @@ var O = {
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
 			this.utils.addListener(w, "load", function() { that.fireEvent("page_load"); that=null; });
 		}
-		this.utils.addListener(w, "beforeunload", function() { this.fireEvent("page_unload"); });
 	
 		return this;
 	},
@@ -180,7 +179,10 @@ var O = {
 	},
 
 	subscribe: function(e, fn, cb_data, cb_scope) {
-		if(bmr.events.hasOwnProperty(e)) {
+		if(e === 'page_unload') {
+			this.utils.addListener(w, "beforeunload", function() { fn.call(cb_scope, null, cb_data); });
+		}
+		else if(bmr.events.hasOwnProperty(e)) {
 			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null ])
 		}
 
@@ -421,7 +423,7 @@ BMR.plugins.RT = {
 		BMR.addVar("u", u);
 		BMR.addVar("r", r);
 
-		BMR.removeVars('r2');
+		BMR.removeVar('r2');
 		if(r2 !== r) {
 			BMR.addVar("r2", r2);
 		}
