@@ -204,7 +204,7 @@ var O = {
 		return this;
 	},
 
-	sendBeacon = function() {
+	sendBeacon: function() {
 		var i, k, url, img;
 	
 		// At this point someone is ready to send the beacon.  We send
@@ -429,8 +429,8 @@ BMR.plugins.RT = {
 
 };
 
-BMR.subscribe("page_load", BMR.RT.done, null, BMR.RT);
-BMR.subscribe("page_unload", BMR.RT.start, null, BMR.RT);
+BMR.subscribe("page_load", BMR.plugins.RT.done, null, BMR.plugins.RT);
+BMR.subscribe("page_unload", BMR.plugins.RT.start, null, BMR.plugins.RT);
 
 }(this, this.document));
 // End of RT plugin
@@ -798,7 +798,7 @@ var finish = function()
 	BMR.sendBeacon();
 };
 
-BMR.subscribe("page_load", BMR.BW.run, null, BMR.BW);
+BMR.subscribe("page_load", BMR.plugins.BW.run, null, BMR.plugins.BW);
 
 }(this, this.document));
 // End of BW plugin
