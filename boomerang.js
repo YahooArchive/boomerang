@@ -441,7 +441,7 @@ BMR.subscribe("page_unload", BMR.plugins.RT.start, null, BMR.plugins.RT);
 
 // private object
 var bw = {
-	base_url: '',
+	base_url: 'images/',
 	timeout: 15000,
 	nruns: 5,
 	latency_runs: 10
