@@ -199,7 +199,17 @@ var O = {
 	},
 
 	addVar: function(name, value) {
-		bmr.vars[name] = value;
+		if(typeof name === "string") {
+			bmr.vars[name] = value;
+		}
+		else if(typeof name === "object") {
+			var o = name;
+			for(var k in o) {
+				if(o.hasOwnProperty(k)) {
+					bmr.vars[k] = o[k];
+				}
+			}
+		}
 		return this;
 	},
 
@@ -299,9 +309,10 @@ BOOMR.plugins.RT = {
 		var i, properties = ["cookie", "cookie_exp"];
 
 		rt.complete = false;
+		rt.timers = {};
 
 		if(typeof config === "undefined" || typeof config.RT === "undefined") {
-			return;
+			return this;
 		}
 
 		for(i=0; i<properties.length; i++) {
@@ -309,6 +320,8 @@ BOOMR.plugins.RT = {
 				rt[properties[i]] = config.RT[properties[i]];
 			}
 		}
+
+		return this;
 	},
 
 	// The start method is fired on page unload
@@ -420,8 +433,7 @@ BOOMR.plugins.RT = {
 
 		rt.timers = {};
 
-		BOOMR.addVar("u", u);
-		BOOMR.addVar("r", r);
+		BOOMR.addVar({ "u": u, "r": r });
 
 		BOOMR.removeVar('r2');
 		if(r2 !== r) {
@@ -521,10 +533,12 @@ BOOMR.plugins.BW = {
 		var cookies = BOOMR.utils.getSubCookies(bacookie);
 
 		if(cookies && cookies.ba) {
-			var ba = cookies.ba,
-			    lat = cookies.l || 0,
+			var ba = parseInt(cookies.ba, 10),
+			    bw_e = parseFloat(cookies.be, 10),
+			    lat = parseInt(cookies.l, 10) || 0,
+			    lat_e = parseFloat(cookies.le, 10) || 0,
 			    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
-			    t = cookies.t,
+			    t = parseInt(cookies.t, 10),
 			    p_sn = _bw.user_ip.replace(/\.\d+$/, '0');
 
 			// We use the subnet instead of the IP address because some people
@@ -535,16 +549,23 @@ BOOMR.plugins.BW = {
 
 			// If the subnet changes or the cookie is more than 7 days old,
 			// then we recheck the bandwidth, else we just use what's in the cookie
-			if(c_sn === p_sn && parseInt(t, 10) >= t_now - _bw.cookie_exp) {
+			if(c_sn === p_sn && t >= t_now - _bw.cookie_exp) {
 				complete = true;
+				BOOMR.addVar({
+					'bw': ba,
+					'lat': lat,
+					'bw_err': bw_e,
+					'lat_err': lat_e
+				});
 			}
 		}
 
+		return this;
 	},
 
 	run: function() {
 		if(running || complete) {
-			return true;
+			return this;
 		}
 
 		if(d.location.protocol === 'https:') {
@@ -554,7 +575,7 @@ BOOMR.plugins.BW = {
 			// gets the cookie from some other Y! page
 
 			complete = true;
-			return false;
+			return this;
 		}
 
 		running = true;
@@ -564,13 +585,15 @@ BOOMR.plugins.BW = {
 		test_start = new Date().getTime();
 		defer(iterate);
 
-		return true;
+		return this;
 	},
 
 	abort: function() {
 		aborted = true;
 		finish();	// we don't defer this call because it might be called from onbeforeunload
 				// and we want the entire chain to complete before we return
+
+		return this;
 	},
 
 	is_complete: function() { return complete; }
@@ -847,18 +870,13 @@ var finish = function()
 		lat_err:	parseFloat(latency.stderr, 10)
 	};
 
-	for(var k in o) {
-		if(o.hasOwnProperty(k)) {
-			BOOMR.addVar(k, o[k]);
-		}
-	}
-
+	BOOMR.addVar(o);
 	complete = true;
 	BOOMR.sendBeacon();
 
 	// If we have an IP address we can make the BA cookie persistent for a while because we'll
 	// recalculate it if necessary (when the user's IP changes).
-	BOOMR.utils.setCookie(_bw.cookie, { ba: Math.round(o.bw/1024), l: o.lat, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
+	BOOMR.utils.setCookie(_bw.cookie, { ba: Math.round(o.bw), be: o.bw_err, l: o.lat, le: o.lat_err, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
 
 	running = false;
 };
