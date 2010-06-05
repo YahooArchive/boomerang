@@ -459,17 +459,6 @@ BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 // the two parameters are the window and document objects
 (function(w, d) {
 
-// private object
-var _bw = {
-	base_url: 'images/',
-	timeout: 15000,
-	nruns: 5,
-	latency_runs: 10,
-	user_ip: '',
-	cookie_exp: 7*86400,
-	cookie: 'BA'
-};
-
 // We choose image sizes so that we can narrow down on a bandwidth range as soon as possible
 // the sizes chosen correspond to bandwidth values of 14-64kbps, 64-256kbps, 256-1024kbps, 1-2Mbps, 2-8Mbps, 8-30Mbps & 30Mbps+
 // Anything below 14kbps will probably timeout before the test completes
@@ -487,307 +476,322 @@ var images=[
 ];
 
 var nimages = images.length;
-var smallest_image = 0;
 
 // abuse arrays to do the latency test simply because it avoids a bunch of branches in the rest of the code
 images['l'] = { name: "image-l.gif", size: 35, timeout: 1000 };
 
-var results = [],
-    latencies = [],
-    latency = null,
-    runs_left = _bw.nruns,
-    aborted = false,
-    complete = false,
-    running = false;
+// private object
+var _bw = {
+	// properties
+	base_url: 'images/',
+	timeout: 15000,
+	nruns: 5,
+	latency_runs: 10,
+	user_ip: '',
+	cookie_exp: 7*86400,
+	cookie: 'BA',
 
-var iterate;
+	// state
+	results: [],
+	latencies: [],
+	latency: null,
+	runs_left: 0,
+	aborted: false,
+	complete: false,
+	running: false,
+	smallest_image: 0,
 
-var debug = function(msg)
-{
-	BOOMR.log(msg, "debug", "boomerang.bw");
-};
+	// methods
 
-var ncmp = function(a, b) { return (a-b); };
-
-var iqr = function(a)
-{
-	var l = a.length-1;
-	var q1 = (a[Math.floor(l*0.25)] + a[Math.ceil(l*0.25)])/2;
-	var q3 = (a[Math.floor(l*0.75)] + a[Math.ceil(l*0.75)])/2;
-
-	var fw = (q3-q1)*1.5;
-
-	var b=[];
-
-	l++;
-
-	for(var i=0; i<l && a[i] < q3+fw; i++) {
-		if(a[i] > q1-fw) {
-			b.push(a[i]);
-		}
-	}
-
-	return b;
-};
-
-var calc_latency = function()
-{
-	var	i, n,
-		sum=0, sumsq=0,
-		amean, median,
-		std_dev, std_err;
-
-	// We first do IQR filtering and use the resulting data set for all calculations
-	var lat_filtered = iqr(latencies.sort(ncmp));
-	n = lat_filtered.length;
-
-	debug(lat_filtered);
-
-	// First we get the arithmetic mean, standard deviation and standard error
-	// We ignore the first since it paid the price of DNS lookup, TCP connect and slow start
-	for(i=1; i<n; i++) {
-		sum += lat_filtered[i];
-		sumsq += lat_filtered[i] * lat_filtered[i];
-	}
-
-	n--;	// Since we started the loop with 1 and not 0
-
-	amean = Math.round(sum / n);
-
-	std_dev = Math.sqrt( sumsq/n - sum*sum/(n*n));
-
-	// See http://en.wikipedia.org/wiki/1.96 and http://en.wikipedia.org/wiki/Standard_error_%28statistics%29
-	std_err = (1.96 * std_dev/Math.sqrt(n)).toFixed(2);
-
-	std_dev = std_dev.toFixed(2);
-
-
-	n = lat_filtered.length-1;
-
-	median = Math.round((lat_filtered[Math.floor(n/2)] + lat_filtered[Math.ceil(n/2)])/2);
-
-	return { mean: amean, median: median, stddev: std_dev, stderr: std_err };
-};
-
-var calc_bw = function(latency)
-{
-	var	i, j, n=0,
-		r, bandwidths=[], bandwidths_corrected=[],
-		sum=0, sumsq=0, sum_corrected=0, sumsq_corrected=0,
-		amean, std_dev, std_err, median,
-		amean_corrected, std_dev_corrected, std_err_corrected, median_corrected;
-
-	for(i=0; i<_bw.nruns; i++) {
-		if(!results[i] || !results[i].r) {
-			continue;
-		}
-
-		r=results[i].r;
-
-		// the next loop we iterate through backwards and only consider the largest 3 images that succeeded
-		// that way we don't consider small images that downloaded fast without really saturating the network
-		var nimgs=0;
-		for(j=r.length-1; j>=0 && nimgs<3; j--) {
-			if(typeof r[j] === 'undefined') {	// if we hit an undefined image time, it means we skipped everything before this
-				break;
+	debug: function(msg)
+	{
+		BOOMR.log(msg, "debug", "boomerang.bw");
+	},
+	
+	ncmp: function(a, b) { return (a-b); },
+	
+	iqr: function(a)
+	{
+		var l = a.length-1;
+		var q1 = (a[Math.floor(l*0.25)] + a[Math.ceil(l*0.25)])/2;
+		var q3 = (a[Math.floor(l*0.75)] + a[Math.ceil(l*0.75)])/2;
+	
+		var fw = (q3-q1)*1.5;
+	
+		var b=[];
+	
+		l++;
+	
+		for(var i=0; i<l && a[i] < q3+fw; i++) {
+			if(a[i] > q1-fw) {
+				b.push(a[i]);
 			}
-			if(r[j].t === null) {
+		}
+	
+		return b;
+	},
+	
+	calc_latency: function()
+	{
+		var	i, n,
+			sum=0, sumsq=0,
+			amean, median,
+			std_dev, std_err;
+	
+		// We first do IQR filtering and use the resulting data set for all calculations
+		var lat_filtered = this.iqr(this.latencies.sort(this.ncmp));
+		n = lat_filtered.length;
+	
+		this.debug(lat_filtered);
+	
+		// First we get the arithmetic mean, standard deviation and standard error
+		// We ignore the first since it paid the price of DNS lookup, TCP connect and slow start
+		for(i=1; i<n; i++) {
+			sum += lat_filtered[i];
+			sumsq += lat_filtered[i] * lat_filtered[i];
+		}
+	
+		n--;	// Since we started the loop with 1 and not 0
+	
+		amean = Math.round(sum / n);
+	
+		std_dev = Math.sqrt( sumsq/n - sum*sum/(n*n));
+	
+		// See http://en.wikipedia.org/wiki/1.96 and http://en.wikipedia.org/wiki/Standard_error_%28statistics%29
+		std_err = (1.96 * std_dev/Math.sqrt(n)).toFixed(2);
+	
+		std_dev = std_dev.toFixed(2);
+	
+	
+		n = lat_filtered.length-1;
+	
+		median = Math.round((lat_filtered[Math.floor(n/2)] + lat_filtered[Math.ceil(n/2)])/2);
+	
+		return { mean: amean, median: median, stddev: std_dev, stderr: std_err };
+	},
+	
+	calc_bw: function()
+	{
+		var	i, j, n=0,
+			r, bandwidths=[], bandwidths_corrected=[],
+			sum=0, sumsq=0, sum_corrected=0, sumsq_corrected=0,
+			amean, std_dev, std_err, median,
+			amean_corrected, std_dev_corrected, std_err_corrected, median_corrected;
+	
+		for(i=0; i<this.nruns; i++) {
+			if(!this.results[i] || !this.results[i].r) {
 				continue;
 			}
-
-			n++;
-			nimgs++;
-
-			var bw = images[j].size*1000/r[j].t;
-			bandwidths.push(bw);
-
-			var bw_c = images[j].size*1000/(r[j].t - latency);
-			bandwidths_corrected.push(bw_c);
+	
+			r=this.results[i].r;
+	
+			// the next loop we iterate through backwards and only consider the largest 3 images that succeeded
+			// that way we don't consider small images that downloaded fast without really saturating the network
+			var nimgs=0;
+			for(j=r.length-1; j>=0 && nimgs<3; j--) {
+				if(typeof r[j] === 'undefined') {	// if we hit an undefined image time, it means we skipped everything before this
+					break;
+				}
+				if(r[j].t === null) {
+					continue;
+				}
+	
+				n++;
+				nimgs++;
+	
+				var bw = images[j].size*1000/r[j].t;
+				bandwidths.push(bw);
+	
+				var bw_c = images[j].size*1000/(r[j].t - this.latency.mean);
+				bandwidths_corrected.push(bw_c);
+			}
+		}
+	
+		this.debug('got ' + n + ' readings');
+	
+		this.debug('bandwidths: ' + bandwidths);
+		this.debug('corrected: ' + bandwidths_corrected);
+	
+		// First do IQR filtering since we use the median here and should use the stddev after filtering.
+		if(bandwidths.length > 3) {
+			bandwidths = this.iqr(bandwidths.sort(this.ncmp));
+			bandwidths_corrected = this.iqr(bandwidths_corrected.sort(this.ncmp));
+		} else {
+			bandwidths = bandwidths.sort(this.ncmp);
+			bandwidths_corrected = bandwidths_corrected.sort(this.ncmp);
+		}
+	
+		this.debug('after iqr: ' + bandwidths);
+		this.debug('corrected: ' + bandwidths_corrected);
+	
+		// Now get the mean & median.  Also get corrected values that eliminate latency
+		n = Math.max(bandwidths.length, bandwidths_corrected.length);
+		for(i=0; i<n; i++) {
+			if(i<bandwidths.length) {
+				sum += bandwidths[i];
+				sumsq += Math.pow(bandwidths[i], 2);
+			}
+			if(i<bandwidths_corrected.length) {
+				sum_corrected += bandwidths_corrected[i];
+				sumsq_corrected += Math.pow(bandwidths_corrected[i], 2);
+			}
+		}
+	
+		n = bandwidths.length;
+		amean = Math.round(sum/n);
+		std_dev = Math.sqrt(sumsq/n - Math.pow(sum/n, 2));
+		std_err = Math.round(1.96 * std_dev/Math.sqrt(n));
+		std_dev = Math.round(std_dev);
+	
+		n = bandwidths.length-1;
+		median = Math.round((bandwidths[Math.floor(n/2)] + bandwidths[Math.ceil(n/2)])/2);
+	
+		n = bandwidths_corrected.length;
+		amean_corrected = Math.round(sum_corrected/n);
+		std_dev_corrected = Math.sqrt(sumsq_corrected/n - Math.pow(sum_corrected/n, 2));
+		std_err_corrected = (1.96 * std_dev_corrected/Math.sqrt(n)).toFixed(2);
+		std_dev_corrected = std_dev_corrected.toFixed(2);
+	
+		n = bandwidths_corrected.length-1;
+		median_corrected = Math.round((bandwidths_corrected[Math.floor(n/2)] + bandwidths_corrected[Math.ceil(n/2)])/2);
+	
+		this.debug('amean: ' + amean + ', median: ' + median);
+		this.debug('corrected amean: ' + amean_corrected + ', median: ' + median_corrected);
+	
+		return {
+			mean: amean,
+			stddev: std_dev,
+			stderr: std_err,
+			median: median,
+			mean_corrected: amean_corrected,
+			stddev_corrected: std_dev_corrected,
+			stderr_corrected: std_err_corrected,
+			median_corrected: median_corrected
+		};
+	},
+	
+	defer: function(method)
+	{
+		var that=this;
+		return setTimeout(function() { method.call(that); that=null;}, 10);
+	},
+	
+	load_img: function(i, run, callback)
+	{
+		var url = this.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
+		var timer=0, tstart=0;
+		var img = new Image();
+		var that=this;
+	
+		img.onload=function() { img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, true); } that=callback=null; };
+		img.onerror=function() { img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, false); } that=callback=null; };
+	
+		// the timeout does not abort download of the current image, it just sets an end of loop flag so we don't attempt download of the next image
+		// we still need to wait until onload or onerror fire to be sure that the image download isn't using up bandwidth.
+		// This also saves us if the timeout happens on the first image.  If it didn't, we'd have nothing to measure.
+		timer=setTimeout(function() { if(callback) { callback.call(that, i, tstart, run, null); } }, images[i].timeout + Math.min(400, this.latency ? this.latency.mean : 400));
+	
+		tstart = new Date().getTime();
+		img.src=url;
+	},
+	
+	lat_loaded: function(i, tstart, run, success)
+	{
+		if(run != this.latency_runs+1) {
+			return;
+		}
+	
+		if(success !== null) {
+			var lat = new Date().getTime() - tstart;
+			this.latencies.push(lat);
+		}
+		// if we've got all the latency images at this point, we can calculate latency
+		if(this.latency_runs === 0) {
+			this.latency = this.calc_latency();
+		}
+	
+		this.defer(this.iterate);
+	},
+	
+	img_loaded: function(i, tstart, run, success)
+	{
+		if(run != this.runs_left+1) {
+			return;
+		}
+	
+		if(this.results[this.nruns-run].r[i])	{	// already called on this image
+			return;
+		}
+	
+		if(success === null) {			// if timeout, then we set the next image to the end of loop marker
+			this.results[this.nruns-run].r[i+1] = {t:null, state: null, run: run};
+			return;
+		}
+	
+		var result = { start: tstart, end: new Date().getTime(), t: null, state: success, run: run };
+		if(success) {
+			result.t = result.end-result.start;
+		}
+		this.results[this.nruns-run].r[i] = result;
+	
+		// we terminate if an image timed out because that means the connection is too slow to go to the next image
+		if(i >= nimages-1 || typeof this.results[this.nruns-run].r[i+1] !== 'undefined') {
+			this.debug(this.results[this.nruns-run]);
+			// First run is a pilot test to decide what the largest image that we can download is
+			// All following runs only try to download this image
+			if(run === this.nruns) {
+				this.smallest_image = i;
+			}
+			this.defer(this.iterate);
+		} else {
+			this.load_img(i+1, run, this.img_loaded);
+		}
+	},
+	
+	finish: function()
+	{
+		if(!this.latency) {
+			this.latency = this.calc_latency();
+		}
+		var bw = this.calc_bw();
+	
+		var o = {
+			bw:		bw.median_corrected,
+			bw_err:		parseFloat(bw.stderr_corrected, 10),
+			lat:		this.latency.mean,
+			lat_err:	parseFloat(this.latency.stderr, 10)
+		};
+	
+		BOOMR.addVar(o);
+		this.complete = true;
+		BOOMR.sendBeacon();
+	
+		// If we have an IP address we can make the BA cookie persistent for a while because we'll
+		// recalculate it if necessary (when the user's IP changes).
+		BOOMR.utils.setCookie(this.cookie, { ba: Math.round(o.bw), be: o.bw_err, l: o.lat, le: o.lat_err, ip: this.user_ip, t: Math.round(new Date().getTime()/1000) }, (this.user_ip ? this.cookie_exp : 0), "/", null);
+	
+		this.running = false;
+	},
+	
+	iterate: function()
+	{
+		if(this.aborted) {
+			return false;
+		}
+	
+		if(!this.runs_left) {
+			this.finish();
+		}
+		else if(this.latency_runs) {
+			this.load_img('l', this.latency_runs--, this.lat_loaded);
+		}
+		else {
+			this.results.push({r:[]});
+			this.load_img(this.smallest_image, this.runs_left--, this.img_loaded);
 		}
 	}
-
-	debug('got ' + n + ' readings');
-
-	debug('bandwidths: ' + bandwidths);
-	debug('corrected: ' + bandwidths_corrected);
-
-	// First do IQR filtering since we use the median here and should use the stddev after filtering.
-	if(bandwidths.length > 3) {
-		bandwidths = iqr(bandwidths.sort(ncmp));
-		bandwidths_corrected = iqr(bandwidths_corrected.sort(ncmp));
-	} else {
-		bandwidths = bandwidths.sort(ncmp);
-		bandwidths_corrected = bandwidths_corrected.sort(ncmp);
-	}
-
-	debug('after iqr: ' + bandwidths);
-	debug('corrected: ' + bandwidths_corrected);
-
-	// Now get the mean & median.  Also get corrected values that eliminate latency
-	n = Math.max(bandwidths.length, bandwidths_corrected.length);
-	for(i=0; i<n; i++) {
-		if(i<bandwidths.length) {
-			sum += bandwidths[i];
-			sumsq += Math.pow(bandwidths[i], 2);
-		}
-		if(i<bandwidths_corrected.length) {
-			sum_corrected += bandwidths_corrected[i];
-			sumsq_corrected += Math.pow(bandwidths_corrected[i], 2);
-		}
-	}
-
-	n = bandwidths.length;
-	amean = Math.round(sum/n);
-	std_dev = Math.sqrt(sumsq/n - Math.pow(sum/n, 2));
-	std_err = Math.round(1.96 * std_dev/Math.sqrt(n));
-	std_dev = Math.round(std_dev);
-
-	n = bandwidths.length-1;
-	median = Math.round((bandwidths[Math.floor(n/2)] + bandwidths[Math.ceil(n/2)])/2);
-
-	n = bandwidths_corrected.length;
-	amean_corrected = Math.round(sum_corrected/n);
-	std_dev_corrected = Math.sqrt(sumsq_corrected/n - Math.pow(sum_corrected/n, 2));
-	std_err_corrected = (1.96 * std_dev_corrected/Math.sqrt(n)).toFixed(2);
-	std_dev_corrected = std_dev_corrected.toFixed(2);
-
-	n = bandwidths_corrected.length-1;
-	median_corrected = Math.round((bandwidths_corrected[Math.floor(n/2)] + bandwidths_corrected[Math.ceil(n/2)])/2);
-
-	debug('amean: ' + amean + ', median: ' + median);
-	debug('corrected amean: ' + amean_corrected + ', median: ' + median_corrected);
-
-	return {
-		mean: amean,
-		stddev: std_dev,
-		stderr: std_err,
-		median: median,
-		mean_corrected: amean_corrected,
-		stddev_corrected: std_dev_corrected,
-		stderr_corrected: std_err_corrected,
-		median_corrected: median_corrected
-	};
 };
-
-var defer = function(method)
-{
-	return setTimeout(method, 10);
-};
-
-var load_img = function(i, run, callback)
-{
-	var url = _bw.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
-	var timer=0, tstart=0;
-	var img = new Image();
-
-	img.onload=function() { img=null; clearTimeout(timer); if(callback) { callback(i, tstart, run, true); } callback=null; };
-	img.onerror=function() { img=null; clearTimeout(timer); if(callback) { callback(i, tstart, run, false); } callback=null; };
-
-	// the timeout does not abort download of the current image, it just sets an end of loop flag so we don't attempt download of the next image
-	// we still need to wait until onload or onerror fire to be sure that the image download isn't using up bandwidth.
-	// This also saves us if the timeout happens on the first image.  If it didn't, we'd have nothing to measure.
-	timer=setTimeout(function() { if(callback) { callback(i, tstart, run, null); } }, images[i].timeout + Math.min(400, latency ? latency.mean : 400));
-
-	tstart = new Date().getTime();
-	img.src=url;
-};
-
-var lat_loaded = function(i, tstart, run, success)
-{
-	if(run != _bw.latency_runs+1) {
-		return;
-	}
-
-	if(success !== null) {
-		var lat = new Date().getTime() - tstart;
-		latencies.push(lat);
-	}
-	// if we've got all the latency images at this point, we can calculate latency
-	if(_bw.latency_runs === 0) {
-		latency = calc_latency();
-	}
-
-	defer(iterate);
-};
-
-var img_loaded = function(i, tstart, run, success)
-{
-	if(run != runs_left+1) {
-		return;
-	}
-
-	if(results[_bw.nruns-run].r[i])	{	// already called on this image
-		return;
-	}
-
-	if(success === null) {			// if timeout, then we set the next image to the end of loop marker
-		results[_bw.nruns-run].r[i+1] = {t:null, state: null, run: run};
-		return;
-	}
-
-	var result = { start: tstart, end: new Date().getTime(), t: null, state: success, run: run };
-	if(success) {
-		result.t = result.end-result.start;
-	}
-	results[_bw.nruns-run].r[i] = result;
-
-	// we terminate if an image timed out because that means the connection is too slow to go to the next image
-	if(i >= nimages-1 || typeof results[_bw.nruns-run].r[i+1] !== 'undefined') {
-		debug(results[_bw.nruns-run]);
-		// First run is a pilot test to decide what the largest image that we can download is
-		// All following runs only try to download this image
-		if(run === _bw.nruns) {
-			smallest_image = i;
-		}
-		defer(iterate);
-	} else {
-		load_img(i+1, run, img_loaded);
-	}
-};
-
-var finish = function()
-{
-	if(!latency) {
-		latency = calc_latency();
-	}
-	var bw = calc_bw(latency.mean);
-
-	var o = {
-		bw:		bw.median_corrected,
-		bw_err:		parseFloat(bw.stderr_corrected, 10),
-		lat:		latency.mean,
-		lat_err:	parseFloat(latency.stderr, 10)
-	};
-
-	BOOMR.addVar(o);
-	complete = true;
-	BOOMR.sendBeacon();
-
-	// If we have an IP address we can make the BA cookie persistent for a while because we'll
-	// recalculate it if necessary (when the user's IP changes).
-	BOOMR.utils.setCookie(_bw.cookie, { ba: Math.round(o.bw), be: o.bw_err, l: o.lat, le: o.lat_err, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
-
-	running = false;
-};
-
-iterate = function()
-{
-	if(aborted) {
-		return false;
-	}
-
-	if(!runs_left) {
-		finish();
-	}
-	else if(_bw.latency_runs) {
-		load_img('l', _bw.latency_runs--, lat_loaded);
-	}
-	else {
-		results.push({r:[]});
-		load_img(smallest_image, runs_left--, img_loaded);
-	}
-};
-
+	
 BOOMR.plugins.BW = {
 	init: function(config) {
 		var i, properties = ["base_url", "timeout", "nruns", "cookie", "cookie_exp"];
@@ -804,14 +808,14 @@ BOOMR.plugins.BW = {
 			_bw.user_ip = config.user_ip;
 		}
 
-		runs_left = _bw.nruns;
+		_bw.runs_left = _bw.nruns;
 		_bw.latency_runs = 10;
-		smallest_image = 0;
-		results = [];
-		latencies = [];
-		latency = null;
-		complete = false;
-		aborted = false;
+		_bw.smallest_image = 0;
+		_bw.results = [];
+		_bw.latencies = [];
+		_bw.latency = null;
+		_bw.complete = false;
+		_bw.aborted = false;
 
 		var bacookie = BOOMR.utils.getCookie(_bw.cookie);
 		var cookies = BOOMR.utils.getSubCookies(bacookie);
@@ -834,7 +838,7 @@ BOOMR.plugins.BW = {
 			// If the subnet changes or the cookie is more than 7 days old,
 			// then we recheck the bandwidth, else we just use what's in the cookie
 			if(c_sn === p_sn && t >= t_now - _bw.cookie_exp) {
-				complete = true;
+				_bw.complete = true;
 				BOOMR.addVar({
 					'bw': ba,
 					'lat': lat,
@@ -848,7 +852,7 @@ BOOMR.plugins.BW = {
 	},
 
 	run: function() {
-		if(running || complete) {
+		if(_bw.running || _bw.complete) {
 			return this;
 		}
 
@@ -858,28 +862,28 @@ BOOMR.plugins.BW = {
 			// insecure resources, so the best is to just bail and hope that the user
 			// gets the cookie from some other Y! page
 
-			complete = true;
+			_bw.complete = true;
 			return this;
 		}
 
-		running = true;
+		_bw.running = true;
 
 		setTimeout(BOOMR.plugins.BW.abort, _bw.timeout);
 
-		defer(iterate);
+		_bw.defer(_bw.iterate);
 
 		return this;
 	},
 
 	abort: function() {
-		aborted = true;
-		finish();	// we don't defer this call because it might be called from onbeforeunload
+		_bw.aborted = true;
+		_bw.finish();	// we don't defer this call because it might be called from onbeforeunload
 				// and we want the entire chain to complete before we return
 
 		return this;
 	},
 
-	is_complete: function() { return complete; }
+	is_complete: function() { return _bw.complete; }
 };
 
 BOOMR.subscribe("page_load", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
