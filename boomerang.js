@@ -18,7 +18,7 @@ for the full license text.
 (function(w, d) {
 
 // don't allow this code to be included twice
-if(typeof BOOMR !== "undefined" && typeof BOOMR.version !== "undefined") {
+if(typeof w.BOOMR !== "undefined" && typeof w.BOOMR.version !== "undefined") {
 	return;
 }
 
@@ -47,6 +47,15 @@ var bmr = {
 
 	vars: {}
 
+};
+
+// We fire events with a setTimeout so that they run asynchronously
+// and don't block each other.  This is most useful on a multi-threaded
+// JS engine.  Don't use this for onbeforeunload though
+var _fireEvent = function(e, i, data) {
+	setTimeout(function() {
+		bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
+	}, 10);
 };
 
 
@@ -183,7 +192,7 @@ var O = {
 			this.utils.addListener(w, "beforeunload", function() { fn.call(cb_scope, null, cb_data); });
 		}
 		else if(bmr.events.hasOwnProperty(e)) {
-			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null ])
+			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null ]);
 		}
 
 		return this;
@@ -215,14 +224,14 @@ var O = {
 
 	removeVar: function(name) {
 		if(bmr.hasOwnProperty(name)) {
-			delete bmr.name
+			delete bmr[name];
 		}
 
 		return this;
 	},
 
 	sendBeacon: function() {
-		var i, k, url, img;
+		var k, url, img;
 	
 		// At this point someone is ready to send the beacon.  We send
 		// the beacon only if all plugins have finished doing what they
@@ -251,25 +260,16 @@ var O = {
 	log: function(m,l,s) {} // create a logger - we'll try to use the YUI logger if it exists or firebug if it exists, or just fall back to nothing.
 };
 
-if(typeof YAHOO !== "undefined" && typeof YAHOO.log !== "undefined") {
-	O.log = YAHOO.log;
+if(typeof w.YAHOO !== "undefined" && typeof w.YAHOO.log !== "undefined") {
+	O.log = w.YAHOO.log;
 }
-else if(typeof Y !== "undefined" && typeof Y.log !== "undefined") {
-	O.log = Y.log;
+else if(typeof w.Y !== "undefined" && typeof w.Y.log !== "undefined") {
+	O.log = w.Y.log;
 }
 else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
 	O.log = function(m,l,s) { console.log(s + ": [" + l + "] ", m); };
 }
 
-
-// We fire events with a setTimeout so that they run asynchronously
-// and don't block each other.  This is most useful on a multi-threaded
-// JS engine.  Don't use this for onbeforeunload though
-var _fireEvent = function(e, i, data) {
-	setTimeout(function() {
-		bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
-	}, 10);
-};
 
 for(var k in O) {
 	if(O.hasOwnProperty(k)) {
@@ -298,8 +298,7 @@ var rt = {
 	timers: {},	//! Custom timers that the developer can use
 			// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 	cookie: 'BRT',	//! Name of the cookie that stores the start time and referrer
-	cookie_exp:600,	//! Cookie expiry in seconds
-
+	cookie_exp:600	//! Cookie expiry in seconds
 };
 
 BOOMR.plugins.RT = {
@@ -334,7 +333,7 @@ BOOMR.plugins.RT = {
 			// It took > 20ms to set the cookie
 			// Most likely user has cookie prompting turned on so t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
-			removeCookie(rt.cookie);
+			BOOMR.utils.removeCookie(rt.cookie);
 
 			// at some point we may want to log this info on the server side
 		}
@@ -499,104 +498,13 @@ var results = [],
     runs_left = _bw.nruns,
     aborted = false,
     complete = false,
-    running = false,
-    test_start = null;
+    running = false;
 
+var iterate;
 
-BOOMR.plugins.BW = {
-	init: function(config) {
-		var i, properties = ["base_url", "timeout", "nruns", "cookie", "cookie_exp"];
-
-		if(typeof config !== "undefined" && typeof config.BW !== "undefined") {
-			for(i=0; i<properties.length; i++) {
-				if(typeof config.BW[properties[i]] !== "undefined") {
-					_bw[properties[i]] = config.BW[properties[i]];
-				}
-			}
-		}
-
-		if(config && config.user_ip) {
-			_bw.user_ip = config.user_ip;
-		}
-
-		runs_left = _bw.nruns;
-		_bw.latency_runs = 10;
-		smallest_image = 0;
-		results = [];
-		latencies = [];
-		latency = null;
-		complete = false;
-		aborted = false;
-		test_start = null;
-
-		var bacookie = BOOMR.utils.getCookie(_bw.cookie);
-		var cookies = BOOMR.utils.getSubCookies(bacookie);
-
-		if(cookies && cookies.ba) {
-			var ba = parseInt(cookies.ba, 10),
-			    bw_e = parseFloat(cookies.be, 10),
-			    lat = parseInt(cookies.l, 10) || 0,
-			    lat_e = parseFloat(cookies.le, 10) || 0,
-			    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
-			    t = parseInt(cookies.t, 10),
-			    p_sn = _bw.user_ip.replace(/\.\d+$/, '0');
-
-			// We use the subnet instead of the IP address because some people
-			// on DHCP with the same ISP may get different IPs on the same subnet
-			// every time they log in
-
-			var t_now = Math.round((new Date().getTime())/1000);	// seconds
-
-			// If the subnet changes or the cookie is more than 7 days old,
-			// then we recheck the bandwidth, else we just use what's in the cookie
-			if(c_sn === p_sn && t >= t_now - _bw.cookie_exp) {
-				complete = true;
-				BOOMR.addVar({
-					'bw': ba,
-					'lat': lat,
-					'bw_err': bw_e,
-					'lat_err': lat_e
-				});
-			}
-		}
-
-		return this;
-	},
-
-	run: function() {
-		if(running || complete) {
-			return this;
-		}
-
-		if(d.location.protocol === 'https:') {
-			// we don't run the test for https because SSL stuff will mess up b/w calculations
-			// we could run the test itself over HTTP, but then IE will complain about
-			// insecure resources, so the best is to just bail and hope that the user
-			// gets the cookie from some other Y! page
-
-			complete = true;
-			return this;
-		}
-
-		running = true;
-
-		setTimeout(BOOMR.plugins.BW.abort, _bw.timeout);
-
-		test_start = new Date().getTime();
-		defer(iterate);
-
-		return this;
-	},
-
-	abort: function() {
-		aborted = true;
-		finish();	// we don't defer this call because it might be called from onbeforeunload
-				// and we want the entire chain to complete before we return
-
-		return this;
-	},
-
-	is_complete: function() { return complete; }
+var debug = function(msg)
+{
+	BOOMR.log(msg, "debug", "boomerang.bw");
 };
 
 var ncmp = function(a, b) { return (a-b); };
@@ -620,102 +528,6 @@ var iqr = function(a)
 	}
 
 	return b;
-};
-
-var debug = function(msg)
-{
-	BOOMR.log(msg, "debug", "boomerang.bw");
-};
-
-var defer = function(method)
-{
-	return setTimeout(method, 10);
-};
-
-var iterate = function()
-{
-	if(aborted) {
-		return false;
-	}
-
-	if(!runs_left) {
-		finish();
-	}
-	else if(_bw.latency_runs) {
-		load_img('l', _bw.latency_runs--, lat_loaded);
-	}
-	else {
-		results.push({r:[]});
-		load_img(smallest_image, runs_left--, img_loaded);
-	}
-};
-
-var load_img = function(i, run, callback)
-{
-	var url = _bw.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
-	var timer=0, tstart=0;
-	var img = new Image();
-
-	img.onload=function() { img=null; clearTimeout(timer); if(callback) callback(i, tstart, run, true); callback=null; };
-	img.onerror=function() { img=null; clearTimeout(timer); if(callback) callback(i, tstart, run, false); callback=null; };
-
-	// the timeout does not abort download of the current image, it just sets an end of loop flag so we don't attempt download of the next image
-	// we still need to wait until onload or onerror fire to be sure that the image download isn't using up bandwidth.
-	// This also saves us if the timeout happens on the first image.  If it didn't, we'd have nothing to measure.
-	timer=setTimeout(function() { if(callback) callback(i, tstart, run, null); }, images[i].timeout + Math.min(400, latency ? latency.mean : 400));
-
-	tstart = new Date().getTime();
-	img.src=url;
-};
-
-var lat_loaded = function(i, tstart, run, success)
-{
-	if(run != _bw.latency_runs+1)
-		return;
-
-	if(success !== null) {
-		var lat = new Date().getTime() - tstart;
-		latencies.push(lat);
-	}
-	// if we've got all the latency images at this point, we can calculate latency
-	if(_bw.latency_runs === 0) {
-		latency = calc_latency();
-	}
-
-	defer(iterate);
-};
-
-var img_loaded = function(i, tstart, run, success)
-{
-	if(run != runs_left+1)
-		return;
-
-	if(results[_bw.nruns-run].r[i])		// already called on this image
-		return;
-
-	if(success === null) {			// if timeout, then we set the next image to the end of loop marker
-		results[_bw.nruns-run].r[i+1] = {t:null, state: null, run: run};
-		return;
-	}
-
-	var result = { start: tstart, end: new Date().getTime(), t: null, state: success, run: run };
-	if(success) {
-		result.t = result.end-result.start;
-	}
-	results[_bw.nruns-run].r[i] = result;
-
-	// we terminate if an image timed out because that means the connection is too slow to go to the next image
-	if(i >= nimages-1 || typeof results[_bw.nruns-run].r[i+1] !== 'undefined') {
-		debug(results[_bw.nruns-run]);
-		// First run is a pilot test to decide what the largest image that we can download is
-		// All following runs only try to download this image
-		if(run === _bw.nruns) {
-			smallest_image = i;
-		}
-		defer(iterate);
-	} else {
-		load_img(i+1, run, img_loaded);
-	}
 };
 
 var calc_latency = function()
@@ -776,10 +588,12 @@ var calc_bw = function(latency)
 		// that way we don't consider small images that downloaded fast without really saturating the network
 		var nimgs=0;
 		for(j=r.length-1; j>=0 && nimgs<3; j--) {
-			if(typeof r[j] === 'undefined')	// if we hit an undefined image time, it means we skipped everything before this
+			if(typeof r[j] === 'undefined') {	// if we hit an undefined image time, it means we skipped everything before this
 				break;
-			if(r[j].t === null)
+			}
+			if(r[j].t === null) {
 				continue;
+			}
 
 			n++;
 			nimgs++;
@@ -855,13 +669,88 @@ var calc_bw = function(latency)
 	};
 };
 
+var defer = function(method)
+{
+	return setTimeout(method, 10);
+};
+
+var load_img = function(i, run, callback)
+{
+	var url = _bw.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
+	var timer=0, tstart=0;
+	var img = new Image();
+
+	img.onload=function() { img=null; clearTimeout(timer); if(callback) { callback(i, tstart, run, true); } callback=null; };
+	img.onerror=function() { img=null; clearTimeout(timer); if(callback) { callback(i, tstart, run, false); } callback=null; };
+
+	// the timeout does not abort download of the current image, it just sets an end of loop flag so we don't attempt download of the next image
+	// we still need to wait until onload or onerror fire to be sure that the image download isn't using up bandwidth.
+	// This also saves us if the timeout happens on the first image.  If it didn't, we'd have nothing to measure.
+	timer=setTimeout(function() { if(callback) { callback(i, tstart, run, null); } }, images[i].timeout + Math.min(400, latency ? latency.mean : 400));
+
+	tstart = new Date().getTime();
+	img.src=url;
+};
+
+var lat_loaded = function(i, tstart, run, success)
+{
+	if(run != _bw.latency_runs+1) {
+		return;
+	}
+
+	if(success !== null) {
+		var lat = new Date().getTime() - tstart;
+		latencies.push(lat);
+	}
+	// if we've got all the latency images at this point, we can calculate latency
+	if(_bw.latency_runs === 0) {
+		latency = calc_latency();
+	}
+
+	defer(iterate);
+};
+
+var img_loaded = function(i, tstart, run, success)
+{
+	if(run != runs_left+1) {
+		return;
+	}
+
+	if(results[_bw.nruns-run].r[i])	{	// already called on this image
+		return;
+	}
+
+	if(success === null) {			// if timeout, then we set the next image to the end of loop marker
+		results[_bw.nruns-run].r[i+1] = {t:null, state: null, run: run};
+		return;
+	}
+
+	var result = { start: tstart, end: new Date().getTime(), t: null, state: success, run: run };
+	if(success) {
+		result.t = result.end-result.start;
+	}
+	results[_bw.nruns-run].r[i] = result;
+
+	// we terminate if an image timed out because that means the connection is too slow to go to the next image
+	if(i >= nimages-1 || typeof results[_bw.nruns-run].r[i+1] !== 'undefined') {
+		debug(results[_bw.nruns-run]);
+		// First run is a pilot test to decide what the largest image that we can download is
+		// All following runs only try to download this image
+		if(run === _bw.nruns) {
+			smallest_image = i;
+		}
+		defer(iterate);
+	} else {
+		load_img(i+1, run, img_loaded);
+	}
+};
+
 var finish = function()
 {
-	if(!latency)
+	if(!latency) {
 		latency = calc_latency();
+	}
 	var bw = calc_bw(latency.mean);
-
-	var test_time = new Date().getTime() - test_start;
 
 	var o = {
 		bw:		bw.median_corrected,
@@ -879,6 +768,118 @@ var finish = function()
 	BOOMR.utils.setCookie(_bw.cookie, { ba: Math.round(o.bw), be: o.bw_err, l: o.lat, le: o.lat_err, ip: _bw.user_ip, t: Math.round(new Date().getTime()/1000) }, (_bw.user_ip ? _bw.cookie_exp : 0), "/", null);
 
 	running = false;
+};
+
+iterate = function()
+{
+	if(aborted) {
+		return false;
+	}
+
+	if(!runs_left) {
+		finish();
+	}
+	else if(_bw.latency_runs) {
+		load_img('l', _bw.latency_runs--, lat_loaded);
+	}
+	else {
+		results.push({r:[]});
+		load_img(smallest_image, runs_left--, img_loaded);
+	}
+};
+
+BOOMR.plugins.BW = {
+	init: function(config) {
+		var i, properties = ["base_url", "timeout", "nruns", "cookie", "cookie_exp"];
+
+		if(typeof config !== "undefined" && typeof config.BW !== "undefined") {
+			for(i=0; i<properties.length; i++) {
+				if(typeof config.BW[properties[i]] !== "undefined") {
+					_bw[properties[i]] = config.BW[properties[i]];
+				}
+			}
+		}
+
+		if(config && config.user_ip) {
+			_bw.user_ip = config.user_ip;
+		}
+
+		runs_left = _bw.nruns;
+		_bw.latency_runs = 10;
+		smallest_image = 0;
+		results = [];
+		latencies = [];
+		latency = null;
+		complete = false;
+		aborted = false;
+
+		var bacookie = BOOMR.utils.getCookie(_bw.cookie);
+		var cookies = BOOMR.utils.getSubCookies(bacookie);
+
+		if(cookies && cookies.ba) {
+			var ba = parseInt(cookies.ba, 10),
+			    bw_e = parseFloat(cookies.be, 10),
+			    lat = parseInt(cookies.l, 10) || 0,
+			    lat_e = parseFloat(cookies.le, 10) || 0,
+			    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
+			    t = parseInt(cookies.t, 10),
+			    p_sn = _bw.user_ip.replace(/\.\d+$/, '0');
+
+			// We use the subnet instead of the IP address because some people
+			// on DHCP with the same ISP may get different IPs on the same subnet
+			// every time they log in
+
+			var t_now = Math.round((new Date().getTime())/1000);	// seconds
+
+			// If the subnet changes or the cookie is more than 7 days old,
+			// then we recheck the bandwidth, else we just use what's in the cookie
+			if(c_sn === p_sn && t >= t_now - _bw.cookie_exp) {
+				complete = true;
+				BOOMR.addVar({
+					'bw': ba,
+					'lat': lat,
+					'bw_err': bw_e,
+					'lat_err': lat_e
+				});
+			}
+		}
+
+		return this;
+	},
+
+	run: function() {
+		if(running || complete) {
+			return this;
+		}
+
+		if(d.location.protocol === 'https:') {
+			// we don't run the test for https because SSL stuff will mess up b/w calculations
+			// we could run the test itself over HTTP, but then IE will complain about
+			// insecure resources, so the best is to just bail and hope that the user
+			// gets the cookie from some other Y! page
+
+			complete = true;
+			return this;
+		}
+
+		running = true;
+
+		setTimeout(BOOMR.plugins.BW.abort, _bw.timeout);
+
+		defer(iterate);
+
+		return this;
+	},
+
+	abort: function() {
+		aborted = true;
+		finish();	// we don't defer this call because it might be called from onbeforeunload
+				// and we want the entire chain to complete before we return
+
+		return this;
+	},
+
+	is_complete: function() { return complete; }
 };
 
 BOOMR.subscribe("page_load", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
