@@ -45,19 +45,18 @@ var bmr = {
 		"before_beacon": []
 	},
 
-	vars: {}
+	vars: {},
 
+
+	// We fire events with a setTimeout so that they run asynchronously
+	// and don't block each other.  This is most useful on a multi-threaded
+	// JS engine.  Don't use this for onbeforeunload though
+	fireEvent: function(e, i, data) {
+		setTimeout(function() {
+			bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
+		}, 10);
+	}
 };
-
-// We fire events with a setTimeout so that they run asynchronously
-// and don't block each other.  This is most useful on a multi-threaded
-// JS engine.  Don't use this for onbeforeunload though
-var _fireEvent = function(e, i, data) {
-	setTimeout(function() {
-		bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
-	}, 10);
-};
-
 
 // O is the boomerang object.  We merge it into BOOMR later.  Do it this way so that plugins
 // may be defined before including the script.
@@ -80,27 +79,29 @@ var O = {
 		},
 		
 		setCookie: function(name, subcookies, max_age, path, domain, sec) {
+			var value = "",
+			    k, nameval, c,
+			    exp = "";
+
 			if(!name) {
 				return;
 			}
 		
-			var value = "";
-			for(var k in subcookies) {
+			for(k in subcookies) {
 				if(subcookies.hasOwnProperty(k)) {
 					value += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(subcookies[k]);
 				}
 			}
 			value = value.replace(/^&/, '');
 		
-			var exp = "";
 			if(max_age) {
 				exp = new Date();
 				exp.setTime(exp.getTime() + max_age*1000);
 				exp = exp.toGMTString();
 			}
 		
-			var nameval = name + '=' + value;
-			var c = nameval +
+			nameval = name + '=' + value;
+			c = nameval +
 				((max_age) ? "; expires=" + exp : "" ) +
 				((path) ? "; path=" + path : "") +
 				((typeof domain !== "undefined") ? "; domain=" + (domain === null ? bmr.site_domain : domain) : "") +
@@ -115,19 +116,22 @@ var O = {
 		},
 		
 		getSubCookies: function(cookie) {
+			var cookies_a,
+			    i, l, kv,
+			    cookies={};
+
 			if(!cookie) {
 				return null;
 			}
 		
-			var cookies_a = cookie.split('&');
+			cookies_a = cookie.split('&');
 		
 			if(cookies_a.length === 0) {
 				return null;
 			}
 		
-			var cookies = {};
-			for(var i=0, l=cookies_a.length; i<l; i++) {
-				var kv = cookies_a[i].split('=');
+			for(i=0, l=cookies_a.length; i<l; i++) {
+				kv = cookies_a[i].split('=');
 				kv.push("");	// just in case there's no value
 				cookies[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
 			}
@@ -150,7 +154,9 @@ var O = {
 	},
 
 	init: function(config) {
-		var i, k, properties = ["beacon_url", "site_domain", "user_ip"];
+		var i, k,
+		    properties = ["beacon_url", "site_domain", "user_ip"],
+		    that=this;
 	
 		if(!config) {
 			config = {};
@@ -172,7 +178,6 @@ var O = {
 			}
 		}
 	
-		var that=this;
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
 			this.utils.addListener(w, "load", function() { that.fireEvent("page_load"); that=null; });
@@ -202,7 +207,7 @@ var O = {
 		var i;
 		if(bmr.events.hasOwnProperty(e)) {
 			for(i=0; i<bmr.events[e].length; i++) {
-				_fireEvent(e, i, data);
+				bmr.fireEvent(e, i, data);
 			}
 		}
 	},
@@ -212,8 +217,8 @@ var O = {
 			bmr.vars[name] = value;
 		}
 		else if(typeof name === "object") {
-			var o = name;
-			for(var k in o) {
+			var o = name, k;
+			for(k in o) {
 				if(o.hasOwnProperty(k)) {
 					bmr.vars[k] = o[k];
 				}
@@ -370,7 +375,11 @@ BOOMR.plugins.RT = {
 	// Called when the page has reached a "loaded" state.  This may be when the onload event fires,
 	// or it could be at some other moment during/after page load when the page is usable by the user
 	done: function() {
-		var t_start, u, r, r2, t_other=[];
+		var t_start, u, r, r2, t_other=[],
+		    subcookies,
+		    basic_timers = { t_done: 1, t_rtpage: 1, t_resp: 1 },
+		    ntimers = 0, timer;
+
 
 		if(rt.complete) {
 			return this;
@@ -385,7 +394,7 @@ BOOMR.plugins.RT = {
 		u = d.location.href.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
-		var subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(rt.cookie));
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(rt.cookie));
 		BOOMR.utils.removeCookie(rt.cookie);
 
 		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
@@ -393,10 +402,7 @@ BOOMR.plugins.RT = {
 			r = subcookies.r;
 		}
 
-		var basic_timers = { t_done: 1, t_rtpage: 1, t_resp: 1 };
-
-		var ntimers = 0;
-		for(var timer in rt.timers) {
+		for(timer in rt.timers) {
 			if(!rt.timers.hasOwnProperty(timer)) {
 				continue;
 			}
@@ -481,7 +487,7 @@ var nimages = images.length;
 images['l'] = { name: "image-l.gif", size: 35, timeout: 1000 };
 
 // private object
-var _bw = {
+var o_bw = {
 	// properties
 	base_url: 'images/',
 	timeout: 15000,
@@ -512,17 +518,16 @@ var _bw = {
 	
 	iqr: function(a)
 	{
-		var l = a.length-1;
-		var q1 = (a[Math.floor(l*0.25)] + a[Math.ceil(l*0.25)])/2;
-		var q3 = (a[Math.floor(l*0.75)] + a[Math.ceil(l*0.75)])/2;
+		var l = a.length-1, q1, q3, fw, b = [], i;
+
+		q1 = (a[Math.floor(l*0.25)] + a[Math.ceil(l*0.25)])/2;
+		q3 = (a[Math.floor(l*0.75)] + a[Math.ceil(l*0.75)])/2;
 	
-		var fw = (q3-q1)*1.5;
-	
-		var b=[];
+		fw = (q3-q1)*1.5;
 	
 		l++;
 	
-		for(var i=0; i<l && a[i] < q3+fw; i++) {
+		for(i=0; i<l && a[i] < q3+fw; i++) {
 			if(a[i] > q1-fw) {
 				b.push(a[i]);
 			}
@@ -536,10 +541,11 @@ var _bw = {
 		var	i, n,
 			sum=0, sumsq=0,
 			amean, median,
-			std_dev, std_err;
+			std_dev, std_err,
+			lat_filtered;
 	
 		// We first do IQR filtering and use the resulting data set for all calculations
-		var lat_filtered = this.iqr(this.latencies.sort(this.ncmp));
+		lat_filtered = this.iqr(this.latencies.sort(this.ncmp));
 		n = lat_filtered.length;
 	
 		this.debug(lat_filtered);
@@ -576,7 +582,8 @@ var _bw = {
 			r, bandwidths=[], bandwidths_corrected=[],
 			sum=0, sumsq=0, sum_corrected=0, sumsq_corrected=0,
 			amean, std_dev, std_err, median,
-			amean_corrected, std_dev_corrected, std_err_corrected, median_corrected;
+			amean_corrected, std_dev_corrected, std_err_corrected, median_corrected,
+			nimgs, bw, bw_c;
 	
 		for(i=0; i<this.nruns; i++) {
 			if(!this.results[i] || !this.results[i].r) {
@@ -587,7 +594,7 @@ var _bw = {
 	
 			// the next loop we iterate through backwards and only consider the largest 3 images that succeeded
 			// that way we don't consider small images that downloaded fast without really saturating the network
-			var nimgs=0;
+			nimgs=0;
 			for(j=r.length-1; j>=0 && nimgs<3; j--) {
 				if(typeof r[j] === 'undefined') {	// if we hit an undefined image time, it means we skipped everything before this
 					break;
@@ -599,10 +606,10 @@ var _bw = {
 				n++;
 				nimgs++;
 	
-				var bw = images[j].size*1000/r[j].t;
+				bw = images[j].size*1000/r[j].t;
 				bandwidths.push(bw);
 	
-				var bw_c = images[j].size*1000/(r[j].t - this.latency.mean);
+				bw_c = images[j].size*1000/(r[j].t - this.latency.mean);
 				bandwidths_corrected.push(bw_c);
 			}
 		}
@@ -678,10 +685,10 @@ var _bw = {
 	
 	load_img: function(i, run, callback)
 	{
-		var url = this.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random();
-		var timer=0, tstart=0;
-		var img = new Image();
-		var that=this;
+		var	url = this.base_url + images[i].name + '?t=' + (new Date().getTime()) + Math.random(),
+			timer=0, tstart=0,
+			img = new Image(),
+			that=this;
 	
 		img.onload=function() { img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, true); } that=callback=null; };
 		img.onerror=function() { img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, false); } that=callback=null; };
@@ -697,7 +704,7 @@ var _bw = {
 	
 	lat_loaded: function(i, tstart, run, success)
 	{
-		if(run != this.latency_runs+1) {
+		if(run !== this.latency_runs+1) {
 			return;
 		}
 	
@@ -715,7 +722,7 @@ var _bw = {
 	
 	img_loaded: function(i, tstart, run, success)
 	{
-		if(run != this.runs_left+1) {
+		if(run !== this.runs_left+1) {
 			return;
 		}
 	
@@ -753,14 +760,13 @@ var _bw = {
 		if(!this.latency) {
 			this.latency = this.calc_latency();
 		}
-		var bw = this.calc_bw();
-	
-		var o = {
-			bw:		bw.median_corrected,
-			bw_err:		parseFloat(bw.stderr_corrected, 10),
-			lat:		this.latency.mean,
-			lat_err:	parseFloat(this.latency.stderr, 10)
-		};
+		var	bw = this.calc_bw(),
+			o = {
+				bw:		bw.median_corrected,
+				bw_err:		parseFloat(bw.stderr_corrected, 10),
+				lat:		this.latency.mean,
+				lat_err:	parseFloat(this.latency.stderr, 10)
+			};
 	
 		BOOMR.addVar(o);
 		this.complete = true;
@@ -768,7 +774,9 @@ var _bw = {
 	
 		// If we have an IP address we can make the BA cookie persistent for a while because we'll
 		// recalculate it if necessary (when the user's IP changes).
-		BOOMR.utils.setCookie(this.cookie, { ba: Math.round(o.bw), be: o.bw_err, l: o.lat, le: o.lat_err, ip: this.user_ip, t: Math.round(new Date().getTime()/1000) }, (this.user_ip ? this.cookie_exp : 0), "/", null);
+		if(!isNaN(o.bw)) {
+			BOOMR.utils.setCookie(this.cookie, { ba: Math.round(o.bw), be: o.bw_err, l: o.lat, le: o.lat_err, ip: this.user_ip, t: Math.round(new Date().getTime()/1000) }, (this.user_ip ? this.cookie_exp : 0), "/", null);
+		}
 	
 		this.running = false;
 	},
@@ -789,70 +797,76 @@ var _bw = {
 			this.results.push({r:[]});
 			this.load_img(this.smallest_image, this.runs_left--, this.img_loaded);
 		}
+	},
+
+	setVarsFromCookie: function(cookies) {
+		var ba = parseInt(cookies.ba, 10),
+		    bw_e = parseFloat(cookies.be, 10),
+		    lat = parseInt(cookies.l, 10) || 0,
+		    lat_e = parseFloat(cookies.le, 10) || 0,
+		    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
+		    t = parseInt(cookies.t, 10),
+		    p_sn = o_bw.user_ip.replace(/\.\d+$/, '0'),
+
+		// We use the subnet instead of the IP address because some people
+		// on DHCP with the same ISP may get different IPs on the same subnet
+		// every time they log in
+
+		    t_now = Math.round((new Date().getTime())/1000);	// seconds
+
+		// If the subnet changes or the cookie is more than 7 days old,
+		// then we recheck the bandwidth, else we just use what's in the cookie
+		if(c_sn === p_sn && t >= t_now - o_bw.cookie_exp) {
+			o_bw.complete = true;
+			BOOMR.addVar({
+				'bw': ba,
+				'lat': lat,
+				'bw_err': bw_e,
+				'lat_err': lat_e
+			});
+		}
 	}
+
 };
 	
 BOOMR.plugins.BW = {
 	init: function(config) {
-		var i, properties = ["base_url", "timeout", "nruns", "cookie", "cookie_exp"];
+		var i, properties = ["base_url", "timeout", "nruns", "cookie", "cookie_exp"],
+		    bacookie, cookies;
 
 		if(typeof config !== "undefined" && typeof config.BW !== "undefined") {
 			for(i=0; i<properties.length; i++) {
 				if(typeof config.BW[properties[i]] !== "undefined") {
-					_bw[properties[i]] = config.BW[properties[i]];
+					o_bw[properties[i]] = config.BW[properties[i]];
 				}
 			}
 		}
 
 		if(config && config.user_ip) {
-			_bw.user_ip = config.user_ip;
+			o_bw.user_ip = config.user_ip;
 		}
 
-		_bw.runs_left = _bw.nruns;
-		_bw.latency_runs = 10;
-		_bw.smallest_image = 0;
-		_bw.results = [];
-		_bw.latencies = [];
-		_bw.latency = null;
-		_bw.complete = false;
-		_bw.aborted = false;
+		o_bw.runs_left = o_bw.nruns;
+		o_bw.latency_runs = 10;
+		o_bw.smallest_image = 0;
+		o_bw.results = [];
+		o_bw.latencies = [];
+		o_bw.latency = null;
+		o_bw.complete = false;
+		o_bw.aborted = false;
 
-		var bacookie = BOOMR.utils.getCookie(_bw.cookie);
-		var cookies = BOOMR.utils.getSubCookies(bacookie);
+		bacookie = BOOMR.utils.getCookie(o_bw.cookie);
+		cookies = BOOMR.utils.getSubCookies(bacookie);
 
 		if(cookies && cookies.ba) {
-			var ba = parseInt(cookies.ba, 10),
-			    bw_e = parseFloat(cookies.be, 10),
-			    lat = parseInt(cookies.l, 10) || 0,
-			    lat_e = parseFloat(cookies.le, 10) || 0,
-			    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
-			    t = parseInt(cookies.t, 10),
-			    p_sn = _bw.user_ip.replace(/\.\d+$/, '0');
-
-			// We use the subnet instead of the IP address because some people
-			// on DHCP with the same ISP may get different IPs on the same subnet
-			// every time they log in
-
-			var t_now = Math.round((new Date().getTime())/1000);	// seconds
-
-			// If the subnet changes or the cookie is more than 7 days old,
-			// then we recheck the bandwidth, else we just use what's in the cookie
-			if(c_sn === p_sn && t >= t_now - _bw.cookie_exp) {
-				_bw.complete = true;
-				BOOMR.addVar({
-					'bw': ba,
-					'lat': lat,
-					'bw_err': bw_e,
-					'lat_err': lat_e
-				});
-			}
+			o_bw.setVarsFromCookie(cookies);
 		}
 
 		return this;
 	},
 
 	run: function() {
-		if(_bw.running || _bw.complete) {
+		if(o_bw.running || o_bw.complete) {
 			return this;
 		}
 
@@ -862,28 +876,28 @@ BOOMR.plugins.BW = {
 			// insecure resources, so the best is to just bail and hope that the user
 			// gets the cookie from some other Y! page
 
-			_bw.complete = true;
+			o_bw.complete = true;
 			return this;
 		}
 
-		_bw.running = true;
+		o_bw.running = true;
 
-		setTimeout(BOOMR.plugins.BW.abort, _bw.timeout);
+		setTimeout(BOOMR.plugins.BW.abort, o_bw.timeout);
 
-		_bw.defer(_bw.iterate);
+		o_bw.defer(o_bw.iterate);
 
 		return this;
 	},
 
 	abort: function() {
-		_bw.aborted = true;
-		_bw.finish();	// we don't defer this call because it might be called from onbeforeunload
+		o_bw.aborted = true;
+		o_bw.finish();	// we don't defer this call because it might be called from onbeforeunload
 				// and we want the entire chain to complete before we return
 
 		return this;
 	},
 
-	is_complete: function() { return _bw.complete; }
+	is_complete: function() { return o_bw.complete; }
 };
 
 BOOMR.subscribe("page_load", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
