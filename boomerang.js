@@ -481,10 +481,11 @@ var images=[
 	{ name: "image-6.png", size: 9084559, timeout: 1200 }
 ];
 
-var nimages = images.length;
+images.end = images.length;
+images.start = 0;
 
 // abuse arrays to do the latency test simply because it avoids a bunch of branches in the rest of the code
-images['l'] = { name: "image-l.gif", size: 35, timeout: 1000 };
+images.l = { name: "image-l.gif", size: 35, timeout: 1000 };
 
 // private object
 var o_bw = {
@@ -505,7 +506,6 @@ var o_bw = {
 	aborted: false,
 	complete: false,
 	running: false,
-	smallest_image: 0,
 
 	// methods
 
@@ -742,12 +742,12 @@ var o_bw = {
 		this.results[this.nruns-run].r[i] = result;
 	
 		// we terminate if an image timed out because that means the connection is too slow to go to the next image
-		if(i >= nimages-1 || typeof this.results[this.nruns-run].r[i+1] !== 'undefined') {
+		if(i >= images.n-1 || typeof this.results[this.nruns-run].r[i+1] !== 'undefined') {
 			this.debug(this.results[this.nruns-run]);
 			// First run is a pilot test to decide what the largest image that we can download is
 			// All following runs only try to download this image
 			if(run === this.nruns) {
-				this.smallest_image = i;
+				images.start = i;
 			}
 			this.defer(this.iterate);
 		} else {
@@ -795,7 +795,7 @@ var o_bw = {
 		}
 		else {
 			this.results.push({r:[]});
-			this.load_img(this.smallest_image, this.runs_left--, this.img_loaded);
+			this.load_img(images.start, this.runs_left--, this.img_loaded);
 		}
 	},
 
@@ -846,9 +846,9 @@ BOOMR.plugins.BW = {
 			o_bw.user_ip = config.user_ip;
 		}
 
+		images.start = 0;
 		o_bw.runs_left = o_bw.nruns;
 		o_bw.latency_runs = 10;
-		o_bw.smallest_image = 0;
 		o_bw.results = [];
 		o_bw.latencies = [];
 		o_bw.latency = null;
