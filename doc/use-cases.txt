@@ -1,0 +1,19 @@
+These are some of the ways that one can use boomerang.  This will help us make sure the library
+actually supports all possible use cases.
+
+1. Measure a page's perceived performance.
+
+We need the ability to measure the time the user thinks it took to load a page.  This is typically
+the time between the user clicking a link (or entering a URL into the browser) and the page becoming
+usable.
+
+While it's easy enough to note the time when a user clicked a link if the link was on a page you
+control, it's not easy to tell the exact moment when a user enters a URL into a browser and hits
+enter.  We'll therefore only concentrate on link clicks on pages that we control.
+
+One unknown is the time when a page becomes usable.  For most pages, this is when the onload event
+fires, however, there may be pages on which the onload event fires before the page is actually
+usable (eg, a lot of content loaded via javascript), or when the page becomes usable before the
+onload event fires (eg, hidden resources downloaded via javascript at the bottom of the page).
+In both these cases, the developer of the page has a better idea of when their page has become
+usable, so they should have the ability to tell the library when to fire this event.
