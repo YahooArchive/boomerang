@@ -29,5 +29,37 @@ Breaking this into four separate use cases:
 2. Measure perceived performance of content loaded dynamically
 
 Many websites might load contentdynamically.  For example, images for a slide show or content for
-tabs may be loaded via javascript.  In these cases the browser may not fire en event for when
-the download was initiated or completed and our library may need to expose events for them.
+tabs may be loaded via javascript.  A stock ticker may periodically refresh itself from a back end
+web service using XHR, a webmail service may check with the server for new messages or download the
+selected message using javascript, etc.
+
+In all these cases the browser may not fire an event for when the download was initiated or completed
+and the library will need to expose methods/events that the web developer can invoke when needed.
+
+
+3. Measure a user's bandwidth along with page load time
+
+Since users browse the web using different types of internet connections, it's not always possible
+to aggregate page load times for multiple users to get an indication of a number that's
+statistically representative for all users.  Knowing the user's bandwidth, however, allows us
+to aggregate data from similar users and use these numbers as representative for users with that
+type of network connection.
+
+
+4. Measure more than just page load time.
+
+Many sites may be composed of separate components loaded from different back end services.  For
+example, on my home page, I have widgets from dopplr, upcoming, twitter, delicious and flickr.
+Now while it's important to have the overall page load time, which is what users perceive as my
+page's performance, it can also be useful and instructive to measure the load time of each component
+separately, but as part of the measurement for the entire page.  This allows us to then cut up
+a page's load time into the load time for each of its components, and carry out statistical
+analysis of each component in the context of its containing page.
+
+To do this, the library needs to expose additional timers that the page developer can set.  These
+timers should be beaconed back along with the overall page load time.
+
+
+5. Measure DNS performance
+
+
