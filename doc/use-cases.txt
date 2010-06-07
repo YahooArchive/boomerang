@@ -17,3 +17,17 @@ usable (eg, a lot of content loaded via javascript), or when the page becomes us
 onload event fires (eg, hidden resources downloaded via javascript at the bottom of the page).
 In both these cases, the developer of the page has a better idea of when their page has become
 usable, so they should have the ability to tell the library when to fire this event.
+
+Breaking this into four separate use cases:
+
+1a. User clicks a link on a page we control and page is usable when onload fires
+1b. User clicks a link on a page we control and page is usable at some developer determined point
+1c. User types in URL/clicks a bookmark or link on a page we don't control and our page is usable when onload fires
+1d. User types in URL/clicks a bookmark or link on a page we don't control and our page is usable at some developer determined point
+
+
+2. Measure perceived performance of content loaded dynamically
+
+Many websites might load contentdynamically.  For example, images for a slide show or content for
+tabs may be loaded via javascript.  In these cases the browser may not fire en event for when
+the download was initiated or completed and our library may need to expose events for them.
