@@ -21,9 +21,16 @@ usable, so they should have the ability to tell the library when to fire this ev
 Breaking this into four separate use cases:
 
 1a. User clicks a link on a page we control and page is usable when onload fires
+    See HOWTO #1a.
+
 1b. User clicks a link on a page we control and page is usable at some developer determined point
+    See HOWTO #1b.
+
 1c. User types in URL/clicks a bookmark or link on a page we don't control and our page is usable when onload fires
+    See TODO #2.
+
 1d. User types in URL/clicks a bookmark or link on a page we don't control and our page is usable at some developer determined point
+    See TODO #2.
 
 
 2. Measure perceived performance of content loaded dynamically
@@ -36,6 +43,8 @@ selected message using javascript, etc.
 In all these cases the browser may not fire an event for when the download was initiated or completed
 and the library will need to expose methods/events that the web developer can invoke when needed.
 
+See HOWTO #2.
+
 
 3. Measure a user's bandwidth along with page load time
 
@@ -44,6 +53,8 @@ to aggregate page load times for multiple users to get an indication of a number
 statistically representative for all users.  Knowing the user's bandwidth, however, allows us
 to aggregate data from similar users and use these numbers as representative for users with that
 type of network connection.
+
+See HOWTO #3.
 
 
 4. Measure more than just page load time.
@@ -59,6 +70,8 @@ analysis of each component in the context of its containing page.
 To do this, the library needs to expose additional timers that the page developer can set.  These
 timers should be beaconed back along with the overall page load time.
 
+See HOWTO #4.
+
 
 5. Measure HTTP latency
 
@@ -70,6 +83,8 @@ headers that don't contribute to actual page content.
 Measuring a user's HTTP latency provides a good indication of the impact that parallelising 
 component downloads can have on overall page load time.
 
+See HOWTO #3.
+
 
 6. Measure DNS latency
 
@@ -79,3 +94,30 @@ servers are configured.  Measuring this latency gives us an indication of how ma
 can safely lookup on a single page.  There's a trade-off between the number of DNS lookups we
 can make and the parallelisability that multiple domains bring us.  HTTP latency and DNS latency
 together can tell us where this point lies for our users.
+
+See TODO #3
+
+
+7. Measure a random sample of users instead of all users
+
+For high traffic sites, it's useful to only measure a random sample of requests rather than
+every request that comes in.  We could either do the random sampling on the server side
+and only serve the javascript on a subset of requests, or we could simplify the server,
+and sample on the client side.
+
+Client side sampling won't be as accurate as server side sampling since we don't share state
+across clients, however we can still get a decently random sample.
+
+See TODO #1.
+
+
+8. Request/page tagging
+
+When doing performance analysis, it is often useful to run an A/B test that compares the performance
+of two or more different page designs.  Since these pages might all have the same URL, it becomes
+necessary to add some additional information to the data beaconed back that identifies the page from
+a series of tests.
+
+The library should provide a method for the page developer to tag each page with additional information.
+
+See HOWTO #8.
