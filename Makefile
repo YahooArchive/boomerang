@@ -9,7 +9,8 @@ all: boomerang-$(VERSION).$(DATE).js
 
 boomerang-$(VERSION).$(DATE).js: boomerang.js $(SOURCES)
 	@echo "Making $@ ..."
-	@sed -e '/---include-plugins-here---/{d;q;}' boomerang.js > $@ && \
+	@echo "   using plugins: $(PLUGINS)"
+	@sed -e '/---include-plugins-here---/q' boomerang.js > $@ && \
 	cat $(SOURCES) >> $@ && \
 	sed -ne '/---include-plugins-here---/,$${/--include-plugins-here/n;p;}' boomerang.js >> $@ && \
 	echo "done"
