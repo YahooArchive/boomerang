@@ -60,6 +60,22 @@ To do this, the library needs to expose additional timers that the page develope
 timers should be beaconed back along with the overall page load time.
 
 
-5. Measure DNS performance
+5. Measure HTTP latency
+
+Network Latency is one of the largest contributors to page download time.  HTTP latency is typically
+higher than simple ping time because it requires a few to-and-fro packets to estabilish a TCP
+connection and make a HTTP request.  There's also overhead involved in HTTP request and response
+headers that don't contribute to actual page content.
+
+Measuring a user's HTTP latency provides a good indication of the impact that parallelising 
+component downloads can have on overall page load time.
 
 
+6. Measure DNS latency
+
+DNS latency tells us how long it takes to make a DNS request.  This may be affected by various
+factors including your web server's DNS configuration and TTL, and how an end user's ISP's DNS
+servers are configured.  Measuring this latency gives us an indication of how many domains we
+can safely lookup on a single page.  There's a trade-off between the number of DNS lookups we
+can make and the parallelisability that multiple domains bring us.  HTTP latency and DNS latency
+together can tell us where this point lies for our users.
