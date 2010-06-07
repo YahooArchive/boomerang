@@ -40,7 +40,7 @@ var bmr = {
 
 	events: {
 		"script_load": [],
-		"page_load": [],
+		"page_ready": [],
 		"page_unload": [],
 		"before_beacon": []
 	},
@@ -180,15 +180,15 @@ var O = {
 	
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
-			this.utils.addListener(w, "load", function() { that.fireEvent("page_load"); that=null; });
+			this.utils.addListener(w, "load", function() { that.fireEvent("page_ready"); that=null; });
 		}
 	
 		return this;
 	},
 
 	// The page dev calls this method when they determine the page is usable.  Only call this if autorun is explicitly set to false
-	page_loaded: function() {
-		this.fireEvent("page_load");
+	page_ready: function() {
+		this.fireEvent("page_ready");
 		return this;
 	},
 
@@ -372,7 +372,7 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
-	// Called when the page has reached a "loaded" state.  This may be when the onload event fires,
+	// Called when the page has reached a "usable" state.  This may be when the onload event fires,
 	// or it could be at some other moment during/after page load when the page is usable by the user
 	done: function() {
 		var t_start, u, r, r2, t_other=[],
@@ -455,7 +455,7 @@ BOOMR.plugins.RT = {
 
 };
 
-BOOMR.subscribe("page_load", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
+BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
 BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 
 }(this, this.document));
@@ -900,7 +900,7 @@ BOOMR.plugins.BW = {
 	is_complete: function() { return o_bw.complete; }
 };
 
-BOOMR.subscribe("page_load", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
+BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
 
 }(this, this.document));
 // End of BW plugin
