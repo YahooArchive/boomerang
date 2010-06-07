@@ -291,7 +291,7 @@ if(typeof BOOMR.plugins === "undefined" || !BOOMR.plugins) {
 // end of boomerang beaconing section
 // Now we start built in plugins.  I might move them into separate source files at some point
 
-/* include plugins here */
+/* ---include-plugins-here--- */
 
 BOOMR.fireEvent("script_load");
 
