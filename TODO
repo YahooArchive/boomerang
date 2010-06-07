@@ -11,3 +11,9 @@
 
   Note that comparing with server time is not a good idea since the user's system
   clock may not actually be correct.
+
+- Measure DNS latency
+
+- Maybe handle different log levels
+
+- Allow dev to easily disable logging
