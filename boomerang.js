@@ -763,7 +763,7 @@ var o_bw = {
 		this.results[this.nruns-run].r[i] = result;
 	
 		// we terminate if an image timed out because that means the connection is too slow to go to the next image
-		if(i >= images.n-1 || typeof this.results[this.nruns-run].r[i+1] !== 'undefined') {
+		if(i >= images.end-1 || typeof this.results[this.nruns-run].r[i+1] !== 'undefined') {
 			this.debug(this.results[this.nruns-run]);
 			// First run is a pilot test to decide what the largest image that we can download is
 			// All following runs only try to download this image
