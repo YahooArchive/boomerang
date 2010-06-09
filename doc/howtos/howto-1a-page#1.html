@@ -76,8 +76,8 @@ Go to <a href="howto-1a-page%232.html">Page #2</a> now to see the results of the
 BOOMR.subscribe('before_beacon', function(o) {
 	var html = "";
 	if(o.t_done) { html += "This page took " + o.t_done + "ms to load<br>"; }
-	if(o.bw) { html += "User's bandwidth is " + parseInt(o.bw/1024) + "kbps (±" + parseInt(o.bw_err*100/o.bw) + "%)<br>"; }
-	if(o.lat) { html += "User's latency is " + parseInt(o.lat) + "±" + parseInt(o.lat_err) + "ms<br>"; }
+	if(o.bw) { html += "Your bandwidth is " + parseInt(o.bw/1024) + "kbps (±" + parseInt(o.bw_err*100/o.bw) + "%)<br>"; }
+	if(o.lat) { html += "Your latency is " + parseInt(o.lat) + "±" + parseInt(o.lat_err) + "ms<br>"; }
 
 	document.getElementById('results').innerHTML = html;
 });
