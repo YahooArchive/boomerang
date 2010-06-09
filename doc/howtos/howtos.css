@@ -3,3 +3,5 @@ a { color: #9a5; }
 a:hover, a:active { color: #793; }
 pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
 h2, h2 a, h3, h3 a, h4, h4 a { color:#9a5; }
+
+p#results { background-color: #bba; border: solid 2px #9a5; padding: 1em; }
