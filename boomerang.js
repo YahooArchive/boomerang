@@ -267,6 +267,13 @@ var O = {
 		}
 	
 		// If we reach here, all plugins have completed
+		this.fireEvent("before_beacon", bmr.vars);
+
+		// Don't send a beacon if no beacon_url has been set
+		if(!this.beacon_url) {
+			return this;
+		}
+
 		url = this.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
 		for(k in bmr.vars) {
 			if(bmr.vars.hasOwnProperty(k)) {
@@ -274,9 +281,10 @@ var O = {
 			}
 		}
 	
-		this.fireEvent("before_beacon", bmr.vars);
 		img = new Image();
 		img.src=url;
+
+		return this;
 	},
 
 	log: function(m,l,s) {} // create a logger - we'll try to use the YUI logger if it exists or firebug if it exists, or just fall back to nothing.
