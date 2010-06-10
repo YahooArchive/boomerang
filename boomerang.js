@@ -355,7 +355,7 @@ BOOMR.plugins.RT = {
 	start: function() {
 		var t_start = new Date().getTime();
 
-		BOOMR.utils.setCookie(rt.cookie, { s: t_start, r: d.location }, rt.cookie_exp, "/", null);
+		BOOMR.utils.setCookie(rt.cookie, { s: t_start, r: d.URL.replace(/#.*/, '') }, rt.cookie_exp, "/", null);
 
 		if(new Date().getTime() - t_start > 20) {
 			// It took > 20ms to set the cookie
@@ -414,7 +414,7 @@ BOOMR.plugins.RT = {
 		// manually with their own timers.  It may not always contain a referrer (eg: XHR calls)
 		// We set default values for these cases
 
-		u = d.location.href.replace(/#.*/, '');
+		u = d.URL.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(rt.cookie));
