@@ -638,7 +638,7 @@ var o_bw = {
 				n++;
 				nimgs++;
 	
-				bw = images[j].size*1000/r[j].t;
+				bw = images[j].size*1000/r[j].t;	// multiply by 1000 since t is in milliseconds and not seconds
 				bandwidths.push(bw);
 	
 				bw_c = images[j].size*1000/(r[j].t - this.latency.mean);
