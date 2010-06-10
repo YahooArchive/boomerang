@@ -1,4 +1,4 @@
-body { font-size: 0.9em; background-color: #eeeee4; padding: 0.5in 1in 1.5in 1in; margin: 0; font-family: "Trebuchet MS",Trebuchet,Tahoma,Verdana,Sans-Serif; }
+body { font-size: 0.9em; background-color: #eeeee4; padding: 5% 10% 15% 10%; margin: 0; font-family: "Trebuchet MS",Trebuchet,Tahoma,Verdana,Sans-Serif; }
 a { color: #571; }
 a:hover, a:active { color: #350; }
 pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
