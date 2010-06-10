@@ -330,12 +330,13 @@ if(!BOOMR.plugins) {
 
 // private object
 var rt = {
-	complete: false,//! Set when this plugin has completed
+	complete: false,	//! Set when this plugin has completed
 
-	timers: {},	//! Custom timers that the developer can use
-			// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
-	cookie: 'BRT',	//! Name of the cookie that stores the start time and referrer
-	cookie_exp:600	//! Cookie expiry in seconds
+	timers: {},		//! Custom timers that the developer can use
+				// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
+	cookie: 'BRT',		//! Name of the cookie that stores the start time and referrer
+	cookie_exp:600,		//! Cookie expiry in seconds
+	strict_referrer: true	//! By default, don't beacon if referrers don't match. If set to false, beacon both referrer values and let the back end decide
 };
 
 BOOMR.plugins.RT = {
@@ -345,7 +346,7 @@ BOOMR.plugins.RT = {
 		rt.complete = false;
 		rt.timers = {};
 
-		BOOMR.utils.pluginConfig(rt, config, "RT", ["cookie", "cookie_exp"]);
+		BOOMR.utils.pluginConfig(rt, config, "RT", ["cookie", "cookie_exp", "strict_referrer"]);
 
 		return this;
 	},
@@ -420,8 +421,10 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.removeCookie(rt.cookie);
 
 		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
-			t_start = parseInt(subcookies.s, 10);
 			r = subcookies.r;
+			if(!rt.strict_referrer || r === r2) { 
+				t_start = parseInt(subcookies.s, 10);
+			}
 		}
 
 		for(timer in rt.timers) {
