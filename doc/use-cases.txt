@@ -35,7 +35,7 @@ Breaking this into four separate use cases:
 
 2. Measure perceived performance of content loaded dynamically
 
-Many websites might load contentdynamically.  For example, images for a slide show or content for
+Many websites might load content dynamically.  For example, images for a slide show or content for
 tabs may be loaded via javascript.  A stock ticker may periodically refresh itself from a back end
 web service using XHR, a webmail service may check with the server for new messages or download the
 selected message using javascript, etc.
