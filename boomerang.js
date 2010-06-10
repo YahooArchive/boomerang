@@ -211,7 +211,7 @@ var O = {
 
 	subscribe: function(e, fn, cb_data, cb_scope) {
 		if(e === 'page_unload') {
-			this.utils.addListener(w, "beforeunload", function() { fn.call(cb_scope, null, cb_data); });
+			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
 		}
 		else if(bmr.events.hasOwnProperty(e)) {
 			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null ]);
