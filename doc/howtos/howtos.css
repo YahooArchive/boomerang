@@ -1,7 +1,7 @@
 body { font-size: 0.9em; background-color: #eeeee4; padding: 0.5in 1in; margin: 0; font-family: "Trebuchet MS",Trebuchet,Tahoma,Verdana,Sans-Serif; }
-a { color: #9a5; }
-a:hover, a:active { color: #793; }
+a { color: #571; }
+a:hover, a:active { color: #350; }
 pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
-h2, h2 a, h3, h3 a, h4, h4 a { color:#9a5; }
+h2, h2 a, h3, h3 a, h4, h4 a { color:#793; }
 
 p#results { background-color: #ffa; border: solid 2px #d82; padding: 1em; position: absolute; }
