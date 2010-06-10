@@ -35,7 +35,7 @@ BOOMR.version = "1.0";
 var bmr = {
 	// properties
 	beacon_url: "",
-	site_domain: d.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase(),	// strip out everything except last two parts of hostname.
+	site_domain: w.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase(),	// strip out everything except last two parts of hostname.
 	user_ip: '',		//! User's ip address determined on the server
 
 	events: {
@@ -895,7 +895,7 @@ BOOMR.plugins.BW = {
 			return this;
 		}
 
-		if(d.location.protocol === 'https:') {
+		if(w.location.protocol === 'https:') {
 			// we don't run the test for https because SSL stuff will mess up b/w calculations
 			// we could run the test itself over HTTP, but then IE will complain about
 			// insecure resources, so the best is to just bail and hope that the user
