@@ -1,0 +1,52 @@
+So how does this thing work?
+
+1. Roundtrip measurements
+
+We define round trip time as the time taken from the user initiating a resource request
+to when that resource is completely available for the user to interact with.  We limit
+our measurements only to HTML page type resources and only to resources requested by a
+click or link activation on a page that we control.
+
+The round trip time is therefore the time from the user clicking on a link to the page
+referenced by that link becoming usable by the user.  For most cases, this is as good
+as measuring the time from the previous page's onunload event firing to the current
+page's onload event firing.  In some cases this may be different, but we let the
+developer determine those events.
+
+This is how we measure.
+
+- attach a function to the window.onunload event.
+
+Inside this function, we take a time reading (in milliseconds) and store it into a 
+session cookie along with the URL of the current page.
+
+- attach a function to the window.onload event.
+
+Inside this function, we take a time reading (in milliseconds).  Then we look for
+the cookie that was set in the onunload handler of the previous page.  If we don't
+find a cookie, we abort [*].
+
+If we find a cookie, we check the URL stored in the cookie with the document.referrer
+of the current document.  If these two differ, it means that the user possibly
+visited a third party page in between the two pages from our site and the measurement
+is invalid, so we abort [**].
+
+If we're still going, we pull the time out of the cookie and remove the cookie.  We 
+measure the difference in the two times and this is the round trip time for the page.
+
+
+
+
+[*] We don't actually abort at this point, but give the developer the ability to
+salvage the moment by setting his own start time.  This is most useful when the
+developer isn't measuring full page load time, but possibly the load time of some
+dynamic content loaded via Javascript.
+
+[**] We offer the developer the ability to not abort at this point, but instead
+pass all URLs to the back end and let the server decide whether to discard the
+beacon or not.  This is useful for sites that have a login page behind SSL and
+possibly redirect to the login page if the user clicks on certain links.  In this
+case there might either be no referrer, or the referrer may not match.
+
+
+2. Bandwidth measurements
