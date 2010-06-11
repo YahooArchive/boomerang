@@ -5,6 +5,7 @@
 <link rel="stylesheet" type="text/css" href="howtos.css">
 </head>
 <body>
+<span style="float:right;"><a href="index.html">Index</a></span>
 <h1>Boomerang Howto #2:<br>Measure perceived performance of content loaded dynamically</h1>
 <p>
 See use case #2 in <a href="../use-cases.txt">use-cases.txt</a> for a description of this requirement.
@@ -46,7 +47,7 @@ YUI().use("io-base", function(Y) {
     function complete(id, o) {
         var html = o.responseText;
 	document.getElementById("dynamic-content").innerHTML = html;
-	BOOMR.plugins.RT.done();
+	<em>BOOMR.plugins.RT.done();	// Tell boomerang to measure time and fire a beacon</em>
     };
  
     Y.on('io:complete', complete);

@@ -1,9 +1,11 @@
 body { font-size: 0.9em; background-color: #eeeee4; padding: 5% 10% 15% 10%; margin: 0; font-family: "Trebuchet MS",Trebuchet,Tahoma,Verdana,Sans-Serif; }
 a { color: #571; }
 a:hover, a:active { color: #350; }
-pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
-h2, h2 a, h3, h3 a, h4, h4 a { color:#793; }
 h1 { padding-left: .8in; text-indent: -.8in; }
+h2, h2 a, h3, h3 a, h4, h4 a { color:#793; }
 
 p#results { background-color: #ffa; border: solid 2px #d82; padding: 1em; position: absolute; }
-div#dynamic-content { background-color: #eee; border: solid 3px #9a5; padding: 1em; margin: 1em 3em 1em 40%; text-align: justify; color: #9a8; }
+div#dynamic-content { font-size: 0.5em; border: solid 3px #9a5; padding: 1em; margin: 1em 10% 1em 40%; text-align: justify; color: #9a8; }
+
+pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
+pre em { background-color: #ccb; color: #a32; font-style: normal; padding: 2px;}
