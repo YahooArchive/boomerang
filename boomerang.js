@@ -51,7 +51,7 @@ var bmr = {
 	// We fire events with a setTimeout so that they run asynchronously
 	// and don't block each other.  This is most useful on a multi-threaded
 	// JS engine.  Don't use this for onbeforeunload though
-	fireEvent: function(e, i, data) {
+	asyncEvent: function(e, i, data) {
 		setTimeout(function() {
 			bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
 		}, 10);
@@ -209,23 +209,35 @@ var O = {
 		return this;
 	},
 
-	subscribe: function(e, fn, cb_data, cb_scope) {
+	subscribe: function(e, fn, cb_data, cb_scope, async) {
 		if(e === 'page_unload') {
 			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
 		}
 		else if(bmr.events.hasOwnProperty(e)) {
-			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null ]);
+			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null, async || false ]);
 		}
 
 		return this;
 	},
 
 	fireEvent: function(e, data) {
-		var i;
+		var i, sync_events=[], h;
 		if(bmr.events.hasOwnProperty(e)) {
 			for(i=0; i<bmr.events[e].length; i++) {
-				bmr.fireEvent(e, i, data);
+				// First we fire all asynchronous event handlers
+				if(bmr.events[e][i][3]) {
+					bmr.asyncEvent(e, i, data);
+				}
+				else {
+					sync_events.push(i);
+				}
 			}
+		}
+
+		// Then fire all synchronous handlers in order of subscription
+		for(i=0; i<sync_events.length; i++) {
+			var h = bmr.events[e][sync_events[i]];
+			h[0].call(h[2], data, h[1]);
 		}
 	},
 
@@ -480,7 +492,7 @@ BOOMR.plugins.RT = {
 
 };
 
-BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
+BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT, true);
 BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 
 }(this, this.document));
