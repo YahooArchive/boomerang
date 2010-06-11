@@ -383,6 +383,7 @@ BOOMR.plugins.RT = {
 
 	startTimer: function(timer_name) {
 		rt.timers[timer_name] = { start: new Date().getTime() };
+		rt.complete = false;
 
 		return this;
 	},
