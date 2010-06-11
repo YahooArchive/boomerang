@@ -329,7 +329,7 @@ if(typeof BOOMR.plugins === "undefined" || !BOOMR.plugins) {
 // Now we start built in plugins.  I might move them into separate source files at some point
 
 
-// This is the RT plugin
+// This is the Round Trip Time plugin.  Abbreviated to RT
 // the two parameters are the window and document objects
 (function(w, d) {
 
@@ -499,7 +499,7 @@ BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 }(this, this.document));
 // End of RT plugin
 
-// This is the BW plugin
+// This is the Bandwidth & Latency plugin abbreviated to BW
 // the two parameters are the window and document objects
 (function(w, d) {
 
