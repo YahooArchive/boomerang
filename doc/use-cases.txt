@@ -86,7 +86,19 @@ component downloads can have on overall page load time.
 See HOWTO #3.
 
 
-6. Measure DNS latency
+6. Request/page tagging
+
+When doing performance analysis, it is often useful to run an A/B test that compares the performance
+of two or more different page designs.  Since these pages might all have the same URL, it becomes
+necessary to add some additional information to the data beaconed back that identifies the page from
+a series of tests.
+
+The library should provide a method for the page developer to tag each page with additional information.
+
+See HOWTO #5.
+
+
+7. Measure DNS latency
 
 DNS latency tells us how long it takes to make a DNS request.  This may be affected by various
 factors including your web server's DNS configuration and TTL, and how an end user's ISP's DNS
@@ -98,7 +110,7 @@ together can tell us where this point lies for our users.
 See TODO #3
 
 
-7. Measure a random sample of users instead of all users
+8. Measure a random sample of users instead of all users
 
 For high traffic sites, it's useful to only measure a random sample of requests rather than
 every request that comes in.  We could either do the random sampling on the server side
@@ -111,13 +123,4 @@ across clients, however we can still get a decently random sample.
 See TODO #1.
 
 
-8. Request/page tagging
 
-When doing performance analysis, it is often useful to run an A/B test that compares the performance
-of two or more different page designs.  Since these pages might all have the same URL, it becomes
-necessary to add some additional information to the data beaconed back that identifies the page from
-a series of tests.
-
-The library should provide a method for the page developer to tag each page with additional information.
-
-See HOWTO #8.
