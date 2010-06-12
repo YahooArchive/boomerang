@@ -99,6 +99,83 @@ BOOMR.subscribe('before_beacon', function(o) {
 });
 </pre>
 
+<h2>Back end script</h2>
+<p>
+A simple back end script would look something like this.  Note, I won't include the code that gets the
+URL parameters out of your environment.  I assume you know how to do that.  The following code assumes
+these parameters are in a variable named <code>params</code>.  The code is in Javascript, but you can write
+it in any language that you like.
+</p>
+
+<pre>
+function extract_boomerang_data(params)
+{
+	var bw_buckets = [64, 256, 1024, 8192, 30720],
+	    bw_bucket = bw_buckets.length,
+	    i, url, page_id, ip, ua, woeid;
+
+
+	// First validate your beacon, make sure all datatypes
+	// are correct and values within reasonable range
+	// We'll also want to detect fake beacons, but that's more complex
+	if(! validate_beacon(params)) {
+		return false;
+	}
+
+	// You may also want to do some kind of random sampling at this point
+
+	// Figure out a bandwidth bucket.
+	// we could get more complex and consider bw_err as well,
+	// but for this example I'll ignore it
+	for(i=0; i&lt;bw_buckets.length; i++) {
+		if(params.bw &lt;= bw_buckets[i]) {
+			bw_bucket = i;
+			break;
+		}
+	}
+
+	// Now figure out a page id from the u parameter
+	// Since we might have a very large number of URLs that all
+	// map onto a very small number (possibly 1) of distinct page types
+	url = canonicalize_url(params.u);		// get a canonical form for this URL
+	page_id = get_page_id(url);			// get the page id out of the URL.  This might be a many-&gt;1 map
+							// it's a good idea to group pages to simplify performance analysis
+
+
+	// At this point we can extract other information from the request as well
+	// for example, the user's IP address (good for geo location) and user agent string
+	ip = get_user_ip();			// get user's IP from request
+	woeid = ip_to_woeid(ip);		// convert IP to a Where on earth ID
+	ua = get_normalized_uastring();		// get a normalized user agent string from the request
+
+	// Now insert the data into our database
+	insert_data(page_id, params.t_done, params.bw, params.bw_err, bw_bucket, params.lat, params.lat_err, ip, woeid, ua);
+
+	return true;
+}
+</pre>
+
+<h3>Scaling up</h3>
+<p>
+The above code works well when you have a few thousand requests in a day.  If that number starts growing to the
+hundreds of thousands or millions, then your beacon handler quickly becomes a bottleneck.  It can then make
+sense to simply batch process the beacons.  Let the requests come in to your apache (or other webserver) logs,
+and then periodically (say once an hour), process those logs as a batch and do a single batch insert into your
+database.
+</p>
+<p>
+My talk from IPC Berlin 2010 on <a href="http://www.slideshare.net/bluesmoon/scaling-mysql-writes-through-partitioning-ipc-spring-edition">scaling MySQL writes</a>
+goes into how we handled a large number of beacon results with a single mysql instance.  It may help you or you
+may come up with a better solution.
+</p>
+
+<h2>Statistical analysis of the data</h2>
+<p>
+Once you've got your data, it's useful to do a bunch of statistical analysis on it.  We'll cover this in a
+future howto, but for now, have a look at my ConFoo 2010 talk on 
+<a href="http://www.slideshare.net/bluesmoon/index-3441823">the statistics of web performance</a>.
+</p>
+
 <p id="results">
 </p>
 
