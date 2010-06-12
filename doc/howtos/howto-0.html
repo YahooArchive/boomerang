@@ -92,8 +92,8 @@ In all these howto documents, we use the following code in the <code>before_beac
 BOOMR.subscribe('before_beacon', function(o) {
 	var html = "";
 	if(o.t_done) { html += "This page took " + o.t_done + "ms to load&lt;br&gt;"; }
-	if(o.bw) { html += "Your bandwidth to this server is " + parseInt(o.bw/1024) + "kbps (±" + parseInt(o.bw_err*100/o.bw) + "%)&lt;br&gt;"; }
-	if(o.lat) { html += "Your latency to this server is " + parseInt(o.lat) + "±" + o.lat_err + "ms&lt;br&gt;"; }
+	if(o.bw) { html += "Your bandwidth to this server is " + parseInt(o.bw/1024) + "kbps (&amp;#x00b1;" + parseInt(o.bw_err*100/o.bw) + "%)&lt;br&gt;"; }
+	if(o.lat) { html += "Your latency to this server is " + parseInt(o.lat) + "&amp;#x00b1;" + o.lat_err + "ms&lt;br&gt;"; }
 
 	document.getElementById('results').innerHTML = html;
 });
