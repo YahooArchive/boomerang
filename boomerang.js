@@ -413,7 +413,7 @@ BOOMR.plugins.RT = {
 	done: function() {
 		var t_start, u, r, r2, t_other=[],
 		    subcookies,
-		    basic_timers = { t_done: 1, t_rtpage: 1, t_resp: 1 },
+		    basic_timers = { t_done: 1, t_page: 1, t_resp: 1 },
 		    ntimers = 0, timer;
 
 
