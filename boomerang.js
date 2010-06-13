@@ -350,7 +350,7 @@ if(!BOOMR.plugins) {
 }
 
 // private object
-var rt = {
+var impl = {
 	complete: false,	//! Set when this plugin has completed
 
 	timers: {},		//! Custom timers that the developer can use
@@ -364,10 +364,10 @@ BOOMR.plugins.RT = {
 	// Methods
 
 	init: function(config) {
-		rt.complete = false;
-		rt.timers = {};
+		impl.complete = false;
+		impl.timers = {};
 
-		BOOMR.utils.pluginConfig(rt, config, "RT", ["cookie", "cookie_exp", "strict_referrer"]);
+		BOOMR.utils.pluginConfig(impl, config, "RT", ["cookie", "cookie_exp", "strict_referrer"]);
 
 		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT, true);
 		BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
@@ -379,13 +379,13 @@ BOOMR.plugins.RT = {
 	start: function() {
 		var t_start = new Date().getTime();
 
-		BOOMR.utils.setCookie(rt.cookie, { s: t_start, r: d.URL.replace(/#.*/, '') }, rt.cookie_exp, "/", null);
+		BOOMR.utils.setCookie(impl.cookie, { s: t_start, r: d.URL.replace(/#.*/, '') }, impl.cookie_exp, "/", null);
 
 		if(new Date().getTime() - t_start > 20) {
 			// It took > 20ms to set the cookie
 			// Most likely user has cookie prompting turned on so t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
-			BOOMR.utils.removeCookie(rt.cookie);
+			BOOMR.utils.removeCookie(impl.cookie);
 
 			// at some point we may want to log this info on the server side
 		}
@@ -394,23 +394,23 @@ BOOMR.plugins.RT = {
 	},
 
 	startTimer: function(timer_name) {
-		rt.timers[timer_name] = { start: new Date().getTime() };
-		rt.complete = false;
+		impl.timers[timer_name] = { start: new Date().getTime() };
+		impl.complete = false;
 
 		return this;
 	},
 
 	endTimer: function(timer_name, time_value) {
-		if(typeof rt.timers[timer_name] === "undefined") {
-			rt.timers[timer_name] = {};
+		if(typeof impl.timers[timer_name] === "undefined") {
+			impl.timers[timer_name] = {};
 		}
-		rt.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
+		impl.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
 
 		return this;
 	},
 
 	setTimer: function(timer_name, time_delta) {
-		rt.timers[timer_name] = { delta: time_delta };
+		impl.timers[timer_name] = { delta: time_delta };
 
 		return this;
 	},
@@ -429,7 +429,7 @@ BOOMR.plugins.RT = {
 		    ntimers = 0, timer;
 
 
-		if(rt.complete) {
+		if(impl.complete) {
 			return this;
 		}
 
@@ -442,34 +442,34 @@ BOOMR.plugins.RT = {
 		u = d.URL.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
-		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(rt.cookie));
-		BOOMR.utils.removeCookie(rt.cookie);
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+		BOOMR.utils.removeCookie(impl.cookie);
 
 		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
 			r = subcookies.r;
-			if(!rt.strict_referrer || r === r2) { 
+			if(!impl.strict_referrer || r === r2) { 
 				t_start = parseInt(subcookies.s, 10);
 			}
 		}
 
-		for(timer in rt.timers) {
-			if(!rt.timers.hasOwnProperty(timer)) {
+		for(timer in impl.timers) {
+			if(!impl.timers.hasOwnProperty(timer)) {
 				continue;
 			}
 
-			if(typeof rt.timers[timer].delta !== "number") {
-				rt.timers[timer].delta = rt.timers[timer].end - ( typeof rt.timers[timer].start === "number" ? rt.timers[timer].start : t_start );
+			if(typeof impl.timers[timer].delta !== "number") {
+				impl.timers[timer].delta = impl.timers[timer].end - ( typeof impl.timers[timer].start === "number" ? impl.timers[timer].start : t_start );
 			}
 
-			if(isNaN(rt.timers[timer].delta)) {
+			if(isNaN(impl.timers[timer].delta)) {
 				continue;
 			}
 
 			if(basic_timers[timer]) {
-				BOOMR.addVar(timer, rt.timers[timer].delta);
+				BOOMR.addVar(timer, impl.timers[timer].delta);
 			}
 			else {
-				t_other.push(encodeURIComponent(timer) + "|" + encodeURIComponent(rt.timers[timer].delta));
+				t_other.push(encodeURIComponent(timer) + "|" + encodeURIComponent(impl.timers[timer].delta));
 			}
 			ntimers++;
 		}
@@ -486,7 +486,7 @@ BOOMR.plugins.RT = {
 			BOOMR.addVar("t_other", t_other.join(","));
 		}
 
-		rt.timers = {};
+		impl.timers = {};
 
 		BOOMR.addVar({ "u": u, "r": r });
 
@@ -495,13 +495,13 @@ BOOMR.plugins.RT = {
 			BOOMR.addVar("r2", r2);
 		}
 
-		rt.complete = true;
+		impl.complete = true;
 
 		BOOMR.sendBeacon();
 		return this;
 	},
 
-	is_complete: function() { return rt.complete; }
+	is_complete: function() { return impl.complete; }
 
 };
 
@@ -542,7 +542,7 @@ images.start = 0;
 images.l = { name: "image-l.gif", size: 35, timeout: 1000 };
 
 // private object
-var o_bw = {
+var impl = {
 	// properties
 	base_url: 'images/',
 	timeout: 15000,
@@ -860,7 +860,7 @@ var o_bw = {
 		    lat_e = parseFloat(cookies.le, 10) || 0,
 		    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
 		    t = parseInt(cookies.t, 10),
-		    p_sn = o_bw.user_ip.replace(/\.\d+$/, '0'),
+		    p_sn = this.user_ip.replace(/\.\d+$/, '0'),
 
 		// We use the subnet instead of the IP address because some people
 		// on DHCP with the same ISP may get different IPs on the same subnet
@@ -870,8 +870,8 @@ var o_bw = {
 
 		// If the subnet changes or the cookie is more than 7 days old,
 		// then we recheck the bandwidth, else we just use what's in the cookie
-		if(c_sn === p_sn && t >= t_now - o_bw.cookie_exp) {
-			o_bw.complete = true;
+		if(c_sn === p_sn && t >= t_now - this.cookie_exp) {
+			this.complete = true;
 			BOOMR.addVar({
 				'bw': ba,
 				'lat': lat,
@@ -887,26 +887,26 @@ BOOMR.plugins.BW = {
 	init: function(config) {
 		var bacookie, cookies;
 
-		BOOMR.utils.pluginConfig(o_bw, config, "BW", ["base_url", "timeout", "nruns", "cookie", "cookie_exp"]);
+		BOOMR.utils.pluginConfig(impl, config, "BW", ["base_url", "timeout", "nruns", "cookie", "cookie_exp"]);
 
 		if(config && config.user_ip) {
-			o_bw.user_ip = config.user_ip;
+			impl.user_ip = config.user_ip;
 		}
 
 		images.start = 0;
-		o_bw.runs_left = o_bw.nruns;
-		o_bw.latency_runs = 10;
-		o_bw.results = [];
-		o_bw.latencies = [];
-		o_bw.latency = null;
-		o_bw.complete = false;
-		o_bw.aborted = false;
+		impl.runs_left = impl.nruns;
+		impl.latency_runs = 10;
+		impl.results = [];
+		impl.latencies = [];
+		impl.latency = null;
+		impl.complete = false;
+		impl.aborted = false;
 
-		bacookie = BOOMR.utils.getCookie(o_bw.cookie);
+		bacookie = BOOMR.utils.getCookie(impl.cookie);
 		cookies = BOOMR.utils.getSubCookies(bacookie);
 
 		if(cookies && cookies.ba) {
-			o_bw.setVarsFromCookie(cookies);
+			impl.setVarsFromCookie(cookies);
 		}
 
 		BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
@@ -915,7 +915,7 @@ BOOMR.plugins.BW = {
 	},
 
 	run: function() {
-		if(o_bw.running || o_bw.complete) {
+		if(impl.running || impl.complete) {
 			return this;
 		}
 
@@ -925,28 +925,28 @@ BOOMR.plugins.BW = {
 			// insecure resources, so the best is to just bail and hope that the user
 			// gets the cookie from some other Y! page
 
-			o_bw.complete = true;
+			impl.complete = true;
 			return this;
 		}
 
-		o_bw.running = true;
+		impl.running = true;
 
-		setTimeout(BOOMR.plugins.BW.abort, o_bw.timeout);
+		setTimeout(this.abort, impl.timeout);
 
-		o_bw.defer(o_bw.iterate);
+		impl.defer(impl.iterate);
 
 		return this;
 	},
 
 	abort: function() {
-		o_bw.aborted = true;
-		o_bw.finish();	// we don't defer this call because it might be called from onbeforeunload
+		impl.aborted = true;
+		impl.finish();	// we don't defer this call because it might be called from onbeforeunload
 				// and we want the entire chain to complete before we return
 
 		return this;
 	},
 
-	is_complete: function() { return o_bw.complete; }
+	is_complete: function() { return impl.complete; }
 };
 
 }(this, this.document));
