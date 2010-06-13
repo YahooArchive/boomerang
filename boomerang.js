@@ -190,7 +190,9 @@ var O = {
 		}
 	
 		for(k in this.plugins) {
-			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {
+			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function"				// plugin exists and has an init method
+				&& (!config[k] || typeof config[k].enabled === "undefined" || config[k].enabled !== false)	// config[pugin].enabled has not been set to false
+			) {
 				this.plugins[k].init(config);
 			}
 		}
