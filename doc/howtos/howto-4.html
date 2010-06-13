@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="../../boomerang.js" type="text/javascript"></script>
+<script type="text/javascript">
+BOOMR.plugins.RT.startTimer("t_head");
+</script>
+<title>Boomerang Howto #4: Measure more than just page load time</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="howtos.css">
+<script type="text/javascript">BOOMR.plugins.RT.endTimer("t_head").startTimer("t_body");</script>
+</head>
+<body>
+<span style="float:right;"><a href="index.html">Index</a></span>
+<h1>Boomerang Howto #4:<br>Measure more than just page load time</h1>
+<p>
+See use case #4 in <a href="../use-cases.txt">use-cases.txt</a> for a description of this requirement.
+</p>
+<p>
+Up until now we've measured the time it takes for a page to become usable by the user.  It may also be
+useful to measure the time it took for various components within the page to load and match that up with
+the full page load time.  boomerang provides additional timers that you can configure to measure separate
+parts of your page.  You use the <code>startTimer()</code> and <code>endTimer()</code> methods of the
+roundtrip (<code>BOOMR.plugin.RT</code>) plugin to do this.
+</p>
+
+<p>
+In the following examples, you'll need to make sure that <code>boomerang.js</code> is loaded before you
+call any of these methods, so perhaps putting it at the top of your page is a good idea.  We'll see later
+how to work around this.
+</p>
+
+<p>
+First, identify sections of your page that you want to measure.  Call <code>startTimer()</code> before
+and <code>endTimer()</code> after.  Each timer has its own name.  The names are free-form strings,
+but stay simple to be efficient.  Stick to alphanumeric characters and underscores, and limit names
+to around 5 characters, eg: <code>t_ads</code>, <code>t_head</code>, <code>t_js</code>.  The following
+names are reserved: <code>t_done</code>, <code>t_page</code>, <code>t_resp</code>.
+</p>
+
+<p>
+Make sure you've included boomerang.js before starting the timers.
+</p>
+
+<pre>
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;script src="boomerang.js" type="text/javascript"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+      BOOMR.plugins.RT.startTimer("t_head");
+    &lt;/script&gt;
+    &lt;title&gt;page title&lt;/title&gt;
+    &lt;meta http-equiv="Content-type" content="text/html; charset=utf-8"&gt;
+    &lt;link rel="stylesheet" type="text/css" href="howtos.css"&gt;
+    &lt;script type="text/javascript"&gt;
+      BOOMR.plugins.RT.endTimer("t_head").startTimer("t_body");
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    page body here
+    &lt;script src="boomerang.js" type="text/javascript"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+      BOOMR.plugins.RT.endTimer("t_body");
+      BOOMR.init({
+		beacon_url: "http://yoursite.com/path/to/beacon.php"
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>
+Your timers will now be included in the beacon along with <code>t_done</code>.
+</p>
+
+<p id="results">
+</p>
+<script src="howtos.js" type="text/javascript"></script>
+<script type="text/javascript">
+BOOMR.plugins.RT.endTimer("t_body");
+BOOMR.init({
+		user_ip: '10.0.0.1',
+		BW: {
+			base_url: '../../images/',
+			cookie: 'HOWTO-BA'
+		},
+		RT: {
+			cookie: 'HOWTO-RT'
+		}
+	});
+</script>
+</body>
+</html>

@@ -34,6 +34,7 @@ test and beacon its results back to the server.  This is the code you'd use:
 &lt;script src="boomerang.js" type="text/javascript"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 BOOMR.init({
+	beacon_url: "http://yoursite.com/path/to/beacon.php",
 	BW: {
 		base_url: "http://base_url/to/bandwidth/images/"
 	}
@@ -62,6 +63,7 @@ to tell boomerang what the user's IP address is.  You do this through the <code>
 &lt;script src="boomerang.js" type="text/javascript"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 BOOMR.init({
+	beacon_url: "http://yoursite.com/path/to/beacon.php",
 	user_ip: "&lt;user's ip&gt;",
 	BW: {
 		base_url: "http://base_url/to/bandwidth/images/"
@@ -92,6 +94,7 @@ set to <code>BBA</code>, but you can change it using the <code>BW.cookie</code> 
 &lt;script src="boomerang.js" type="text/javascript"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 BOOMR.init({
+	beacon_url: "http://yoursite.com/path/to/beacon.php",
 	user_ip: "&lt;user's ip&gt;",
 	BW: {
 		base_url: "http://base_url/to/bandwidth/images/",
