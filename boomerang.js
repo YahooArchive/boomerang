@@ -267,9 +267,15 @@ var O = {
 		return this;
 	},
 
-	removeVar: function(name) {
-		if(bmr.hasOwnProperty(name)) {
-			delete bmr[name];
+	removeVar: function() {
+		var i;
+		if(!arguments.length) {
+			return this;
+
+		for(i=0; i<arguments.length; i++) {
+			if(bmr.hasOwnProperty(arguments[i])) {
+				delete bmr[arguments[i]];
+			}
 		}
 
 		return this;
@@ -465,6 +471,9 @@ BOOMR.plugins.RT = {
 			this.warn("start cookie not set");
 		}
 
+		// make sure old variables don't stick around
+		BOOMR.removeVar('t_other', 't_done', 't_page', 't_resp', 'u', 'r', 'r2');
+
 		for(timer in impl.timers) {
 			if(!impl.timers.hasOwnProperty(timer)) {
 				continue;
@@ -487,11 +496,9 @@ BOOMR.plugins.RT = {
 			ntimers++;
 		}
 
-		// make sure an old t_other doesn't stick around
-		BOOMR.removeVar('t_other');
-
 		// At this point we decide whether the beacon should be sent or not
 		if(ntimers === 0) {
+			impl.complete = true;			// no point blocking other plugins
 			return this.error("no timers");
 		}
 
@@ -503,7 +510,6 @@ BOOMR.plugins.RT = {
 
 		BOOMR.addVar({ "u": u, "r": r });
 
-		BOOMR.removeVar('r2');
 		if(r2 !== r) {
 			BOOMR.addVar("r2", r2);
 		}
@@ -914,6 +920,8 @@ BOOMR.plugins.BW = {
 		impl.latency = null;
 		impl.complete = false;
 		impl.aborted = false;
+
+		BOOMR.removeVar('ba', 'ba_err', 'lat', 'lat_err');
 
 		bacookie = BOOMR.utils.getCookie(impl.cookie);
 		cookies = BOOMR.utils.getSubCookies(bacookie);
