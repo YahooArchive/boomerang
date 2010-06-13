@@ -755,8 +755,8 @@ var impl = {
 			img = new Image(),
 			that=this;
 	
-		img.onload=function() { img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, true); } that=callback=null; };
-		img.onerror=function() { img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, false); } that=callback=null; };
+		img.onload=function() { img.onload=img.onerror=null; img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, true); } that=callback=null; };
+		img.onerror=function() { img.onload=img.onerror=null; img=null; clearTimeout(timer); if(callback) { callback.call(that, i, tstart, run, false); } that=callback=null; };
 	
 		// the timeout does not abort download of the current image, it just sets an end of loop flag so we don't attempt download of the next image
 		// we still need to wait until onload or onerror fire to be sure that the image download isn't using up bandwidth.
