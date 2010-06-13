@@ -11,4 +11,4 @@ div#dynamic-content > p:first-child { font-size: 2em; }
 pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
 pre em { background-color: #ccb; color: #a32; font-style: normal; padding: 2px;}
 
-pre span.ni { color: #9b5; }
+pre span.ni { color: #886; }
