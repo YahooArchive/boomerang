@@ -278,6 +278,7 @@ var O = {
 		var i;
 		if(!arguments.length) {
 			return this;
+		}
 
 		for(i=0; i<arguments.length; i++) {
 			if(impl.vars.hasOwnProperty(arguments[i])) {
