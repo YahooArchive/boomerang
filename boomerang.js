@@ -282,7 +282,7 @@ var O = {
 	},
 
 	sendBeacon: function() {
-		var k, url, img;
+		var k, url, img, nparams=0;
 	
 		// At this point someone is ready to send the beacon.  We send
 		// the beacon only if all plugins have finished doing what they
@@ -306,12 +306,16 @@ var O = {
 		url = this.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
 		for(k in bmr.vars) {
 			if(bmr.vars.hasOwnProperty(k)) {
+				nparams++;
 				url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(bmr.vars[k]);
 			}
 		}
 	
-		img = new Image();
-		img.src=url;
+		// only send beacon if we actually have something to beacon back
+		if(nparams) {
+			img = new Image();
+			img.src=url;
+		}
 
 		return this;
 	},
