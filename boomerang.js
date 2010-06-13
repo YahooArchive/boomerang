@@ -420,6 +420,11 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
+	warn: function(msg) {
+		BOOMR.log(msg, "warn", "boomerang.rt");
+		return this;
+	},
+
 	// Called when the page has reached a "usable" state.  This may be when the onload event fires,
 	// or it could be at some other moment during/after page load when the page is usable by the user
 	done: function() {
@@ -450,6 +455,9 @@ BOOMR.plugins.RT = {
 			if(!impl.strict_referrer || r === r2) { 
 				t_start = parseInt(subcookies.s, 10);
 			}
+		}
+		else {
+			this.warn("start cookie not set");
 		}
 
 		for(timer in impl.timers) {
