@@ -377,17 +377,21 @@ BOOMR.plugins.RT = {
 
 	// The start method is fired on page unload
 	start: function() {
-		var t_start = new Date().getTime();
+		var t_end, t_start = new Date().getTime();
 
-		BOOMR.utils.setCookie(impl.cookie, { s: t_start, r: d.URL.replace(/#.*/, '') }, impl.cookie_exp, "/", null);
+		if(!BOOMR.utils.setCookie(impl.cookie, { s: t_start, r: d.URL.replace(/#.*/, '') }, impl.cookie_exp, "/", null)) {
+			return this.error("cannot set start cookie");
+		}
 
-		if(new Date().getTime() - t_start > 20) {
-			// It took > 20ms to set the cookie
+		t_end = new Date().getTime();
+		if(t_end - t_start > 50) {
+			// It took > 50ms to set the cookie
 			// Most likely user has cookie prompting turned on so t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
 			BOOMR.utils.removeCookie(impl.cookie);
 
 			// at some point we may want to log this info on the server side
+			this.error("took more than 50ms to set cookie... aborting: " + t_start + " -> " + t_end);
 		}
 
 		return this;
@@ -432,7 +436,6 @@ BOOMR.plugins.RT = {
 		    subcookies,
 		    basic_timers = { t_done: 1, t_page: 1, t_resp: 1 },
 		    ntimers = 0, timer;
-
 
 		if(impl.complete) {
 			return this;
