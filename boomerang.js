@@ -191,13 +191,16 @@ var O = {
 		}
 	
 		for(k in this.plugins) {
-			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {				// plugin exists and has an init method
-				if(!config[k] || typeof config[k].enabled === "undefined" || config[k].enabled !== false) {		// config[pugin].enabled has not been set to false
-					this.plugins[k].init(config);
-				}
-				else {
-					impl.disabled_plugins[k] = 1;
-				}
+			if(config[k] && typeof config[k].enabled !== "undefined" && config[k].enabled === false) {	// config[pugin].enabled has been set to false
+				impl.disabled_plugins[k] = 1;
+				continue;
+			}
+			else if(impl.disabled_plugins[k]) {
+				delete impl.disabled_plugins[k];
+			}
+
+			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {		// plugin exists and has an init method
+				this.plugins[k].init(config);
 			}
 		}
 	
