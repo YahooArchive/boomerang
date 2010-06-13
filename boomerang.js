@@ -30,9 +30,9 @@ if(typeof w.BOOMR === "undefined" || !w.BOOMR) {
 BOOMR.version = "1.0";
 
 
-// bmr is a private object not reachable from outside the impl
+// impl is a private object not reachable from outside the BOOMR object
 // users can set properties by passing in to the init() method
-var bmr = {
+var impl = {
 	// properties
 	beacon_url: "",
 	site_domain: w.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase(),	// strip out everything except last two parts of hostname.
@@ -47,13 +47,14 @@ var bmr = {
 
 	vars: {},
 
+	disabled_plugins: {},
 
 	// We fire events with a setTimeout so that they run asynchronously
 	// and don't block each other.  This is most useful on a multi-threaded
 	// JS engine.  Don't use this for onbeforeunload though
 	asyncEvent: function(e, i, data) {
 		setTimeout(function() {
-			bmr.events[e][i][0].call(bmr.events[e][i][2], data, bmr.events[e][i][1]);
+			impl.events[e][i][0].call(impl.events[e][i][2], data, impl.events[e][i][1]);
 		}, 10);
 	}
 };
@@ -104,7 +105,7 @@ var O = {
 			c = nameval +
 				((max_age) ? "; expires=" + exp : "" ) +
 				((path) ? "; path=" + path : "") +
-				((typeof domain !== "undefined") ? "; domain=" + (domain === null ? bmr.site_domain : domain) : "") +
+				((typeof domain !== "undefined") ? "; domain=" + (domain === null ? impl.site_domain : domain) : "") +
 				((sec) ? "; secure" : "");
 		
 			if ( nameval.length < 4000 ) {
@@ -181,7 +182,7 @@ var O = {
 
 		for(i=0; i<properties.length; i++) {
 			if(typeof config[properties[i]] !== "undefined") {
-				bmr[properties[i]] = config[properties[i]];
+				impl[properties[i]] = config[properties[i]];
 			}
 		}
 
@@ -190,10 +191,13 @@ var O = {
 		}
 	
 		for(k in this.plugins) {
-			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function"				// plugin exists and has an init method
-				&& (!config[k] || typeof config[k].enabled === "undefined" || config[k].enabled !== false)	// config[pugin].enabled has not been set to false
-			) {
-				this.plugins[k].init(config);
+			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {				// plugin exists and has an init method
+				if(!config[k] || typeof config[k].enabled === "undefined" || config[k].enabled !== false) {		// config[pugin].enabled has not been set to false
+					this.plugins[k].init(config);
+				}
+				else {
+					impl.disabled_plugins[k] = 1;
+				}
 			}
 		}
 	
@@ -217,15 +221,15 @@ var O = {
 			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
 		}
 
-		if(bmr.events.hasOwnProperty(e)) {
-			for(i=0; i<bmr.events[e].length; i++) {
-				h = bmr.events[e][i];
+		if(impl.events.hasOwnProperty(e)) {
+			for(i=0; i<impl.events[e].length; i++) {
+				h = impl.events[e][i];
 				// don't allow a handler to be attached more than once to the same event
 				if(h[0] === fn && h[1] === cb_data && h[2] === cb_scope) {
 					return this;
 				}
 			}
-			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null, async || false ]);
+			impl.events[e].push([ fn, cb_data || {}, cb_scope || null, async || false ]);
 		}
 
 		return this;
@@ -233,11 +237,11 @@ var O = {
 
 	fireEvent: function(e, data) {
 		var i, sync_events=[], h;
-		if(bmr.events.hasOwnProperty(e)) {
-			for(i=0; i<bmr.events[e].length; i++) {
+		if(impl.events.hasOwnProperty(e)) {
+			for(i=0; i<impl.events[e].length; i++) {
 				// First we fire all asynchronous event handlers
-				if(bmr.events[e][i][3]) {
-					bmr.asyncEvent(e, i, data);
+				if(impl.events[e][i][3]) {
+					impl.asyncEvent(e, i, data);
 				}
 				else {
 					sync_events.push(i);
@@ -247,20 +251,20 @@ var O = {
 
 		// Then fire all synchronous handlers in order of subscription
 		for(i=0; i<sync_events.length; i++) {
-			var h = bmr.events[e][sync_events[i]];
+			var h = impl.events[e][sync_events[i]];
 			h[0].call(h[2], data, h[1]);
 		}
 	},
 
 	addVar: function(name, value) {
 		if(typeof name === "string") {
-			bmr.vars[name] = value;
+			impl.vars[name] = value;
 		}
 		else if(typeof name === "object") {
 			var o = name, k;
 			for(k in o) {
 				if(o.hasOwnProperty(k)) {
-					bmr.vars[k] = o[k];
+					impl.vars[k] = o[k];
 				}
 			}
 		}
@@ -273,8 +277,8 @@ var O = {
 			return this;
 
 		for(i=0; i<arguments.length; i++) {
-			if(bmr.hasOwnProperty(arguments[i])) {
-				delete bmr[arguments[i]];
+			if(impl.vars.hasOwnProperty(arguments[i])) {
+				delete impl.vars[arguments[i]];
 			}
 		}
 
@@ -289,14 +293,17 @@ var O = {
 		// wanted to do
 		for(k in this.plugins) {
 			if(this.plugins.hasOwnProperty(k)) {
+				if(impl.disabled_plugins[k]) {
+					continue;
+				}
 				if(!this.plugins[k].is_complete()) {
-					return;
+					return this;
 				}
 			}
 		}
 	
 		// If we reach here, all plugins have completed
-		this.fireEvent("before_beacon", bmr.vars);
+		this.fireEvent("before_beacon", impl.vars);
 
 		// Don't send a beacon if no beacon_url has been set
 		if(!this.beacon_url) {
@@ -304,10 +311,10 @@ var O = {
 		}
 
 		url = this.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
-		for(k in bmr.vars) {
-			if(bmr.vars.hasOwnProperty(k)) {
+		for(k in impl.vars) {
+			if(impl.vars.hasOwnProperty(k)) {
 				nparams++;
-				url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(bmr.vars[k]);
+				url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(impl.vars[k]);
 			}
 		}
 	
