@@ -4,6 +4,7 @@ Skeleton template for all boomerang plugins.  Use this code as a starting point 
 own plugins.
 */
 
+// w is the window object and d is the document object.
 (function(w, d) {
 
 // First make sure BOOMR is actually defined.  It's possible that your plugin is loaded before boomerang, in which case
@@ -17,7 +18,7 @@ if(!BOOMR.plugins) {
 
 // A private object to encapsulate all your implementation details
 // This is optional, but the way we recommend you do it.
-var O = {
+var impl = {
 };
 	
 BOOMR.plugins.MyPlugin = {
@@ -25,9 +26,13 @@ BOOMR.plugins.MyPlugin = {
 		var i, properties = ["prop1", "prop2"];	// list of user configurable properties in O
 
 		// This block is only needed if you actually have user configurable properties
-		BOOMR.utils.pluginConfig(O, config, "MyPlugin", properties);
+		BOOMR.utils.pluginConfig(impl, config, "MyPlugin", properties);
 
 		// Other initialisation code here
+
+		// Subscribe to any BOOMR events here.
+		// Unless your code will explicitly be called by the developer
+		// or by another plugin, you must to do this.
 
 		return this;
 	},
@@ -36,12 +41,9 @@ BOOMR.plugins.MyPlugin = {
 
 	is_complete: function() {
 		// This method should determine if the plugin has completed doing what it
-		/// neds to do and return true if so or false otherwise
+		/// needs to do and return true if so or false otherwise
 	}
 };
-
-// Subscribe to any BOOMR events here.  Unless your code will explicitly be called by the developer
-// or by another plugin, you will need to do this.
 
 }(this, this.document));
 

@@ -210,10 +210,19 @@ var O = {
 	},
 
 	subscribe: function(e, fn, cb_data, cb_scope, async) {
+		var i, h;
 		if(e === 'page_unload') {
 			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
 		}
-		else if(bmr.events.hasOwnProperty(e)) {
+
+		if(bmr.events.hasOwnProperty(e)) {
+			for(i=0; i<bmr.events[e].length; i++) {
+				h = bmr.events[e][i];
+				// don't allow a handler to be attached more than once to the same event
+				if(h[0] === fn && h[1] === cb_data && h[2] === cb_scope) {
+					return this;
+				}
+			}
 			bmr.events[e].push([ fn, cb_data || {}, cb_scope || null, async || false ]);
 		}
 
@@ -360,6 +369,9 @@ BOOMR.plugins.RT = {
 
 		BOOMR.utils.pluginConfig(rt, config, "RT", ["cookie", "cookie_exp", "strict_referrer"]);
 
+		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT, true);
+		BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
+
 		return this;
 	},
 
@@ -492,9 +504,6 @@ BOOMR.plugins.RT = {
 	is_complete: function() { return rt.complete; }
 
 };
-
-BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT, true);
-BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 
 }(this, this.document));
 // End of RT plugin
@@ -900,6 +909,8 @@ BOOMR.plugins.BW = {
 			o_bw.setVarsFromCookie(cookies);
 		}
 
+		BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
+
 		return this;
 	},
 
@@ -937,8 +948,6 @@ BOOMR.plugins.BW = {
 
 	is_complete: function() { return o_bw.complete; }
 };
-
-BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
 
 }(this, this.document));
 // End of BW plugin
