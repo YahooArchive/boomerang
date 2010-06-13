@@ -29,16 +29,12 @@ BOOMR.init({
 	});
 &lt;/script&gt;
 </pre>
-<p>
-Next, tell boomerang to start its timer.  The timer is called <code>t_done</code>.
-</p>
-<pre>
-BOOMR.plugins.RT.startTimer("t_done");
-</pre>
 
 <p>
-Now fetch your content, and in the callback function where your content has been fetched, call the <code>done()</code> method.
-This measures and beacons back the response time.  I use YUI 3 in the code below, but you could use anything you like.
+Next fetch your content.  Right before the call to fetch content, start the timer.  The load time timer is called
+<code>t_done</code>.  In the callback function where the content has been fetched, call the <code>done()</code>
+method.  This measures and beacons back the response time.  I use YUI 3 in the code below, but you could use
+anything you like.
 </p>
 
 <pre>
@@ -53,6 +49,7 @@ YUI().use("io-base", function(Y) {
  
     Y.on('io:complete', complete);
  
+    <em>BOOMR.plugins.RT.startTimer("t_done");
     var request = Y.io(uri);
 });
  </pre>
@@ -76,7 +73,7 @@ BOOMR.init({
 		RT: {
 			cookie: 'HOWTO-RT'
 		}
-	}).plugins.RT.startTimer("t_done");
+	});
 
 YUI().use("io-base", function(Y) {
     var uri = "dynamic-content.txt?" + new Date().getTime();
@@ -89,6 +86,7 @@ YUI().use("io-base", function(Y) {
  
     Y.on('io:complete', complete);
  
+    BOOMR.plugins.RT.startTimer("t_done");
     var request = Y.io(uri);
 });
  
