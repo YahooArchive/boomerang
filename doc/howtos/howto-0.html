@@ -75,7 +75,7 @@ You can get at this data before the beacon fires by subscribing to the <code>bef
 
 <pre>
 BOOMR.subscribe('before_beacon', function(o) {
-	// Do something with o
+	<span class="comment">// Do something with o</span>
 });
 </pre>
 
@@ -115,18 +115,18 @@ function extract_boomerang_data(params)
 	    i, url, page_id, ip, ua, woeid;
 
 
-	// First validate your beacon, make sure all datatypes
-	// are correct and values within reasonable range
-	// We'll also want to detect fake beacons, but that's more complex
+	<span class="comment">// First validate your beacon, make sure all datatypes               </span>
+	<span class="comment">// are correct and values within reasonable range                    </span>
+	<span class="comment">// We'll also want to detect fake beacons, but that's more complex   </span>
 	if(! validate_beacon(params)) {
 		return false;
 	}
 
-	// You may also want to do some kind of random sampling at this point
+	<span class="comment">// You may also want to do some kind of random sampling at this point</span>
 
-	// Figure out a bandwidth bucket.
-	// we could get more complex and consider bw_err as well,
-	// but for this example I'll ignore it
+	<span class="comment">// Figure out a bandwidth bucket.                                    </span>
+	<span class="comment">// we could get more complex and consider bw_err as well,            </span>
+	<span class="comment">// but for this example I'll ignore it                               </span>
 	for(i=0; i&lt;bw_buckets.length; i++) {
 		if(params.bw &lt;= bw_buckets[i]) {
 			bw_bucket = i;
@@ -134,21 +134,22 @@ function extract_boomerang_data(params)
 		}
 	}
 
-	// Now figure out a page id from the u parameter
-	// Since we might have a very large number of URLs that all
-	// map onto a very small number (possibly 1) of distinct page types
-	url = canonicalize_url(params.u);		// get a canonical form for this URL
-	page_id = get_page_id(url);			// get the page id out of the URL.  This might be a many-&gt;1 map
-							// it's a good idea to group pages to simplify performance analysis
+	<span class="comment">// Now figure out a page id from the u parameter                     </span>
+	<span class="comment">// Since we might have a very large number of URLs that all          </span>
+	<span class="comment">// map onto a very small number (possibly 1) of distinct page types  </span>
+	<span class="comment">// It's good to create page groups to simplify performance analysis. </span>
+
+	url = canonicalize_url(params.u); <span class="comment">// get a canonical form for the URL</span>
+	page_id = get_page_id(url);	  <span class="comment">// get a page id.  (many-&gt;1 map?)  </span>
 
 
-	// At this point we can extract other information from the request as well
-	// for example, the user's IP address (good for geo location) and user agent string
-	ip = get_user_ip();			// get user's IP from request
-	woeid = ip_to_woeid(ip);		// convert IP to a Where on earth ID
-	ua = get_normalized_uastring();		// get a normalized user agent string from the request
+	<span class="comment">// At this point we can extract other information from the request   </span>
+	<span class="comment">// eg, the user's IP address (good for geo location) and user agent  </span>
+	ip = get_user_ip();              <span class="comment">// get user's IP from request       </span>
+	woeid = ip_to_woeid(ip);         <span class="comment">// convert IP to a Where on earth ID</span>
+	ua = get_normalized_uastring();	 <span class="comment">// get a normalized useragent string</span>
 
-	// Now insert the data into our database
+	<span class="comment">// Now insert the data into our database                             </span>
 	insert_data(page_id, params.t_done, params.bw, params.bw_err, bw_bucket, params.lat, params.lat_err, ip, woeid, ua);
 
 	return true;
