@@ -4,8 +4,10 @@ Skeleton template for all boomerang plugins.  Use this code as a starting point 
 own plugins.
 */
 
-// w is the window object and d is the document object.
-(function(w, d) {
+// w is the window object
+(function(w) {
+
+var d=w.document;
 
 // First make sure BOOMR is actually defined.  It's possible that your plugin is loaded before boomerang, in which case
 // you'll need this.
@@ -45,5 +47,5 @@ BOOMR.plugins.MyPlugin = {
 	}
 };
 
-}(this, this.document));
+}(this));
 

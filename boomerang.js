@@ -14,8 +14,10 @@ for the full license text.
 */
 
 // beaconing section
-// the two parameters are the window and document objects
-(function(w, d) {
+// the parameter is the window
+(function(w) {
+
+var d=w.document;
 
 // don't allow this code to be included twice
 if(typeof w.BOOMR !== "undefined" && typeof w.BOOMR.version !== "undefined") {
@@ -355,15 +357,17 @@ if(typeof BOOMR.plugins === "undefined" || !BOOMR.plugins) {
 	BOOMR.plugins = {};
 }
 
-}(this, this.document));
+}(this));
 
 // end of boomerang beaconing section
 // Now we start built in plugins.  I might move them into separate source files at some point
 
 
 // This is the Round Trip Time plugin.  Abbreviated to RT
-// the two parameters are the window and document objects
-(function(w, d) {
+// the parameter is the window
+(function(w) {
+
+var d=w.document;
 
 if(!BOOMR) {
 	BOOMR = {};
@@ -539,12 +543,14 @@ BOOMR.plugins.RT = {
 
 };
 
-}(this, this.document));
+}(this));
 // End of RT plugin
 
 // This is the Bandwidth & Latency plugin abbreviated to BW
-// the two parameters are the window and document objects
-(function(w, d) {
+// the parameter is the window
+(function(w) {
+
+var d=w.document;
 
 if(!BOOMR) {
 	BOOMR = {};
@@ -985,7 +991,7 @@ BOOMR.plugins.BW = {
 	is_complete: function() { return impl.complete; }
 };
 
-}(this, this.document));
+}(this));
 // End of BW plugin
 
 /* ---include-plugins-here--- */
