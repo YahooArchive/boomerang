@@ -41,7 +41,6 @@ var impl = {
 	user_ip: '',		//! User's ip address determined on the server
 
 	events: {
-		"script_load": [],
 		"page_ready": [],
 		"page_unload": [],
 		"before_beacon": []
@@ -995,8 +994,6 @@ BOOMR.plugins.BW = {
 // End of BW plugin
 
 /* ---include-plugins-here--- */
-
-BOOMR.fireEvent("script_load");
 
 
 
