@@ -45,16 +45,7 @@ impl = {
 
 	vars: {},
 
-	disabled_plugins: {},
-
-	// We fire events with a setTimeout so that they run asynchronously
-	// and don't block each other.  This is most useful on a multi-threaded
-	// JS engine.  Don't use this for onbeforeunload though
-	asyncEvent: function(e, i, data) {
-		setTimeout(function() {
-			impl.events[e][i][0].call(impl.events[e][i][2], data, impl.events[e][i][1]);
-		}, 10);
-	}
+	disabled_plugins: {}
 };
 
 
@@ -216,7 +207,7 @@ boomr = {
 		return this;
 	},
 
-	subscribe: function(e, fn, cb_data, cb_scope, async) {
+	subscribe: function(e, fn, cb_data, cb_scope) {
 		var i, h;
 		if(e === 'page_unload') {
 			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
@@ -230,31 +221,26 @@ boomr = {
 					return this;
 				}
 			}
-			impl.events[e].push([ fn, cb_data || {}, cb_scope || null, async || false ]);
+			impl.events[e].push([ fn, cb_data || {}, cb_scope || null ]);
 		}
 
 		return this;
 	},
 
 	fireEvent: function(e, data) {
-		var i, sync_events=[], h;
-		if(impl.events.hasOwnProperty(e)) {
-			for(i=0; i<impl.events[e].length; i++) {
-				// First we fire all asynchronous event handlers
-				if(impl.events[e][i][3]) {
-					impl.asyncEvent(e, i, data);
-				}
-				else {
-					sync_events.push(i);
-				}
-			}
+		var i, h;
+		if(!impl.events.hasOwnProperty(e)) {
+			return this;
 		}
 
-		// Then fire all synchronous handlers in order of subscription
-		for(i=0; i<sync_events.length; i++) {
-			var h = impl.events[e][sync_events[i]];
+		e = impl.events[e];
+
+		for(i=0; i<e.length; i++) {
+			h = impl.events[e][sync_events[i]];
 			h[0].call(h[2], data, h[1]);
 		}
+
+		return this;
 	},
 
 	addVar: function(name, value) {
@@ -392,7 +378,7 @@ BOOMR.plugins.RT = {
 
 		BOOMR.utils.pluginConfig(impl, config, "RT", ["cookie", "cookie_exp", "strict_referrer"]);
 
-		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT, true);
+		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
 		BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
 
 		return this;
