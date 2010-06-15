@@ -247,7 +247,7 @@ boomr = {
 		e = impl.events[e];
 
 		for(i=0; i<e.length; i++) {
-			h = impl.events[e][sync_events[i]];
+			h = e[i];
 			h[0].call(h[2], data, h[1]);
 		}
 
