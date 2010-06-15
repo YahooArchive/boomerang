@@ -965,7 +965,7 @@ BOOMR.plugins.BW = {
 			// we don't run the test for https because SSL stuff will mess up b/w calculations
 			// we could run the test itself over HTTP, but then IE will complain about
 			// insecure resources, so the best is to just bail and hope that the user
-			// gets the cookie from some other Y! page
+			// gets the cookie from some other page
 
 			impl.complete = true;
 			return this;
