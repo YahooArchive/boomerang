@@ -145,12 +145,12 @@ boomr = {
 		pluginConfig: function(o, config, plugin_name, properties) {
 			var i, props=0;
 
-			if(typeof config === "undefined" || typeof config[plugin_name] === "undefined") {
+			if(!config || !config[plugin_name]) {
 				return false;
 			}
 
 			for(i=0; i<properties.length; i++) {
-				if(typeof(config[plugin_name][properties[i]]) !== "undefined") {
+				if(typeof config[plugin_name][properties[i]] !== "undefined") {
 					o[properties[i]] = config[plugin_name][properties[i]];
 					props++;
 				}
@@ -177,6 +177,9 @@ boomr = {
 
 		if(typeof config.log  !== "undefined") {
 			this.log = config.log;
+		}
+		if(!this.log) {
+			this.log = function(m,l,s) { };
 		}
 	
 		for(k in this.plugins) {
@@ -209,19 +212,25 @@ boomr = {
 
 	subscribe: function(e, fn, cb_data, cb_scope) {
 		var i, h;
-		if(e === 'page_unload') {
-			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
+
+		if(!impl.events.hasOwnProperty(e)) {
+			return this;
 		}
 
-		if(impl.events.hasOwnProperty(e)) {
-			for(i=0; i<impl.events[e].length; i++) {
-				h = impl.events[e][i];
-				// don't allow a handler to be attached more than once to the same event
-				if(h[0] === fn && h[1] === cb_data && h[2] === cb_scope) {
-					return this;
-				}
+		e = impl.events[e];
+
+		// don't allow a handler to be attached more than once to the same event
+		for(i=0; i<e.length; i++) {
+			h = e[i];
+			if(h[0] === fn && h[1] === cb_data && h[2] === cb_scope) {
+				return this;
 			}
-			impl.events[e].push([ fn, cb_data || {}, cb_scope || null ]);
+		}
+		e.push([ fn, cb_data || {}, cb_scope || null ]);
+
+		// If it's an unload handler, then attach directly to the window.onunload event
+		if(e === 'page_unload') {
+			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
 		}
 
 		return this;
@@ -313,9 +322,7 @@ boomr = {
 		}
 
 		return this;
-	},
-
-	log: function(m,l,s) {} // create a logger - we'll try to use the YUI logger if it exists or firebug if it exists, or just fall back to nothing.
+	}
 };
 
 if(typeof w.YAHOO !== "undefined" && typeof w.YAHOO.log !== "undefined") {
@@ -335,9 +342,7 @@ for(k in boomr) {
 	}
 }
 
-if(typeof BOOMR.plugins === "undefined" || !BOOMR.plugins) {
-	BOOMR.plugins = {};
-}
+BOOMR.plugins = BOOMR.plugins || {};
 
 }(this));
 
