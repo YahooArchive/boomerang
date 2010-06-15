@@ -19,13 +19,15 @@ for the full license text.
 
 var impl, boomr, k, d=w.document;
 
+// Short namespace because I don't want to keep typing BOOMERANG
+if(typeof BOOMR === "undefined") {
+	BOOMR = {};
+}
 // don't allow this code to be included twice
-if(typeof w.BOOMR !== "undefined" && typeof w.BOOMR.version !== "undefined") {
+if(BOOMR.version) {
 	return;
 }
 
-// Short namespace because I don't want to keep typing BOOMERANG
-BOOMR = BOOMR || {};
 BOOMR.version = "1.0";
 
 
