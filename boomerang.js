@@ -412,23 +412,27 @@ BOOMR.plugins.RT = {
 	},
 
 	startTimer: function(timer_name) {
-		impl.timers[timer_name] = { start: new Date().getTime() };
-		impl.complete = false;
+		if(timer_name) {
+			impl.timers[timer_name] = { start: new Date().getTime() };
+			impl.complete = false;
+		}
 
 		return this;
 	},
 
 	endTimer: function(timer_name, time_value) {
-		if(typeof impl.timers[timer_name] === "undefined") {
-			impl.timers[timer_name] = {};
+		if(timer_name) {
+			impl.timers[timer_name] = impl.timers[timer_name] || {};
+			impl.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
 		}
-		impl.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
 
 		return this;
 	},
 
 	setTimer: function(timer_name, time_delta) {
-		impl.timers[timer_name] = { delta: time_delta };
+		if(timer_name) {
+			impl.timers[timer_name] = { delta: time_delta };
+		}
 
 		return this;
 	},
@@ -446,10 +450,9 @@ BOOMR.plugins.RT = {
 	// Called when the page has reached a "usable" state.  This may be when the onload event fires,
 	// or it could be at some other moment during/after page load when the page is usable by the user
 	done: function() {
-		var t_start, u, r, r2, t_other=[],
+		var t_start, u, r, r2, 
 		    subcookies,
-		    basic_timers = { t_done: 1, t_page: 1, t_resp: 1 },
-		    ntimers = 0, timer;
+		    ntimers = 0, t_name, timer;
 
 		if(impl.complete) {
 			return this;
@@ -478,51 +481,48 @@ BOOMR.plugins.RT = {
 		}
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_other', 't_done', 't_page', 't_resp', 'u', 'r', 'r2');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'u', 'r', 'r2');
 
-		for(timer in impl.timers) {
-			if(!impl.timers.hasOwnProperty(timer)) {
+		for(t_name in impl.timers) {
+			if(!impl.timers.hasOwnProperty(t_name)) {
 				continue;
 			}
 
-			if(typeof impl.timers[timer].delta !== "number") {
-				impl.timers[timer].delta = impl.timers[timer].end - ( typeof impl.timers[timer].start === "number" ? impl.timers[timer].start : t_start );
+			timer = impl.timers[t_name];
+
+			// if delta is a number, then it was set using setTimer
+			// if not, then we have to calculate it using start & end
+			if(typeof timer.delta !== "number") {
+				if(typeof timer.start !== "number") {
+					timer.start = t_start;
+				}
+				timer.delta = timer.end - timer.start;
 			}
 
-			if(isNaN(impl.timers[timer].delta)) {
+			// If the caller did not set a start time, and if there was no start cookie
+			// then timer.delta will be NaN, in which case we discard it.
+			if(isNaN(timer.delta)) {
 				continue;
 			}
 
-			if(basic_timers[timer]) {
-				BOOMR.addVar(timer, impl.timers[timer].delta);
-			}
-			else {
-				t_other.push(encodeURIComponent(timer) + "|" + encodeURIComponent(impl.timers[timer].delta));
-			}
+			BOOMR.addVar(t_name, timer.delta);
 			ntimers++;
 		}
 
 		// At this point we decide whether the beacon should be sent or not
-		if(ntimers === 0) {
-			impl.complete = true;			// no point blocking other plugins
-			return this.error("no timers");
-		}
+		if(ntimers) {
+			BOOMR.addVar({ "u": u, "r": r });
 
-		if(t_other.length > 0) {
-			BOOMR.addVar("t_other", t_other.join(","));
+			if(r2 !== r) {
+				BOOMR.addVar("r2", r2);
+			}
 		}
 
 		impl.timers = {};
-
-		BOOMR.addVar({ "u": u, "r": r });
-
-		if(r2 !== r) {
-			BOOMR.addVar("r2", r2);
-		}
-
 		impl.complete = true;
 
-		BOOMR.sendBeacon();
+		BOOMR.sendBeacon();		// we call sendBeacon() anyway because some other plugin
+						// may have blocked waiting for RT to complete
 		return this;
 	},
 
