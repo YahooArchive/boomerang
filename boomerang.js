@@ -344,7 +344,7 @@ for(k in boomr) {
 
 BOOMR.plugins = BOOMR.plugins || {};
 
-}(this));
+}(window));
 
 // end of boomerang beaconing section
 // Now we start built in plugins.  I might move them into separate source files at some point
@@ -530,7 +530,7 @@ BOOMR.plugins.RT = {
 
 };
 
-}(this));
+}(window));
 // End of RT plugin
 
 // This is the Bandwidth & Latency plugin abbreviated to BW
@@ -978,7 +978,7 @@ BOOMR.plugins.BW = {
 	is_complete: function() { return impl.complete; }
 };
 
-}(this));
+}(window));
 // End of BW plugin
 
 /* ---include-plugins-here--- */
