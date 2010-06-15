@@ -17,7 +17,7 @@ for the full license text.
 // the parameter is the window
 (function(w) {
 
-var d=w.document;
+var impl, boomr, k, d=w.document;
 
 // don't allow this code to be included twice
 if(typeof w.BOOMR !== "undefined" && typeof w.BOOMR.version !== "undefined") {
@@ -25,16 +25,13 @@ if(typeof w.BOOMR !== "undefined" && typeof w.BOOMR.version !== "undefined") {
 }
 
 // Short namespace because I don't want to keep typing BOOMERANG
-if(typeof w.BOOMR === "undefined" || !w.BOOMR) {
-	BOOMR = {};
-}
-
+BOOMR = BOOMR || {};
 BOOMR.version = "1.0";
 
 
 // impl is a private object not reachable from outside the BOOMR object
 // users can set properties by passing in to the init() method
-var impl = {
+impl = {
 	// properties
 	beacon_url: "",
 	site_domain: w.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase(),	// strip out everything except last two parts of hostname.
@@ -60,10 +57,10 @@ var impl = {
 	}
 };
 
-// O is the boomerang object.  We merge it into BOOMR later.  Do it this way so that plugins
-// may be defined before including the script.
 
-var O = {
+// We create a boomr object and then copy all its properties to BOOMR so that we don't overwrite
+// anything additional that was added to BOOMR before this was called... for example, a plugin.
+boomr = {
 	// Utility functions
 	utils: {
 		getCookie: function(name) {
@@ -336,19 +333,19 @@ var O = {
 };
 
 if(typeof w.YAHOO !== "undefined" && typeof w.YAHOO.log !== "undefined") {
-	O.log = w.YAHOO.log;
+	boomr.log = w.YAHOO.log;
 }
 else if(typeof w.Y !== "undefined" && typeof w.Y.log !== "undefined") {
-	O.log = w.Y.log;
+	boomr.log = w.Y.log;
 }
 else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
-	O.log = function(m,l,s) { console.log(s + ": [" + l + "] ", m); };
+	boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] ", m); };
 }
 
 
-for(var k in O) {
-	if(O.hasOwnProperty(k)) {
-		BOOMR[k] = O[k];
+for(k in boomr) {
+	if(boomr.hasOwnProperty(k)) {
+		BOOMR[k] = boomr[k];
 	}
 }
 
