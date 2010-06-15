@@ -212,14 +212,14 @@ boomr = {
 		return this;
 	},
 
-	subscribe: function(e, fn, cb_data, cb_scope) {
-		var i, h;
+	subscribe: function(e_name, fn, cb_data, cb_scope) {
+		var i, h, e;
 
-		if(!impl.events.hasOwnProperty(e)) {
+		if(!impl.events.hasOwnProperty(e_name)) {
 			return this;
 		}
 
-		e = impl.events[e];
+		e = impl.events[e_name];
 
 		// don't allow a handler to be attached more than once to the same event
 		for(i=0; i<e.length; i++) {
@@ -231,20 +231,20 @@ boomr = {
 		e.push([ fn, cb_data || {}, cb_scope || null ]);
 
 		// If it's an unload handler, then attach directly to the window.onunload event
-		if(e === 'page_unload') {
+		if(e_name === 'page_unload') {
 			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
 		}
 
 		return this;
 	},
 
-	fireEvent: function(e, data) {
-		var i, h;
-		if(!impl.events.hasOwnProperty(e)) {
+	fireEvent: function(e_name, data) {
+		var i, h, e;
+		if(!impl.events.hasOwnProperty(e_name)) {
 			return this;
 		}
 
-		e = impl.events[e];
+		e = impl.events[e_name];
 
 		for(i=0; i<e.length; i++) {
 			h = e[i];
