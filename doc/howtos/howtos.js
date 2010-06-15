@@ -1,13 +1,18 @@
 // Since we don't set a beacon_url, we'll just subscribe to the before_beacon function
 // and print the results into the browser itself.
 BOOMR.subscribe('before_beacon', function(o) {
-	var html = "";
+	var html = "", t_name, t_other=[];
 	if(o.t_done) { html += "This page took " + o.t_done + " ms to load<br>"; }
-	if(o.t_other) {
-		var t_other = o.t_other.split(',');
+	for(t_name in o) {
+		if( o.hasOwnProperty(t_name) && t_name.match(/^t_/) && t_name !== "t_done" ) {
+			t_other.push(t_name + ' = ' + o[t_name]);
+		}
+	}
+
+	if(t_other.length) {
 		html += "Other timers measured: <br>";
 		for(var i=0; i<t_other.length; i++) {
-			html += "&nbsp;&nbsp;&nbsp;" + t_other[i].replace('|', ' = ') + " ms<br>";
+			html += "&nbsp;&nbsp;&nbsp;" + t_other[i] + " ms<br>";
 		}
 	}
 	if(o.bw) { html += "Your bandwidth to this server is " + parseInt(o.bw/1024) + "kbps (&#x00b1;" + parseInt(o.bw_err*100/o.bw) + "%)<br>"; }
