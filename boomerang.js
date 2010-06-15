@@ -356,12 +356,8 @@ BOOMR.plugins = BOOMR.plugins || {};
 
 var d=w.document;
 
-if(!BOOMR) {
-	BOOMR = {};
-}
-if(!BOOMR.plugins) {
-	BOOMR.plugins = {};
-}
+BOOMR = BOOMR || {};
+BOOMR.plugins = BOOMR.plugins || {};
 
 // private object
 var impl = {
@@ -539,12 +535,8 @@ BOOMR.plugins.RT = {
 
 var d=w.document;
 
-if(!BOOMR) {
-	BOOMR = {};
-}
-if(!BOOMR.plugins) {
-	BOOMR.plugins = {};
-}
+BOOMR = BOOMR || {};
+BOOMR.plugins = BOOMR.plugins || {};
 
 // We choose image sizes so that we can narrow down on a bandwidth range as soon as possible
 // the sizes chosen correspond to bandwidth values of 14-64kbps, 64-256kbps, 256-1024kbps, 1-2Mbps, 2-8Mbps, 8-30Mbps & 30Mbps+

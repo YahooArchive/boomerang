@@ -11,12 +11,8 @@ var d=w.document;
 
 // First make sure BOOMR is actually defined.  It's possible that your plugin is loaded before boomerang, in which case
 // you'll need this.
-if(!BOOMR) {
-	BOOMR = {};
-}
-if(!BOOMR.plugins) {
-	BOOMR.plugins = {};
-}
+BOOMR = BOOMR || {};
+BOOMR.plugins = BOOMR.plugins || {};
 
 // A private object to encapsulate all your implementation details
 // This is optional, but the way we recommend you do it.
@@ -47,5 +43,5 @@ BOOMR.plugins.MyPlugin = {
 	}
 };
 
-}(this));
+}(window));
 
