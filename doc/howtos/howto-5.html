@@ -9,7 +9,7 @@
 <span style="float:right;"><a href="index.html">Index</a></span>
 <h1>Boomerang Howto #5:<br>Request/page tagging</h1>
 <p>
-See use case #4 in <a href="../use-cases.txt">use-cases.txt</a> for a description of this requirement.
+See use case #5 in <a href="../use-cases.txt">use-cases.txt</a> for a description of this requirement.
 </p>
 <p>
 There will be several occassions when you need to add more information to the beacon that's sent
@@ -31,7 +31,7 @@ BOOMR.addVar("page_id", 123);
 
 <p>
 The parameter name must be a string.  We recommend only using alphanumeric characters and underscores,
-but you can really use anything you lik.  Parameter values may only be numbers or strings, ie, 
+but you can really use anything you like.  Parameter values may only be numbers or strings, ie, 
 something that you can put into a URL.
 </p>
 
@@ -41,7 +41,7 @@ If you need to set multiple parameters, you can pass in an object instead:
 
 <pre>
 BOOMR.addVar({
-		"bucket": "test1",
+		"bucket": "test#1",
 		"page_id": 123
 	});
 </pre>
@@ -50,8 +50,53 @@ BOOMR.addVar({
 Make sure you've included boomerang.js before calling <code>BOOMR.addVar()</code>.
 </p>
 
+<h2>The beacon</h2>
+<p>
+The beacon will include all variables that you add in the URL.  Both keys and values will be
+URI encoded.  Your back end application will need to understand the passed in parameters.
+</p>
 
 <pre>
+http://yoursite.com/path/to/beacon.php?<em>bucket=test%231</em>&amp;<em>page_id=123</em>&amp;t_done=.....
+</pre>
+
+<h2>Removing variables</h2>
+<p>
+You can also remove a parameter that you've added (or that a plugin has added) from the beacon.
+To do this, call the <code>BOOMR.removeVar()</code> method.  This method takes in a list of
+name, and removes all of them from the parameter list.  Any name that isn't in the parameter
+list is ignored.
+</p>
+
+<pre>
+<span class="comment">// don't send the stooges to the server   </span>
+BOOMR.removeVar("larry", "moe", "curly");
+</pre>
+
+<h2>Stopping the beacon</h2>
+<p>
+You can also this as a crude way to prevent the beacon from firing.  Inside your <code>before_beacon</code>
+event handler, simply remove all parameters.
+</p>
+
+<pre>
+BOOMR.subscribe('before_beacon', function(o) {
+	var p_names = [], k;
+
+	if( "t_done" in o ) {
+		return;
+	}
+
+	<span class="comment">// t_done is not set, so don't beacon         </span>
+	for(k in o) {
+		if(o.hasOwnProperty(k)) {
+			p_names.push(k);
+		}
+	}
+
+	<span class="comment">// removeVar accepts either a list or an array</span>
+	BOOMR.removeVar(p_names);
+});
 </pre>
 
 <p id="results">
