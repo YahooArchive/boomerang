@@ -298,14 +298,21 @@ boomr = {
 	},
 
 	removeVar: function() {
-		var i;
+		var i, params;
 		if(!arguments.length) {
 			return this;
 		}
 
-		for(i=0; i<arguments.length; i++) {
-			if(impl.vars.hasOwnProperty(arguments[i])) {
-				delete impl.vars[arguments[i]];
+		if(arguments.length === 1 && Object.prototype.toString.apply(arguments[0]) === "[object Array]") {
+			params = arguments[0];
+		}
+		else {
+			params = arguments;
+		}
+
+		for(i=0; i<params.length; i++) {
+			if(impl.vars.hasOwnProperty(params[i])) {
+				delete impl.vars[params[i]];
 			}
 		}
 
