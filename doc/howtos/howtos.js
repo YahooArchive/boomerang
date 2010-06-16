@@ -4,7 +4,7 @@ BOOMR.subscribe('before_beacon', function(o) {
 	var html = "", t_name, t_other, others = [];
 	if(o.t_done) { html += "This page took " + o.t_done + " ms to load<br>"; }
 	if(o.t_other) {
-		t_other = o.t_other.replace(/\|/, ' = ').split(',');
+		t_other = o.t_other.replace(/\|/g, ' = ').split(',');
 		html += "Other timers measured: <br>";
 		for(var i=0; i<t_other.length; i++) {
 			html += "&nbsp;&nbsp;&nbsp;" + t_other[i] + " ms<br>";
