@@ -38,15 +38,15 @@ boomerang has the following configurable parameters:
 <dl>
 <dt>beacon_url</dt>
 <dd>
-[strongly recommended]
+<strong>[highly recommended]</strong>
 The URL to beacon results back to.  All parameters will be added to this URL's
-query string.  This URL should not already have a query string component.<br>
+query string.  This URL should not already have a query string component.
 There is no default value for this parameter.  If not set, no beacon will be sent.
 </dd>
 
 <dt>site_domain</dt>
 <dd>
-[recommended]
+<strong>[recommended]</strong>
 The domain that all cookies should be set on.  Boomerang will try to auto-detect this,
 but unless your site is of the <code>foo.com</code> format, it will probably get it
 wrong.  It's a good idea to set this to whatever part of your domain you'd like to
@@ -57,7 +57,7 @@ separate measurements across them.
 
 <dt>user_ip</dt>
 <dd>
-[recommended]
+<strong>[recommended]</strong>
 Despite its name, this is really a free-form string used to uniquely identify the user's
 current internet connection.  It's used primarily by the bandwidth test to determine
 whether it should re-measure the user's bandwidth or just use the value stored in the
@@ -67,7 +67,7 @@ the user's network connection.
 
 <dt>log</dt>
 <dd>
-[optional]
+<strong>[optional]</strong>
 By default, boomerang will attempt to use the logger component from YUI if it finds it
 or firebug if it finds that instead.  If it finds neither, it will default to not
 logging anything.  You can define your own logger by setting the <code>log</code>
@@ -85,7 +85,7 @@ Where:<dl>
 
 <dt>autorun</dt>
 <dd>
-[optional]
+<strong>[optional]</strong>
 By default, boomerang runs automatically and attaches its <code>page_ready</code> handler to
 the <code>window.onload</code> event.  If you set <code>autorun</code> to <code>false</code>,
 this will not happen and you will need to call <code>BOOMR.page_ready()</code> yourself.
@@ -116,13 +116,13 @@ All roundtrip plugin configuration items are under the <code>RT</code> namespace
 
 <dt>cookie</dt>
 <dd>
-[optional]
+<strong>[optional]</strong>
 The name of the cookie in which to store the start time for measuring page load time.  The default name is <code>RT</code>.
 </dd>
 
 <dt>cookie_exp</dt>
 <dd>
-[optional]
+<strong>[optional]</strong>
 The lifetime in seconds of the roundtrip cookie.  This only needs to live for as long as it takes for a single page to load.
 Something like 10 seconds or so should be good for most cases, but to be safe, and to cover people with really slow
 connections, or users that are geographically far away from you, keep it to a few minutes.  The default is set to 10 minutes.
@@ -130,7 +130,7 @@ connections, or users that are geographically far away from you, keep it to a fe
 
 <dt>strict_referrer</dt>
 <dd>
-[optional]
+<strong>[optional]</strong>
 By default, boomerang will not measure a page's roundtrip time if the URL in the <code>RT</code> cookie doesn't match
 the current page's <code>document.referrer</code>.  This is so because it generally means that the user visited a
 third page while their <code>RT</code> cookie was still valid, and this could render the page load time invalid.<br>
