@@ -449,8 +449,8 @@ BOOMR.plugins.RT = {
 	// or it could be at some other moment during/after page load when the page is usable by the user
 	done: function() {
 		var t_start, u, r, r2, 
-		    subcookies,
-		    ntimers = 0, t_name, timer;
+		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
+		    ntimers = 0, t_name, timer, t_other=[];
 
 		if(impl.complete) {
 			return this;
@@ -503,7 +503,12 @@ BOOMR.plugins.RT = {
 				continue;
 			}
 
-			BOOMR.addVar(t_name, timer.delta);
+			if(basic_timers.hasOwnProperty(t_name)) {
+				BOOMR.addVar(t_name, timer.delta);
+			}
+			else {
+				t_other.push(t_name + '|' + timer.delta);
+			}
 			ntimers++;
 		}
 
@@ -513,6 +518,10 @@ BOOMR.plugins.RT = {
 
 			if(r2 !== r) {
 				BOOMR.addVar("r2", r2);
+			}
+
+			if(t_other.length) {
+				BOOMR.addVar("t_other", t_other.join(','));
 			}
 		}
 
