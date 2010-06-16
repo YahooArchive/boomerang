@@ -38,6 +38,7 @@ boomerang has the following configurable parameters:
 <dl>
 <dt>beacon_url</dt>
 <dd>
+[strongly recommended]
 The URL to beacon results back to.  All parameters will be added to this URL's
 query string.  This URL should not already have a query string component.<br>
 There is no default value for this parameter.  If not set, no beacon will be sent.
@@ -45,6 +46,7 @@ There is no default value for this parameter.  If not set, no beacon will be sen
 
 <dt>site_domain</dt>
 <dd>
+[recommended]
 The domain that all cookies should be set on.  Boomerang will try to auto-detect this,
 but unless your site is of the <code>foo.com</code> format, it will probably get it
 wrong.  It's a good idea to set this to whatever part of your domain you'd like to
@@ -55,6 +57,7 @@ separate measurements across them.
 
 <dt>user_ip</dt>
 <dd>
+[recommended]
 Despite its name, this is really a free-form string used to uniquely identify the user's
 current internet connection.  It's used primarily by the bandwidth test to determine
 whether it should re-measure the user's bandwidth or just use the value stored in the
@@ -64,6 +67,7 @@ the user's network connection.
 
 <dt>log</dt>
 <dd>
+[optional]
 By default, boomerang will attempt to use the logger component from YUI if it finds it
 or firebug if it finds that instead.  If it finds neither, it will default to not
 logging anything.  You can define your own logger by setting the <code>log</code>
@@ -72,7 +76,7 @@ The signature of this function is:
 <pre>
 function log(oMessage, sLevel, sSource);
 </pre>
-Where<dl>
+Where:<dl>
 <dt>oMessage</dt> <dd>is the object/message to be logged.  It is up to you to decide how to log objects.<dd>
 <dt>sLevel</dt> <dd>is the log level, with values of "error", "warn", "info" and "debug"</dd>
 <dt>sSource</dt> <dd>is the source of the log message.  This will typically be the string "boomerang" followed by the name of a plugin</dd>
@@ -81,6 +85,7 @@ Where<dl>
 
 <dt>autorun</dt>
 <dd>
+[optional]
 By default, boomerang runs automatically and attaches its <code>page_ready</code> handler to
 the <code>window.onload</code> event.  If you set <code>autorun</code> to <code>false</code>,
 this will not happen and you will need to call <code>BOOMR.page_ready()</code> yourself.
@@ -94,7 +99,59 @@ of the plugin.  In the following sections we'll see how to configure our built-i
 
 </dl>
 
+<pre>
+BOOMR.init({
+		beacon_url: "http://beacons.yoursite.com/path/to/beacon.php",
+		site_domain: "yoursite.com",
+		user_ip: "202.54.1.18",
+		autorun: false
+	});
+</pre>
+
 <h2>Roundtrip plugin</h2>
+<p>
+All roundtrip plugin configuration items are under the <code>RT</code> namespace.
+</p>
+<dl>
+
+<dt>cookie</dt>
+<dd>
+[optional]
+The name of the cookie in which to store the start time for measuring page load time.  The default name is <code>RT</code>.
+</dd>
+
+<dt>cookie_exp</dt>
+<dd>
+[optional]
+The lifetime in seconds of the roundtrip cookie.  This only needs to live for as long as it takes for a single page to load.
+Something like 10 seconds or so should be good for most cases, but to be safe, and to cover people with really slow
+connections, or users that are geographically far away from you, keep it to a few minutes.  The default is set to 10 minutes.
+</dd>
+
+<dt>strict_referrer</dt>
+<dd>
+[optional]
+By default, boomerang will not measure a page's roundtrip time if the URL in the <code>RT</code> cookie doesn't match
+the current page's <code>document.referrer</code>.  This is so because it generally means that the user visited a
+third page while their <code>RT</code> cookie was still valid, and this could render the page load time invalid.<br>
+There may be cases, though, when this is a valid flow &mdash; for example, you have an SSL page in between and the
+referrer isn't passed through.  In this case, you'll want to set <code>strict_referrer</code> to <code>false</code>
+</dd>
+
+</dl>
+
+<pre>
+BOOMR.init({
+		beacon_url: "http://beacons.yoursite.com/path/to/beacon.php",
+		site_domain: "yoursite.com",
+		user_ip: "202.54.1.18",
+		autorun: false,
+		RT: {
+			cookie: "MyRT",
+			cookie_exp: 120		<span class="comment">// 2 minutes</span>
+		}
+	});
+</pre>
 
 <h2>Bandwidth plugin</h2>
 
