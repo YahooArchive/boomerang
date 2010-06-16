@@ -123,4 +123,24 @@ across clients, however we can still get a decently random sample.
 See TODO #1.
 
 
+9. Protect the beacon from abuse
+
+If you have a URL entry point, chances are that someone will abuse it, either intentionally
+or accidentally.
+
+For example, you design a site that you're happy with, and you include the boomerang javascript
+in your code to measure performance.  The javascript beacons back to your server.  Now someone
+comes along and really likes your design, so goes ahead and copies your HTML and sticks it on
+their own server.  They change some of the text and images, but leave the javascript still
+beaconing to your server.  You end up getting their beacons, which not only increase the load
+on your server, but also messes with your measurements.
+
+The second possibility is that some script kiddie notices the beacon URL on your site and starts
+hitting it with a whole bunch of different combinations to try and exploit your server, or if
+nothing else, to try and DoS you.
+
+boomerang should be able to protect against these problems.
+
+See HOWTO #7
+
 
