@@ -38,7 +38,7 @@ page is usable by a user browsing your website, you need to fire the <code>page_
 </p>
 
 <pre>
-BOOMR.fireEvent("page_ready");	// Tell boomerang that the page is now usable
+BOOMR.page_ready();	// Tell boomerang that the page is now usable
 </pre>
 
 <p>
@@ -68,7 +68,7 @@ BOOMR.init({
 	});
 
 // Fire the page_ready event after 750ms
-setTimeout(function() { BOOMR.fireEvent("page_ready"); }, 750);
+setTimeout(function() { BOOMR.page_ready(); }, 750);
 </script>
 </body>
 </html>
