@@ -36,8 +36,14 @@ BOOMR.version = "1.0";
 impl = {
 	// properties
 	beacon_url: "",
-	site_domain: w.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').toLowerCase(),	// strip out everything except last two parts of hostname.
-	user_ip: '',		//! User's ip address determined on the server
+	// strip out everything except last two parts of hostname.
+	// This doesn't work well for domains that end with a country tld,
+	// but we allow the developer to override site_domain for that.
+	site_domain: w.location.hostname.
+				replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').
+				toLowerCase(),
+	//! User's ip address determined on the server.  Used for the BA cookie
+	user_ip: '',
 
 	events: {
 		"page_ready": [],
@@ -51,8 +57,9 @@ impl = {
 };
 
 
-// We create a boomr object and then copy all its properties to BOOMR so that we don't overwrite
-// anything additional that was added to BOOMR before this was called... for example, a plugin.
+// We create a boomr object and then copy all its properties to BOOMR so that
+// we don't overwrite anything additional that was added to BOOMR before this
+// was called... for example, a plugin.
 boomr = {
 	// Utility functions
 	utils: {
@@ -81,7 +88,8 @@ boomr = {
 		
 			for(k in subcookies) {
 				if(subcookies.hasOwnProperty(k)) {
-					value += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(subcookies[k]);
+					value += '&' + encodeURIComponent(k)
+							+ '=' + encodeURIComponent(subcookies[k]);
 				}
 			}
 			value = value.replace(/^&/, '');
@@ -96,12 +104,14 @@ boomr = {
 			c = nameval +
 				((max_age) ? "; expires=" + exp : "" ) +
 				((path) ? "; path=" + path : "") +
-				((typeof domain !== "undefined") ? "; domain=" + (domain === null ? impl.site_domain : domain) : "") +
+				((typeof domain !== "undefined") ? "; domain="
+						+ (domain !== null ? domain : impl.site_domain ) : "") +
 				((sec) ? "; secure" : "");
 		
 			if ( nameval.length < 4000 ) {
 				d.cookie = c;
-				return ( value === this.getCookie(name) );    // confirm it was set (could be blocked by user's settings, etc.)
+				// confirm cookie was set (could be blocked by user's settings, etc.)
+				return ( value === this.getCookie(name) );
 			}
 		
 			return false;
@@ -185,7 +195,11 @@ boomr = {
 		}
 	
 		for(k in this.plugins) {
-			if(config[k] && typeof config[k].enabled !== "undefined" && config[k].enabled === false) {	// config[pugin].enabled has been set to false
+			// config[pugin].enabled has been set to false
+			if( config[k]
+				&& typeof config[k].enabled !== "undefined"
+				&& config[k].enabled === false
+			) {
 				impl.disabled_plugins[k] = 1;
 				continue;
 			}
@@ -193,20 +207,29 @@ boomr = {
 				delete impl.disabled_plugins[k];
 			}
 
-			if(this.plugins.hasOwnProperty(k) && typeof this.plugins[k].init === "function") {		// plugin exists and has an init method
+			// plugin exists and has an init method
+			if(this.plugins.hasOwnProperty(k)
+				&& typeof this.plugins[k].init === "function"
+			) {
 				this.plugins[k].init(config);
 			}
 		}
 	
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
-			this.utils.addListener(w, "load", function() { that.fireEvent("page_ready"); that=null; });
+			this.utils.addListener(w, "load",
+						function() {
+							that.fireEvent("page_ready");
+							that=null;
+						}
+					);
 		}
 	
 		return this;
 	},
 
-	// The page dev calls this method when they determine the page is usable.  Only call this if autorun is explicitly set to false
+	// The page dev calls this method when they determine the page is usable.
+	// Only call this if autorun is explicitly set to false
 	page_ready: function() {
 		this.fireEvent("page_ready");
 		return this;
@@ -230,9 +253,14 @@ boomr = {
 		}
 		e.push([ fn, cb_data || {}, cb_scope || null ]);
 
-		// If it's an unload handler, then attach directly to the window.onunload event
+		// Attach unload handlers directly to the window.onunload event
 		if(e_name === 'page_unload') {
-			this.utils.addListener(w, "unload", function() { fn.call(cb_scope, null, cb_data); });
+			this.utils.addListener(w, "unload",
+						function() {
+							fn.call(cb_scope, null, cb_data);
+							fn=cb_scope=cb_data=null;
+						}
+					);
 		}
 
 		return this;
@@ -313,7 +341,8 @@ boomr = {
 		for(k in impl.vars) {
 			if(impl.vars.hasOwnProperty(k)) {
 				nparams++;
-				url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(impl.vars[k]);
+				url += "&" + encodeURIComponent(k)
+					+ "=" + encodeURIComponent(impl.vars[k]);
 			}
 		}
 	
@@ -349,7 +378,7 @@ BOOMR.plugins = BOOMR.plugins || {};
 }(window));
 
 // end of boomerang beaconing section
-// Now we start built in plugins.  I might move them into separate source files at some point
+// Now we start built in plugins.
 
 
 // This is the Round Trip Time plugin.  Abbreviated to RT
@@ -367,9 +396,11 @@ var impl = {
 
 	timers: {},		//! Custom timers that the developer can use
 				// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
-	cookie: 'BRT',		//! Name of the cookie that stores the start time and referrer
+	cookie: 'RT',		//! Name of the cookie that stores the start time and referrer
 	cookie_exp:600,		//! Cookie expiry in seconds
-	strict_referrer: true	//! By default, don't beacon if referrers don't match. If set to false, beacon both referrer values and let the back end decide
+	strict_referrer: true	//! By default, don't beacon if referrers don't match.
+				// If set to false, beacon both referrer values and let
+				// the back end decide
 };
 
 BOOMR.plugins.RT = {
@@ -379,10 +410,13 @@ BOOMR.plugins.RT = {
 		impl.complete = false;
 		impl.timers = {};
 
-		BOOMR.utils.pluginConfig(impl, config, "RT", ["cookie", "cookie_exp", "strict_referrer"]);
+		BOOMR.utils.pluginConfig(impl, config, "RT",
+					["cookie", "cookie_exp", "strict_referrer"]);
 
-		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
-		BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start, null, BOOMR.plugins.RT);
+		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done,
+					null, BOOMR.plugins.RT);
+		BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start,
+					null, BOOMR.plugins.RT);
 
 		return this;
 	},
@@ -391,19 +425,27 @@ BOOMR.plugins.RT = {
 	start: function() {
 		var t_end, t_start = new Date().getTime();
 
-		if(!BOOMR.utils.setCookie(impl.cookie, { s: t_start, r: d.URL.replace(/#.*/, '') }, impl.cookie_exp, "/", null)) {
+		// We use document.URL instead of location.href because of a bug in safari 4
+		// where location.href is URL decoded
+		if(!BOOMR.utils.setCookie(impl.cookie,
+						{ s: t_start, r: d.URL.replace(/#.*/, '') },
+						impl.cookie_exp,
+						"/", null)
+		) {
 			return this.error("cannot set start cookie");
 		}
 
 		t_end = new Date().getTime();
 		if(t_end - t_start > 50) {
 			// It took > 50ms to set the cookie
-			// Most likely user has cookie prompting turned on so t_start won't be the actual unload time
+			// The user Most likely has cookie prompting turned on so
+			// t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
 			BOOMR.utils.removeCookie(impl.cookie);
 
 			// at some point we may want to log this info on the server side
-			this.error("took more than 50ms to set cookie... aborting: " + t_start + " -> " + t_end);
+			this.error("took more than 50ms to set cookie... aborting: "
+					+ t_start + " -> " + t_end);
 		}
 
 		return this;
@@ -421,7 +463,8 @@ BOOMR.plugins.RT = {
 	endTimer: function(timer_name, time_value) {
 		if(timer_name) {
 			impl.timers[timer_name] = impl.timers[timer_name] || {};
-			impl.timers[timer_name].end = (typeof time_value === "number" ? time_value : new Date().getTime());
+			impl.timers[timer_name].end =
+					(typeof time_value === "number" ? time_value : new Date().getTime());
 		}
 
 		return this;
@@ -445,8 +488,9 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
-	// Called when the page has reached a "usable" state.  This may be when the onload event fires,
-	// or it could be at some other moment during/after page load when the page is usable by the user
+	// Called when the page has reached a "usable" state.  This may be when the
+	// onload event fires, or it could be at some other moment during/after page
+	// load when the page is usable by the user
 	done: function() {
 		var t_start, u, r, r2, 
 		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
@@ -458,17 +502,21 @@ BOOMR.plugins.RT = {
 
 		this.endTimer("t_done");
 
-		// A beacon may be fired automatically on page load or if the page dev fires it
-		// manually with their own timers.  It may not always contain a referrer (eg: XHR calls)
-		// We set default values for these cases
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases
 
+		// use document.URL instead of location.href because of a safari bug
 		u = d.URL.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 		BOOMR.utils.removeCookie(impl.cookie);
 
-		if(subcookies !== null && typeof subcookies.s !== "undefined" && typeof subcookies.r !== "undefined") {
+		if(subcookies !== null
+			&& typeof subcookies.s !== "undefined"
+			&& typeof subcookies.r !== "undefined"
+		) {
 			r = subcookies.r;
 			if(!impl.strict_referrer || r === r2) { 
 				t_start = parseInt(subcookies.s, 10);
@@ -528,8 +576,8 @@ BOOMR.plugins.RT = {
 		impl.timers = {};
 		impl.complete = true;
 
-		BOOMR.sendBeacon();		// we call sendBeacon() anyway because some other plugin
-						// may have blocked waiting for RT to complete
+		BOOMR.sendBeacon();	// we call sendBeacon() anyway because some other plugin
+					// may have blocked waiting for RT to complete
 		return this;
 	},
 
