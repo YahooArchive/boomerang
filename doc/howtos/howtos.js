@@ -17,7 +17,7 @@ BOOMR.subscribe('before_beacon', function(o) {
 	r.innerHTML = html;
 
 	for(var k in o) {
-		if(!k.match(/^(t_done|t_other|bw|lat|bw_err|lat_err)$/)) {
+		if(!k.match(/^(t_done|t_other|bw|lat|bw_err|lat_err|u|r2?)$/)) {
 			others.push(k + " = " + o[k]);
 		}
 	}
