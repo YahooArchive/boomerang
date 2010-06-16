@@ -8,9 +8,95 @@
 <body>
 <span style="float:right;"><a href="index.html">Index</a></span>
 <h1>Boomerang Howto #6:<br>Configuring boomerang</h1>
+<p>
+To use boomerang, you first include <code>boomerang.js</code> in your html file and
+then call the <code>BOOMR.init()</code> method.  This should be sufficient to measure
+page performance, but may not be useful enough to you as a site owner.  You still won't
+get data back to your server, and probably won't be able to measure the user's bandwidth
+either.
+</p>
+<p>
+In this document we'll look at all the different parameters you can use to configure
+boomerang and its built in plugins.  If you have additional plugins, consult their
+documentation for details on how to configure them.
+</p>
+
+<h2>Configuring boomerang</h2>
+<p>
+To configure boomerang and its plugins, you pass in a configuration object to the <code>init()</code>
+method:
+</p>
+<pre>
+BOOMR.init({
+		key: value,
+		...
+	});
+</pre>
+<p>
+boomerang has the following configurable parameters:
+</p>
+<dl>
+<dt>beacon_url</dt>
+<dd>
+The URL to beacon results back to.  All parameters will be added to this URL's
+query string.  This URL should not already have a query string component.<br>
+There is no default value for this parameter.  If not set, no beacon will be sent.
+</dd>
+
+<dt>site_domain</dt>
+<dd>
+The domain that all cookies should be set on.  Boomerang will try to auto-detect this,
+but unless your site is of the <code>foo.com</code> format, it will probably get it
+wrong.  It's a good idea to set this to whatever part of your domain you'd like to
+share bandwidth and performance measurements across.<br>
+If you have multiple domains, then you're out of luck.  You'll just have to get 
+separate measurements across them.
+</dd>
+
+<dt>user_ip</dt>
+<dd>
+Despite its name, this is really a free-form string used to uniquely identify the user's
+current internet connection.  It's used primarily by the bandwidth test to determine
+whether it should re-measure the user's bandwidth or just use the value stored in the
+cookie.  You may use IPv4, IPv6 or anything else that you think can be used to identify
+the user's network connection.
+</dd>
+
+<dt>log</dt>
+<dd>
+By default, boomerang will attempt to use the logger component from YUI if it finds it
+or firebug if it finds that instead.  If it finds neither, it will default to not
+logging anything.  You can define your own logger by setting the <code>log</code>
+parameter to a function that logs messages.<br>
+The signature of this function is:
+<pre>
+function log(oMessage, sLevel, sSource);
+</pre>
+Where<dl>
+<dt>oMessage</dt> <dd>is the object/message to be logged.  It is up to you to decide how to log objects.<dd>
+<dt>sLevel</dt> <dd>is the log level, with values of "error", "warn", "info" and "debug"</dd>
+<dt>sSource</dt> <dd>is the source of the log message.  This will typically be the string "boomerang" followed by the name of a plugin</dd>
+</dl>
+</dd>
+
+<dt>autorun</dt>
+<dd>
+By default, boomerang runs automatically and attaches its <code>page_ready</code> handler to
+the <code>window.onload</code> event.  If you set <code>autorun</code> to <code>false</code>,
+this will not happen and you will need to call <code>BOOMR.page_ready()</code> yourself.
+</dd>
+
+<dt>&lt;plugin_name&gt;<dt>
+<dd>
+Each plugin is configured through a sub-object of the config object.  The key is the name
+of the plugin.  In the following sections we'll see how to configure our built-in plugins.
+</dd>
+
+</dl>
 
 <p id="results">
 </p>
+
 <script src="../../boomerang.js" type="text/javascript"></script>
 <script src="howtos.js" type="text/javascript"></script>
 <script type="text/javascript">
