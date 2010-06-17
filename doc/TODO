@@ -18,8 +18,4 @@
 3. Measure DNS latency
    See use-case #6.
 
-4. Maybe handle different log levels
-
-5. Allow dev to easily disable logging
-
-6. Rewrite bandwidth testing code to be pretty and clean
+4. Rewrite bandwidth testing code to be pretty and clean
