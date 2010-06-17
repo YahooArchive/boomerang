@@ -13,12 +13,11 @@ See use case #9 in <a href="../use-cases.txt">use-cases.txt</a> for a descriptio
 </p>
 
 <p>
-There are three types of beacon abuse you may need to protect against:
+There are two types of beacon abuse you may need to protect against:
 </p>
 <ol>
 <li>Denial of service attacks</li>
 <li>Fake beacons that do not originate from a page you own</li>
-<li>Fake beacons that a malicious user has tricked your users into firing from a page you own</li>
 </ol>
 
 <h2>Denial of service</h2>
@@ -100,14 +99,6 @@ The nonce also doesn't protect you from someone pulling the beacon out of your p
 nonce, then modifying the beacon parameters and sending it off to your server.  Protecting against this
 requires you to sign the parameters in the beacon, but this isn't something that you can do in javascript.
 I do not know of a general purpose solution to this problem.
-</p>
-
-<h2>Fake beacons that a malicious user has tricked your users into firing from a page you own</h2>
-<p>
-Unfortunately there's very little in addition to the above that you can do to prevent this kind
-of attack.  Just make sure that all pages on your site is protected against Cross-site scripting
-and Cross-site request forgery attacks, and implement nonces and referrer checks into your beaconing
-infrastructure.
 </p>
 
 <p id="results">
