@@ -155,6 +155,68 @@ BOOMR.init({
 
 <h2>Bandwidth plugin</h2>
 
+<p>
+All bandwidth plugin configurationitems are under the <code>BW</code> namespace.
+</p>
+
+<dl>
+<dt>base_url</dt>
+<dd>
+<strong>[recommended]</strong>
+By default, the bandwidth plugin looks for its bandwidth measurement images in the <code>images/</code> subdirectory
+of the current directory.  This may not be true for all pages on your site.  You can set the <code>base_url</code>
+parameter to the HTTP path of the directory that contains the bandwidth images.  This can be an absolute or a relative
+URL.  If it's relative, remember that it's relative to the page that boomerang is included in and not to the javascript
+file.
+</dd>
+
+<dt>cookie</dt>
+<dd>
+<strong>[optional]</strong>
+The name of the cookie in which to store the measured bandwidth and latency of the user's network connection.
+The default name is <code>BA</code>.  See <a href="howto-3.html">Howto #3</a> for more details on the bandwidth cookie.
+</dd>
+
+<dt>cookie_exp</dt>
+<dd>
+<strong>[optional]</strong>
+The lifetime in seconds of the bandwidth cookie.  The default is set to 7 days.  This specifies how long it will be before
+we run the bandwidth test again for a user, assuming their IP address doesn't change within this time.  You probably do
+not need to change this setting at all since the bandwidth of a given network connection typically does not change by an
+order of magnitude on a regular basis.<br>
+Note that if you're doing some kind of real-time streaming, then chances are that this bandwidth test isn't right for you,
+so setting this cookie to a shorter value isn't the right solution.
+</dd>
+
+<dt>timeout</dt>
+<dd>
+<strong>[optional]</strong>
+The timeout in seconds for the entire bandwidth test.  The default is set to 15 seconds.  The bandwidth test can run for
+a long time, and sometimes, due to network errors, it might never complete.  The timeout forces the test to complete at
+that time.  This is a hard limit.  If the timeout fires, we stop further iterations of the test and attempt to calculate
+bandwidth with the data that we've collected at that point.  Increasing the timeout can get you more data and increase
+the accuracy of the test, but at the same time increases the risk of the test not completing before the user leaves the
+page.
+</dd>
+
+<dt>nruns</dt>
+<dd>
+<strong>[optional]</strong>
+The number of times the bandwidth test should run.  The default is set to 5.  The first test is always a pilot to figure
+out the best way to proceed with the remaining tests.  Increasing this number will increase the tests accuracy, but at
+the same time increases the risk that the test will timeout.  It should take about 2-4 seconds per run, so consider this
+value along with the <code>timeout</code> value above.
+</dd>
+
+</dl>
+
+<h2>All optional</h2>
+<p>
+All configuration parameters are optional, but not setting some of them can lead to unexpected or incomplete results,
+so they should be set.  It is, however, possible to get up and running by doing nothing more than putting your bandwidth
+images in the right directory, including the code and calling <code>init()</code>.
+</p>
+
 <p id="results">
 </p>
 

@@ -9,6 +9,8 @@ p#results:hover { width: auto; }
 div#dynamic-content { font-size: 0.5em; border: solid 3px #9a5; padding: 1em; margin: 1em 10% 1em 40%; text-align: justify; color: #9a8; }
 div#dynamic-content > p:first-child { font-size: 2em; }
 
+dd strong { color: #a43; background-color: #ddc; }
+
 pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
 pre em { background-color: #ccb; color: #a32; font-style: normal; padding: 2px;}
 pre span.comment { background-color: #ccb; color: #56a; padding: 2px;}
