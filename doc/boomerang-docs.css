@@ -16,3 +16,7 @@ pre em { background-color: #ccb; color: #a32; font-style: normal; padding: 2px;}
 pre span.comment { background-color: #ccb; color: #56a; padding: 2px;}
 
 pre span.ni { color: #886; }
+
+a.fn { position: relative; top: -0.4em; font-size: 0.7em; text-decoration: none; }
+#footnotes { font-size: 0.8em; width: 50%; text-align: justify; border-top: solid 1px #888; padding-right: 0.5em; margin: 3em 0 0 0;}
+#footnotes li { margin-bottom: 0.8em; }
