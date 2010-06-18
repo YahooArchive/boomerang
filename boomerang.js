@@ -363,6 +363,15 @@ boomr = {
 	}
 };
 
+var make_logger = function(l) {
+	return function(m, s) { this.log(m, l, "boomerang" + (s?"."+s:"")); return this; };
+};
+
+boomr.debug = make_logger("debug");
+boomr.info = make_logger("info");
+boomr.warn = make_logger("warn");
+boomr.error = make_logger("error");
+
 if(typeof w.YAHOO !== "undefined" && typeof w.YAHOO.log !== "undefined") {
 	boomr.log = w.YAHOO.log;
 }
@@ -485,16 +494,6 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
-	error: function(msg) {
-		BOOMR.log(msg, "error", "boomerang.rt");
-		return this;
-	},
-
-	warn: function(msg) {
-		BOOMR.log(msg, "warn", "boomerang.rt");
-		return this;
-	},
-
 	// Called when the page has reached a "usable" state.  This may be when the
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
@@ -530,7 +529,7 @@ BOOMR.plugins.RT = {
 			}
 		}
 		else {
-			this.warn("start cookie not set");
+			BOOMR.warn("start cookie not set", "rt");
 		}
 
 		// make sure old variables don't stick around
@@ -654,11 +653,6 @@ var impl = {
 
 	// methods
 
-	debug: function(msg)
-	{
-		BOOMR.log(msg, "debug", "boomerang.bw");
-	},
-	
 	ncmp: function(a, b) { return (a-b); },
 	
 	iqr: function(a)
@@ -694,7 +688,7 @@ var impl = {
 		lat_filtered = this.iqr(this.latencies.sort(this.ncmp));
 		n = lat_filtered.length;
 	
-		this.debug(lat_filtered);
+		BOOMR.debug(lat_filtered, "bw");
 	
 		// First we get the arithmetic mean, standard deviation and standard error
 		// We ignore the first since it paid the price of DNS lookup, TCP connect
@@ -766,10 +760,10 @@ var impl = {
 			}
 		}
 	
-		this.debug('got ' + n + ' readings');
+		BOOMR.debug('got ' + n + ' readings', "bw");
 	
-		this.debug('bandwidths: ' + bandwidths);
-		this.debug('corrected: ' + bandwidths_corrected);
+		BOOMR.debug('bandwidths: ' + bandwidths, "bw");
+		BOOMR.debug('corrected: ' + bandwidths_corrected, "bw");
 	
 		// First do IQR filtering since we use the median here
 		// and should use the stddev after filtering.
@@ -781,8 +775,8 @@ var impl = {
 			bandwidths_corrected = bandwidths_corrected.sort(this.ncmp);
 		}
 	
-		this.debug('after iqr: ' + bandwidths);
-		this.debug('corrected: ' + bandwidths_corrected);
+		BOOMR.debug('after iqr: ' + bandwidths, "bw");
+		BOOMR.debug('corrected: ' + bandwidths_corrected, "bw");
 	
 		// Now get the mean & median.
 		// Also get corrected values that eliminate latency
@@ -823,8 +817,8 @@ var impl = {
 					) / 2
 				);
 	
-		this.debug('amean: ' + amean + ', median: ' + median);
-		this.debug('corrected amean: ' + amean_corrected + ', median: ' + median_corrected);
+		BOOMR.debug('amean: ' + amean + ', median: ' + median, "bw");
+		BOOMR.debug('corrected amean: ' + amean_corrected + ', median: ' + median_corrected, "bw");
 	
 		return {
 			mean: amean,
@@ -941,7 +935,7 @@ var impl = {
 		if(i >= images.end-1
 			|| typeof this.results[this.nruns-run].r[i+1] !== 'undefined'
 		) {
-			this.debug(this.results[this.nruns-run]);
+			BOOMR.debug(this.results[this.nruns-run], "bw");
 			// First run is a pilot test to decide what the largest image
 			// that we can download is. All following runs only try to
 			// download this image
