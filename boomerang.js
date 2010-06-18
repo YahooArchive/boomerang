@@ -53,7 +53,23 @@ impl = {
 
 	vars: {},
 
-	disabled_plugins: {}
+	disabled_plugins: {},
+
+	fireEvent: function(e_name, data) {
+		var i, h, e;
+		if(!this.events.hasOwnProperty(e_name)) {
+			return false;
+		}
+
+		e = this.events[e_name];
+
+		for(i=0; i<e.length; i++) {
+			h = e[i];
+			h[0].call(h[2], data, h[1]);
+		}
+
+		return true;
+	}
 };
 
 
@@ -174,8 +190,7 @@ boomr = {
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "site_domain", "user_ip"],
-		    that=this;
+		    properties = ["beacon_url", "site_domain", "user_ip"];
 	
 		if(!config) {
 			config = {};
@@ -219,8 +234,7 @@ boomr = {
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
 			this.utils.addListener(w, "load",
 						function() {
-							that.fireEvent("page_ready");
-							that=null;
+							impl.fireEvent("page_ready");
 						}
 					);
 		}
@@ -231,7 +245,7 @@ boomr = {
 	// The page dev calls this method when they determine the page is usable.
 	// Only call this if autorun is explicitly set to false
 	page_ready: function() {
-		this.fireEvent("page_ready");
+		impl.fireEvent("page_ready");
 		return this;
 	},
 
@@ -261,22 +275,6 @@ boomr = {
 							fn=cb_scope=cb_data=null;
 						}
 					);
-		}
-
-		return this;
-	},
-
-	fireEvent: function(e_name, data) {
-		var i, h, e;
-		if(!impl.events.hasOwnProperty(e_name)) {
-			return this;
-		}
-
-		e = impl.events[e_name];
-
-		for(i=0; i<e.length; i++) {
-			h = e[i];
-			h[0].call(h[2], data, h[1]);
 		}
 
 		return this;
