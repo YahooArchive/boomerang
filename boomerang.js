@@ -335,7 +335,7 @@ boomr = {
 		}
 	
 		// If we reach here, all plugins have completed
-		this.fireEvent("before_beacon", impl.vars);
+		impl.fireEvent("before_beacon", impl.vars);
 
 		// Don't send a beacon if no beacon_url has been set
 		if(!this.beacon_url) {
