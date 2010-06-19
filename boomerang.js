@@ -450,7 +450,8 @@ BOOMR.plugins.RT = {
 						impl.cookie_exp,
 						"/", null)
 		) {
-			return this.error("cannot set start cookie");
+			BOOMR.error("cannot set start cookie", "rt");
+			return this;
 		}
 
 		t_end = new Date().getTime();
@@ -462,8 +463,8 @@ BOOMR.plugins.RT = {
 			BOOMR.utils.removeCookie(impl.cookie);
 
 			// at some point we may want to log this info on the server side
-			this.error("took more than 50ms to set cookie... aborting: "
-					+ t_start + " -> " + t_end);
+			BOOMR.error("took more than 50ms to set cookie... aborting: "
+					+ t_start + " -> " + t_end, "rt");
 		}
 
 		return this;
