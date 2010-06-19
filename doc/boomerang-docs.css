@@ -15,6 +15,7 @@ dd h3 { color: black; margin-left: -0.8em; }
 dl.api {border-bottom: solid 1px #aaa; }
 dl.api > dt { font-weight: bolder; border-top: solid 1px #aaa; padding: 3px; }
 dl.api > dd { font-size: 0.9em; color: #222; }
+dl.api > dd > ul { padding-bottom: 0.5em; }
 
 pre { line-height:1.4em; font-size: 1.1em; margin-right: 4%; padding: 1em 1em 1em 1.5em; background-color: #bba; border-left: solid 5px #9a5; }
 pre em { background-color: #ccb; color: #a32; font-style: normal; padding: 2px;}
