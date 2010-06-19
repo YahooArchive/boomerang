@@ -80,6 +80,10 @@ boomr = {
 	// Utility functions
 	utils: {
 		getCookie: function(name) {
+			if(!name) {
+				return null;
+			}
+
 			name = ' ' + name + '=';
 		
 			var i, cookies;
@@ -90,7 +94,7 @@ boomr = {
 				return cookies;
 			}
 		
-			return "";
+			return null;
 		},
 		
 		setCookie: function(name, subcookies, max_age, path, domain, sec) {
@@ -99,7 +103,7 @@ boomr = {
 			    exp = "";
 
 			if(!name) {
-				return;
+				return false;
 			}
 		
 			for(k in subcookies) {
@@ -1034,7 +1038,7 @@ var impl = {
 	
 BOOMR.plugins.BW = {
 	init: function(config) {
-		var bacookie, cookies;
+		var cookies;
 
 		BOOMR.utils.pluginConfig(impl, config, "BW",
 						["base_url", "timeout", "nruns", "cookie", "cookie_exp"]);
@@ -1054,8 +1058,7 @@ BOOMR.plugins.BW = {
 
 		BOOMR.removeVar('ba', 'ba_err', 'lat', 'lat_err');
 
-		bacookie = BOOMR.utils.getCookie(impl.cookie);
-		cookies = BOOMR.utils.getSubCookies(bacookie);
+		cookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 
 		if(cookies && cookies.ba) {
 			impl.setVarsFromCookie(cookies);
