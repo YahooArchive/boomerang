@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bandwidth/latency plugin API</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="../boomerang-docs.css">
+</head>
+<body>
+<span style="float:right;"><a href="../">All Docs</a> | <a href="index.html">Index</a></span>
+<h1>Bandwidth/latency plugin API</h1>
+<p>
+The bandwidth plugin measures the bandwidth and latency of the user's network connection to your
+server.  The bandwidth API is encapsulated within the <code>BOOMR.plugins.BW</code> namespace.
+</p>
+
+<h2 id="methods">Methods</h2>
+
+<dl class="api">
+
+<dt>init(oConfig)</dt>
+<dd>
+<p>
+Called by the <a href="BOOMR.html#init">BOOMR.init()</a> method to configure the bandwidth
+plugin.  The configuration object is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+</p>
+<h3>Returns</h3>
+<p>
+a reference to the <code>BOOMR.plugins.BW</code> object, so you can chain methods.
+</p>
+</dd>
+
+<dt>run()</dt>
+<dd>
+<p>
+Starts the bandwidth test.  This method is called automatically when boomerang's
+<a href="BOOMR.html#page_ready">page_ready</a> event fires, so you won't need to call it
+yourself.
+</p>
+<h3>Returns</h3>
+<p>
+a reference to the <code>BOOMR.plugins.BW</code> object, so you can chain methods.
+</p>
+</dd>
+
+<dt>abort()</dt>
+<dd>
+<p>
+Stops the bandwidth test immediately and attempts to calculate bandwidth and latency
+from values that it has already gathered.  This method is called automatically if the
+bandwidth test times out.  It is better to set the <code>timeout</code> value appropriately
+when calling the <a href="BOOMR.html#init">BOOMR.init()</a> method.
+</p>
+<h3>Returns</h3>
+<p>
+a reference to the <code>BOOMR.plugins.BW</code> object, so you can chain methods.
+</p>
+</dd>
+
+<dt>is_complete()</dt>
+<dd>
+<p>
+Called by <a href="BOOMR.html#sendBeacon">BOOMR.sendBeacon()</a> to determine if the bandwidth plugin has
+finished what it's doing or not.
+</p>
+<h3>Returns</h3>
+<ul>
+<li><code>true</code> if the plugin has completed.</li>
+<li><code>false</code> if the plugin has not completed.</li>
+</ul>
+</dd>
+
+</dl>
+
+</body>
+</html>
