@@ -1077,9 +1077,9 @@ BOOMR.plugins.BW = {
 
 		if(w.location.protocol === 'https:') {
 			// we don't run the test for https because SSL stuff will mess up b/w
-			// calculations // we could run the test itself over HTTP, but then IE
+			// calculations we could run the test itself over HTTP, but then IE
 			// will complain about insecure resources, so the best is to just bail
-			// and hope that the user/ gets the cookie from some other page
+			// and hope that the user gets the cookie from some other page
 
 			impl.complete = true;
 			return this;
@@ -1097,7 +1097,7 @@ BOOMR.plugins.BW = {
 	abort: function() {
 		impl.aborted = true;
 		impl.finish();	// we don't defer this call because it might be called from
-				// onbeforeunload and we want the entire chain to complete
+				// onunload and we want the entire chain to complete
 				// before we return
 
 		return this;
