@@ -342,11 +342,11 @@ boomr = {
 		impl.fireEvent("before_beacon", impl.vars);
 
 		// Don't send a beacon if no beacon_url has been set
-		if(!this.beacon_url) {
+		if(!impl.beacon_url) {
 			return this;
 		}
 
-		url = this.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
+		url = impl.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
 		for(k in impl.vars) {
 			if(impl.vars.hasOwnProperty(k)) {
 				nparams++;
