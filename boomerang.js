@@ -416,30 +416,11 @@ var impl = {
 				// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 	cookie: 'RT',		//! Name of the cookie that stores the start time and referrer
 	cookie_exp:600,		//! Cookie expiry in seconds
-	strict_referrer: true	//! By default, don't beacon if referrers don't match.
+	strict_referrer: true,	//! By default, don't beacon if referrers don't match.
 				// If set to false, beacon both referrer values and let
 				// the back end decide
-};
 
-BOOMR.plugins.RT = {
-	// Methods
-
-	init: function(config) {
-		impl.complete = false;
-		impl.timers = {};
-
-		BOOMR.utils.pluginConfig(impl, config, "RT",
-					["cookie", "cookie_exp", "strict_referrer"]);
-
-		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done,
-					null, BOOMR.plugins.RT);
-		BOOMR.subscribe("page_unload", BOOMR.plugins.RT.start,
-					null, BOOMR.plugins.RT);
-
-		return this;
-	},
-
-	// The start method is fired on page unload
+	// The start method is fired on page unload.  It is called with the scope of the BOOMR.plugins.RT object
 	start: function() {
 		var t_end, t_start = new Date().getTime();
 
@@ -466,6 +447,25 @@ BOOMR.plugins.RT = {
 			BOOMR.error("took more than 50ms to set cookie... aborting: "
 					+ t_start + " -> " + t_end, "rt");
 		}
+
+		return this;
+	}
+};
+
+BOOMR.plugins.RT = {
+	// Methods
+
+	init: function(config) {
+		impl.complete = false;
+		impl.timers = {};
+
+		BOOMR.utils.pluginConfig(impl, config, "RT",
+					["cookie", "cookie_exp", "strict_referrer"]);
+
+		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done,
+					null, BOOMR.plugins.RT);
+		BOOMR.subscribe("page_unload", impl.start,
+					null, BOOMR.plugins.RT);
 
 		return this;
 	},
