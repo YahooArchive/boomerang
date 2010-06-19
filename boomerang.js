@@ -1032,7 +1032,11 @@ var impl = {
 				'bw_err': bw_e,
 				'lat_err': lat_e
 			});
+
+			return true;
 		}
+
+		return false;
 	}
 
 };
@@ -1061,11 +1065,9 @@ BOOMR.plugins.BW = {
 
 		cookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 
-		if(cookies && cookies.ba) {
-			impl.setVarsFromCookie(cookies);
+		if(!cookies || !cookies.ba || !impl.setVarsFromCookie(cookies)) {
+			BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
 		}
-
-		BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
 
 		return this;
 	},
