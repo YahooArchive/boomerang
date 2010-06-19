@@ -69,6 +69,7 @@ Method that fires the <code>page_ready</code> event.  Call this only if you've s
 false when calling the <code>init()</code> method.  You should call this method when you determine that
 your page is ready to be used by your user.  This will be the end-time used in the page load time measurement.
 </p>
+<h3>Example:</h3>
 <p>
 See <a href="../howtos/howto-1b-page%231.html">Howto #1b</a> for an example of how to use this method.
 </p>
@@ -116,8 +117,11 @@ a reference to the <code>BOOMR</code> object, so you can chain methods.
 <dd>
 <p>
 Add one or more parameters to the beacon.  This method is used by plugins to add parameters to the beacon,
-but may also be used by the page developer to tag the current request.  See <a href="../howtos/howto-5.html">Howto #5</a>
-for an example of using <code>addVar()</code>.
+but may also be used by the page developer to tag the current request.
+</p>
+<h3>Example:</h3>
+<p>
+See <a href="../howtos/howto-5.html">Howto #5</a> for an example of using <code>addVar()</code>.
 </p>
 <p>
 This method may either be called with a single object containing key/value pairs, or with two parameters,
