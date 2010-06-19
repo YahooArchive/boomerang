@@ -69,6 +69,15 @@ impl = {
 		}
 
 		return true;
+	},
+
+	addListener: function(el, sType, fn, capture) {
+		if(el.addEventListener) {
+			el.addEventListener(sType, fn, (capture));
+		}
+		else if(el.attachEvent) {
+			el.attachEvent("on" + sType, fn);
+		}
 	}
 };
 
@@ -165,15 +174,6 @@ boomr = {
 			return this.setCookie(name, {}, 0, "/", null);
 		},
 		
-		addListener: function(el, sType, fn, capture) {
-			if(el.addEventListener) {
-				el.addEventListener(sType, fn, (capture));
-			}
-			else if(el.attachEvent) {
-				el.attachEvent("on" + sType, fn);
-			}
-		},
-
 		pluginConfig: function(o, config, plugin_name, properties) {
 			var i, props=0;
 
@@ -236,7 +236,7 @@ boomr = {
 	
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
-			this.utils.addListener(w, "load",
+			impl.addListener(w, "load",
 						function() {
 							impl.fireEvent("page_ready");
 						}
@@ -273,7 +273,7 @@ boomr = {
 
 		// Attach unload handlers directly to the window.onunload event
 		if(e_name === 'page_unload') {
-			this.utils.addListener(w, "unload",
+			impl.addListener(w, "unload",
 						function() {
 							fn.call(cb_scope, null, cb_data);
 							fn=cb_scope=cb_data=null;
