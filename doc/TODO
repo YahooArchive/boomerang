@@ -17,6 +17,8 @@
 
 3. Measure DNS latency
    See use-case #6.
+   See Carlos' implementation here:
+   http://developer.yahoo.net/blog/archives/2009/11/guide_to_dns.html
 
 4. Rewrite bandwidth testing code to be pretty and clean
 
