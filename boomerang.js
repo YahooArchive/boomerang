@@ -462,10 +462,8 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
-		BOOMR.subscribe("page_ready", BOOMR.plugins.RT.done,
-					null, BOOMR.plugins.RT);
-		BOOMR.subscribe("page_unload", impl.start,
-					null, BOOMR.plugins.RT);
+		BOOMR.subscribe("page_ready", this.done, null, this);
+		BOOMR.subscribe("page_unload", impl.start, null, this);
 
 		return this;
 	},
@@ -1066,7 +1064,7 @@ BOOMR.plugins.BW = {
 		cookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 
 		if(!cookies || !cookies.ba || !impl.setVarsFromCookie(cookies)) {
-			BOOMR.subscribe("page_ready", BOOMR.plugins.BW.run, null, BOOMR.plugins.BW);
+			BOOMR.subscribe("page_ready", this.run, null, this);
 		}
 
 		return this;
@@ -1083,6 +1081,7 @@ BOOMR.plugins.BW = {
 			// will complain about insecure resources, so the best is to just bail
 			// and hope that the user gets the cookie from some other page
 
+			BOOMR.info("HTTPS detected, skipping bandwidth test", "bw");
 			impl.complete = true;
 			return this;
 		}
