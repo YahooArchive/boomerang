@@ -5,3 +5,8 @@ web browsing experience.  All you have to do is stick it into the bottom of your
 call the init() method.
 
 We'll make it more complicated later.
+
+documentation is in the docs/ directory, it's all HTML, so your best bet is to check it out
+and view it locally.
+
+I periodically check out a copy of the docs here: http://hacks.bluesmoon.info/boomerang/doc/
