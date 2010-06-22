@@ -13,7 +13,7 @@ These are some of the ways that one can use boomerang.  This will help us make s
 actually supports all possible use cases.
 </p>
 
-<h2>1. Measure a page's perceived performance.</h2>
+<h2 id="uc-1">1. Measure a page's perceived performance.</h2>
 <p>
 We need the ability to measure the time the user thinks it took to load a page.  This is typically
 the time between the user clicking a link (or entering a URL into the browser) and the page becoming
@@ -51,7 +51,7 @@ Breaking this into four separate use cases:
 </ol>
 
 
-<h2>2. Measure perceived performance of content loaded dynamically</h2>
+<h2 id="uc-2">2. Measure perceived performance of content loaded dynamically</h2>
 <p>
 Many websites might load content dynamically.  For example, images for a slide show or content for
 tabs may be loaded via javascript.  A stock ticker may periodically refresh itself from a back end
@@ -66,7 +66,7 @@ and the library will need to expose methods/events that the web developer can in
 See <a href="howtos/howto-2.html">HOWTO #2</a>.
 </p>
 
-<h2>3. Measure a user's bandwidth along with page load time</h2>
+<h2 id="uc-3">3. Measure a user's bandwidth along with page load time</h2>
 <p>
 Since users browse the web using different types of internet connections, it's not always possible
 to aggregate page load times for multiple users to get an indication of a number that's
@@ -79,7 +79,7 @@ See <a href="howtos/howto-3.html">HOWTO #3</a>.
 </p>
 
 
-<h2>4. Measure more than just page load time.</h2>
+<h2 id="uc-4">4. Measure more than just page load time.</h2>
 <p>
 Many sites may be composed of separate components loaded from different back end services.  For
 example, on my home page, I have widgets from dopplr, upcoming, twitter, delicious and flickr.
@@ -98,7 +98,7 @@ See <a href="howtos/howto-4.html">HOWTO #4</a>.
 </p>
 
 
-<h2>5. Measure HTTP latency</h2>
+<h2 id="uc-5">5. Measure HTTP latency</h2>
 <p>
 Network Latency is one of the largest contributors to page download time.  HTTP latency is typically
 higher than simple ping time because it requires a few to-and-fro packets to estabilish a TCP
@@ -114,7 +114,7 @@ See <a href="howtos/howto-3.html">HOWTO #3</a>.
 </p>
 
 
-<h2>6. Request/page tagging</h2>
+<h2 id="uc-6">6. Request/page tagging</h2>
 <p>
 When doing performance analysis, it is often useful to run an A/B test that compares the performance
 of two or more different page designs.  Since these pages might all have the same URL, it becomes
@@ -129,7 +129,7 @@ See <a href="howtos/howto-5.html">HOWTO #5</a>.
 </p>
 
 
-<h2>7. Measure DNS latency</h2>
+<h2 id="uc-7">7. Measure DNS latency</h2>
 <p>
 DNS latency tells us how long it takes to make a DNS request.  This may be affected by various
 factors including your web server's DNS configuration and TTL, and how an end user's ISP's DNS
@@ -139,11 +139,11 @@ can make and the parallelisability that multiple domains bring us.  HTTP latency
 together can tell us where this point lies for our users.
 </p>
 <p>
-See <a href="TODO">TODO #3</a>
+See <a href="howtos/howto-8.html">HOWTO #8</a>
 </p>
 
 
-<h2>8. Measure a random sample of users instead of all users</h2>
+<h2 id="uc-8">8. Measure a random sample of users instead of all users</h2>
 <p>
 For high traffic sites, it's useful to only measure a random sample of requests rather than
 every request that comes in.  We could either do the random sampling on the server side
@@ -159,7 +159,7 @@ See <a href="TODO">TODO #1</a>.
 </p>
 
 
-<h2>9. Protect the beacon from abuse</h2>
+<h2 id="uc-9">9. Protect the beacon from abuse</h2>
 <p>
 If you have a URL entry point, chances are that someone will abuse it, either intentionally
 or accidentally.
