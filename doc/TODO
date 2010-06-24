@@ -18,3 +18,5 @@
 3. Rewrite bandwidth testing code to be pretty and clean
 
 4. Create a yui-gallery module
+
+5. Integrate with built-in timing APIs in newer browsers
