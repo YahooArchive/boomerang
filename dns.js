@@ -29,7 +29,8 @@ var impl = {
 		impl.img.onload = impl.A_loaded;
 
 		impl.t_start = new Date().getTime();
-		impl.img.src = base_url + "image-l.gif?t=" + (new Date().getTime()) + Math.random();
+		impl.img.src = base_url + "image-l.gif?t="
+					+ (new Date().getTime()) + Math.random();
 	},
 
 	A_loaded: function() {
@@ -39,7 +40,8 @@ var impl = {
 		impl.img.onload = impl.B_loaded;
 
 		impl.t_start = new DatE().getTime();
-		impl.img.src = base_url + "image-l.gif?t=" + (new Date().getTime()) + Math.random();
+		impl.img.src = base_url + "image-l.gif?t="
+					+ (new Date().getTime()) + Math.random();
 	},
 
 	B_loaded: function() {
@@ -58,18 +60,40 @@ var impl = {
 		BOOMR.addVar("dns", dns);
 		this.complete = true;
 		BOOMR.sendBeacon();
+	},
+
+	read_timing_api: function(t) {
+		if(typeof t.domainLookupStart === "undefined"
+				|| typeof t.domainLookupEnd === "undefined") {
+			return false;
+		}
+
+		// This will be 0 if we read DNS from cache, but that's what
+		// we want because it's what the user experiences
+		BOOMR.addVar("dns", t.domainLookupEnd - t.domainLookupStart);
+
+		impl.complete = true;
+
+		return true;
 	}
 };
 	
 BOOMR.plugins.DNS = {
 	init: function(config) {
-		var i, properties = ["base_url"];
+		BOOMR.utils.pluginConfig(impl, config, "DNS", ["base_url"]);
 
-		BOOMR.utils.pluginConfig(impl, config, "DNS", properties);
+		// If this browser supports the WebTiming API, then we just
+		// use that and don't bother doing the test
+		if(w.performance && w.performance.timing) {
+			if(impl.read_timing_api(w.performance.timing)) {
+				return this;
+			}
+		}
 
 		if(!impl.base_url) {
 			BOOMR.warn("DNS.base_url is not set.  Cannot run DNS test.", "dns");
-			impl.complete = true;	// set to true so that is_complete doesn't block other plugins
+			impl.complete = true;	// set to true so that is_complete doesn't
+						// block other plugins
 			return this;
 		}
 
