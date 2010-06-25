@@ -305,7 +305,8 @@ boomr = {
 			return this;
 		}
 
-		if(arguments.length === 1 && Object.prototype.toString.apply(arguments[0]) === "[object Array]") {
+		if(arguments.length === 1
+				&& Object.prototype.toString.apply(arguments[0]) === "[object Array]") {
 			params = arguments[0];
 		}
 		else {
@@ -366,7 +367,9 @@ boomr = {
 };
 
 var make_logger = function(l) {
-	return function(m, s) { this.log(m, l, "boomerang" + (s?"."+s:"")); return this; };
+	return function(m, s) {
+		this.log(m, l, "boomerang" + (s?"."+s:"")); return this;
+	};
 };
 
 boomr.debug = make_logger("debug");
@@ -420,7 +423,8 @@ var impl = {
 				// If set to false, beacon both referrer values and let
 				// the back end decide
 
-	// The start method is fired on page unload.  It is called with the scope of the BOOMR.plugins.RT object
+	// The start method is fired on page unload.  It is called with the scope
+	// of the BOOMR.plugins.RT object
 	start: function() {
 		var t_end, t_start = new Date().getTime();
 
@@ -819,7 +823,8 @@ var impl = {
 				);
 	
 		BOOMR.debug('amean: ' + amean + ', median: ' + median, "bw");
-		BOOMR.debug('corrected amean: ' + amean_corrected + ', median: ' + median_corrected, "bw");
+		BOOMR.debug('corrected amean: ' + amean_corrected + ', '
+				+ 'median: ' + median_corrected, "bw");
 	
 		return {
 			mean: amean,
