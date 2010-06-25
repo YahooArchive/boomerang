@@ -556,6 +556,9 @@ BOOMR.plugins.RT = {
 						|| ti.navigationStart
 						|| undefined;
 			}
+			else {
+				BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
+			}
 		}
 
 		// make sure old variables don't stick around
