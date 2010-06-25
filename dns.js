@@ -29,7 +29,7 @@ var impl = {
 		impl.img.onload = impl.A_loaded;
 
 		impl.t_start = new Date().getTime();
-		impl.img.src = base_url + "A.gif";
+		impl.img.src = base_url + "image-l.gif?t=" + (new Date().getTime()) + Math.random();
 	},
 
 	A_loaded: function() {
@@ -39,7 +39,7 @@ var impl = {
 		impl.img.onload = impl.B_loaded;
 
 		impl.t_start = new DatE().getTime();
-		impl.img.src = base_url + "B.gif";
+		impl.img.src = base_url + "image-l.gif?t=" + (new Date().getTime()) + Math.random();
 	},
 
 	B_loaded: function() {
