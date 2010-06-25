@@ -484,8 +484,10 @@ BOOMR.plugins.RT = {
 	endTimer: function(timer_name, time_value) {
 		if(timer_name) {
 			impl.timers[timer_name] = impl.timers[timer_name] || {};
-			impl.timers[timer_name].end =
-					(typeof time_value === "number" ? time_value : new Date().getTime());
+			if(typeof impl.timers[timer_name].end === "undefined") {
+				impl.timers[timer_name].end =
+						(typeof time_value === "number" ? time_value : new Date().getTime());
+			}
 		}
 
 		return this;
