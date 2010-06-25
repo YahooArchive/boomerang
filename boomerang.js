@@ -540,6 +540,7 @@ BOOMR.plugins.RT = {
 		else {
 			// TODO: Change this to info (or drop it) once the WebTiming API
 			// becomes standard (2012? 2014?)
+			// http://dev.w3.org/2006/webapi/WebTiming/
 			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
 
 			if(w.performance && w.performance.timing) {
