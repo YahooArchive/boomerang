@@ -513,6 +513,8 @@ BOOMR.plugins.RT = {
 			return this;
 		}
 
+		// If the dev has already called endTimer, then this call will do nothing
+		// else, it will stop the page load timer
 		this.endTimer("t_done");
 
 		// A beacon may be fired automatically on page load or if the page dev fires
@@ -536,7 +538,23 @@ BOOMR.plugins.RT = {
 			}
 		}
 		else {
-			BOOMR.warn("start cookie not set", "rt");
+			// TODO: Change this to info (or drop it) once the WebTiming API
+			// becomes standard (2012? 2014?)
+			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
+
+			if(w.performance && w.performance.timing) {
+				var ti = w.performance.timing;
+				// First check if requestStart is set.  It will be 0 if
+				// the page were fetched from cache.  If so, check fetchStart
+				// which should always be there except if not implemented. If
+				// not, then look at navigationStart.  If none are set, we
+				// leave t_start alone so that timers that depend on it don't
+				// get sent back.
+				t_start = ti.requestStart
+						|| ti.fetchStart
+						|| ti.navigationStart
+						|| undefined;
+			}
 		}
 
 		// make sure old variables don't stick around
