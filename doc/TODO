@@ -20,3 +20,4 @@
 4. Create a yui-gallery module
 
 5. Integrate with built-in timing APIs in newer browsers
+   See http://dev.w3.org/2006/webapi/WebTiming/
