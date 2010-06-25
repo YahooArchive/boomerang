@@ -43,7 +43,9 @@ attach a function to the <code>window.onload</code> event.
 <p>
 Inside this function, we take a time reading (in milliseconds).  Then we look for
 the cookie that was set in the onunload handler of the previous page.  If we don't
-find a cookie, we abort <a href="#fn-1" class="fn">[1]</a>.
+find a cookie, we check to see if the browser has implemented the
+<a href="http://dev.w3.org/2006/webapi/WebTiming/">WebTiming</a> API.  If so, we
+use data from there instead.  If we find neither, we abort <a href="#fn-1" class="fn">[1]</a>.
 </p>
 <p>
 If we find a cookie, we check the URL stored in the cookie with the <code>document.referrer</code>
@@ -111,7 +113,7 @@ and this is the bandwidth that we beacon back to our server.
 <ol>
 <li id="fn-1">
 We don't actually abort at this point, but give the developer the ability to
-salvage the moment by setting his own start time.  This is most useful when the
+salvage the moment by setting his/her own start time.  This is most useful when the
 developer isn't measuring full page load time, but possibly the load time of some
 dynamic content loaded via Javascript.
 </li>
