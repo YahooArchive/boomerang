@@ -39,7 +39,7 @@ var impl = {
 		impl.img = new Image();
 		impl.img.onload = impl.B_loaded;
 
-		impl.t_start = new DatE().getTime();
+		impl.t_start = new Date().getTime();
 		impl.img.src = base_url + "image-l.gif?t="
 					+ (new Date().getTime()) + Math.random();
 	},
