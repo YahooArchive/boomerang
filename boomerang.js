@@ -1139,7 +1139,6 @@ BOOMR.plugins.BW = {
 }(window));
 // End of BW plugin
 
-/* ---include-plugins-here--- */
 
 
 
