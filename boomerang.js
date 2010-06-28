@@ -242,6 +242,9 @@ boomr = {
 						}
 					);
 		}
+
+		// This must be the last one to fire
+		impl.addListener(w, "unload", function() { w=null; });
 	
 		return this;
 	},
