@@ -377,7 +377,7 @@ boomr.info = make_logger("info");
 boomr.warn = make_logger("warn");
 boomr.error = make_logger("error");
 
-if(typeof w.YAHOO !== "undefined" && typeof w.YAHOO.log !== "undefined") {
+if(w.YAHOO && w.YAHOO.widget && w.YAHOO.widget.Logger) {
 	boomr.log = w.YAHOO.log;
 }
 else if(typeof w.Y !== "undefined" && typeof w.Y.log !== "undefined") {
