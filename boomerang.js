@@ -510,7 +510,8 @@ BOOMR.plugins.RT = {
 	done: function() {
 		var t_start, u, r, r2, 
 		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
-		    ntimers = 0, t_name, timer, t_other=[];
+		    ntimers = 0, t_name, timer, t_other=[],
+		    ti;
 
 		if(impl.complete) {
 			return this;
@@ -547,7 +548,15 @@ BOOMR.plugins.RT = {
 			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
 
 			if(w.performance && w.performance.timing) {
-				var ti = w.performance.timing;
+				// Based on the W3C spec
+				ti = w.performance.timing;
+			} else if(w.msPerformance && w.msPerformance.timing) {
+				// The microsoft implementation until the spec is standardised
+				// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
+				ti = w.msPerformance.timing;
+			}
+
+			if(ti) {
 				// First check if requestStart is set.  It will be 0 if
 				// the page were fetched from cache.  If so, check fetchStart
 				// which should always be there except if not implemented. If
