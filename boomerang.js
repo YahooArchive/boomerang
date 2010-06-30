@@ -1000,12 +1000,11 @@ var impl = {
 				bw:		bw.median_corrected,
 				bw_err:		parseFloat(bw.stderr_corrected, 10),
 				lat:		this.latency.mean,
-				lat_err:	parseFloat(this.latency.stderr, 10)
+				lat_err:	parseFloat(this.latency.stderr, 10),
+				bw_time:	Math.round(new Date().getTime()/1000)
 			};
 	
 		BOOMR.addVar(o);
-		this.complete = true;
-		BOOMR.sendBeacon();
 	
 		// If we have an IP address we can make the BA cookie persistent for a while
 		// because we'll recalculate it if necessary (when the user's IP changes).
@@ -1014,10 +1013,10 @@ var impl = {
 						{
 							ba: Math.round(o.bw),
 							be: o.bw_err,
-							l: o.lat,
+							l:  o.lat,
 							le: o.lat_err,
 							ip: this.user_ip,
-							t: Math.round(new Date().getTime()/1000)
+							t:  o.bw_time
 						},
 						(this.user_ip ? this.cookie_exp : 0),
 						"/",
@@ -1025,6 +1024,8 @@ var impl = {
 				);
 		}
 	
+		this.complete = true;
+		BOOMR.sendBeacon();
 		this.running = false;
 	},
 	
