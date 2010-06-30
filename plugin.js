@@ -4,6 +4,11 @@ Skeleton template for all boomerang plugins.  Use this code as a starting point 
 own plugins.
 */
 
+//////////////////////////////////////////////////////////
+//    DO NOT INCLUDE THIS FILE IN YOUR HTML DOCUMENT    //
+//               THIS IS A SAMPLE PLUGIN                //
+//////////////////////////////////////////////////////////
+
 // w is the window object
 (function(w) {
 
