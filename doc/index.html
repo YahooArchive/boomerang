@@ -7,6 +7,17 @@
 <style type="text/css">
 div.gadget { background-color: #f8f8f8; float: right; padding: 10px; }
 </style>
+<script type="text/javascript">
+window.Delicious = {
+	BLOGBADGE_GRAPH_SHOW:true,
+	BLOGBADGE_MANUAL_MODE:true
+};
+</script>
+<script src='http://static.delicious.com/js/d2-blogbadge.js'></script>
+<style type='text/css'>
+.delicious-blogbadge { border: none; }
+.delicious-blogbadge .graph a img { height: auto; width: auto; }
+</style>
 </head>
 <body>
 <h1>this, is boomerang</h1>
@@ -46,5 +57,8 @@ Developer Network</a>.
 <li>Get the working source code from <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a></li>
 </ul>
 <!-- script type="text/javascript" src="http://www.ohloh.net/p/483832/widgets/project_basic_stats.js"></script -->
+<script type='text/javascript'>
+Delicious.BlogBadge.writeBadge("delicious-blogbadge-"+Math.random(), location.href, document.title, {});
+</script>
 </body>
 </html>
