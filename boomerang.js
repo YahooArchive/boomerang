@@ -274,11 +274,26 @@ boomr = {
 		}
 		e.push([ fn, cb_data || {}, cb_scope || null ]);
 
-		// Attach unload handlers directly to the window.onunload event
+		// Attach unload handlers directly to the window.onunload and
+		// window.onbeforeunload events. The first of the two to fire will clear
+		// fn so that the second doesn't fire. We do this because technically
+		// onbeforeunload is the right event to fire, but all browsers don't
+		// support it.  This allows us to fall back to onunload when onbeforeunload
+		// isn't implemented
 		if(e_name === 'page_unload') {
 			impl.addListener(w, "unload",
 						function() {
-							fn.call(cb_scope, null, cb_data);
+							if(fn) {
+								fn.call(cb_scope, null, cb_data);
+							}
+							fn=cb_scope=cb_data=null;
+						}
+					);
+			impl.addListener(w, "beforeunload",
+						function() {
+							if(fn) {
+								fn.call(cb_scope, null, cb_data);
+							}
 							fn=cb_scope=cb_data=null;
 						}
 					);
