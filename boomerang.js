@@ -569,6 +569,14 @@ BOOMR.plugins.RT = {
 				// The microsoft implementation until the spec is standardised
 				// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
 				ti = w.msPerformance.timing;
+			} else if(w.chrome && w.chrome.csi) {
+				// Chrome also has a timing API that's sort of documented here:
+				// http://ecmanaut.blogspot.com/2010/06/google-bom-feature-ms-since-pageload.html
+				// source here:
+				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
+				ti = {
+					requestStart: w.chrome.csi().startE
+				};
 			}
 
 			if(ti) {
