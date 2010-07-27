@@ -58,8 +58,7 @@ Developer Network</a>.
 </ul>
 <!-- script type="text/javascript" src="http://www.ohloh.net/p/483832/widgets/project_basic_stats.js"></script -->
 <script type='text/javascript'>
-var b = Delicious.BlogBadge;
-b.renderBadge = function(badge) {
+Delicious.BlogBadge.renderBadge = function(badge) {
 	if (Delicious.BlogBadge.graph_show && badge.data.total_posts > 0) {
 		var type      = "4-1277362800-" + parseInt(new Date().getTime()/1000);
 		var el        = this.bind(this.el);
@@ -70,7 +69,7 @@ b.renderBadge = function(badge) {
 		];
 	}
 };
-b.writeBadge("delicious-blogbadge-"+Math.random(), document.URL.replace(/\?.*/, ''), document.title, {});
+Delicious.BlogBadge.writeBadge("delicious-blogbadge-"+Math.random(), document.URL.replace(/\?.*/, ''), document.title, {});
 </script>
 </body>
 </html>
