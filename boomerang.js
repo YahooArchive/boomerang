@@ -526,7 +526,7 @@ BOOMR.plugins.RT = {
 		var t_start, u, r, r2, 
 		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[],
-		    ti;
+		    ti, p;
 
 		if(impl.complete) {
 			return this;
@@ -560,18 +560,19 @@ BOOMR.plugins.RT = {
 		if(!t_start) {
 			// TODO: Change the "warn" to "info" (or drop it) once the WebTiming API
 			// becomes standard (2012? 2014?)  Scream at me if you see this past 2012
-			// http://dev.w3.org/2006/webapi/WebTiming/
 			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
 
-			if(w.performance && w.performance.timing) {
-				// Based on the W3C spec
-				ti = w.performance.timing;
-			} else if(w.msPerformance && w.msPerformance.timing) {
-				// The microsoft implementation until the spec is standardised
-				// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
-				ti = w.msPerformance.timing;
-			} else if(w.chrome && w.chrome.csi) {
-				// Chrome also has a timing API that's sort of documented here:
+			// Get start time from WebTiming API see:
+			// http://dev.w3.org/2006/webapi/WebTiming/
+			// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
+			// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
+			p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
+
+			if(p && p.timing) {
+				ti = p.timing;
+			}
+			else if(w.chrome && w.chrome.csi) {
+				// Older versions of chrome also have a timing API that's sort of documented here:
 				// http://ecmanaut.blogspot.com/2010/06/google-bom-feature-ms-since-pageload.html
 				// source here:
 				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
