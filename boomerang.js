@@ -45,6 +45,11 @@ impl = {
 	//! User's ip address determined on the server.  Used for the BA cookie
 	user_ip: '',
 
+	// Ratio, used for the percentage-users tracking. Set ratio to the numeric percentage you want
+	// tracked, 0-100, with 100 being full tracking. No % sign.
+	ratio: '',
+	ratiocookiename: 'boomrsession',
+
 	events: {
 		"page_ready": [],
 		"page_unload": [],
@@ -194,7 +199,7 @@ boomr = {
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "site_domain", "user_ip"];
+		    properties = ["beacon_url", "site_domain", "user_ip","ratio","ratiocookiename"];
 	
 		if(!config) {
 			config = {};
@@ -212,7 +217,48 @@ boomr = {
 		if(!this.log) {
 			this.log = function(m,l,s) { };
 		}
-	
+
+		//check if ratio has been set
+		if(impl.ratio != ''){
+			var tc=BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.ratiocookiename));
+
+			// if boomr run is true then run boomerang during their session
+			// 	and skip calculating the ratio this time
+			if(tc != null && tc.run == "true"){
+				var runRatio = false;
+			// if boomr don't run session is false then don't run run boomerang during their session
+			// 	and just return
+			}else if(tc != null && tc.run == "false"){
+				return false;
+			}else{
+					//If ratio is set and no session cookie exists then roll the dice
+                     var runRatio = true;
+			}
+
+			if(runRatio){
+				if(!this.randomNess()){
+                                        // set don't run boomerang session subcookie
+                                        BOOMR.utils.setCookie(
+                                                        impl.ratiocookiename,
+                                                        {run: "false"},
+                                                        0,
+                                                        "/", 
+                                                        null);
+                                        return false;
+				}else{
+
+
+                                      	// set run boomerang session subcookie
+                                        BOOMR.utils.setCookie(
+                                                        impl.ratiocookiename,
+                                                        {run: "true"},
+                                                        0,
+                                                        "/", 
+                                                        null);
+				}
+			}
+		}
+
 		for(k in this.plugins) {
 			// config[pugin].enabled has been set to false
 			if( config[k]
@@ -381,7 +427,14 @@ boomr = {
 		}
 
 		return this;
+	},
+
+	randomNess: function() {
+		var randomnumber=Math.floor((Math.random()*100) + 1);
+		if (randomnumber <= impl.ratio) ( return true;)
+		else { return false;}
 	}
+
 };
 
 var make_logger = function(l) {
