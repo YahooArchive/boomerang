@@ -431,7 +431,7 @@ boomr = {
 
 	randomNess: function() {
 		var randomnumber=Math.floor((Math.random()*100) + 1);
-		if (randomnumber <= impl.ratio) ( return true;)
+		if (randomnumber <= impl.ratio) { return true;}
 		else { return false;}
 	}
 
