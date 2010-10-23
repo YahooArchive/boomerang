@@ -772,8 +772,11 @@ var impl = {
 
 	// methods
 
+	// numeric comparator.  Returns negative number if a < b, positive if a > b and 0 if they're equal
+	// used to sort an array numerically
 	ncmp: function(a, b) { return (a-b); },
 	
+	// Calculate the interquartile range of an array of data points
 	iqr: function(a)
 	{
 		var l = a.length-1, q1, q3, fw, b = [], i;
