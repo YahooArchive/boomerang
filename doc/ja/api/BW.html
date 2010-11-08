@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>帯域幅/遅延 プラグイン API</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="../boomerang-docs.css">
+</head>
+<body>
+<span style="float:right;"><a href="../">ドキュメント一覧</a> | <a href="index.html">API</a></span>
+<h1>帯域幅/遅延 プラグイン API</h1>
+<p>
+帯域幅プラグインはサーバーへのユーザーのネットワークコネクションの帯域幅と遅延を測定します。帯域幅 API は <code>BOOMR.plugins.BW</code> に内包されます。
+</p>
+
+<h2 id="methods">メソッド</h2>
+
+<dl class="api">
+
+<dt>init(oConfig)</dt>
+<dd>
+<p>
+帯域幅プラグインを設定するために <a href="BOOMR.html#init">BOOMR.init()</a> メソッドによって呼び出されます。設定オブジェクトについては <a href="../howtos/howto-6.html">使用方法 #6 &mdash; boomerang の設定</a> をご覧ください。
+</p>
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.BW</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>run()</dt>
+<dd>
+<p>
+帯域幅テストを開始します。
+このメソッドは <a href="BOOMR.html#page_ready">page_ready</a> イベントが発生したときに自動的に呼び出されます。もし必要であれば自分で呼び出してもかまいません。
+</p>
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.BW</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>abort()</dt>
+<dd>
+<p>
+すぐに帯域幅のテストを中断して、すでに収集した値から帯域幅と遅延を計算します。このメソッドは帯域幅のテストが中断されると自動的に呼び出されます。<a href="BOOMR.html#init">BOOMR.init()</a> メソッドを呼び出すときに適切な <code>timeout</code> 値を設定することを推奨します。
+</p>
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.BW</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>is_complete()</dt>
+<dd>
+<p>
+帯域幅プラグインが終了したのかどうかを確認するために <a href="BOOMR.html#sendBeacon">BOOMR.sendBeacon()</a> によって呼び出されます。
+</p>
+<h3>返り値</h3>
+<ul>
+<li>プラグインが終了している場合は <code>true</code> を返します。</li>
+<li>プラグインが終了していない場合は <code>false</code> を返します。</li>
+</ul>
+</dd>
+
+</dl>
+
+<p>
+最新のソースコードとドキュメントは <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a> に公開されています。
+</p>
+
+</body>
+</html>
