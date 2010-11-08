@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Roundtrip プラグイン API</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="../boomerang-docs.css">
+</head>
+<body>
+<span style="float:right;"><a href="../">ドキュメント一覧</a> | <a href="index.html">API</a></span>
+<h1>Roundtrip プラグイン API</h1>
+<p>
+roundtrip プラグインはページの読み込み時間を測定したりページにタイマーを連動させたりします。この API は <code>BOOMR.plugins.RT</code> に内包されます。
+</p>
+
+<h2 id="methods">メソッド</h2>
+
+<dl class="api">
+
+<dt>init(oConfig)</dt>
+<dd>
+<p>
+roundtrip プラグインを設定するために呼び出される <a href="BOOMR.html#init">BOOMR.init()</a> メソッドです。設定オブジェクトについては <a href="../howtos/howto-6.html">使用方法 #6 &mdash; boomerang の設定</a> に記載しています。
+</p>
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.RT</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>startTimer(sName)</dt>
+<dd>
+<p>
+<code>sName</code> に指定された名前のタイマーを開始します。タイマーはミリ秒でカウントされます。boomerang のビーコンの測定結果を記録を終えるには <code>endTimer()</code> を呼び出す必要があります。
+</p>
+<h3>例:</h3>
+<p>
+startTimeer と endTimer の使用例は <a href="../howtos/howto-4.html">使用方法 #4</a> をご覧くさい。
+</p>
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.RT</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>endTimer(sName, nValue)</dt>
+<dd>
+<p>
+<code>sName</code> に指定された名前のタイマーを停止します。<code>endTimer()</code> が呼び出される前にタイマーが開始している必要はありません。この名前のタイマーが開始していない場合、前のページの unload 時間を代わりに使用します。これはページ間の時間の測定を可能にします。
+</p>
+<h3>パラメーター:</h3>
+<dl>
+<dt>sName</dt>
+<dd>停止するタイマーの名前</dd>
+
+<dt>nValue</dt>
+<dd><strong>[オプション]</strong>
+JavaScript のタイムスタンプ値（特定のミリ秒）。セットされていればこの値の時間にタイマーが停止します。セットされていなければ現在の時間のタイムスタンプが使用されます。boomerang が読み込まれる前のタイムスタンプを測定し、roundtrip プラグインにその値を今すぐ渡す必要がある場合はこのパラメーターを使用します。
+</dd>
+</dl>
+<h3>例:</h3>
+<p>
+startTimeer と endTimer の使用例は <a href="../howtos/howto-4.html">使用方法 #4</a> をご覧くさい。
+</p>
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.RT</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>setTimer(sName, nValue)</dt>
+<dd>
+<p>
+明示的な時間を測定するために <code>sName</code> に指定された名前のタイマーをセットします。
+<code>boomerang</code> が読み込まれる前にページ内の時間を計測していて、それらの値をビーコンに含めるために roundtrip プラグインへ渡す必要がある場合はこのメソッドを使う必要があります。<code>setTimer()</code> を呼び出す前に <code>startTimer()</code> や <code>endTimer()</code> を呼び出す必要はありません。もしそうした場合、古い値は無視され関数に渡された値が使用されます。
+</p>
+<h3>パラメーター:</h3>
+<dl>
+<dt>sName</dt>
+<dd>セットするタイマーの名前</dd>
+
+<dt>nValue</dt>
+<dd>
+このタイマーをセットする時間（ミリ秒）
+</dd>
+</dl>
+
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.RT</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+</dd>
+
+<dt>done()</dt>
+<dd>
+<p>
+通常は boomerang の <a href="BOOMR.html#page_ready">page_ready</a> イベントが発生した時に自動的に呼び出されますが、onload イベントとは関係ない状態の読み込み時間を測定するために明示的に呼び出すこともできます。
+</p>
+<p>
+このメソッドはページの読み込み時間を計算し、ビーコンを送信する十分な値かどうかを判断します。その時に <a href="BOOMR.html#sendBeacon">sendBeacon</a> メソッドを通して<code>BOOMR</code> オブジェクトに知らせます。
+</p>
+
+<h3>例:</h3>
+<p>
+<code>done()</code> メソッドの明示的な呼び出し方の例は <a href="../howtos/howto-2.html">使用方法 #2</a> をご覧ください。
+</p>
+
+<h3>返り値</h3>
+<p>
+<code>BOOMR.plugins.RT</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+
+<h3>参考</h3>
+<ul>
+<li>往復（roundtrip）時間の詳しい測定の仕方については <a href="../methodology.html#roundtrip">Roundtrip の測定方法</a> をご覧ください。</li>
+</ul>
+</dd>
+
+<dt>is_complete()</dt>
+<dd>
+<p>
+roundtrip プラグインが終了したのかどうかを確認するために <a href="BOOMR.html#sendBeacon">BOOMR.sendBeacon()</a> によって呼び出されます。
+</p>
+<h3>Returns</h3>
+<ul>
+<li>プラグインが終了している場合は <code>true</code> を返します。</li>
+<li>プラグインが終了していない場合は <code>false</code> を返します。</li>
+</ul>
+</dd>
+
+</dl>
+
+<p>
+最新のソースコードとドキュメントは <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a> に公開されています。
+</p>
+
+</body>
+</html>
