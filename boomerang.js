@@ -478,6 +478,7 @@ BOOMR.plugins = BOOMR.plugins || {};
 (function(w) {
 
 var d=w.document;
+var ea=new Date().getTime();
 
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
@@ -615,6 +616,10 @@ BOOMR.plugins.RT = {
 			// becomes standard (2012? 2014?)  Scream at me if you see this past 2012
 			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
 
+
+                        // if we've no start time, no point comparing with the arrival time
+                        ea=0;
+
 			// Get start time from WebTiming API see:
 			// http://dev.w3.org/2006/webapi/WebTiming/
 			// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
@@ -645,6 +650,10 @@ BOOMR.plugins.RT = {
 						|| ti.fetchStart
 						|| ti.navigationStart
 						|| undefined;
+				if (!ea || ti.responseEnd<ea) {
+                                        ea=ti.responseEnd;
+                                }
+
 			}
 			else {
 				BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
@@ -652,7 +661,7 @@ BOOMR.plugins.RT = {
 		}
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'u', 'r', 'r2');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'u', 'r', 'r2', 'ea');
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
@@ -687,7 +696,7 @@ BOOMR.plugins.RT = {
 
 		// At this point we decide whether the beacon should be sent or not
 		if(ntimers) {
-			BOOMR.addVar({ "u": u, "r": r });
+			BOOMR.addVar({ "u": u, "r": r, "ea": ea - t_start});
 
 			if(r2 !== r) {
 				BOOMR.addVar("r2", r2);
@@ -1106,6 +1115,7 @@ var impl = {
 		}
 	
 		this.complete = true;
+		// NB the following line may result in an additional fire when the BW checks are run
 		BOOMR.sendBeacon();
 		this.running = false;
 	},
@@ -1182,9 +1192,13 @@ BOOMR.plugins.BW = {
 		impl.complete = false;
 		impl.aborted = false;
 
-		BOOMR.removeVar('ba', 'ba_err', 'lat', 'lat_err');
+		BOOMR.removeVar('ba', 'ba_err', 'lat', 'lat_err', 'sz');
 
 		cookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+
+		// with page_ready, fetch_sz seems to fire every time but only reported to beacon
+		// when BW checks run?
+		BOOMR.subscribe("before_beacon", this.fetch_sz, null, this);
 
 		if(!cookies || !cookies.ba || !impl.setVarsFromCookie(cookies)) {
 			BOOMR.subscribe("page_ready", this.run, null, this);
@@ -1216,6 +1230,18 @@ BOOMR.plugins.BW = {
 		impl.defer(impl.iterate);
 
 		return this;
+	},
+
+	fetch_sz: function () {
+		// By the time this fires, using my stress test rig (running Dokuwiki) the
+		// page size has changed in FF3 from the value detected at onload()
+		// There will also be problems in the caluclation using multi-byte charsets
+
+		var sz=document.documentElement.innerHTML.length;
+		BOOMR.debug("fetch_sz fired="+sz,"bw");
+		BOOMR.addVar({
+                	'sz': sz
+        	});
 	},
 
 	abort: function() {
