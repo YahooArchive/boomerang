@@ -10,7 +10,7 @@ BOOMR.subscribe('before_beacon', function(o) {
 			html += "&nbsp;&nbsp;&nbsp;" + t_other[i] + " ms<br>";
 		}
 	}
-	if(o.bw) { html += "Your bandwidth to this server is " + parseInt(o.bw/1024*8) + "kbps (&#x00b1;" + parseInt(o.bw_err*100/o.bw) + "%)<br>"; }
+	if(o.bw) { html += "Your bandwidth to this server is " + parseInt(o.bw*8/1024) + "kbps (&#x00b1;" + parseInt(o.bw_err*100/o.bw) + "%)<br>"; }
 	if(o.lat) { html += "Your latency to this server is " + parseInt(o.lat) + "&#x00b1;" + o.lat_err + "ms<br>"; }
 
 	var r = document.getElementById('results');
