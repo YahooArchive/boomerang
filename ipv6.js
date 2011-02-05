@@ -14,6 +14,14 @@ that you probably cannot use shared hosting that puts multiple hosts on the
 same IP address.
 
 All beacon parameters are prefixed with ipv6_
+
+Beacon parameters:
+- ipv6_latency: Latency in milliseconds of getting data from an ipv6 host when
+		connecting to the IP.  Set to NA if the client cannot connect
+		to the ipv6 host.
+- ipv6_lookup:  Latency of getting data from a hostname that resolves to an
+		ipv6 address.  Set to NA if the client cannot resolve or connect
+		to the ipv6 host.
 */
 
 // w is the window object
@@ -38,17 +46,81 @@ var impl = {
 	complete: false,
 	ipv6_url: "",
 	host_url: "",
+	timeout: 1200,
+
+	timers: {
+		ipv6: { start: null, end: null },
+		host: { start: null, end: null }
+	},
 
 	start: function() {
+		load_img('ipv6', 'host');
+	},
+
+	load_img: function(which) {
+		if(!which || !(which in this.timers)) {
+			this.done();
+			return false;
+		}
+
+		Array.prototype.shift.call(arguments);
+
+		var img = new Image(),
+			rnd = "?t=" + (new Date().getTime()) + Math.random(),
+			timer=0, error = null,
+			that = this, a = arguments;
+
+		img.onload = function() {
+			that.timers[which].end = new Date().getTime();
+			clearTimeout(timer);
+			img.onload = img.onerror = null;
+			img = error = null;
+
+			that.load_img(a);
+			that = a = null;
+		};
+
+		error = function() {
+			that.timers[which].supported = false;
+			clearTimeout(timer);
+			img.onload = img.onerror = null;
+			img = error = null;
+
+			that.done();
+			that = a = null;
+		};
+
+		img.onerror = error;
+		timer = setTimeout(error, this.timeout);
+		this.timers[which].start = new Date().getTime();
+		img.src = this.[which + '_url'] + rnd;
 	},
 
 	done: function() {
+		var k;
+
+		BOOMR.removeVar('ipv6_latency', 'ipv6_lookup');
+		if(this.timers.ipv6.end !== null) {
+			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start)
+		}
+		else {
+			BOOMR.addVar('ipv6_latency', 'NA')
+		}
+
+		if(this.timers.host.end !== null) {
+			BOOMR.addVar('ipv6_lookup', this.timers.host.end - this.timers.host.start)
+		}
+		else {
+			BOOMR.addVar('ipv6_lookup', 'NA')
+		}
+
+		this.complete = true;
 	}
 };
 	
 BOOMR.plugins.IPv6 = {
 	init: function(config) {
-		BOOMR.utils.pluginConfig(impl, config, "IPv6", ["ipv6_url", "host_url"]);
+		BOOMR.utils.pluginConfig(impl, config, "IPv6", ["ipv6_url", "host_url", "timeout"]);
 
 		if(!impl.ipv6_url) {
 			BOOMR.warn("IPv6.ipv6_url is not set.  Cannot run IPv6 test.", "ipv6");
