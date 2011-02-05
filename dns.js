@@ -99,10 +99,10 @@ BOOMR.plugins.DNS = {
 
 		// make sure that dns test images use the same protocol as the host page
 		if(w.location.protocol === 'https:') {
-			impl.base_url.replace(/^http:/, 'https:');
+			impl.base_url = impl.base_url.replace(/^http:/, 'https:');
 		}
 		else {
-			impl.base_url.replace(/^https:/, 'http:');
+			impl.base_url = impl.base_url.replace(/^https:/, 'http:');
 		}
 
 		BOOMR.subscribe("page_ready", impl.start, null, this);
