@@ -24,10 +24,7 @@ Beacon parameters:
 		to the ipv6 host.
 */
 
-// w is the window object
 (function(w) {
-
-var d=w.document;
 
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
@@ -54,29 +51,38 @@ var impl = {
 	},
 
 	start: function() {
-		load_img('ipv6', 'host');
+		this.load_img('ipv6', 'host');
 	},
 
 	load_img: function(which) {
+		var img,
+			rnd = "?t=" + (new Date().getTime()) + Math.random(),
+			timer=0, error = null,
+			that = this, a;
+
+		// Terminate if we've reached end of test list
 		if(!which || !(which in this.timers)) {
 			this.done();
 			return false;
 		}
 
 		Array.prototype.shift.call(arguments);
+		a = arguments;
 
-		var img = new Image(),
-			rnd = "?t=" + (new Date().getTime()) + Math.random(),
-			timer=0, error = null,
-			that = this, a = arguments;
+		// Skip if URL wasn't set for this test
+		if(!this[which + '_url']) {
+			return this.load_img.apply(this, a);
+		}
+
+		img = new Image();
 
 		img.onload = function() {
 			that.timers[which].end = new Date().getTime();
 			clearTimeout(timer);
 			img.onload = img.onerror = null;
-			img = error = null;
+			img = null;
 
-			that.load_img(a);
+			that.load_img.apply(that, a);
 			that = a = null;
 		};
 
@@ -84,7 +90,7 @@ var impl = {
 			that.timers[which].supported = false;
 			clearTimeout(timer);
 			img.onload = img.onerror = null;
-			img = error = null;
+			img = null;
 
 			that.done();
 			that = a = null;
@@ -93,28 +99,29 @@ var impl = {
 		img.onerror = error;
 		timer = setTimeout(error, this.timeout);
 		this.timers[which].start = new Date().getTime();
-		img.src = this.[which + '_url'] + rnd;
+		img.src = this[which + '_url'] + rnd;
+
+		return true;
 	},
 
 	done: function() {
-		var k;
-
 		BOOMR.removeVar('ipv6_latency', 'ipv6_lookup');
 		if(this.timers.ipv6.end !== null) {
-			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start)
+			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start);
 		}
 		else {
-			BOOMR.addVar('ipv6_latency', 'NA')
+			BOOMR.addVar('ipv6_latency', 'NA');
 		}
 
 		if(this.timers.host.end !== null) {
-			BOOMR.addVar('ipv6_lookup', this.timers.host.end - this.timers.host.start)
+			BOOMR.addVar('ipv6_lookup', this.timers.host.end - this.timers.host.start);
 		}
 		else {
-			BOOMR.addVar('ipv6_lookup', 'NA')
+			BOOMR.addVar('ipv6_lookup', 'NA');
 		}
 
 		this.complete = true;
+		BOOMR.sendBeacon();
 	}
 };
 	
