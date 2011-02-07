@@ -460,7 +460,8 @@ else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
 
 
 for(k in boomr) {
-	if(boomr.hasOwnProperty(k)) {
+	// Copy only if BOOMR doesn't have it.
+	if(!BOOMR.hasOwnProperty(k)) {
 		BOOMR[k] = boomr[k];
 	}
 }
