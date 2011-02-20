@@ -28,15 +28,7 @@ var images=[
 	{ name: "image-4.png", size: 1234664, timeout: 1200 }, 
 	{ name: "image-5.png", size: 4509613, timeout: 1200 }, 
 	{ name: "image-6.png", size: 9084559, timeout: 1200 }
-];
-
-images.end = images.length;
-images.start = 0;
-
-// abuse arrays to do the latency test simply because it avoids a bunch of
-// branches in the rest of the code.
-// I'm sorry Douglas
-images.l = { name: "image-l.gif", size: 35, timeout: 1000 };
+], limage = { name: "image-l.gif", size: 35, timeout: 1000 };
 
 // private object
 var impl = {
@@ -140,7 +132,7 @@ var impl = {
 			amean_corrected, std_dev_corrected, std_err_corrected, median_corrected,
 			bw, bw_c;
 	
-		for(i=0; i<results.length; i++) {
+		for(i=0; i<latencies.length; i++) {
 			// multiply by 1000 since t is in milliseconds and not seconds
 			bw = size*1000/latencies[i];
 			bandwidths.push(bw);
@@ -270,8 +262,8 @@ var impl = {
 		if(o.ctr < this.latency_runs) {
 			o.ctr++;
 			BOOMR.utils.loadImage(
-					this.base_url + images.l.name,
-					images.l.timeout,
+					this.base_url + limage.name,
+					limage.timeout,
 					this.test_latency, this, o
 			);
 		}
@@ -294,7 +286,7 @@ var impl = {
 				return;
 			}
 			// if not timed out, we go to the next image
-			if(!t.timeout && o.i < images.end-1) {
+			if(!t.timeout && o.i < images.length-1) {
 				o.i++;
 			}
 			// at this point it either timed out or we're at the last image
