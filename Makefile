@@ -1,4 +1,4 @@
-PLUGINS := 
+PLUGINS := bw.js
 
 VERSION := $(shell sed -ne '/^BOOMR\.version/{s/^.*"\([^"]*\)".*/\1/;p;q;}' boomerang.js)
 DATE := $(shell date +%s)
