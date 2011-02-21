@@ -287,7 +287,7 @@ var impl = {
 				return;
 			}
 			// if not timed out, we go to the next image
-			if(!t.timeout && o.i < images.length-1) {
+			if(o.ctr===0 && !t.timeout && o.i < images.length-1) {
 				o.i++;
 			}
 			// at this point it either timed out or we're at the last image
