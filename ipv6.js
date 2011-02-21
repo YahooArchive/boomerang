@@ -60,13 +60,13 @@ var impl = {
 		}
 		else {
 			if(this.ipv6_url) {
-				BOOMR.util.loadImage(
+				BOOMR.utils.loadImage(
 						this.ipv6_url, this.timeout,
 						this.start, this, 'ipv6'
 				);
 			}
 			if(this.host_url) {
-				BOOMR.util.loadImage(
+				BOOMR.utils.loadImage(
 						this.host_url, this.timeout,
 						this.start, this, 'host'
 				);
