@@ -8,8 +8,6 @@ http://developer.yahoo.net/blog/archives/2009/11/guide_to_dns.html
 // w is the window object
 (function(w) {
 
-var d=w.document;
-
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
 
@@ -21,15 +19,18 @@ var impl = {
 	t_http: null,
 	img: null,
 
+	gen_url: "",
+
 	start: function() {
-		var random = Math.floor(Math.random()*(2147483647)).toString(36),
-		    base_url = this.base_url.replace(/\*/, random);
+		var random = Math.floor(Math.random()*(2147483647)).toString(36);
+
+		this.gen_url = this.base_url.replace(/\*/, random);
 
 		impl.img = new Image();
 		impl.img.onload = impl.A_loaded;
 
 		impl.t_start = new Date().getTime();
-		impl.img.src = base_url + "image-l.gif?t="
+		impl.img.src = this.gen_url + "image-l.gif?t="
 					+ (new Date().getTime()) + Math.random();
 	},
 
@@ -40,7 +41,7 @@ var impl = {
 		impl.img.onload = impl.B_loaded;
 
 		impl.t_start = new Date().getTime();
-		impl.img.src = base_url + "image-l.gif?t="
+		impl.img.src = impl.gen_url + "image-l.gif?t="
 					+ (new Date().getTime()) + Math.random();
 	},
 
@@ -99,10 +100,10 @@ BOOMR.plugins.DNS = {
 
 		// make sure that dns test images use the same protocol as the host page
 		if(w.location.protocol === 'https:') {
-			impl.base_url.replace(/^http:/, 'https:');
+			impl.base_url = impl.base_url.replace(/^http:/, 'https:');
 		}
 		else {
-			impl.base_url.replace(/^https:/, 'http:');
+			impl.base_url = impl.base_url.replace(/^https:/, 'http:');
 		}
 
 		BOOMR.subscribe("page_ready", impl.start, null, this);
