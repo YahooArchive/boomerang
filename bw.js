@@ -259,7 +259,7 @@ var impl = {
 			o.state.push(t.end - t.start);
 		}
 
-		if(o.ctr < this.latency_runs) {
+		if(!this.aborted && o.ctr < this.latency_runs) {
 			o.ctr++;
 			BOOMR.utils.loadImage(
 					this.base_url + limage.name,
@@ -283,6 +283,7 @@ var impl = {
 			// terminate on failure
 			if(t.success === false) {
 				BOOMR.warn("error fetching bandwidth image", "bw");
+				this.bw = this.calc_bw(o.state, images[o.i].size);
 				return;
 			}
 			// if not timed out, we go to the next image
@@ -297,11 +298,12 @@ var impl = {
 		}
 
 		// first run through each image until the first that timesout
-		if(o.ctr < this.nruns) {
+		if(!this.aborted && o.ctr < this.nruns) {
 			BOOMR.utils.loadImage(
 					this.base_url + images[o.i].name,
 					images[o.i].timeout,
-					this.test_bandwidth, this, o
+					this.test_bandwidth, this, o,
+					false, true
 			);
 		}
 		else {
@@ -323,6 +325,7 @@ var impl = {
 		}
 	
 		if(this.iteration_state.length === 0) {
+			this.iteration_state = null;
 			return this.finish();
 		}
 
@@ -420,7 +423,6 @@ BOOMR.plugins.BW = {
 	abort: function() {
 		if(impl.running) {
 			impl.aborted = true;
-			impl.finish();
 		}
 
 		return this;

@@ -196,7 +196,7 @@ boomr = {
 			return (props>0);
 		},
 
-		loadImage: function(url, timeout, callback, o, data, allowcache) {
+		loadImage: function(url, timeout, callback, o, data, allowcache, no_abort_on_timeout) {
 			var img=new Image(),
 				t={ start: null, end: null, success: false, timeout: false },
 				timer=null;
@@ -231,10 +231,10 @@ boomr = {
 				img=timer=null;
 				
 				t.success = false;
-				if(callback) {
+				if(callback && !no_abort_on_timeout) {
 					callback.call(o, t, data);
+					o = t = data = callback = null;
 				}
-				o = t = data = callback = null;
 			};
 
 			if(timeout) {
