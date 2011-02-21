@@ -33,10 +33,10 @@ BOOMR.plugins = BOOMR.plugins || {};
 Algorithm:
 
 1. Try to load a sizeless image from an IPv6 host
-   - onerror, flag no IPv6 connect support and end
+   - onerror/timeout, flag no IPv6 connect support
    - onload, measure load time
 2. Try to load a sizeless image from a hostname that resolves to an IPv6 address
-   - onerror, flag no IPv6 DNS resolver and end
+   - onerror/timeout, flag no IPv6 DNS resolver
    - onload, measure load time
 */
 var impl = {
@@ -46,78 +46,54 @@ var impl = {
 	timeout: 1200,
 
 	timers: {
-		ipv6: { start: null, end: null },
-		host: { start: null, end: null }
+		ipv6: null,
+		host: null 
 	},
 
 	start: function() {
-		this.load_img('ipv6', 'host');
+		this.test();
 	},
 
-	load_img: function(which) {
-		var img,
-			rnd = "?t=" + (new Date().getTime()) + Math.random(),
-			timer=0, error = null,
-			that = this, a;
-
-		// Terminate if we've reached end of test list
-		if(!which || !(which in this.timers)) {
-			this.done();
-			return false;
+	test: function(t, which) {
+		if(t) {
+			this.timers[which] = t;
 		}
-
-		Array.prototype.shift.call(arguments);
-		a = arguments;
-
-		// Skip if URL wasn't set for this test
-		if(!this[which + '_url']) {
-			return this.load_img.apply(this, a);
+		else {
+			if(this.ipv6_url) {
+				BOOMR.util.loadImage(
+						this.ipv6_url, this.timeout,
+						this.start, this, 'ipv6'
+				);
+			}
+			if(this.host_url) {
+				BOOMR.util.loadImage(
+						this.host_url, this.timeout,
+						this.start, this, 'host'
+				);
+			}
 		}
-
-		img = new Image();
-
-		img.onload = function() {
-			that.timers[which].end = new Date().getTime();
-			clearTimeout(timer);
-			img.onload = img.onerror = null;
-			img = null;
-
-			that.load_img.apply(that, a);
-			that = a = null;
-		};
-
-		error = function() {
-			that.timers[which].supported = false;
-			clearTimeout(timer);
-			img.onload = img.onerror = null;
-			img = null;
-
-			that.done();
-			that = a = null;
-		};
-
-		img.onerror = error;
-		timer = setTimeout(error, this.timeout);
-		this.timers[which].start = new Date().getTime();
-		img.src = this[which + '_url'] + rnd;
-
-		return true;
 	},
 
 	done: function() {
 		BOOMR.removeVar('ipv6_latency', 'ipv6_lookup');
-		if(this.timers.ipv6.end !== null) {
-			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start);
-		}
-		else {
+		if(this.timers.ipv6 === null) {
 			BOOMR.addVar('ipv6_latency', 'NA');
 		}
-
-		if(this.timers.host.end !== null) {
-			BOOMR.addVar('ipv6_lookup', this.timers.host.end - this.timers.host.start);
+		else if(this.timers.ipv6.timeout || !this.timers.ipv6.success) {
+			BOOMR.addVar('ipv6_latency', 'NS');
 		}
 		else {
+			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start);
+		}
+
+		if(this.timers.host === null) {
 			BOOMR.addVar('ipv6_lookup', 'NA');
+		}
+		else if(this.timers.host.timeout || !this.timers.host.success) {
+			BOOMR.addVar('ipv6_lookup', 'NS');
+		}
+		else {
+			BOOMR.addVar('ipv6_lookup', this.timers.host.end - this.timers.host.start);
 		}
 
 		this.complete = true;
