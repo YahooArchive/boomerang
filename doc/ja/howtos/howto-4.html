@@ -4,7 +4,7 @@
 <script type="text/javascript">
 var t_pagestart = new Date().getTime();
 </script>
-<script src="../../boomerang.js" type="text/javascript"></script>
+<script src="../../../boomerang.js" type="text/javascript"></script>
 <script type="text/javascript">
 BOOMR.init({
 		user_ip: '10.0.0.1',
@@ -21,7 +21,7 @@ BOOMR.plugins.RT.setTimer("t_js", new Date().getTime() - t_pagestart).
 </script>
 <title>Boomerang 使用方法 #4: さらに正確なページの読み込み時間を測定する</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="../boomerang-docs.css">
+<link rel="stylesheet" type="text/css" href="../../boomerang-docs.css">
 <script type="text/javascript">
 BOOMR.plugins.RT.endTimer("t_head").
 		startTimer("t_body");
@@ -61,7 +61,7 @@ BOOMR.plugins.RT.endTimer("t_head").
     &lt;/script&gt;
     &lt;title&gt;page title&lt;/title&gt;
     &lt;meta http-equiv="Content-type" content="text/html; charset=utf-8"&gt;
-    &lt;link rel="stylesheet" type="text/css" href="../boomerang-docs.css"&gt;
+    &lt;link rel="stylesheet" type="text/css" href="../../boomerang-docs.css"&gt;
     &lt;script type="text/javascript"&gt;
       <em>BOOMR.plugins.RT.endTimer("t_head").startTimer("t_body");</em>
     &lt;/script&gt;
@@ -128,7 +128,7 @@ BOOMR.plugins.RT.endTimer("t_head").
 <script type="text/javascript">
 BOOMR.plugins.RT.startTimer("t_howtojs");
 </script>
-<script src="howtos.js" type="text/javascript"></script>
+<script src="../../howtos/howtos.js" type="text/javascript"></script>
 <script type="text/javascript">
 BOOMR.plugins.RT.endTimer("t_howtojs").endTimer("t_body");
 </script>
