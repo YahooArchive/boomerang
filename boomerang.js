@@ -231,19 +231,19 @@ boomr = {
 				img=timer=null;
 				
 				t.success = false;
-				if(callback && !no_abort_on_timeout) {
+				if(callback) {
 					callback.call(o, t, data);
-					o = t = data = callback = null;
 				}
+				o = t = data = callback = null;
 			};
 
 			if(timeout) {
 				timer = setTimeout(function() {
 						t.timeout=true;
-						if(callback) {
+						if(callback && !no_abort_on_timeout) {
 							callback.call(o, t, data);
+							o = data = callback = timer = null;
 						}
-						o = data = callback = timer = null;
 					}, timeout);
 			}
 
