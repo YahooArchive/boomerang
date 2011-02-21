@@ -40,7 +40,7 @@ var impl = {
 	cookie: 'BA',
 
 	latency_runs: 10,
-	nruns: 5,
+	nruns: 4,
 
 	// results
 	latency: null,
