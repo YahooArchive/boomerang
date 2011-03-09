@@ -1221,10 +1221,10 @@ BOOMR.plugins.BW = {
 	abort: function() {
 		impl.aborted = true;
 		if (impl.running) {
-            impl.finish();	// we don't defer this call because it might be called from
+                    impl.finish();	// we don't defer this call because it might be called from
 				// onunload and we want the entire chain to complete
 				// before we return
-        }
+                }
 		return this;
 	},
 
