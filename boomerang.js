@@ -543,9 +543,12 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
-	startTimer: function(timer_name) {
+	startTimer: function(timer_name, time_value) {
 		if(timer_name) {
-			impl.timers[timer_name] = { start: new Date().getTime() };
+      if  (timer_name == 't_page') {
+        this.endTimer('t_resp', time_value);
+      }
+			impl.timers[timer_name] = {start: (typeof time_value === "number" ? time_value : new Date().getTime())};
 			impl.complete = false;
 		}
 
@@ -588,6 +591,11 @@ BOOMR.plugins.RT = {
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
 		this.endTimer("t_done");
+
+    // If the dev has already started t_page timer, we can end it now as well
+    if(impl.timers.hasOwnProperty('t_page')) {
+  		this.endTimer("t_page");
+    }
 
 		// A beacon may be fired automatically on page load or if the page dev fires
 		// it manually with their own timers.  It may not always contain a referrer
