@@ -543,9 +543,12 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
-	startTimer: function(timer_name) {
+	startTimer: function(timer_name, time_value) {
 		if(timer_name) {
-			impl.timers[timer_name] = { start: new Date().getTime() };
+			if (timer_name == 't_page') {
+				this.endTimer('t_resp', time_value);
+			}
+			impl.timers[timer_name] = {start: (typeof time_value === "number" ? time_value : new Date().getTime())};
 			impl.complete = false;
 		}
 
@@ -589,6 +592,11 @@ BOOMR.plugins.RT = {
 		// else, it will stop the page load timer
 		this.endTimer("t_done");
 
+		// If the dev has already started t_page timer, we can end it now as well
+		if(impl.timers.hasOwnProperty('t_page')) {
+			this.endTimer("t_page");
+		}
+
 		// A beacon may be fired automatically on page load or if the page dev fires
 		// it manually with their own timers.  It may not always contain a referrer
 		// (eg: XHR calls).  We set default values for these cases
@@ -613,7 +621,7 @@ BOOMR.plugins.RT = {
 		if(!t_start) {
 			// TODO: Change the "warn" to "info" (or drop it) once the WebTiming API
 			// becomes standard (2012? 2014?)  Scream at me if you see this past 2012
-			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
+			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
 
 			// Get start time from WebTiming API see:
 			// http://dev.w3.org/2006/webapi/WebTiming/
@@ -631,6 +639,13 @@ BOOMR.plugins.RT = {
 				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 				ti = {
 					requestStart: w.chrome.csi().startE
+				};
+			}
+			else if(w.gtbExternal) {
+				// The Google Toolbar exposes navigation start time similar to old versions of chrome
+				// This would work for any browser that has the google toolbar installed
+				ti = {
+					requestStart: w.gtbExternal.startE()
 				};
 			}
 
@@ -1220,10 +1235,11 @@ BOOMR.plugins.BW = {
 
 	abort: function() {
 		impl.aborted = true;
-		impl.finish();	// we don't defer this call because it might be called from
-				// onunload and we want the entire chain to complete
-				// before we return
-
+		if (impl.running) {
+			impl.finish();	// we don't defer this call because it might be called from
+					// onunload and we want the entire chain to complete
+					// before we return
+		}
 		return this;
 	},
 
