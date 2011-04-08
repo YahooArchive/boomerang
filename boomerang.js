@@ -619,8 +619,8 @@ BOOMR.plugins.RT = {
 		}
 
 		if(!t_start) {
-			// TODO: Change the "warn" to "info" (or drop it) once the WebTiming API
-			// becomes standard (2012? 2014?)  Scream at me if you see this past 2012
+			// TODO: Drop this message once the WebTiming API becomes standard (2012? 2014?)
+			// Scream at me if you see this past 2013
 			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
 
 			// Get start time from WebTiming API see:
