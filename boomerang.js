@@ -621,7 +621,7 @@ BOOMR.plugins.RT = {
 		if(!t_start) {
 			// TODO: Change the "warn" to "info" (or drop it) once the WebTiming API
 			// becomes standard (2012? 2014?)  Scream at me if you see this past 2012
-			BOOMR.warn("start cookie not set, trying WebTiming API", "rt");
+			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
 
 			// Get start time from WebTiming API see:
 			// http://dev.w3.org/2006/webapi/WebTiming/
@@ -639,6 +639,13 @@ BOOMR.plugins.RT = {
 				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 				ti = {
 					requestStart: w.chrome.csi().startE
+				};
+			}
+			else if(w.gtbExternal) {
+				// The Google Toolbar exposes navigation start time similar to old versions of chrome
+				// This would work for any browser that has the google toolbar installed
+				ti = {
+					requestStart: w.gtbExternal.startE()
 				};
 			}
 
