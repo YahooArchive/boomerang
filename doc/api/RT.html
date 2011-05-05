@@ -29,13 +29,31 @@ a reference to the <code>BOOMR.plugins.RT</code> object, so you can chain method
 </p>
 </dd>
 
-<dt>startTimer(sName)</dt>
+<dt>startTimer(sName, [nValue])</dt>
 <dd>
 <p>
 Starts the timer named <code>sName</code>.  Timers count in milliseconds.  You must call
 <code>endTimer()</code> when this timer has complete for the measurement to be recorded
 in boomerang's beacon.
 </p>
+<p>
+If passed in, the optional second parameter <code>nValue</code> is the timestamp in milliseconds
+to set the timer's start time to.  This is useful if you need to record a timer that started
+before boomerang was loaded up.
+</p>
+<h3>Parameters:</h3>
+<dl>
+<dt>sName</dt>
+<dd>The name of the timer to start</dd>
+
+<dt>nValue</dt>
+<dd><strong>[optional]</strong>
+A javascript timestamp value (milliseconds since the epoch).  If set, the timer's start time will be set
+explicitly to this value.  If not set, the current timestamp is used.  You'd use this parameter if you
+measured a timestamp before <code>boomerang</code> was loaded and now need to pass that value to the
+roundtrip plugin.
+</dd>
+</dl>
 <h3>Example:</h3>
 <p>
 See <a href="../howtos/howto-4.html">Howto #4</a> for an example that uses startTimer and endTimer.
@@ -43,6 +61,13 @@ See <a href="../howtos/howto-4.html">Howto #4</a> for an example that uses start
 <h3>Returns</h3>
 <p>
 a reference to the <code>BOOMR.plugins.RT</code> object, so you can chain methods.
+</p>
+<h3>Note</h3>
+<p>
+Calling <code>startTimer("t_page")</code> has the side-effect of calling <code>endTimer("t_resp")</code>.
+These timers are generally used to measure the time from (as close to) the first byte loaded to <code>onload</code>
+(<code>t_page</code>) and from <code>onbeforeunload</code> to the first byte time (<code>t_resp</code>).
+You do not need to explicitly call <code>startTimer("t_resp")</code>.
 </p>
 </dd>
 
