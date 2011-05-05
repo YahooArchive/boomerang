@@ -119,6 +119,8 @@ All roundtrip plugin configuration items are under the <code>RT</code> namespace
 <dd>
 <strong>[optional]</strong>
 The name of the cookie in which to store the start time for measuring page load time.  The default name is <code>RT</code>.
+Set this to a falsy value like <code>null</code> or the empty string to ignore cookies and depend completely on the
+WebTiming API for the start time.
 </dd>
 
 <dt>cookie_exp</dt>
