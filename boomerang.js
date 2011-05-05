@@ -498,7 +498,7 @@ BOOMR.plugins.RT = {
 
 	startTimer: function(timer_name, time_value) {
 		if(timer_name) {
-			if (timer_name == 't_page') {
+			if (timer_name === 't_page') {
 				this.endTimer('t_resp', time_value);
 			}
 			impl.timers[timer_name] = {start: (typeof time_value === "number" ? time_value : new Date().getTime())};
