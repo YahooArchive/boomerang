@@ -3,7 +3,7 @@
 <head>
 <title>Roundtrip プラグイン API</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="../boomerang-docs.css">
+<link rel="stylesheet" type="text/css" href="../../boomerang-docs.css">
 </head>
 <body>
 <span style="float:right;"><a href="../">ドキュメント一覧</a> | <a href="index.html">API</a></span>
@@ -27,11 +27,22 @@ roundtrip プラグインを設定するために呼び出される <a href="BOO
 </p>
 </dd>
 
-<dt>startTimer(sName)</dt>
+<dt>startTimer(sName, [nValue])</dt>
 <dd>
 <p>
 <code>sName</code> に指定された名前のタイマーを開始します。タイマーはミリ秒でカウントされます。boomerang のビーコンの測定結果を記録を終えるには <code>endTimer()</code> を呼び出す必要があります。
 </p>
+<p>オプションとなる2番目のパラメーターである <code>nValue</code> はタイマーの開始時間とするタイムスタンプをミリ秒で指定します。これは boomerang が読み込まれる前にタイマーを開始する必要がある場合に便利です。</p>
+<h3>パラメーター:</h3>
+<dl>
+<dt>sName</dt>
+<dd>開始するタイマーの名前</dd>
+
+<dt>nValue</dt>
+<dd><strong>[オプション]</strong>
+JavaScript のタイムスタンプ値（特定のミリ秒）。指定されている場合、タイマーの開始時間が明示的に設定されます。指定されていない場合は現在のタイムスタンプ値が使用されます。boomerang が読み込まれる前のタイムスタンプ値を測定する場合はこのパラメーターを Roundtrip プラグインに渡す必要があります。
+</dd>
+</dl>
 <h3>例:</h3>
 <p>
 startTimeer と endTimer の使用例は <a href="../howtos/howto-4.html">使用方法 #4</a> をご覧くさい。
@@ -39,6 +50,10 @@ startTimeer と endTimer の使用例は <a href="../howtos/howto-4.html">使用
 <h3>返り値</h3>
 <p>
 <code>BOOMR.plugins.RT</code> オブジェクトへの参照。メソッドチェーンをサポートします。
+</p>
+<h3>注意</h3>
+<p>
+<code>startTimer("t_page")</code> を呼び出すと <code>endTimer("t_resp")</code> を呼び出す副作用があります。これらのタイマーは通常（できるだけ近い）読み込んだ最初の byte から <code>onload</code>（<code>t_page</code>）までと <code>onbeforeunload</code> から最初の byte の時間（<code>t_resp</code>）を使います。明示的に <code>startTimer("t_resp")</code> を呼び出す必要はありません。
 </p>
 </dd>
 
