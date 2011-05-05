@@ -499,6 +499,11 @@ var impl = {
 	start: function() {
 		var t_end, t_start = new Date().getTime();
 
+		// Disable use of RT cookie by setting its name to a falsy value
+		if(!impl.cookie) {
+			return this;
+		}
+
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
 		if(!BOOMR.utils.setCookie(impl.cookie,
@@ -605,16 +610,19 @@ BOOMR.plugins.RT = {
 		u = d.URL.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
-		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
-		BOOMR.utils.removeCookie(impl.cookie);
+		// If impl.cookie is not set, the dev does not want to use cookie time
+		if(impl.cookie) {
+			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+			BOOMR.utils.removeCookie(impl.cookie);
 
-		if(subcookies !== null
-			&& typeof subcookies.s !== "undefined"
-			&& typeof subcookies.r !== "undefined"
-		) {
-			r = subcookies.r;
-			if(!impl.strict_referrer || r === r2) { 
-				t_start = parseInt(subcookies.s, 10);
+			if(subcookies !== null
+				&& typeof subcookies.s !== "undefined"
+				&& typeof subcookies.r !== "undefined"
+			) {
+				r = subcookies.r;
+				if(!impl.strict_referrer || r === r2) { 
+					t_start = parseInt(subcookies.s, 10);
+				}
 			}
 		}
 
