@@ -448,15 +448,15 @@ var impl = {
 		var t_end, t_start = new Date().getTime();
 
 		// Disable use of RT cookie by setting its name to a falsy value
-		if(!impl.cookie) {
+		if(!this.cookie) {
 			return this;
 		}
 
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		if(!BOOMR.utils.setCookie(impl.cookie,
+		if(!BOOMR.utils.setCookie(this.cookie,
 						{ s: t_start, r: d.URL.replace(/#.*/, '') },
-						impl.cookie_exp,
+						this.cookie_exp,
 						"/", null)
 		) {
 			BOOMR.error("cannot set start cookie", "rt");
@@ -469,7 +469,7 @@ var impl = {
 			// The user Most likely has cookie prompting turned on so
 			// t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
-			BOOMR.utils.removeCookie(impl.cookie);
+			BOOMR.utils.removeCookie(this.cookie);
 
 			// at some point we may want to log this info on the server side
 			BOOMR.error("took more than 50ms to set cookie... aborting: "
