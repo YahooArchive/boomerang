@@ -45,11 +45,6 @@ impl = {
 	//! User's ip address determined on the server.  Used for the BA cookie
 	user_ip: '',
 
-	// Ratio, used for the percentage-users tracking. Set ratio to the numeric percentage you want
-	// tracked, 0-100, with 100 being full tracking. No % sign.
-	ratio: '',
-	ratiocookiename: 'boomrsession',
-
 	events: {
 		"page_ready": [],
 		"page_unload": [],
@@ -199,7 +194,7 @@ boomr = {
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "site_domain", "user_ip","ratio","ratiocookiename"];
+		    properties = ["beacon_url", "site_domain", "user_ip"];
 	
 		if(!config) {
 			config = {};
@@ -216,47 +211,6 @@ boomr = {
 		}
 		if(!this.log) {
 			this.log = function(m,l,s) { };
-		}
-
-		//check if ratio has been set
-		if(impl.ratio != ''){
-			var tc=BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.ratiocookiename));
-
-			// if boomr run is true then run boomerang during their session
-			// 	and skip calculating the ratio this time
-			if(tc != null && tc.run == "true"){
-				var runRatio = false;
-			// if boomr don't run session is false then don't run run boomerang during their session
-			// 	and just return
-			}else if(tc != null && tc.run == "false"){
-				return false;
-			}else{
-					//If ratio is set and no session cookie exists then roll the dice
-                     var runRatio = true;
-			}
-
-			if(runRatio){
-				if(!this.randomNess()){
-                                        // set don't run boomerang session subcookie
-                                        BOOMR.utils.setCookie(
-                                                        impl.ratiocookiename,
-                                                        {run: "false"},
-                                                        0,
-                                                        "/", 
-                                                        null);
-                                        return false;
-				}else{
-
-
-                                      	// set run boomerang session subcookie
-                                        BOOMR.utils.setCookie(
-                                                        impl.ratiocookiename,
-                                                        {run: "true"},
-                                                        0,
-                                                        "/", 
-                                                        null);
-				}
-			}
 		}
 
 		for(k in this.plugins) {
@@ -427,12 +381,6 @@ boomr = {
 		}
 
 		return this;
-	},
-
-	randomNess: function() {
-		var randomnumber=Math.floor((Math.random()*100) + 1);
-		if (randomnumber <= impl.ratio) { return true;}
-		else { return false;}
 	}
 
 };
@@ -499,11 +447,16 @@ var impl = {
 	start: function() {
 		var t_end, t_start = new Date().getTime();
 
+		// Disable use of RT cookie by setting its name to a falsy value
+		if(!this.cookie) {
+			return this;
+		}
+
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		if(!BOOMR.utils.setCookie(impl.cookie,
+		if(!BOOMR.utils.setCookie(this.cookie,
 						{ s: t_start, r: d.URL.replace(/#.*/, '') },
-						impl.cookie_exp,
+						this.cookie_exp,
 						"/", null)
 		) {
 			BOOMR.error("cannot set start cookie", "rt");
@@ -516,7 +469,7 @@ var impl = {
 			// The user Most likely has cookie prompting turned on so
 			// t_start won't be the actual unload time
 			// We bail at this point since we can't reliably tell t_done
-			BOOMR.utils.removeCookie(impl.cookie);
+			BOOMR.utils.removeCookie(this.cookie);
 
 			// at some point we may want to log this info on the server side
 			BOOMR.error("took more than 50ms to set cookie... aborting: "
@@ -545,7 +498,7 @@ BOOMR.plugins.RT = {
 
 	startTimer: function(timer_name, time_value) {
 		if(timer_name) {
-			if (timer_name == 't_page') {
+			if (timer_name === 't_page') {
 				this.endTimer('t_resp', time_value);
 			}
 			impl.timers[timer_name] = {start: (typeof time_value === "number" ? time_value : new Date().getTime())};
@@ -605,22 +558,25 @@ BOOMR.plugins.RT = {
 		u = d.URL.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
-		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
-		BOOMR.utils.removeCookie(impl.cookie);
+		// If impl.cookie is not set, the dev does not want to use cookie time
+		if(impl.cookie) {
+			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+			BOOMR.utils.removeCookie(impl.cookie);
 
-		if(subcookies !== null
-			&& typeof subcookies.s !== "undefined"
-			&& typeof subcookies.r !== "undefined"
-		) {
-			r = subcookies.r;
-			if(!impl.strict_referrer || r === r2) { 
-				t_start = parseInt(subcookies.s, 10);
+			if(subcookies !== null
+				&& typeof subcookies.s !== "undefined"
+				&& typeof subcookies.r !== "undefined"
+			) {
+				r = subcookies.r;
+				if(!impl.strict_referrer || r === r2) { 
+					t_start = parseInt(subcookies.s, 10);
+				}
 			}
 		}
 
 		if(!t_start) {
-			// TODO: Change the "warn" to "info" (or drop it) once the WebTiming API
-			// becomes standard (2012? 2014?)  Scream at me if you see this past 2012
+			// TODO: Drop this message once the WebTiming API becomes standard (2012? 2014?)
+			// Scream at me if you see this past 2013
 			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
 
 			// Get start time from WebTiming API see:
@@ -1251,4 +1207,4 @@ BOOMR.plugins.BW = {
 
 
 
-
+/*jslint white: false, devel: true, onevar: true, browser: true, undef: true, nomen: true, regexp: false, continue: true, plusplus: false, bitwise: false, newcap: true, maxerr: 50, indent: 4 */

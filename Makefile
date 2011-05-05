@@ -8,10 +8,18 @@ MINIFIER := cat
 all: boomerang-$(VERSION).$(DATE).js
 
 usage:
-	echo -e "Create a release version of boomerang:\n\tmake\n"
-	echo -e "Create a release version of boomerang with the dns plugin:\n\tmake PLUGINS=dns.js\n"
-	echo -e "Create a yuicompressor minified release version of boomerang:\n\tmake MINIFIER=\"java -jar /path/to/yuicompressor-2.4.2.jar --type js\"\n"
-	echo -e "Create a jsmin minified release version of boomerang:\n\tmake MINIFIER=\"/path/to/jsmin\"\n"
+	echo "Create a release version of boomerang:"
+	echo "	make"
+	echo ""
+	echo "Create a release version of boomerang with the dns plugin:"
+	echo "	make PLUGINS=dns.js"
+	echo ""
+	echo "Create a yuicompressor minified release version of boomerang:"
+	echo "	make MINIFIER=\"java -jar /path/to/yuicompressor-2.4.2.jar --type js\""
+	echo ""
+	echo "Create a jsmin minified release version of boomerang:"
+	echo "	make MINIFIER=\"/path/to/jsmin\""
+	echo ""
 
 boomerang-$(VERSION).$(DATE).js: boomerang.js $(PLUGINS)
 	echo
