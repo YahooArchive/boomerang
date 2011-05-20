@@ -491,7 +491,7 @@ BOOMR.plugins.RT = {
 					["cookie", "cookie_exp", "strict_referrer"]);
 
 		BOOMR.subscribe("page_ready", this.done, null, this);
-		BOOMR.subscribe("page_unload", impl.start, null, this);
+		BOOMR.subscribe("page_unload", impl.start, null, impl);
 
 		return this;
 	},
