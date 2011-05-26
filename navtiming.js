@@ -7,8 +7,6 @@ see: http://www.w3.org/TR/navigation-timing/
 // w is the window object
 (function(w) {
 
-var d=w.document;
-
 // First make sure BOOMR is actually defined.  It's possible that your plugin is loaded before boomerang, in which case
 // you'll need this.
 BOOMR = BOOMR || {};
@@ -59,8 +57,8 @@ var impl = {
 };
 	
 BOOMR.plugins.NavigationTiming = {
-	init: function(config) {
-		BOOMR.subscribe("page_ready", impl.done, null, this);
+	init: function() {
+		BOOMR.subscribe("page_ready", impl.done, null, impl);
 		return this;
 	},
 
