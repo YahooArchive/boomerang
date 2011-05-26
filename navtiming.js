@@ -51,7 +51,7 @@ var impl = {
 			}
 			BOOMR.addVar(data);
 		}
-		impl.complete = true;
+		this.complete = true;
 		BOOMR.sendBeacon();
 	}
 };
