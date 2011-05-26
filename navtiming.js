@@ -18,6 +18,7 @@ BOOMR.plugins = BOOMR.plugins || {};
 var impl = {
 	complete: false,
 	done: function() {
+		var p, pn, pt, data;
 		p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
 		if(p && p.timing && p.navigation) {
 			BOOMR.info("This user agent supports NavigationTiming.", "nt");
