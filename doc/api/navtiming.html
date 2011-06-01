@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Navigation Timing plugin API</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="../boomerang-docs.css">
+</head>
+<body>
+<span style="float:right;"><a href="../">All Docs</a> | <a href="index.html">Index</a></span>
+<h1>Navigation Timing plugin API</h1>
+<p>
+<strong>Note:</strong> The Navigation Timing plugin hasn't been tested.  Your help in testing it is appreciated.
+</p>
+<p>
+The Navigation Timing plugin collects metrics collected by modern user agents that support the 
+<a href="http://w3c-test.org/webperf/specs/NavigationTiming/">W3C Navigation Timing</a> specification. The Navigation 
+Timing API is encapsulated within the <code>BOOMR.plugins.NavigationTiming</code> namespace.
+</p>
+
+<p>
+<strong>Note</strong> that the Navigation Timing plugin isn't included by default in boomerang.js. See
+<a href="../howtos/howto-9.html">Howto #9</a> for details on how to include the plugin in your boomerang
+deployment.
+</p>
+
+<h2 id="methods">Methods</h2>
+
+<dl class="api">
+
+<dt>init()</dt>
+<dd>
+<p>
+Called by the <a href="BOOMR.html#init">BOOMR.init()</a> method to configure the Navigation Timing
+plugin.  The Navigation Timing plugin doesn't require any configuration parameters, since it simply
+reads values out of the browser's <code>window.performance</code> object (if available) and adds them to the
+beacon query string.
+</p>
+
+<h3>Returns</h3>
+<p>
+a reference to the <code>BOOMR.plugins.NavigationTiming</code> object, so you can chain methods.
+</p>
+<h3>Note</h3>
+<p>
+If the user agent being examined doesn't implement the Navigation Timing spec, the plugin won't
+add any parameters to the beacon.
+</p>
+</dd>
+
+<dt>is_complete()</dt>
+<dd>
+<p>
+Called by <a href="BOOMR.html#sendBeacon">BOOMR.sendBeacon()</a> to determine
+if the Navigation Timing plugin has finished what it's doing or not.
+</p>
+<h3>Returns</h3>
+<ul>
+<li><code>true</code> if the plugin has completed.</li>
+<li><code>false</code> if the plugin has not completed.</li>
+</ul>
+</dd>
+
+</dl>
+
+<p>
+The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
+</p>
+
+</body>
+</html>
