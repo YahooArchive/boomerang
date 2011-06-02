@@ -46,16 +46,16 @@ This is what you get from the default install:
 <h4>boomerang parameters</h4>
 <dl>
 <dt>v</dt> <dd>Version number of the boomerang library in use.</dd>
+<dt>u</dt> <dd>URL of page that sends the beacon.</dd>
 </dl>
 
 <h4>roundtrip plugin parameters</h4>
 <dl>
-<dt>t_done</dt> <dd>[optional] Round trip time of the page.</dd>
-<dt>t_page</dt> <dd>[optional] Time taken from the head of the page to page_ready.  Requires dev effort.</dd>
-<dt>t_other</dt> <dd>[optional] Comma separated list of additional timers set by page developer.  Each timer is of the format <code>name|value</code></dd>
-<dt>u</dt> <dd>URL of page that sends the beacon.</dd>
+<dt>t_done</dt> <dd><strong>[optional]</strong> Round trip time of the page.</dd>
+<dt>t_page</dt> <dd><strong>[optional]</strong> Time taken from the head of the page to page_ready.  Requires dev effort.</dd>
+<dt>t_other</dt> <dd><strong>[optional]</strong> Comma separated list of additional timers set by page developer.  Each timer is of the format <code>name|value</code></dd>
 <dt>r</dt> <dd>URL of page that set the start time of the beacon.</dd>
-<dt>r2</dt> <dd>[optional] URL of referrer of current page.  Only set if different from <code>r</code> and <code>strict_referrer</code> has been explicitly turned off.</dd>
+<dt>r2</dt> <dd><strong>[optional]</strong> URL of referrer of current page.  Only set if different from <code>r</code> and <code>strict_referrer</code> has been explicitly turned off.</dd>
 </dl>
 
 <h4>bandwidth &amp; latency plugin</h4>
@@ -178,7 +178,7 @@ future howto, but for now, have a look at my ConFoo 2010 talk on
 <a href="http://www.slideshare.net/bluesmoon/index-3441823">the statistics of web performance</a>.
 </p>
 
-<p>
+<p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
 
