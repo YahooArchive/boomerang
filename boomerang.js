@@ -569,7 +569,7 @@ BOOMR.plugins.RT = {
 				&& typeof subcookies.r !== "undefined"
 			) {
 				r = subcookies.r;
-				if(!impl.strict_referrer || r === r2) { 
+				if(!impl.strict_referrer || r === r2) {
 					t_start = parseInt(subcookies.s, 10);
 				}
 			}
@@ -705,12 +705,12 @@ BOOMR.plugins = BOOMR.plugins || {};
 // See https://spreadsheets.google.com/ccc?key=0AplxPyCzmQi6dDRBN2JEd190N1hhV1N5cHQtUVdBMUE&hl=en_GB
 // for a spreadsheet with the details
 var images=[
-	{ name: "image-0.png", size: 11483, timeout: 1400 }, 
-	{ name: "image-1.png", size: 40658, timeout: 1200 }, 
-	{ name: "image-2.png", size: 164897, timeout: 1300 }, 
-	{ name: "image-3.png", size: 381756, timeout: 1500 }, 
-	{ name: "image-4.png", size: 1234664, timeout: 1200 }, 
-	{ name: "image-5.png", size: 4509613, timeout: 1200 }, 
+	{ name: "image-0.png", size: 11483, timeout: 1400 },
+	{ name: "image-1.png", size: 40658, timeout: 1200 },
+	{ name: "image-2.png", size: 164897, timeout: 1300 },
+	{ name: "image-3.png", size: 381756, timeout: 1500 },
+	{ name: "image-4.png", size: 1234664, timeout: 1200 },
+	{ name: "image-5.png", size: 4509613, timeout: 1200 },
 	{ name: "image-6.png", size: 9084559, timeout: 1200 }
 ];
 
