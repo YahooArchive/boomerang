@@ -13,6 +13,43 @@ The roundtrip plugin measures page load time, or other timers associated with th
 is encapsulated within the <code>BOOMR.plugins.RT</code> namespace.
 </p>
 
+<h2 id="config">Configuration</h2>
+
+<p>
+All roundtrip plugin configuration items are under the <code>RT</code> namespace.
+The full configuration object is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+</p>
+<dl>
+
+<dt>cookie</dt>
+<dd>
+<strong>[optional]</strong>
+The name of the cookie in which to store the start time for measuring page load time.  The default name is <code>RT</code>.
+Set this to a falsy value like <code>null</code> or the empty string to ignore cookies and depend completely on the
+WebTiming API for the start time.
+</dd>
+
+<dt>cookie_exp</dt>
+<dd>
+<strong>[optional]</strong>
+The lifetime in seconds of the roundtrip cookie.  This only needs to live for as long as it takes for a single page to load.
+Something like 10 seconds or so should be good for most cases, but to be safe, and to cover people with really slow
+connections, or users that are geographically far away from you, keep it to a few minutes.  The default is set to 10 minutes.
+</dd>
+
+<dt>strict_referrer</dt>
+<dd>
+<strong>[optional]</strong>
+By default, boomerang will not measure a page's roundtrip time if the URL in the <code>RT</code> cookie doesn't match
+the current page's <code>document.referrer</code>.  This is so because it generally means that the user visited a
+third page while their <code>RT</code> cookie was still valid, and this could render the page load time invalid.<br>
+There may be cases, though, when this is a valid flow &mdash; for example, you have an SSL page in between and the
+referrer isn't passed through.  In this case, you'll want to set <code>strict_referrer</code> to <code>false</code>
+</dd>
+
+</dl>
+
+
 <h2 id="methods">Methods</h2>
 
 <dl class="api">
@@ -21,8 +58,13 @@ is encapsulated within the <code>BOOMR.plugins.RT</code> namespace.
 <dd>
 <p>
 Called by the <a href="BOOMR.html#init">BOOMR.init()</a> method to configure the roundtrip
-plugin.  The configuration object is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+plugin.
 </p>
+<h3>Parameters</h3>
+<dl>
+<dt>oConfig</dt>
+<dd>The configuration object passed in via <code>BOOMR.init()</code>.  See the <a href="#config">Configuration section</a> for details.
+</dl>
 <h3>Returns</h3>
 <p>
 a reference to the <code>BOOMR.plugins.RT</code> object, so you can chain methods.
@@ -171,7 +213,21 @@ finished what it's doing or not.
 
 </dl>
 
+<h2 id="beacon">Beacon Parameters</h2>
 <p>
+This plugin adds the following parameters to the beacon:
+</p>
+<dl>
+<dt>t_done</dt> <dd><strong>[optional]</strong> Round trip time of the page.</dd>
+<dt>t_page</dt> <dd><strong>[optional]</strong> Time taken from the head of the page to page_ready.  Requires dev effort.</dd>
+<dt>t_other</dt> <dd><strong>[optional]</strong> Comma separated list of additional timers set by page developer.  Each timer is of the format <code>name|value</code></dd>
+<dt>r</dt> <dd>URL of page that set the start time of the beacon.</dd>
+<dt>r2</dt> <dd><strong>[optional]</strong> URL of referrer of current page.  Only set if different from <code>r</code> and <code>strict_referrer</code> has been explicitly turned off.</dd>
+</dl>
+
+
+
+<p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
 

@@ -13,6 +13,63 @@ The bandwidth plugin measures the bandwidth and latency of the user's network co
 server.  The bandwidth API is encapsulated within the <code>BOOMR.plugins.BW</code> namespace.
 </p>
 
+<h2 id="config">Configuration</h2>
+<p>
+All bandwidth plugin configuration items are under the <code>BW</code> namespace.
+The full configuration object is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+</p>
+<dl>
+<dt>base_url</dt>
+<dd>
+<strong>[recommended]</strong>
+By default, the bandwidth plugin looks for its bandwidth measurement images in the <code>images/</code> subdirectory
+of the current directory.  This may not be true for all pages on your site.  You can set the <code>base_url</code>
+parameter to the HTTP path of the directory that contains the bandwidth images.  This can be an absolute or a relative
+URL.  If it's relative, remember that it's relative to the page that boomerang is included in and not to the javascript
+file.
+</dd>
+
+<dt>cookie</dt>
+<dd>
+<strong>[optional]</strong>
+The name of the cookie in which to store the measured bandwidth and latency of the user's network connection.
+The default name is <code>BA</code>.  See <a href="howto-3.html">Howto #3</a> for more details on the bandwidth cookie.
+</dd>
+
+<dt>cookie_exp</dt>
+<dd>
+<strong>[optional]</strong>
+The lifetime in seconds of the bandwidth cookie.  The default is set to 7 days.  This specifies how long it will be before
+we run the bandwidth test again for a user, assuming their IP address doesn't change within this time.  You probably do
+not need to change this setting at all since the bandwidth of a given network connection typically does not change by an
+order of magnitude on a regular basis.<br>
+Note that if you're doing some kind of real-time streaming, then chances are that this bandwidth test isn't right for you,
+so setting this cookie to a shorter value isn't the right solution.
+</dd>
+
+<dt>timeout</dt>
+<dd>
+<strong>[optional]</strong>
+The timeout in seconds for the entire bandwidth test.  The default is set to 15 seconds.  The bandwidth test can run for
+a long time, and sometimes, due to network errors, it might never complete.  The timeout forces the test to complete at
+that time.  This is a hard limit.  If the timeout fires, we stop further iterations of the test and attempt to calculate
+bandwidth with the data that we've collected at that point.  Increasing the timeout can get you more data and increase
+the accuracy of the test, but at the same time increases the risk of the test not completing before the user leaves the
+page.
+</dd>
+
+<dt>nruns</dt>
+<dd>
+<strong>[optional]</strong>
+The number of times the bandwidth test should run.  The default is set to 5.  The first test is always a pilot to figure
+out the best way to proceed with the remaining tests.  Increasing this number will increase the tests accuracy, but at
+the same time increases the risk that the test will timeout.  It should take about 2-4 seconds per run, so consider this
+value along with the <code>timeout</code> value above.
+</dd>
+
+</dl>
+
+
 <h2 id="methods">Methods</h2>
 
 <dl class="api">
@@ -21,8 +78,13 @@ server.  The bandwidth API is encapsulated within the <code>BOOMR.plugins.BW</co
 <dd>
 <p>
 Called by the <a href="BOOMR.html#init">BOOMR.init()</a> method to configure the bandwidth
-plugin.  The configuration object is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+plugin.
 </p>
+<h3>Parameters</h3>
+<dl>
+<dt>oConfig</dt>
+<dd>The configuration object passed in via <code>BOOMR.init()</code>.  See the <a href="#config">Configuration section</a> for details.
+</dl>
 <h3>Returns</h3>
 <p>
 a reference to the <code>BOOMR.plugins.BW</code> object, so you can chain methods.
@@ -71,7 +133,20 @@ finished what it's doing or not.
 
 </dl>
 
+<h2 id="beacon">Beacon Parameters</h2>
 <p>
+This plugin adds the following parameters to the beacon:
+</p>
+<dl>
+<dt>bw</dt> <dd>User's measured bandwidth in bytes per second</dd>
+<dt>bw_err</dt> <dd>95% confidence interval margin of error in measuring user's bandwidth</dd>
+<dt>lat</dt> <dd>User's measured HTTP latency in milliseconds</dd>
+<dt>lat_err</dt> <dd>95% confidence interval margin of error in measuring user's latency</dd>
+<dt>bw_time</dt> <dd>Timestamp (seconds since the epoch) on the user's browser when the bandwidth and latency was measured</dd>
+</dl>
+
+
+<p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
 

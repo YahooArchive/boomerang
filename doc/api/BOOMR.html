@@ -45,6 +45,76 @@ BOOMR.plugins.MyPlugin = {
 
 </dl>
 
+<h2 id="config">Configuration</h2>
+<p>
+Configuring boomerang is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+Parameters relevant to the <code>BOOMR</code> object are:
+</p>
+<dl>
+<dt>beacon_url</dt>
+<dd>
+<strong>[highly recommended]</strong>
+The URL to beacon results back to.  All parameters will be added to this URL's
+query string.  This URL should not already have a query string component.
+There is no default value for this parameter.  If not set, no beacon will be sent.
+</dd>
+
+<dt>site_domain</dt>
+<dd>
+<strong>[recommended]</strong>
+The domain that all cookies should be set on.  Boomerang will try to auto-detect this,
+but unless your site is of the <code>foo.com</code> format, it will probably get it
+wrong.  It's a good idea to set this to whatever part of your domain you'd like to
+share bandwidth and performance measurements across.<br>
+If you have multiple domains, then you're out of luck.  You'll just have to get 
+separate measurements across them.
+</dd>
+
+<dt>user_ip</dt>
+<dd>
+<strong>[recommended]</strong>
+Despite its name, this is really a free-form string used to uniquely identify the user's
+current internet connection.  It's used primarily by the bandwidth test to determine
+whether it should re-measure the user's bandwidth or just use the value stored in the
+cookie.  You may use IPv4, IPv6 or anything else that you think can be used to identify
+the user's network connection.
+</dd>
+
+<dt>log</dt>
+<dd>
+<strong>[optional]</strong>
+By default, boomerang will attempt to use the logger component from YUI if it finds it
+or firebug if it finds that instead.  If it finds neither, it will default to not
+logging anything.  You can define your own logger by setting the <code>log</code>
+parameter to a function that logs messages.<br>
+The signature of this function is:
+<pre>
+function log(oMessage, sLevel, sSource);
+</pre>
+Where:<dl>
+<dt>oMessage</dt> <dd>is the object/message to be logged.  It is up to you to decide how to log objects.<dd>
+<dt>sLevel</dt> <dd>is the log level, with values of "error", "warn", "info" and "debug"</dd>
+<dt>sSource</dt> <dd>is the source of the log message.  This will typically be the string "boomerang" followed by the name of a plugin</dd>
+</dl>
+Note that you can completely disable logging by setting <code>log</code> to <code>null</code>.
+</dd>
+
+<dt>autorun</dt>
+<dd>
+<strong>[optional]</strong>
+By default, boomerang runs automatically and attaches its <code>page_ready</code> handler to
+the <code>window.onload</code> event.  If you set <code>autorun</code> to <code>false</code>,
+this will not happen and you will need to call <code>BOOMR.page_ready()</code> yourself.
+</dd>
+
+<dt>&lt;plugin_name&gt;<dt>
+<dd>
+Each plugin is configured through a sub-object of the config object.  The key is the name
+of the plugin.  Each plugin's documentation will have details on its configuration object.
+</dd>
+
+</dl>
+
 <h2 id="methods">Methods</h2>
 
 <dl class="api">
@@ -53,8 +123,8 @@ BOOMR.plugins.MyPlugin = {
 <dd>
 <p>
 The init method that you to call to initialise boomerang.  Call this method once after you've
-loaded the boomerang javascript.  It accepts a single configuration object as a parameter.  The
-configuration object is described in <a href="../howtos/howto-6.html">Howto #6 &mdash; Configuring boomerang</a>.
+loaded the boomerang javascript.  It accepts a single configuration object as a parameter.  See
+the <a href="#config">Configuration section</a> for details.
 </p>
 <h3>Returns</h3>
 <p>
@@ -286,7 +356,22 @@ from boomerang, the beacon will not fire.
 
 </dl>
 
+<h2 id="beacon">Beacon Parameters</h2>
 <p>
+On its own, with no plugins set up, boomerang will send the following parameters across through the beacon:
+</p>
+<dl>
+<dt>v</dt>
+<dd>The version number of the boomerang library in use.</dd>
+<dt>u</dt>
+<dd>The URL of the page that sends the beacon.</dd>
+</dl>
+
+<p>
+Each plugin may add its own parameters, and these are specified in each plugin's API docs.
+</p>
+
+<p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
 
