@@ -62,6 +62,40 @@ if the Navigation Timing plugin has finished what it's doing or not.
 
 </dl>
 
+<h2 id="beacon">Beacon Parameters</h2>
+<p>
+The NavigationTiming plugin adds the following parameters to the beacon.  Each maps onto a attribute from the
+browser's NavigationTiming API.
+</p>
+<table>
+<tr>
+  <th>Beacon parameter</th>
+  <th>NavigationTiming attribute</th>
+</tr>
+<tr><td><code>nt_red_cnt</code></td><td><code>window.performance.navigation.redirectCount</code></td></tr>
+<tr><td><code>nt_nav_type</code></td><td><code>window.performance.navigation.type</code></td></tr>
+<tr><td><code>nt_nav_st</code></td><td><code>window.performance.timing.navigationStart</code></td></tr>
+<tr><td><code>nt_red_st</code></td><td><code>window.performance.timing.redirectStart</code></td></tr>
+<tr><td><code>nt_red_end</code></td><td><code>window.performance.timing.redirectEnd</code></td></tr>
+<tr><td><code>nt_fet_st</code></td><td><code>window.performance.timing.fetchStart</code></td></tr>
+<tr><td><code>nt_dns_st</code></td><td><code>window.performance.timing.domainLookupStart</code></td></tr>
+<tr><td><code>nt_dns_end</code></td><td><code>window.performance.timing.domainLookupEnd</code></td></tr>
+<tr><td><code>nt_con_st</code></td><td><code>window.performance.timing.connectStart</code></td></tr>
+<tr><td><code>nt_con_end</code></td><td><code>window.performance.timing.connectEnd</code></td></tr>
+<tr><td><code>nt_req_st</code></td><td><code>window.performance.timing.requestStart</code></td></tr>
+<tr><td><code>nt_res_st</code></td><td><code>window.performance.timing.responseStart</code></td></tr>
+<tr><td><code>nt_res_end</code></td><td><code>window.performance.timing.responseEnd</code></td></tr>
+<tr><td><code>nt_domloading</code></td><td><code>window.performance.timing.domLoading</code></td></tr>
+<tr><td><code>nt_domint</code></td><td><code>window.performance.timing.domInteractive</code></td></tr>
+<tr><td><code>nt_domcontloaded</code></td><td><code>window.performance.timing.domContentLoaded</code></td></tr>
+<tr><td><code>nt_domcomp</code></td><td><code>window.performance.timing.domComplete</code></td></tr>
+<tr><td><code>nt_load_st</code></td><td><code>window.performance.timing.loadEventStart</code></td></tr>
+<tr><td><code>nt_load_end</code></td><td><code>window.performance.timing.loadEventEnd</code></td></tr>
+<tr><td><code>nt_unload_st</code></td><td><code>window.performance.timing.unloadEventStart</code></td></tr>
+<tr><td><code>nt_unload_end</code></td><td><code>window.performance.timing.unloadEventEnd</code></td></tr>
+<tr><td><code>nt_ssl_st</code></td><td><strong>[optional]</strong> <code>window.performance.secureConnectionStart</code></td></tr>
+</table>
+
 <p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
