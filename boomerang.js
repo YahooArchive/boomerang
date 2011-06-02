@@ -365,7 +365,10 @@ boomr = {
 			return this;
 		}
 
-		url = impl.beacon_url + '?v=' + encodeURIComponent(BOOMR.version);
+		// use document.URL instead of location.href because of a safari bug
+		url = impl.beacon_url + '?v=' + encodeURIComponent(BOOMR.version) +
+			'&u=' + encodeURIComponent(d.URL.replace(/#.*/, ''));
+		
 		for(k in impl.vars) {
 			if(impl.vars.hasOwnProperty(k)) {
 				nparams++;
@@ -532,7 +535,7 @@ BOOMR.plugins.RT = {
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
 	done: function() {
-		var t_start, u, r, r2, 
+		var t_start, r, r2,
 		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[],
 		    ti, p;
@@ -554,8 +557,6 @@ BOOMR.plugins.RT = {
 		// it manually with their own timers.  It may not always contain a referrer
 		// (eg: XHR calls).  We set default values for these cases
 
-		// use document.URL instead of location.href because of a safari bug
-		u = d.URL.replace(/#.*/, '');
 		r = r2 = d.referrer.replace(/#.*/, '');
 
 		// If impl.cookie is not set, the dev does not want to use cookie time
@@ -623,7 +624,7 @@ BOOMR.plugins.RT = {
 		}
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'u', 'r', 'r2');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2');
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
@@ -658,7 +659,7 @@ BOOMR.plugins.RT = {
 
 		// At this point we decide whether the beacon should be sent or not
 		if(ntimers) {
-			BOOMR.addVar({ "u": u, "r": r });
+			BOOMR.addVar("r", r);
 
 			if(r2 !== r) {
 				BOOMR.addVar("r2", r2);

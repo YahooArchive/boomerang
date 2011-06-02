@@ -286,7 +286,22 @@ from boomerang, the beacon will not fire.
 
 </dl>
 
+<h2 id="beacon">Beacon Parameters</h2>
 <p>
+On its own, with no plugins set up, boomerang will send the following parameters across through the beacon:
+</p>
+<dl>
+<dt>v</dt>
+<dd>The version number of the boomerang library in use.</dd>
+<dt>u</dt>
+<dd>The URL of the page that sends the beacon.</dd>
+</dl>
+
+<p>
+Each plugin may add its own parameters, and these are specified in each plugin's API docs.
+</p>
+
+<p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
 
