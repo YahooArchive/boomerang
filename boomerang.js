@@ -581,7 +581,7 @@ BOOMR.plugins.RT = {
 			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
 
 			// Get start time from WebTiming API see:
-			// http://dev.w3.org/2006/webapi/WebTiming/
+			// https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
 			// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
 			// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
 			p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
@@ -595,26 +595,26 @@ BOOMR.plugins.RT = {
 				// source here:
 				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 				ti = {
-					requestStart: w.chrome.csi().startE
+					fetchStart: w.chrome.csi().startE
 				};
 			}
 			else if(w.gtbExternal) {
 				// The Google Toolbar exposes navigation start time similar to old versions of chrome
 				// This would work for any browser that has the google toolbar installed
 				ti = {
-					requestStart: w.gtbExternal.startE()
+					fetchStart: w.gtbExternal.startE()
 				};
 			}
 
 			if(ti) {
-				// First check if requestStart is set.  It will be 0 if
-				// the page were fetched from cache.  If so, check fetchStart
-				// which should always be there except if not implemented. If
-				// not, then look at navigationStart.  If none are set, we
-				// leave t_start alone so that timers that depend on it don't
-				// get sent back.
-				t_start = ti.requestStart
-						|| ti.fetchStart
+				// First check if fetchStart is set which should always be 
+				// there except if not implemented. If not, then look at 
+				// navigationStart.  If none are set, we leave t_start alone 
+				// so that timers that depend on it don't get sent back.
+				// Never use requestStart since if the first request fails and
+				// the browser retries, it will contain the value for the new
+				// request.
+				t_start = ti.fetchStart
 						|| ti.navigationStart
 						|| undefined;
 			}
