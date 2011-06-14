@@ -581,7 +581,7 @@ BOOMR.plugins.RT = {
 			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
 
 			// Get start time from WebTiming API see:
-			// http://dev.w3.org/2006/webapi/WebTiming/
+			// https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
 			// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
 			// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
 			p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
