@@ -48,6 +48,7 @@ impl = {
 	events: {
 		"page_ready": [],
 		"page_unload": [],
+		"visibility_changed": [],
 		"before_beacon": []
 	},
 
@@ -243,6 +244,12 @@ boomr = {
 					);
 		}
 
+		// webkitvisibilitychange is useful to detect if the page loaded through prerender
+		impl.addListener(d, "webkitvisibilitychange", 
+						function() {
+							impl.fireEvent("visibility_changed");
+						}
+				);
 		// This must be the last one to fire
 		impl.addListener(w, "unload", function() { w=null; });
 	
@@ -544,6 +551,22 @@ BOOMR.plugins.RT = {
 			return this;
 		}
 
+		if(document.webkitVisibilityState && document.webkitVisibilityState === "prerender") {
+			// This means that onload fired through a pre-render.  We'll capture this
+			// time, but wait for t_done until after the page has become either visible
+			// or hidden (ie, it moved out of the pre-render state)
+			// http://code.google.com/chrome/whitepapers/pagevisibility.html
+			// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
+			// http://code.google.com/chrome/whitepapers/prerender.html
+
+			this.endTimer("t_load");	// this will measure actual onload time for a prerendered page
+			this.startTimer("t_prerender");	// time from prerender to visible
+
+			BOOMR.subscribe("visibility_changed", this.done, null, this);
+
+			return this;
+		}
+
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
 		this.endTimer("t_done");
@@ -551,6 +574,11 @@ BOOMR.plugins.RT = {
 		// If the dev has already started t_page timer, we can end it now as well
 		if(impl.timers.hasOwnProperty('t_page')) {
 			this.endTimer("t_page");
+		}
+
+		// If a prerender timer was started, we can end it now as well
+		if(impl.timers.hasOwnProperty('t_prerender')) {
+			this.endTimer("t_prerender");
 		}
 
 		// A beacon may be fired automatically on page load or if the page dev fires
@@ -595,28 +623,24 @@ BOOMR.plugins.RT = {
 				// source here:
 				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 				ti = {
-					fetchStart: w.chrome.csi().startE
+					navigationStart: w.chrome.csi().startE
 				};
 			}
 			else if(w.gtbExternal) {
 				// The Google Toolbar exposes navigation start time similar to old versions of chrome
 				// This would work for any browser that has the google toolbar installed
 				ti = {
-					fetchStart: w.gtbExternal.startE()
+					navigationStart: w.gtbExternal.startE()
 				};
 			}
 
 			if(ti) {
-				// First check if fetchStart is set which should always be 
-				// there except if not implemented. If not, then look at 
-				// navigationStart.  If none are set, we leave t_start alone 
-				// so that timers that depend on it don't get sent back.
-				// Never use requestStart since if the first request fails and
-				// the browser retries, it will contain the value for the new
-				// request.
-				t_start = ti.fetchStart
-						|| ti.navigationStart
-						|| undefined;
+				// Always use navigationStart since it falls back to fetchStart
+				// If not set, we leave t_start alone so that timers that depend
+				// on it don't get sent back.  Never use requestStart since if
+				// the first request fails and the browser retries, it will contain
+				// the value for the new request.
+				t_start = ti.navigationStart || undefined;
 			}
 			else {
 				BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
