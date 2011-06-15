@@ -560,7 +560,7 @@ BOOMR.plugins.RT = {
 			// http://code.google.com/chrome/whitepapers/prerender.html
 
 			this.endTimer("t_load");	// this will measure actual onload time for a prerendered page
-			this.startTimer("t_prerender");	// time from prerender to visible
+			this.startTimer("t_postrender");	// time from prerender to visible or hidden
 
 			BOOMR.subscribe("visibility_changed", this.done, null, this);
 
@@ -577,8 +577,8 @@ BOOMR.plugins.RT = {
 		}
 
 		// If a prerender timer was started, we can end it now as well
-		if(impl.timers.hasOwnProperty('t_prerender')) {
-			this.endTimer("t_prerender");
+		if(impl.timers.hasOwnProperty('t_postrender')) {
+			this.endTimer("t_postrender");
 		}
 
 		// A beacon may be fired automatically on page load or if the page dev fires
