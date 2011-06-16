@@ -603,7 +603,10 @@ BOOMR.plugins.RT = {
 			}
 		}
 
-		if(!t_start) {
+		if(t_start) {
+			BOOMR.addVar("rt.start", "cookie");
+		}
+		else {
 			// TODO: Drop this message once the WebTiming API becomes standard (2012? 2014?)
 			// Scream at me if you see this past 2013
 			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
@@ -625,6 +628,7 @@ BOOMR.plugins.RT = {
 				ti = {
 					navigationStart: w.chrome.csi().startE
 				};
+				BOOMR.addVar("rt.start", "csi");
 			}
 			else if(w.gtbExternal) {
 				// The Google Toolbar exposes navigation start time similar to old versions of chrome
@@ -632,6 +636,7 @@ BOOMR.plugins.RT = {
 				ti = {
 					navigationStart: w.gtbExternal.startE()
 				};
+				BOOMR.addVar("rt.start", "gtb");
 			}
 
 			if(ti) {
@@ -641,6 +646,7 @@ BOOMR.plugins.RT = {
 				// the first request fails and the browser retries, it will contain
 				// the value for the new request.
 				t_start = ti.navigationStart || undefined;
+				BOOMR.addVar("rt.start", "navigation");
 			}
 			else {
 				BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
