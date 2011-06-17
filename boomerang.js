@@ -453,6 +453,7 @@ var impl = {
 				// the back end decide
 
 	navigationStart: undefined,
+	responseStart: undefined,
 
 	// The start method is fired on page unload.  It is called with the scope
 	// of the BOOMR.plugins.RT object
@@ -491,11 +492,11 @@ var impl = {
 		return this;
 	},
 
-	getNavStart: function() {
+	initNavTiming: function() {
 		var ti, p;
 
 		if(this.navigationStart) {
-			return this.navigationStart;
+			return;
 		}
 
 		// Get start time from WebTiming API see:
@@ -513,7 +514,8 @@ var impl = {
 			// source here:
 			// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 			ti = {
-				navigationStart: w.chrome.csi().startE
+				navigationStart: w.chrome.csi().startE,
+				responseStart: undefined
 			};
 			BOOMR.addVar("rt.start", "csi");
 		}
@@ -521,7 +523,8 @@ var impl = {
 			// The Google Toolbar exposes navigation start time similar to old versions of chrome
 			// This would work for any browser that has the google toolbar installed
 			ti = {
-				navigationStart: w.gtbExternal.startE()
+				navigationStart: w.gtbExternal.startE(),
+				responseStart: undefined
 			};
 			BOOMR.addVar("rt.start", "gtb");
 		}
@@ -534,12 +537,13 @@ var impl = {
 			// the value for the new request.
 			BOOMR.addVar("rt.start", "navigation");
 			this.navigationStart = ti.navigationStart || undefined;
+			this.responseStart = ti.responseStart || undefined;
 		}
 		else {
 			BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
 		}
 
-		return this.navigationStart;
+		return;
 	}
 };
 
@@ -603,6 +607,8 @@ BOOMR.plugins.RT = {
 			return this;
 		}
 
+		impl.initNavTiming();
+
 		if(document.webkitVisibilityState && document.webkitVisibilityState === "prerender") {
 			// This means that onload fired through a pre-render.  We'll capture this
 			// time, but wait for t_done until after the page has become either visible
@@ -611,9 +617,9 @@ BOOMR.plugins.RT = {
 			// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
 			// http://code.google.com/chrome/whitepapers/prerender.html
 
-			this.startTimer("t_load", impl.getNavStart());
+			this.startTimer("t_load", impl.navigationStart);
 			this.endTimer("t_load");		// this will measure actual onload time for a prerendered page
-			this.startTimer("t_prerender", impl.getNavStart());
+			this.startTimer("t_prerender", impl.navigationStart);
 			this.startTimer("t_postrender");	// time from prerender to visible or hidden
 
 			BOOMR.subscribe("visibility_changed", this.done, null, this);
@@ -625,8 +631,18 @@ BOOMR.plugins.RT = {
 		// else, it will stop the page load timer
 		this.endTimer("t_done");
 
-		// If the dev has already started t_page timer, we can end it now as well
-		if(impl.timers.hasOwnProperty('t_page')) {
+		if(impl.responseStart) {
+			// Use NavTiming API to figure out resp latency and page time
+			this.setTimer("t_resp", impl.responseStart - impl.navigationStart);
+			if(impl.timers.t_load) {
+				this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
+			}
+			else {
+				this.setTimer("t_page", new Date().getTime() - impl.responseStart);
+			}
+		}
+		else if(impl.timers.hasOwnProperty('t_page')) {
+			// If the dev has already started t_page timer, we can end it now as well
 			this.endTimer("t_page");
 		}
 
@@ -662,7 +678,7 @@ BOOMR.plugins.RT = {
 			BOOMR.addVar("rt.start", "cookie");
 		}
 		else {
-			t_start = impl.getNavStart();
+			t_start = impl.navigationStart;
 		}
 
 		// make sure old variables don't stick around
