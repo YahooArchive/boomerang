@@ -2,9 +2,23 @@
 // and print the results into the browser itself.
 BOOMR.subscribe('before_beacon', function(o) {
 	var html = "", t_name, t_other, others = [];
+
+	if(!o.t_other) o.t_other = "";
+
+	for(var k in o) {
+		if(!k.match(/^(t_done|t_other|bw|lat|bw_err|lat_err|u|r2?)$/)) {
+			if(k.match(/^t_/)) {
+				o.t_other += "," + k + "|" + o[k];
+			}
+			else {
+				others.push(k + " = " + o[k]);
+			}
+		}
+	}
+
 	if(o.t_done) { html += "This page took " + o.t_done + " ms to load<br>"; }
 	if(o.t_other) {
-		t_other = o.t_other.replace(/\|/g, ' = ').split(',');
+		t_other = o.t_other.replace(/^,/, '').replace(/\|/g, ' = ').split(',');
 		html += "Other timers measured: <br>";
 		for(var i=0; i<t_other.length; i++) {
 			html += "&nbsp;&nbsp;&nbsp;" + t_other[i] + " ms<br>";
@@ -15,12 +29,6 @@ BOOMR.subscribe('before_beacon', function(o) {
 
 	var r = document.getElementById('results');
 	r.innerHTML = html;
-
-	for(var k in o) {
-		if(!k.match(/^(t_done|t_other|bw|lat|bw_err|lat_err|u|r2?)$/)) {
-			others.push(k + " = " + o[k]);
-		}
-	}
 
 	if(others.length) {
 		r.innerHTML += "Other parameters:<br>";

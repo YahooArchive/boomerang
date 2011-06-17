@@ -48,6 +48,7 @@ impl = {
 	events: {
 		"page_ready": [],
 		"page_unload": [],
+		"visibility_changed": [],
 		"before_beacon": []
 	},
 
@@ -243,6 +244,12 @@ boomr = {
 					);
 		}
 
+		// webkitvisibilitychange is useful to detect if the page loaded through prerender
+		impl.addListener(d, "webkitvisibilitychange", 
+						function() {
+							impl.fireEvent("visibility_changed");
+						}
+				);
 		// This must be the last one to fire
 		impl.addListener(w, "unload", function() { w=null; });
 	
@@ -445,6 +452,9 @@ var impl = {
 				// If set to false, beacon both referrer values and let
 				// the back end decide
 
+	navigationStart: undefined,
+	responseStart: undefined,
+
 	// The start method is fired on page unload.  It is called with the scope
 	// of the BOOMR.plugins.RT object
 	start: function() {
@@ -480,6 +490,60 @@ var impl = {
 		}
 
 		return this;
+	},
+
+	initNavTiming: function() {
+		var ti, p;
+
+		if(this.navigationStart) {
+			return;
+		}
+
+		// Get start time from WebTiming API see:
+		// https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
+		// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
+		// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
+		p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
+
+		if(p && p.timing) {
+			ti = p.timing;
+		}
+		else if(w.chrome && w.chrome.csi) {
+			// Older versions of chrome also have a timing API that's sort of documented here:
+			// http://ecmanaut.blogspot.com/2010/06/google-bom-feature-ms-since-pageload.html
+			// source here:
+			// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
+			ti = {
+				navigationStart: w.chrome.csi().startE,
+				responseStart: undefined
+			};
+			BOOMR.addVar("rt.start", "csi");
+		}
+		else if(w.gtbExternal) {
+			// The Google Toolbar exposes navigation start time similar to old versions of chrome
+			// This would work for any browser that has the google toolbar installed
+			ti = {
+				navigationStart: w.gtbExternal.startE(),
+				responseStart: undefined
+			};
+			BOOMR.addVar("rt.start", "gtb");
+		}
+
+		if(ti) {
+			// Always use navigationStart since it falls back to fetchStart
+			// If not set, we leave t_start alone so that timers that depend
+			// on it don't get sent back.  Never use requestStart since if
+			// the first request fails and the browser retries, it will contain
+			// the value for the new request.
+			BOOMR.addVar("rt.start", "navigation");
+			this.navigationStart = ti.navigationStart || undefined;
+			this.responseStart = ti.responseStart || undefined;
+		}
+		else {
+			BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
+		}
+
+		return;
 	}
 };
 
@@ -537,10 +601,29 @@ BOOMR.plugins.RT = {
 	done: function() {
 		var t_start, r, r2,
 		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
-		    ntimers = 0, t_name, timer, t_other=[],
-		    ti, p;
+		    ntimers = 0, t_name, timer, t_other=[];
 
 		if(impl.complete) {
+			return this;
+		}
+
+		impl.initNavTiming();
+
+		if(document.webkitVisibilityState && document.webkitVisibilityState === "prerender") {
+			// This means that onload fired through a pre-render.  We'll capture this
+			// time, but wait for t_done until after the page has become either visible
+			// or hidden (ie, it moved out of the pre-render state)
+			// http://code.google.com/chrome/whitepapers/pagevisibility.html
+			// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
+			// http://code.google.com/chrome/whitepapers/prerender.html
+
+			this.startTimer("t_load", impl.navigationStart);
+			this.endTimer("t_load");		// this will measure actual onload time for a prerendered page
+			this.startTimer("t_prerender", impl.navigationStart);
+			this.startTimer("t_postrender");	// time from prerender to visible or hidden
+
+			BOOMR.subscribe("visibility_changed", this.done, null, this);
+
 			return this;
 		}
 
@@ -548,9 +631,25 @@ BOOMR.plugins.RT = {
 		// else, it will stop the page load timer
 		this.endTimer("t_done");
 
-		// If the dev has already started t_page timer, we can end it now as well
-		if(impl.timers.hasOwnProperty('t_page')) {
+		if(impl.responseStart) {
+			// Use NavTiming API to figure out resp latency and page time
+			this.setTimer("t_resp", impl.responseStart - impl.navigationStart);
+			if(impl.timers.t_load) {
+				this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
+			}
+			else {
+				this.setTimer("t_page", new Date().getTime() - impl.responseStart);
+			}
+		}
+		else if(impl.timers.hasOwnProperty('t_page')) {
+			// If the dev has already started t_page timer, we can end it now as well
 			this.endTimer("t_page");
+		}
+
+		// If a prerender timer was started, we can end it now as well
+		if(impl.timers.hasOwnProperty('t_postrender')) {
+			this.endTimer("t_postrender");
+			this.endTimer("t_prerender");
 		}
 
 		// A beacon may be fired automatically on page load or if the page dev fires
@@ -575,52 +674,11 @@ BOOMR.plugins.RT = {
 			}
 		}
 
-		if(!t_start) {
-			// TODO: Drop this message once the WebTiming API becomes standard (2012? 2014?)
-			// Scream at me if you see this past 2013
-			BOOMR.info("start cookie not set, trying WebTiming API", "rt");
-
-			// Get start time from WebTiming API see:
-			// https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
-			// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
-			// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
-			p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
-
-			if(p && p.timing) {
-				ti = p.timing;
-			}
-			else if(w.chrome && w.chrome.csi) {
-				// Older versions of chrome also have a timing API that's sort of documented here:
-				// http://ecmanaut.blogspot.com/2010/06/google-bom-feature-ms-since-pageload.html
-				// source here:
-				// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
-				ti = {
-					fetchStart: w.chrome.csi().startE
-				};
-			}
-			else if(w.gtbExternal) {
-				// The Google Toolbar exposes navigation start time similar to old versions of chrome
-				// This would work for any browser that has the google toolbar installed
-				ti = {
-					fetchStart: w.gtbExternal.startE()
-				};
-			}
-
-			if(ti) {
-				// First check if fetchStart is set which should always be 
-				// there except if not implemented. If not, then look at 
-				// navigationStart.  If none are set, we leave t_start alone 
-				// so that timers that depend on it don't get sent back.
-				// Never use requestStart since if the first request fails and
-				// the browser retries, it will contain the value for the new
-				// request.
-				t_start = ti.fetchStart
-						|| ti.navigationStart
-						|| undefined;
-			}
-			else {
-				BOOMR.warn("This browser doesn't support the WebTiming API", "rt");
-			}
+		if(t_start) {
+			BOOMR.addVar("rt.start", "cookie");
+		}
+		else {
+			t_start = impl.navigationStart;
 		}
 
 		// make sure old variables don't stick around
