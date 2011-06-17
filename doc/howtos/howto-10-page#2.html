@@ -21,6 +21,20 @@ the test since testing your bandwidth takes about 6 seconds.  You can also click
 to see the same output on Page #1.
 </p>
 
+<p>
+In the box below, if rt.start is set to cookie, you should see the following numbers:
+</p>
+<ol>
+<li>t_done (load time): Time from click to display (perceived load time)</li>
+<li>t_load: Time from fetchStart/navigationStart to prerender finish</li>
+<li>t_prerender: Time from fetchStart/navigationStart to display</li>
+<li>t_postrender: Time from prerender finish to display</li>
+</ol>
+<p>
+If rt.start is set to navigation (or something else), then t_done is the same as t_prerender.  If t_prerender is not set, then this
+page wasn't prerendered, and t_done is the actual perceived load time.
+</p>
+
 <p class="perma-link">
 The latest code and docs is available on <a href="http://github.com/yahoo/boomerang/">github.com/yahoo/boomerang</a>
 </p>
