@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
+ * Copyrights licensed under the BSD License. See the accompanying LICENSE file for terms.
+ */
+
 /**
 \file navtiming.js
 Plugin to collect metrics from the W3C Navigation Timing API. For more information about Navigation Timing,
