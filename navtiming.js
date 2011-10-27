@@ -60,7 +60,7 @@ var impl = {
 		BOOMR.sendBeacon();
 	}
 };
-	
+
 BOOMR.plugins.NavigationTiming = {
 	init: function() {
 		BOOMR.subscribe("page_ready", impl.done, null, impl);

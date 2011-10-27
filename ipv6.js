@@ -129,7 +129,7 @@ var impl = {
 		BOOMR.sendBeacon();
 	}
 };
-	
+
 BOOMR.plugins.IPv6 = {
 	init: function(config) {
 		BOOMR.utils.pluginConfig(impl, config, "IPv6", ["ipv6_url", "host_url", "timeout"]);
