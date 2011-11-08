@@ -12,10 +12,6 @@ experience and beacons it back to your server.
 To use this you'll need a web site, lots of users and the ability to do
 something with the data you collect.  How you collect the data is up to
 you, but we have a few ideas.
-
-Copyright (c) 2010 Yahoo! Inc. All rights reserved.
-Code licensed under the BSD License.  See the file LICENSE.txt
-for the full license text.
 */
 
 // beaconing section
