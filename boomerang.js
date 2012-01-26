@@ -1238,6 +1238,7 @@ BOOMR.plugins.BW = {
 
 			BOOMR.info("HTTPS detected, skipping bandwidth test", "bw");
 			impl.complete = true;
+			BOOMR.sendBeacon();
 			return this;
 		}
 
