@@ -83,7 +83,7 @@ var impl = {
 		return true;
 	}
 };
-	
+
 BOOMR.plugins.DNS = {
 	init: function(config) {
 		BOOMR.utils.pluginConfig(impl, config, "DNS", ["base_url"]);
