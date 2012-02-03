@@ -59,20 +59,19 @@ var impl = {
 		this.load_img('ipv6', 'host');
 	},
 
-	load_img: function(which) {
+	load_img: function() {
 		var img,
 			rnd = "?t=" + (new Date().getTime()) + Math.random(),
 			timer=0, error = null,
-			that = this, a;
+			that = this,
+			which = Array.prototype.shift.call(arguments),
+			a = arguments;
 
 		// Terminate if we've reached end of test list
 		if(!which || !(which in this.timers)) {
 			this.done();
 			return false;
 		}
-
-		Array.prototype.shift.call(arguments);
-		a = arguments;
 
 		// Skip if URL wasn't set for this test
 		if(!this[which + '_url']) {
@@ -129,7 +128,7 @@ var impl = {
 		BOOMR.sendBeacon();
 	}
 };
-	
+
 BOOMR.plugins.IPv6 = {
 	init: function(config) {
 		BOOMR.utils.pluginConfig(impl, config, "IPv6", ["ipv6_url", "host_url", "timeout"]);
@@ -155,7 +154,7 @@ BOOMR.plugins.IPv6 = {
 			impl.host_url = impl.host_url.replace(/^https:/, 'http:');
 		}
 
-		BOOMR.subscribe("page_ready", impl.start, null, this);
+		BOOMR.subscribe("page_ready", impl.start, null, impl);
 
 		return this;
 	},
