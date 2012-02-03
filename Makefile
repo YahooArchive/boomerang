@@ -1,7 +1,7 @@
 # Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
 # Copyrights licensed under the BSD License. See the accompanying LICENSE file for terms.
 
-PLUGINS := 
+PLUGINS :=
 
 VERSION := $(shell sed -ne '/^BOOMR\.version/{s/^.*"\([^"]*\)".*/\1/;p;q;}' boomerang.js)
 DATE := $(shell date +%s)
@@ -28,7 +28,7 @@ boomerang-$(VERSION).$(DATE).js: boomerang.js $(PLUGINS)
 	echo
 	echo "Making $@ ..."
 	echo "using plugins: $(PLUGINS)..."
-	cat boomerang.js $(PLUGINS) | $(MINIFIER) > $@ && echo "done"
+	cat boomerang.js $(PLUGINS) | sed -e 's/^\(BOOMR\.version = "\)$(VERSION)\("\)/\1$(VERSION).$(DATE)\2/' | $(MINIFIER) | perl -pe "s/\(window\)\);/\(window\)\);\n/g" > $@ && echo "done"
 	echo
 
 .PHONY: all

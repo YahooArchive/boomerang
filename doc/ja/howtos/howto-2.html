@@ -36,15 +36,15 @@ BOOMR.init({
 <pre>
 YUI().use("io-base", function(Y) {
     var uri = "dynamic-content.txt";
- 
+
     function complete(id, o) {
         var html = o.responseText;
 	document.getElementById("dynamic-content").innerHTML = html;
 	<em>BOOMR.plugins.RT.done();	// Tell boomerang to measure time and fire a beacon</em>
     };
- 
+
     Y.on('io:complete', complete);
- 
+
     <em>BOOMR.plugins.RT.startTimer("t_done");	// Start measuring download time</em>
     var request = Y.io(uri);
 });
@@ -77,19 +77,19 @@ BOOMR.init({
 
 YUI().use("io-base", function(Y) {
     var uri = "dynamic-content.txt?" + new Date().getTime();
- 
+
     function complete(id, o) {
         var html = "<p>\n" + o.responseText.replace(/^$/mg, '</p>\n<p>') + "\n</p>";
 	document.getElementById("dynamic-content").innerHTML = html;
 	BOOMR.plugins.RT.done();
     };
- 
+
     Y.on('io:complete', complete);
- 
+
     BOOMR.plugins.RT.startTimer("t_done");
     var request = Y.io(uri);
 });
- 
+
 </script>
 </body>
 </html>
