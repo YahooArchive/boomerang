@@ -13,6 +13,13 @@ Code licensed under the BSD License.  See the file LICENSE.txt
 for the full license text.
 */
 
+// Measure the time the script started
+// This has to be global so that we don't wait for the entire
+// BOOMR function to download and execute before measuring the
+// time.  We also declare it without `var` so that we can later
+// `delete` it.  This is the only way that works on Internet Explorer
+BOOMR_start = new Date.getTime();
+
 // beaconing section
 // the parameter is the window
 (function(w) {
@@ -87,6 +94,9 @@ impl = {
 // we don't overwrite anything additional that was added to BOOMR before this
 // was called... for example, a plugin.
 boomr = {
+	t_start: BOOMR_start,
+	t_end: null,
+
 	// Utility functions
 	utils: {
 		getCookie: function(name) {
@@ -400,6 +410,8 @@ boomr = {
 
 };
 
+delete BOOMR_start;
+
 var make_logger = function(l) {
 	return function(m, s) {
 		this.log(m, l, "boomerang" + (s?"."+s:"")); return this;
@@ -519,7 +531,7 @@ var impl = {
 			// source here:
 			// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 			ti = {
-				navigationStart: w.chrome.csi().startE,
+				navigationStart: w.chrome.csi().startE
 			};
 			source = "csi";
 		}
@@ -527,7 +539,7 @@ var impl = {
 			// The Google Toolbar exposes navigation start time similar to old versions of chrome
 			// This would work for any browser that has the google toolbar installed
 			ti = {
-				navigationStart: w.gtbExternal.startE(),
+				navigationStart: w.gtbExternal.startE()
 			};
 			source = 'gtb';
 		}
@@ -567,6 +579,15 @@ BOOMR.plugins.RT = {
 
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("page_unload", impl.start, null, impl);
+
+		if(BOOMR.t_start) {
+			// How long does it take Boomerang to load up and execute
+			this.startTimer('boomerang', BOOMR.t_start);
+			this.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
+
+			// How long did it take till Boomerang started
+			this.endTimer('boomr_lat', BOOMR.t_start);
+		}
 
 		return this;
 	},
@@ -691,7 +712,10 @@ BOOMR.plugins.RT = {
 		}
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.bstart', 'rt.end');
+
+		BOOMR.addVar('rt.bstart', BOOMR.t_start);
+		BOOMR.addVar('rt.end', impl.timers.t_done.end);
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
@@ -724,7 +748,6 @@ BOOMR.plugins.RT = {
 			ntimers++;
 		}
 
-		// At this point we decide whether the beacon should be sent or not
 		if(ntimers) {
 			BOOMR.addVar("r", r);
 
