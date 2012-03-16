@@ -712,7 +712,10 @@ BOOMR.plugins.RT = {
 		}
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.bstart', 'rt.end');
+
+		BOOMR.addVar('rt.bstart', BOOMR.t_start);
+		BOOMR.addVar('rt.end', impl.timers.t_done.end);
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
@@ -745,7 +748,6 @@ BOOMR.plugins.RT = {
 			ntimers++;
 		}
 
-		// At this point we decide whether the beacon should be sent or not
 		if(ntimers) {
 			BOOMR.addVar("r", r);
 
