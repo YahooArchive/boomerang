@@ -649,7 +649,11 @@ BOOMR.plugins.RT = {
 
 		impl.initNavTiming();
 
-		if(document.webkitVisibilityState && document.webkitVisibilityState === "prerender") {
+		if(
+			(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
+			||
+			(d.msVisibilityState && d.msVisibilityState === 3)
+		) {
 			// This means that onload fired through a pre-render.  We'll capture this
 			// time, but wait for t_done until after the page has become either visible
 			// or hidden (ie, it moved out of the pre-render state)
