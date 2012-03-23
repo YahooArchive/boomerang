@@ -375,9 +375,9 @@ boomr = {
 
 		// if there are already url parameters in the beacon url,
 		// change the first parameter prefix for the boomerang url parameters to &
-                var paramPrefix = '?';
-                if(impl.beacon_url.indexOf('?') > -1)
-                        paramPrefix = '&';
+		var paramPrefix = '?';
+		if(impl.beacon_url.indexOf('?') > -1)
+			paramPrefix = '&';
  
 
 		// use document.URL instead of location.href because of a safari bug
