@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
- * Copyrights licensed under the BSD License. See the accompanying LICENSE file for terms.
+ * Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
  */
 
 /**
@@ -255,12 +255,18 @@ boomr = {
 					);
 		}
 
-		// webkitvisibilitychange is useful to detect if the page loaded through prerender
-		impl.addListener(d, "webkitvisibilitychange",
-						function() {
-							impl.fireEvent("visibility_changed");
-						}
-				);
+		// visibilitychange is useful to detect if the page loaded through prerender
+		// or if the page never became visible
+		// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
+		// http://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
+		var fire_visible = function() { impl.fireEvent("visibility_changed"); }
+		if(d.webkitVisibilityState)
+			impl.addListener(d, "webkitvisibilitychange", fire_visible);
+		else if(d.msVisibilityState)
+			impl.addListener(d, "msvisibilitychange", fire_visible);
+		else if(d.visibilityState)
+			impl.addListener(d, "visibilitychange", fire_visible);
+
 		// This must be the last one to fire
 		impl.addListener(w, "unload", function() { w=null; });
 
@@ -591,7 +597,7 @@ BOOMR.plugins.RT = {
 			this.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
 
 			// How long did it take till Boomerang started
-			this.endTimer('boomr_lat', BOOMR.t_start);
+			this.endTimer('boomr_fb', BOOMR.t_start);
 		}
 
 		return this;
@@ -643,7 +649,11 @@ BOOMR.plugins.RT = {
 
 		impl.initNavTiming();
 
-		if(document.webkitVisibilityState && document.webkitVisibilityState === "prerender") {
+		if(
+			(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
+			||
+			(d.msVisibilityState && d.msVisibilityState === 3)
+		) {
 			// This means that onload fired through a pre-render.  We'll capture this
 			// time, but wait for t_done until after the page has become either visible
 			// or hidden (ie, it moved out of the pre-render state)
