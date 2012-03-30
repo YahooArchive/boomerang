@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
+ * Copyrights licensed under the BSD License. See the accompanying LICENSE file for terms.
+ */
+
 /**
 \file boomerang.js
 boomerang measures various performance characteristics of your user's browsing
@@ -7,10 +12,6 @@ experience and beacons it back to your server.
 To use this you'll need a web site, lots of users and the ability to do
 something with the data you collect.  How you collect the data is up to
 you, but we have a few ideas.
-
-Copyright (c) 2010 Yahoo! Inc. All rights reserved.
-Code licensed under the BSD License.  See the file LICENSE.txt
-for the full license text.
 */
 
 // Measure the time the script started
@@ -105,7 +106,7 @@ boomr = {
 			}
 
 			name = ' ' + name + '=';
-		
+
 			var i, cookies;
 			cookies = ' ' + d.cookie + ';';
 			if ( (i=cookies.indexOf(name)) >= 0 ) {
@@ -113,10 +114,10 @@ boomr = {
 				cookies = cookies.substring(i, cookies.indexOf(';', i));
 				return cookies;
 			}
-		
+
 			return null;
 		},
-		
+
 		setCookie: function(name, subcookies, max_age, path, domain, sec) {
 			var value = "",
 			    k, nameval, c,
@@ -125,7 +126,7 @@ boomr = {
 			if(!name) {
 				return false;
 			}
-		
+
 			for(k in subcookies) {
 				if(subcookies.hasOwnProperty(k)) {
 					value += '&' + encodeURIComponent(k)
@@ -133,13 +134,13 @@ boomr = {
 				}
 			}
 			value = value.replace(/^&/, '');
-		
+
 			if(max_age) {
 				exp = new Date();
 				exp.setTime(exp.getTime() + max_age*1000);
 				exp = exp.toGMTString();
 			}
-		
+
 			nameval = name + '=' + value;
 			c = nameval +
 				((max_age) ? "; expires=" + exp : "" ) +
@@ -147,16 +148,16 @@ boomr = {
 				((typeof domain !== "undefined") ? "; domain="
 						+ (domain !== null ? domain : impl.site_domain ) : "") +
 				((sec) ? "; secure" : "");
-		
+
 			if ( nameval.length < 4000 ) {
 				d.cookie = c;
 				// confirm cookie was set (could be blocked by user's settings, etc.)
 				return ( value === this.getCookie(name) );
 			}
-		
+
 			return false;
 		},
-		
+
 		getSubCookies: function(cookie) {
 			var cookies_a,
 			    i, l, kv,
@@ -165,26 +166,26 @@ boomr = {
 			if(!cookie) {
 				return null;
 			}
-		
+
 			cookies_a = cookie.split('&');
-		
+
 			if(cookies_a.length === 0) {
 				return null;
 			}
-		
+
 			for(i=0, l=cookies_a.length; i<l; i++) {
 				kv = cookies_a[i].split('=');
 				kv.push("");	// just in case there's no value
 				cookies[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
 			}
-		
+
 			return cookies;
 		},
-		
+
 		removeCookie: function(name) {
 			return this.setCookie(name, {}, 0, "/", null);
 		},
-		
+
 		pluginConfig: function(o, config, plugin_name, properties) {
 			var i, props=0;
 
@@ -206,7 +207,7 @@ boomr = {
 	init: function(config) {
 		var i, k,
 		    properties = ["beacon_url", "site_domain", "user_ip"];
-	
+
 		if(!config) {
 			config = {};
 		}
@@ -244,7 +245,7 @@ boomr = {
 				this.plugins[k].init(config);
 			}
 		}
-	
+
 		// The developer can override onload by setting autorun to false
 		if(typeof config.autorun === "undefined" || config.autorun !== false) {
 			impl.addListener(w, "load",
@@ -255,14 +256,14 @@ boomr = {
 		}
 
 		// webkitvisibilitychange is useful to detect if the page loaded through prerender
-		impl.addListener(d, "webkitvisibilitychange", 
+		impl.addListener(d, "webkitvisibilitychange",
 						function() {
 							impl.fireEvent("visibility_changed");
 						}
 				);
 		// This must be the last one to fire
 		impl.addListener(w, "unload", function() { w=null; });
-	
+
 		return this;
 	},
 
@@ -359,7 +360,7 @@ boomr = {
 
 	sendBeacon: function() {
 		var k, url, img, nparams=0;
-	
+
 		// At this point someone is ready to send the beacon.  We send
 		// the beacon only if all plugins have finished doing what they
 		// wanted to do
@@ -373,7 +374,7 @@ boomr = {
 				}
 			}
 		}
-	
+
 		// If we reach here, all plugins have completed
 		impl.fireEvent("before_beacon", impl.vars);
 
@@ -382,10 +383,14 @@ boomr = {
 			return this;
 		}
 
-		// use document.URL instead of location.href because of a safari bug
-		url = impl.beacon_url + '?v=' + encodeURIComponent(BOOMR.version) +
+		// if there are already url parameters in the beacon url,
+		// change the first parameter prefix for the boomerang url parameters to &
+
+		url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') +
+			'v=' + encodeURIComponent(BOOMR.version) +
 			'&u=' + encodeURIComponent(d.URL.replace(/#.*/, ''));
-		
+			// use d.URL instead of location.href because of a safari bug
+
 		for(k in impl.vars) {
 			if(impl.vars.hasOwnProperty(k)) {
 				nparams++;
@@ -398,7 +403,7 @@ boomr = {
 					);
 			}
 		}
-	
+
 		// only send beacon if we actually have something to beacon back
 		if(nparams) {
 			img = new Image();
@@ -837,7 +842,7 @@ var impl = {
 	// numeric comparator.  Returns negative number if a < b, positive if a > b and 0 if they're equal
 	// used to sort an array numerically
 	ncmp: function(a, b) { return (a-b); },
-	
+
 	// Calculate the interquartile range of an array of data points
 	iqr: function(a)
 	{
@@ -845,20 +850,20 @@ var impl = {
 
 		q1 = (a[Math.floor(l*0.25)] + a[Math.ceil(l*0.25)])/2;
 		q3 = (a[Math.floor(l*0.75)] + a[Math.ceil(l*0.75)])/2;
-	
+
 		fw = (q3-q1)*1.5;
-	
+
 		l++;
-	
+
 		for(i=0; i<l && a[i] < q3+fw; i++) {
 			if(a[i] > q1-fw) {
 				b.push(a[i]);
 			}
 		}
-	
+
 		return b;
 	},
-	
+
 	calc_latency: function()
 	{
 		var	i, n,
@@ -866,14 +871,14 @@ var impl = {
 			amean, median,
 			std_dev, std_err,
 			lat_filtered;
-	
+
 		// We first do IQR filtering and use the resulting data set
 		// for all calculations
 		lat_filtered = this.iqr(this.latencies.sort(this.ncmp));
 		n = lat_filtered.length;
-	
+
 		BOOMR.debug(lat_filtered, "bw");
-	
+
 		// First we get the arithmetic mean, standard deviation and standard error
 		// We ignore the first since it paid the price of DNS lookup, TCP connect
 		// and slow start
@@ -881,28 +886,28 @@ var impl = {
 			sum += lat_filtered[i];
 			sumsq += lat_filtered[i] * lat_filtered[i];
 		}
-	
+
 		n--;	// Since we started the loop with 1 and not 0
-	
+
 		amean = Math.round(sum / n);
-	
+
 		std_dev = Math.sqrt( sumsq/n - sum*sum/(n*n));
-	
+
 		// See http://en.wikipedia.org/wiki/1.96 and http://en.wikipedia.org/wiki/Standard_error_%28statistics%29
 		std_err = (1.96 * std_dev/Math.sqrt(n)).toFixed(2);
-	
+
 		std_dev = std_dev.toFixed(2);
-	
-	
+
+
 		n = lat_filtered.length-1;
-	
+
 		median = Math.round(
 				(lat_filtered[Math.floor(n/2)] + lat_filtered[Math.ceil(n/2)]) / 2
 			);
-	
+
 		return { mean: amean, median: median, stddev: std_dev, stderr: std_err };
 	},
-	
+
 	calc_bw: function()
 	{
 		var	i, j, n=0,
@@ -911,14 +916,14 @@ var impl = {
 			amean, std_dev, std_err, median,
 			amean_corrected, std_dev_corrected, std_err_corrected, median_corrected,
 			nimgs, bw, bw_c;
-	
+
 		for(i=0; i<this.nruns; i++) {
 			if(!this.results[i] || !this.results[i].r) {
 				continue;
 			}
-	
+
 			r=this.results[i].r;
-	
+
 			// the next loop we iterate through backwards and only consider the largest
 			// 3 images that succeeded that way we don't consider small images that
 			// downloaded fast without really saturating the network
@@ -931,24 +936,24 @@ var impl = {
 				if(r[j].t === null) {
 					continue;
 				}
-	
+
 				n++;
 				nimgs++;
-	
+
 				// multiply by 1000 since t is in milliseconds and not seconds
 				bw = images[j].size*1000/r[j].t;
 				bandwidths.push(bw);
-	
+
 				bw_c = images[j].size*1000/(r[j].t - this.latency.mean);
 				bandwidths_corrected.push(bw_c);
 			}
 		}
-	
+
 		BOOMR.debug('got ' + n + ' readings', "bw");
-	
+
 		BOOMR.debug('bandwidths: ' + bandwidths, "bw");
 		BOOMR.debug('corrected: ' + bandwidths_corrected, "bw");
-	
+
 		// First do IQR filtering since we use the median here
 		// and should use the stddev after filtering.
 		if(bandwidths.length > 3) {
@@ -958,10 +963,10 @@ var impl = {
 			bandwidths = bandwidths.sort(this.ncmp);
 			bandwidths_corrected = bandwidths_corrected.sort(this.ncmp);
 		}
-	
+
 		BOOMR.debug('after iqr: ' + bandwidths, "bw");
 		BOOMR.debug('corrected: ' + bandwidths_corrected, "bw");
-	
+
 		// Now get the mean & median.
 		// Also get corrected values that eliminate latency
 		n = Math.max(bandwidths.length, bandwidths_corrected.length);
@@ -975,24 +980,24 @@ var impl = {
 				sumsq_corrected += Math.pow(bandwidths_corrected[i], 2);
 			}
 		}
-	
+
 		n = bandwidths.length;
 		amean = Math.round(sum/n);
 		std_dev = Math.sqrt(sumsq/n - Math.pow(sum/n, 2));
 		std_err = Math.round(1.96 * std_dev/Math.sqrt(n));
 		std_dev = Math.round(std_dev);
-	
+
 		n = bandwidths.length-1;
 		median = Math.round(
 				(bandwidths[Math.floor(n/2)] + bandwidths[Math.ceil(n/2)]) / 2
 			);
-	
+
 		n = bandwidths_corrected.length;
 		amean_corrected = Math.round(sum_corrected/n);
 		std_dev_corrected = Math.sqrt(sumsq_corrected/n - Math.pow(sum_corrected/n, 2));
 		std_err_corrected = (1.96 * std_dev_corrected/Math.sqrt(n)).toFixed(2);
 		std_dev_corrected = std_dev_corrected.toFixed(2);
-	
+
 		n = bandwidths_corrected.length-1;
 		median_corrected = Math.round(
 					(
@@ -1000,11 +1005,11 @@ var impl = {
 						+ bandwidths_corrected[Math.ceil(n/2)]
 					) / 2
 				);
-	
+
 		BOOMR.debug('amean: ' + amean + ', median: ' + median, "bw");
 		BOOMR.debug('corrected amean: ' + amean_corrected + ', '
 				+ 'median: ' + median_corrected, "bw");
-	
+
 		return {
 			mean: amean,
 			stddev: std_dev,
@@ -1016,13 +1021,13 @@ var impl = {
 			median_corrected: median_corrected
 		};
 	},
-	
+
 	defer: function(method)
 	{
 		var that=this;
 		return setTimeout(function() { method.call(that); that=null;}, 10);
 	},
-	
+
 	load_img: function(i, run, callback)
 	{
 		var url = this.base_url + images[i].name
@@ -1030,7 +1035,7 @@ var impl = {
 		    timer=0, tstart=0,
 		    img = new Image(),
 		    that=this;
-	
+
 		img.onload=function() {
 			img.onload=img.onerror=null;
 			img=null;
@@ -1049,7 +1054,7 @@ var impl = {
 			}
 			that=callback=null;
 		};
-	
+
 		// the timeout does not abort download of the current image, it just sets an
 		// end of loop flag so we don't attempt download of the next image we still
 		// need to wait until onload or onerror fire to be sure that the image
@@ -1063,17 +1068,17 @@ var impl = {
 				images[i].timeout
 					+ Math.min(400, this.latency ? this.latency.mean : 400)
 			);
-	
+
 		tstart = new Date().getTime();
 		img.src=url;
 	},
-	
+
 	lat_loaded: function(i, tstart, run, success)
 	{
 		if(run !== this.latency_runs+1) {
 			return;
 		}
-	
+
 		if(success !== null) {
 			var lat = new Date().getTime() - tstart;
 			this.latencies.push(lat);
@@ -1083,26 +1088,26 @@ var impl = {
 		if(this.latency_runs === 0) {
 			this.latency = this.calc_latency();
 		}
-	
+
 		this.defer(this.iterate);
 	},
-	
+
 	img_loaded: function(i, tstart, run, success)
 	{
 		if(run !== this.runs_left+1) {
 			return;
 		}
-	
+
 		if(this.results[this.nruns-run].r[i])	{	// already called on this image
 			return;
 		}
-	
+
 		// if timeout, then we set the next image to the end of loop marker
 		if(success === null) {
 			this.results[this.nruns-run].r[i+1] = {t:null, state: null, run: run};
 			return;
 		}
-	
+
 		var result = {
 				start: tstart,
 				end: new Date().getTime(),
@@ -1114,7 +1119,7 @@ var impl = {
 			result.t = result.end-result.start;
 		}
 		this.results[this.nruns-run].r[i] = result;
-	
+
 		// we terminate if an image timed out because that means the connection is
 		// too slow to go to the next image
 		if(i >= images.end-1
@@ -1132,7 +1137,7 @@ var impl = {
 			this.load_img(i+1, run, this.img_loaded);
 		}
 	},
-	
+
 	finish: function()
 	{
 		if(!this.latency) {
@@ -1146,9 +1151,9 @@ var impl = {
 				lat_err:	parseFloat(this.latency.stderr, 10),
 				bw_time:	Math.round(new Date().getTime()/1000)
 			};
-	
+
 		BOOMR.addVar(o);
-	
+
 		// If we have an IP address we can make the BA cookie persistent for a while
 		// because we'll recalculate it if necessary (when the user's IP changes).
 		if(!isNaN(o.bw)) {
@@ -1166,18 +1171,18 @@ var impl = {
 						null
 				);
 		}
-	
+
 		this.complete = true;
 		BOOMR.sendBeacon();
 		this.running = false;
 	},
-	
+
 	iterate: function()
 	{
 		if(this.aborted) {
 			return false;
 		}
-	
+
 		if(!this.runs_left) {
 			this.finish();
 		}
@@ -1223,7 +1228,7 @@ var impl = {
 	}
 
 };
-	
+
 BOOMR.plugins.BW = {
 	init: function(config) {
 		var cookies;
