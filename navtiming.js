@@ -1,3 +1,7 @@
+/*
+ * Copyright (c), Buddy Brewer.
+ */
+
 /**
 \file navtiming.js
 Plugin to collect metrics from the W3C Navigation Timing API. For more information about Navigation Timing,
@@ -55,7 +59,7 @@ var impl = {
 		BOOMR.sendBeacon();
 	}
 };
-	
+
 BOOMR.plugins.NavigationTiming = {
 	init: function() {
 		BOOMR.subscribe("page_ready", impl.done, null, impl);
