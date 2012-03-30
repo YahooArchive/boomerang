@@ -385,14 +385,11 @@ boomr = {
 
 		// if there are already url parameters in the beacon url,
 		// change the first parameter prefix for the boomerang url parameters to &
-		var paramPrefix = '?';
-		if(impl.beacon_url.indexOf('?') > -1)
-			paramPrefix = '&';
- 
 
-		// use document.URL instead of location.href because of a safari bug
-		url = impl.beacon_url + paramPrefix + 'v=' + encodeURIComponent(BOOMR.version) +
+		url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') +
+			'v=' + encodeURIComponent(BOOMR.version) +
 			'&u=' + encodeURIComponent(d.URL.replace(/#.*/, ''));
+			// use d.URL instead of location.href because of a safari bug
 
 		for(k in impl.vars) {
 			if(impl.vars.hasOwnProperty(k)) {
