@@ -43,6 +43,10 @@ var impl = {
 				nt_domloading: pt.domLoading,
 				nt_domint: pt.domInteractive,
 				nt_domcontloaded: pt.domContentLoaded,
+				//the newest chrome use "domContentLoadedEventStart" and "domContentLoadedEventEnd" instead of "comContentLoaded"
+				nt_domcontloaded_st:pt.domContentLoadedEventStart,
+				nt_domcontloaded_end:pt.domContentLoadedEventEnd,
+				
 				nt_domcomp: pt.domComplete,
 				nt_load_st: pt.loadEventStart,
 				nt_load_end: pt.loadEventEnd,
