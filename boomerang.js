@@ -193,6 +193,7 @@ impl = {
 // we don't overwrite anything additional that was added to BOOMR before this
 // was called... for example, a plugin.
 boomr = {
+	t_lstart: null,
 	t_start: BOOMR_start,
 	t_end: null,
 
@@ -657,6 +658,10 @@ boomr = {
 };
 
 delete BOOMR_start;
+if(typeof BOOMR_lstart === 'number') {
+	boomr.t_lstart = BOOMR_lstart;
+	delete BOOMR_lstart;
+}
 
 (function() {
 	var make_logger;
