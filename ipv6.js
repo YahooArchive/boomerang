@@ -109,6 +109,10 @@ var impl = {
 	},
 
 	done: function() {
+		if(this.complete) {
+			return;
+		}
+
 		BOOMR.removeVar('ipv6_latency', 'ipv6_lookup');
 		if(this.timers.ipv6.end !== null) {
 			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start);

@@ -80,9 +80,9 @@ impl = {
 		return true;
 	},
 
-	addListener: function(el, sType, fn, capture) {
+	addListener: function(el, sType, fn) {
 		if(el.addEventListener) {
-			el.addEventListener(sType, fn, (capture));
+			el.addEventListener(sType, fn, false);
 		}
 		else if(el.attachEvent) {
 			el.attachEvent("on" + sType, fn);
@@ -228,7 +228,7 @@ boomr = {
 		for(k in this.plugins) {
 			// config[pugin].enabled has been set to false
 			if( config[k]
-				&& typeof config[k].enabled !== "undefined"
+				&& ("enabled" in config[k])
 				&& config[k].enabled === false
 			) {
 				impl.disabled_plugins[k] = 1;
@@ -247,7 +247,7 @@ boomr = {
 		}
 
 		// The developer can override onload by setting autorun to false
-		if(typeof config.autorun === "undefined" || config.autorun !== false) {
+		if(!("autorun" in config) || config.autorun !== false) {
 			impl.addListener(w, "load",
 						function() {
 							impl.fireEvent("page_ready");
@@ -480,6 +480,7 @@ var impl = {
 				// If set to false, beacon both referrer values and let
 				// the back end decide
 
+	navigationType: 0,
 	navigationStart: undefined,
 	responseStart: undefined,
 
@@ -532,6 +533,10 @@ var impl = {
 		// http://blogs.msdn.com/b/ie/archive/2010/06/28/measuring-web-page-performance.aspx
 		// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
 		p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
+
+		if(p && p.navigation) {
+			this.navigationType = p.navigation.type;
+		}
 
 		if(p && p.timing) {
 			ti = p.timing;
@@ -618,7 +623,7 @@ BOOMR.plugins.RT = {
 	endTimer: function(timer_name, time_value) {
 		if(timer_name) {
 			impl.timers[timer_name] = impl.timers[timer_name] || {};
-			if(typeof impl.timers[timer_name].end === "undefined") {
+			if(!("end" in impl.timers[timer_name])) {
 				impl.timers[timer_name].end =
 						(typeof time_value === "number" ? time_value : new Date().getTime());
 			}
@@ -708,10 +713,7 @@ BOOMR.plugins.RT = {
 			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 			BOOMR.utils.removeCookie(impl.cookie);
 
-			if(subcookies !== null
-				&& typeof subcookies.s !== "undefined"
-				&& typeof subcookies.r !== "undefined"
-			) {
+			if(subcookies && subcookies.s && subcookies.r) {
 				r = subcookies.r;
 				if(!impl.strict_referrer || r === r2) {
 					t_start = parseInt(subcookies.s, 10);
@@ -719,9 +721,9 @@ BOOMR.plugins.RT = {
 			}
 		}
 
-		if(t_start) {
-			BOOMR.addVar("rt.start", "cookie");
-		}
+		if(t_start && impl.navigationType != 2) {	// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
+		}						// but will have time of previous page start, so t_done will be wrong
 		else {
 			t_start = impl.navigationStart;
 		}
@@ -940,7 +942,7 @@ var impl = {
 			nimgs=0;
 			for(j=r.length-1; j>=0 && nimgs<3; j--) {
 				// if we hit an undefined image time, we skipped everything before this
-				if(typeof r[j] === "undefined") {
+				if(!r[j]) {
 					break;
 				}
 				if(r[j].t === null) {
@@ -1041,7 +1043,7 @@ var impl = {
 	load_img: function(i, run, callback)
 	{
 		var url = this.base_url + images[i].name
-			+ '?t=' + (new Date().getTime()) + Math.random(),
+			+ '?t=' + (new Date().getTime()) + Math.random(),	// Math.random() is slow, but we get it before we start the timer
 		    timer=0, tstart=0,
 		    img = new Image(),
 		    that=this;
