@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
- * Copyrights licensed under the BSD License. See the accompanying LICENSE file for terms.
+ * Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
  */
 
 /**
@@ -109,6 +109,10 @@ var impl = {
 	},
 
 	done: function() {
+		if(this.complete) {
+			return;
+		}
+
 		BOOMR.removeVar('ipv6_latency', 'ipv6_lookup');
 		if(this.timers.ipv6.end !== null) {
 			BOOMR.addVar('ipv6_latency', this.timers.ipv6.end - this.timers.ipv6.start);
