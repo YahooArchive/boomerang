@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
- * Copyrights licensed under the BSD License. See the accompanying LICENSE file for terms.
+ * Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
  */
 
 /**
@@ -13,6 +13,13 @@ To use this you'll need a web site, lots of users and the ability to do
 something with the data you collect.  How you collect the data is up to
 you, but we have a few ideas.
 */
+
+// Measure the time the script started
+// This has to be global so that we don't wait for the entire
+// BOOMR function to download and execute before measuring the
+// time.  We also declare it without `var` so that we can later
+// `delete` it.  This is the only way that works on Internet Explorer
+BOOMR_start = new Date().getTime();
 
 // beaconing section
 // the parameter is the window
@@ -73,9 +80,9 @@ impl = {
 		return true;
 	},
 
-	addListener: function(el, sType, fn, capture) {
+	addListener: function(el, sType, fn) {
 		if(el.addEventListener) {
-			el.addEventListener(sType, fn, (capture));
+			el.addEventListener(sType, fn, false);
 		}
 		else if(el.attachEvent) {
 			el.attachEvent("on" + sType, fn);
@@ -88,6 +95,9 @@ impl = {
 // we don't overwrite anything additional that was added to BOOMR before this
 // was called... for example, a plugin.
 boomr = {
+	t_start: BOOMR_start,
+	t_end: null,
+
 	// Utility functions
 	utils: {
 		getCookie: function(name) {
@@ -218,7 +228,7 @@ boomr = {
 		for(k in this.plugins) {
 			// config[pugin].enabled has been set to false
 			if( config[k]
-				&& typeof config[k].enabled !== "undefined"
+				&& ("enabled" in config[k])
 				&& config[k].enabled === false
 			) {
 				impl.disabled_plugins[k] = 1;
@@ -237,7 +247,7 @@ boomr = {
 		}
 
 		// The developer can override onload by setting autorun to false
-		if(typeof config.autorun === "undefined" || config.autorun !== false) {
+		if(!("autorun" in config) || config.autorun !== false) {
 			impl.addListener(w, "load",
 						function() {
 							impl.fireEvent("page_ready");
@@ -245,12 +255,18 @@ boomr = {
 					);
 		}
 
-		// webkitvisibilitychange is useful to detect if the page loaded through prerender
-		impl.addListener(d, "webkitvisibilitychange",
-						function() {
-							impl.fireEvent("visibility_changed");
-						}
-				);
+		// visibilitychange is useful to detect if the page loaded through prerender
+		// or if the page never became visible
+		// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
+		// http://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
+		var fire_visible = function() { impl.fireEvent("visibility_changed"); }
+		if(d.webkitVisibilityState)
+			impl.addListener(d, "webkitvisibilitychange", fire_visible);
+		else if(d.msVisibilityState)
+			impl.addListener(d, "msvisibilitychange", fire_visible);
+		else if(d.visibilityState)
+			impl.addListener(d, "visibilitychange", fire_visible);
+
 		// This must be the last one to fire
 		impl.addListener(w, "unload", function() { w=null; });
 
@@ -373,15 +389,24 @@ boomr = {
 			return this;
 		}
 
-		// use document.URL instead of location.href because of a safari bug
-		url = impl.beacon_url + '?v=' + encodeURIComponent(BOOMR.version) +
+		// if there are already url parameters in the beacon url,
+		// change the first parameter prefix for the boomerang url parameters to &
+
+		url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') +
+			'v=' + encodeURIComponent(BOOMR.version) +
 			'&u=' + encodeURIComponent(d.URL.replace(/#.*/, ''));
+			// use d.URL instead of location.href because of a safari bug
 
 		for(k in impl.vars) {
 			if(impl.vars.hasOwnProperty(k)) {
 				nparams++;
 				url += "&" + encodeURIComponent(k)
-					+ "=" + encodeURIComponent(impl.vars[k]);
+					+ "="
+					+ (
+						impl.vars[k]===undefined || impl.vars[k]===null
+						? ''
+						: encodeURIComponent(impl.vars[k])
+					);
 			}
 		}
 
@@ -395,6 +420,8 @@ boomr = {
 	}
 
 };
+
+delete BOOMR_start;
 
 var make_logger = function(l) {
 	return function(m, s) {
@@ -453,6 +480,7 @@ var impl = {
 				// If set to false, beacon both referrer values and let
 				// the back end decide
 
+	navigationType: 0,
 	navigationStart: undefined,
 	responseStart: undefined,
 
@@ -494,7 +522,7 @@ var impl = {
 	},
 
 	initNavTiming: function() {
-		var ti, p;
+		var ti, p, source;
 
 		if(this.navigationStart) {
 			return;
@@ -506,28 +534,30 @@ var impl = {
 		// http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
 		p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
 
+		if(p && p.navigation) {
+			this.navigationType = p.navigation.type;
+		}
+
 		if(p && p.timing) {
 			ti = p.timing;
 		}
-		else if(w.chrome && w.chrome.csi) {
+		else if(w.chrome && w.chrome.csi && w.chrome.csi().startE) {
 			// Older versions of chrome also have a timing API that's sort of documented here:
 			// http://ecmanaut.blogspot.com/2010/06/google-bom-feature-ms-since-pageload.html
 			// source here:
 			// http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/loadtimes_extension_bindings.cc?view=markup
 			ti = {
-				navigationStart: w.chrome.csi().startE,
-				responseStart: undefined
+				navigationStart: w.chrome.csi().startE
 			};
-			BOOMR.addVar("rt.start", "csi");
+			source = "csi";
 		}
-		else if(w.gtbExternal) {
+		else if(w.gtbExternal && w.gtbExternal.startE()) {
 			// The Google Toolbar exposes navigation start time similar to old versions of chrome
 			// This would work for any browser that has the google toolbar installed
 			ti = {
-				navigationStart: w.gtbExternal.startE(),
-				responseStart: undefined
+				navigationStart: w.gtbExternal.startE()
 			};
-			BOOMR.addVar("rt.start", "gtb");
+			source = 'gtb';
 		}
 
 		if(ti) {
@@ -536,7 +566,7 @@ var impl = {
 			// on it don't get sent back.  Never use requestStart since if
 			// the first request fails and the browser retries, it will contain
 			// the value for the new request.
-			BOOMR.addVar("rt.start", "navigation");
+			BOOMR.addVar("rt.start", source || "navigation");
 			this.navigationStart = ti.navigationStart || undefined;
 			this.responseStart = ti.responseStart || undefined;
 
@@ -566,6 +596,15 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("page_unload", impl.start, null, impl);
 
+		if(BOOMR.t_start) {
+			// How long does it take Boomerang to load up and execute
+			this.startTimer('boomerang', BOOMR.t_start);
+			this.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
+
+			// How long did it take till Boomerang started
+			this.endTimer('boomr_fb', BOOMR.t_start);
+		}
+
 		return this;
 	},
 
@@ -584,7 +623,7 @@ BOOMR.plugins.RT = {
 	endTimer: function(timer_name, time_value) {
 		if(timer_name) {
 			impl.timers[timer_name] = impl.timers[timer_name] || {};
-			if(typeof impl.timers[timer_name].end === "undefined") {
+			if(!("end" in impl.timers[timer_name])) {
 				impl.timers[timer_name].end =
 						(typeof time_value === "number" ? time_value : new Date().getTime());
 			}
@@ -615,7 +654,11 @@ BOOMR.plugins.RT = {
 
 		impl.initNavTiming();
 
-		if(document.webkitVisibilityState && document.webkitVisibilityState === "prerender") {
+		if(
+			(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
+			||
+			(d.msVisibilityState && d.msVisibilityState === 3)
+		) {
 			// This means that onload fired through a pre-render.  We'll capture this
 			// time, but wait for t_done until after the page has become either visible
 			// or hidden (ie, it moved out of the pre-render state)
@@ -670,10 +713,7 @@ BOOMR.plugins.RT = {
 			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 			BOOMR.utils.removeCookie(impl.cookie);
 
-			if(subcookies !== null
-				&& typeof subcookies.s !== "undefined"
-				&& typeof subcookies.r !== "undefined"
-			) {
+			if(subcookies && subcookies.s && subcookies.r) {
 				r = subcookies.r;
 				if(!impl.strict_referrer || r === r2) {
 					t_start = parseInt(subcookies.s, 10);
@@ -681,15 +721,18 @@ BOOMR.plugins.RT = {
 			}
 		}
 
-		if(t_start) {
-			BOOMR.addVar("rt.start", "cookie");
-		}
+		if(t_start && impl.navigationType != 2) {	// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
+		}						// but will have time of previous page start, so t_done will be wrong
 		else {
 			t_start = impl.navigationStart;
 		}
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.bstart', 'rt.end');
+
+		BOOMR.addVar('rt.bstart', BOOMR.t_start);
+		BOOMR.addVar('rt.end', impl.timers.t_done.end);
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
@@ -722,7 +765,6 @@ BOOMR.plugins.RT = {
 			ntimers++;
 		}
 
-		// At this point we decide whether the beacon should be sent or not
 		if(ntimers) {
 			BOOMR.addVar("r", r);
 
@@ -900,7 +942,7 @@ var impl = {
 			nimgs=0;
 			for(j=r.length-1; j>=0 && nimgs<3; j--) {
 				// if we hit an undefined image time, we skipped everything before this
-				if(typeof r[j] === 'undefined') {
+				if(!r[j]) {
 					break;
 				}
 				if(r[j].t === null) {
@@ -1001,7 +1043,7 @@ var impl = {
 	load_img: function(i, run, callback)
 	{
 		var url = this.base_url + images[i].name
-			+ '?t=' + (new Date().getTime()) + Math.random(),
+			+ '?t=' + (new Date().getTime()) + Math.random(),	// Math.random() is slow, but we get it before we start the timer
 		    timer=0, tstart=0,
 		    img = new Image(),
 		    that=this;
@@ -1093,7 +1135,7 @@ var impl = {
 		// we terminate if an image timed out because that means the connection is
 		// too slow to go to the next image
 		if(i >= images.end-1
-			|| typeof this.results[this.nruns-run].r[i+1] !== 'undefined'
+			|| typeof this.results[this.nruns-run].r[i+1] !== "undefined"
 		) {
 			BOOMR.debug(this.results[this.nruns-run], "bw");
 			// First run is a pilot test to decide what the largest image
