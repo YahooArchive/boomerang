@@ -134,6 +134,7 @@ impl = {
 		"dom_loaded": [],
 		"visibility_changed": [],
 		"before_beacon": [],
+		"xhr_load": [],
 		"click": [],
 		"form_submit": []
 	},
@@ -585,6 +586,16 @@ boomr = {
 		}
 
 		return this;
+	},
+
+	requestStart: function(name) {
+		BOOMR.plugins.RT.startTimer("xhr_" + name);
+
+		return { loaded: function() { BOOMR.responseEnd(name); } };
+	},
+
+	responseEnd: function(name) {
+		impl.fireEvent("xhr_load", { "name": "xhr_" + name });
 	},
 
 	sendBeacon: function() {
