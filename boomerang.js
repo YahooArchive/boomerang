@@ -589,12 +589,18 @@ boomr = {
 	},
 
 	requestStart: function(name) {
-		BOOMR.plugins.RT.startTimer("xhr_" + name);
+		var t_start = new Date().getTime();
+		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
 
-		return { loaded: function() { BOOMR.responseEnd(name); } };
+		return {
+			loaded: function() {
+				BOOMR.responseEnd(name, t_start);
+			}
+		};
 	},
 
-	responseEnd: function(name) {
+	responseEnd: function(name, t_start) {
+		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
 		impl.fireEvent("xhr_load", { "name": "xhr_" + name });
 	},
 
