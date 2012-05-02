@@ -31,6 +31,20 @@ Standard version numbering rules apply
 </p>
 </dd>
 
+<dt>t_start</dt>
+<dd>
+<p>
+The timestamp when the boomerang code showed up on the page.
+</p>
+</dd>
+
+<dt>t_end</dt>
+<dd>
+<p>
+The timestamp when the boomerang code finished loading.  Note, this will only be set if you used <code>make</code> to make a combined version of boomerang.
+</p>
+</dd>
+
 <dt>plugins</dt>
 <dd>
 <p>
@@ -331,6 +345,18 @@ the <code>subscribe()</code> method.
 <p>
 Fired just before the browser unloads the page.  This is fired when <code>window.onbeforeunload</code> fires
 (<code>onunload</code> on Opera).
+</p>
+<h3>Callback</h3>
+<p>
+No additional event data is passed to the callback function.  Any callback data is passed as specified in
+the <code>subscribe()</code> method.
+</p>
+</dd>
+
+<dt>visibility_changed</dt>
+<dd>
+<p>
+Fired if the page's visibility state changes.  Currently only supported on IE10 and Chrome.
 </p>
 <h3>Callback</h3>
 <p>
