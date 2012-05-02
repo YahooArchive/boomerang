@@ -67,8 +67,6 @@ BOOMR.plugins.NavigationTiming = {
 		return this;
 	},
 
-	// Any other public methods would be defined here
-
 	is_complete: function() {
 		return impl.complete;
 	}
