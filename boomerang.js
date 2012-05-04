@@ -256,7 +256,7 @@ boomr = {
 					);
 		}
 
-		impl.addListenenr(w, "DOMContentLoaded", function() { impl.fireEvent("dom_loaded"); });
+		impl.addListener(w, "DOMContentLoaded", function() { impl.fireEvent("dom_loaded"); });
 
 		// visibilitychange is useful to detect if the page loaded through prerender
 		// or if the page never became visible
