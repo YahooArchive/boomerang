@@ -249,14 +249,11 @@ boomr = {
 
 		// The developer can override onload by setting autorun to false
 		if(!("autorun" in config) || config.autorun !== false) {
-			var load_handler = function() {
-						impl.fireEvent("page_ready");
-					};
 			if("onpagehide" in w) {
-				impl.addListener(w, "pageshow", load_handler);
+				impl.addListener(w, "pageshow", BOOMR.page_ready);
 			}
 			else {
-				impl.addListener(w, "load", load_handler);
+				impl.addListener(w, "load", BOOMR.page_ready);
 			}
 		}
 
