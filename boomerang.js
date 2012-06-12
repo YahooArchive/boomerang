@@ -443,7 +443,7 @@ else if(typeof w.Y !== "undefined" && typeof w.Y.log !== "undefined") {
 	boomr.log = w.Y.log;
 }
 else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
-	boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] ", m); };
+	boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
 }
 
 
