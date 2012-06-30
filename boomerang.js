@@ -56,6 +56,7 @@ impl = {
 	events: {
 		"page_ready": [],
 		"page_unload": [],
+		"dom_loaded": [],
 		"visibility_changed": [],
 		"before_beacon": []
 	},
@@ -118,10 +119,8 @@ boomr = {
 			return null;
 		},
 
-		setCookie: function(name, subcookies, max_age, path, domain, sec) {
-			var value = "",
-			    k, nameval, c,
-			    exp = "";
+		setCookie: function(name, subcookies, max_age) {
+			var value=[], k, nameval, c, exp;
 
 			if(!name) {
 				return false;
@@ -129,28 +128,24 @@ boomr = {
 
 			for(k in subcookies) {
 				if(subcookies.hasOwnProperty(k)) {
-					value += '&' + encodeURIComponent(k)
-							+ '=' + encodeURIComponent(subcookies[k]);
+					value.push(encodeURIComponent(k) + '=' + encodeURIComponent(subcookies[k]));
 				}
 			}
-			value = value.replace(/^&/, '');
 
+			value = value.join('&');
+
+			nameval = name + '=' + value;
+
+			c = [nameval, "path=/", "domain=" + impl.site_domain];
 			if(max_age) {
 				exp = new Date();
 				exp.setTime(exp.getTime() + max_age*1000);
 				exp = exp.toGMTString();
+				c.push("expires=" + exp);
 			}
 
-			nameval = name + '=' + value;
-			c = nameval +
-				((max_age) ? "; expires=" + exp : "" ) +
-				((path) ? "; path=" + path : "") +
-				((typeof domain !== "undefined") ? "; domain="
-						+ (domain !== null ? domain : impl.site_domain ) : "") +
-				((sec) ? "; secure" : "");
-
 			if ( nameval.length < 4000 ) {
-				d.cookie = c;
+				d.cookie = c.join('; ');
 				// confirm cookie was set (could be blocked by user's settings, etc.)
 				return ( value === this.getCookie(name) );
 			}
@@ -183,7 +178,7 @@ boomr = {
 		},
 
 		removeCookie: function(name) {
-			return this.setCookie(name, {}, 0, "/", null);
+			return this.setCookie(name, {}, 0);
 		},
 
 		pluginConfig: function(o, config, plugin_name, properties) {
@@ -248,12 +243,15 @@ boomr = {
 
 		// The developer can override onload by setting autorun to false
 		if(!("autorun" in config) || config.autorun !== false) {
-			impl.addListener(w, "load",
-						function() {
-							impl.fireEvent("page_ready");
-						}
-					);
+			if("onpagehide" in w) {
+				impl.addListener(w, "pageshow", BOOMR.page_ready);
+			}
+			else {
+				impl.addListener(w, "load", BOOMR.page_ready);
+			}
 		}
+
+		impl.addListener(w, "DOMContentLoaded", function() { impl.fireEvent("dom_loaded"); });
 
 		// visibilitychange is useful to detect if the page loaded through prerender
 		// or if the page never became visible
@@ -267,8 +265,13 @@ boomr = {
 		else if(d.visibilityState)
 			impl.addListener(d, "visibilitychange", fire_visible);
 
-		// This must be the last one to fire
-		impl.addListener(w, "unload", function() { w=null; });
+		if(!("onpagehide" in w)) {
+			// This must be the last one to fire
+			// We only clear w on browsers that don't support onpagehide because
+			// those that do are new enough to not have memory leak problems of
+			// some older browsers
+			impl.addListener(w, "unload", function() { w=null; });
+		}
 
 		return this;
 	},
@@ -305,22 +308,21 @@ boomr = {
 		// support it.  This allows us to fall back to onunload when onbeforeunload
 		// isn't implemented
 		if(e_name === 'page_unload') {
-			impl.addListener(w, "unload",
-						function() {
+			var unload_handler = function() {
 							if(fn) {
 								fn.call(cb_scope, null, cb_data);
 							}
 							fn=cb_scope=cb_data=null;
-						}
-					);
-			impl.addListener(w, "beforeunload",
-						function() {
-							if(fn) {
-								fn.call(cb_scope, null, cb_data);
-							}
-							fn=cb_scope=cb_data=null;
-						}
-					);
+						};
+			// pagehide is for iOS devices
+			// see http://www.webkit.org/blog/516/webkit-page-cache-ii-the-unload-event/
+			if("onpagehide" in w) {
+				impl.addListener(w, "pagehide", unload_handler);
+			}
+			else {
+				impl.addListener(w, "unload", unload_handler);
+				impl.addListener(w, "beforeunload", unload_handler);
+			}
 		}
 
 		return this;
@@ -441,7 +443,7 @@ else if(typeof w.Y !== "undefined" && typeof w.Y.log !== "undefined") {
 	boomr.log = w.Y.log;
 }
 else if(typeof console !== "undefined" && typeof console.log !== "undefined") {
-	boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] ", m); };
+	boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
 }
 
 
@@ -498,8 +500,7 @@ var impl = {
 		// where location.href is URL decoded
 		if(!BOOMR.utils.setCookie(this.cookie,
 						{ s: t_start, r: d.URL.replace(/#.*/, '') },
-						this.cookie_exp,
-						"/", null)
+						this.cookie_exp)
 		) {
 			BOOMR.error("cannot set start cookie", "rt");
 			return this;
@@ -561,13 +562,13 @@ var impl = {
 		}
 
 		if(ti) {
-			// Always use navigationStart since it falls back to fetchStart
+			// Always use navigationStart since it falls back to fetchStart (not with redirects)
 			// If not set, we leave t_start alone so that timers that depend
 			// on it don't get sent back.  Never use requestStart since if
 			// the first request fails and the browser retries, it will contain
 			// the value for the new request.
 			BOOMR.addVar("rt.start", source || "navigation");
-			this.navigationStart = ti.navigationStart || undefined;
+			this.navigationStart = ti.navigationStart || ti.fetchStart || undefined;
 			this.responseStart = ti.responseStart || undefined;
 
 			// bug in Firefox 7 & 8 https://bugzilla.mozilla.org/show_bug.cgi?id=691547
@@ -580,6 +581,10 @@ var impl = {
 		}
 
 		return;
+	},
+
+	domloaded: function() {
+		BOOMR.plugins.RT.endTimer("t_domloaded");
 	}
 };
 
@@ -594,6 +599,7 @@ BOOMR.plugins.RT = {
 					["cookie", "cookie_exp", "strict_referrer"]);
 
 		BOOMR.subscribe("page_ready", this.done, null, this);
+		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.start, null, impl);
 
 		if(BOOMR.t_start) {
@@ -1178,9 +1184,7 @@ var impl = {
 							ip: this.user_ip,
 							t:  o.bw_time
 						},
-						(this.user_ip ? this.cookie_exp : 0),
-						"/",
-						null
+						(this.user_ip ? this.cookie_exp : 0)
 				);
 		}
 
