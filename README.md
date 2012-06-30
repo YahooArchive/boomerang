@@ -6,27 +6,15 @@ Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file
 boomerang always comes back, except when it hits something.
 
 summary
-===
+---
 
 boomerang is a JavaScript library that measures the page load time experienced by real users, commonly called RUM.
 
 Apart from page load time, boomerang measures a whole bunch of performance characteristics of your user's web browsing experience.  All you have to do is stick it into your web pages and call the
 init() method.
 
-Documentation is in the docs/ sub directory, and is written in HTML.  Your best bet is to check it out and view it locally, though it works best through a web server (you'll need cookies).
-Thanks to github's awesome `gh-pages` feature, we're able to host the boomerang docs right here on github.  Visit http://lognormal.github.com/boomerang/doc/ for a browsable version where all
-the examples work.
-
-In case you're browsing this elsewhere, the latest development version of the code and docs are available at https://github.com/bluesmoon/boomerang/, while the latest stable version is
-at https://github.com/lognormal/boomerang/
-
-We use github issues for discussions, feature requests and bug reports.  Get in touch at https://github.com/lognormal/boomerang/issues
-You'll need a github account to participate, but then you'll need one to check out the code as well :)
-
-Thanks for dropping by, and please leave us a message telling us if you use boomerang.
-
-synopsis
-===
+usage
+---
 
 The simple synchronous way to include boomerang on your page:
 ```html
@@ -81,10 +69,21 @@ way will not block other resources, however it _will_ block <code>onload</code>.
 before the rest of your page does thereby reducing the probability of it blocking the `onload` event.  If you don't want to block `onload` either, follow Stoyan's
 <a href="http://www.phpied.com/non-onload-blocking-async-js/">advice from the Meebo team</a>.
 
+docs
+---
+Documentation is in the docs/ sub directory, and is written in HTML.  Your best bet is to check it out and view it locally, though it works best through a web server (you'll need cookies).
+Thanks to github's awesome `gh-pages` feature, we're able to host the boomerang docs right here on github.  Visit http://lognormal.github.com/boomerang/doc/ for a browsable version where all
+the examples work.
+
+In case you're browsing this elsewhere, the latest development version of the code and docs are available at https://github.com/bluesmoon/boomerang/, while the latest stable version is
+at https://github.com/lognormal/boomerang/
+
 support
 ---
+We use github issues for discussions, feature requests and bug reports.  Get in touch at https://github.com/lognormal/boomerang/issues
+You'll need a github account to participate, but then you'll need one to check out the code as well :)
 
-Get support and file bugs at https://github.com/lognormal/boomerang/issues
+Thanks for dropping by, and please leave us a message telling us if you use boomerang.
 
 boomerang is supported by the devs at <a href="http://www.lognormal.com/">LogNormal</a>, and the awesome community of opensource developers that use
 and hack it.  That's you.  Thank you!
