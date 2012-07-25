@@ -966,7 +966,7 @@ var impl = {
 				bandwidths_corrected.push(bw_c);
 
 				if(r[j].t < this.latency.mean) {
-					debug_info[j] = r[j].t;
+					debug_info.push("" + j + "_" + r[j].t);
 				}
 			}
 		}
