@@ -30,13 +30,13 @@ var impl = {
 		var random = Math.floor(Math.random()*(2147483647)).toString(36),
 		    cache_bust = "" + (new Date().getTime()) + (Math.random());
 
-		this.gen_url = this.base_url.replace(/\*/, random);
+		impl.gen_url = impl.base_url.replace(/\*/, random);
 
 		impl.img = new Image();
 		impl.img.onload = impl.A_loaded;
 
 		impl.t_start = new Date().getTime();
-		impl.img.src = this.gen_url + "image-l.gif?t=" + cache_bust;
+		impl.img.src = impl.gen_url + "image-l.gif?t=" + cache_bust;
 	},
 
 	A_loaded: function() {
@@ -66,7 +66,7 @@ var impl = {
 		var dns = impl.t_dns - impl.t_http;
 
 		BOOMR.addVar("dns", dns);
-		this.complete = true;
+		impl.complete = true;
 		BOOMR.sendBeacon();
 	},
 
@@ -113,7 +113,7 @@ BOOMR.plugins.DNS = {
 			impl.base_url = impl.base_url.replace(/^https:/, 'http:');
 		}
 
-		BOOMR.subscribe("page_ready", impl.start, null, this);
+		BOOMR.subscribe("page_ready", impl.start, null, impl);
 
 		return this;
 	},
