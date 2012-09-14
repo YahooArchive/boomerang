@@ -1,7 +1,7 @@
 # Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
 # Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
 
-PLUGINS :=
+PLUGINS := rt.js bw.js
 
 VERSION := $(shell sed -ne '/^BOOMR\.version/{s/^.*"\([^"]*\)".*/\1/;p;q;}' boomerang.js)
 DATE := $(shell date +%s)
@@ -14,8 +14,8 @@ usage:
 	echo "Create a release version of boomerang:"
 	echo "	make"
 	echo ""
-	echo "Create a release version of boomerang with the dns plugin:"
-	echo "	make PLUGINS=dns.js"
+	echo "Create a release version of boomerang with the rt, bw & dns plugins:"
+	echo "	make PLUGINS=\"rt.js bw.js dns.js\""
 	echo ""
 	echo "Create a yuicompressor minified release version of boomerang:"
 	echo "	make MINIFIER=\"java -jar /path/to/yuicompressor-2.4.2.jar --type js\""
