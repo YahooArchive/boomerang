@@ -130,6 +130,19 @@ var impl = {
 
 		this.complete = true;
 		BOOMR.sendBeacon();
+	},
+
+	skip: function() {
+		// it's possible that we didn't start, so sendBeacon never
+		// gets called.  Let's set our complete state and call sendBeacon.
+		// This happens if onunload fires before onload
+
+		if(!this.complete) {
+			this.complete = true;
+			BOOMR.sendBeacon();
+		}
+
+		return this;
 	}
 };
 
@@ -159,6 +172,7 @@ BOOMR.plugins.IPv6 = {
 		}
 
 		BOOMR.subscribe("page_ready", impl.start, null, impl);
+		BOOMR.subscribe("page_unload", impl.skip, null, impl);
 
 		return this;
 	},
