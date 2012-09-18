@@ -466,5 +466,4 @@ BOOMR.plugins = BOOMR.plugins || {};
 
 
 
-
 /*jslint white: false, devel: true, onevar: true, browser: true, undef: true, nomen: true, regexp: false, continue: true, plusplus: false, bitwise: false, newcap: true, maxerr: 50, indent: 4 */

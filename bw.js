@@ -44,7 +44,7 @@ images.l = { name: "image-l.gif", size: 35, timeout: 1000 };
 // private object
 var impl = {
 	// properties
-	base_url: 'images/',
+	base_url: '',
 	timeout: 15000,
 	nruns: 5,
 	latency_runs: 10,
@@ -463,11 +463,19 @@ BOOMR.plugins.BW = {
 	init: function(config) {
 		var cookies;
 
+		if(impl.complete) {
+			return this;
+		}
+
 		BOOMR.utils.pluginConfig(impl, config, "BW",
 						["base_url", "timeout", "nruns", "cookie", "cookie_exp"]);
 
 		if(config && config.user_ip) {
 			impl.user_ip = config.user_ip;
+		}
+
+		if(!impl.base_url) {
+			return this;
 		}
 
 		images.start = 0;
@@ -485,6 +493,7 @@ BOOMR.plugins.BW = {
 
 		if(!cookies || !cookies.ba || !impl.setVarsFromCookie(cookies)) {
 			BOOMR.subscribe("page_ready", this.run, null, this);
+			BOOMR.subscribe("page_unload", this.skip, null, this);
 		}
 
 		return this;
@@ -523,6 +532,23 @@ BOOMR.plugins.BW = {
 					// onunload and we want the entire chain to complete
 					// before we return
 		}
+		return this;
+	},
+
+	skip: function() {
+		// this is called on unload, so we should abort the test
+		// if it's already started and report results.
+		this.abort();
+
+		// it's also possible that we didn't start, so sendBeacon never
+		// gets called.  Let's set our complete state and call sendBeacon.
+		// This happens if onunload fires before onload
+
+		if(!impl.complete) {
+			impl.complete = true;
+			BOOMR.sendBeacon();
+		}
+
 		return this;
 	},
 
