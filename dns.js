@@ -31,7 +31,7 @@ var impl = {
 			return;
 		}
 
-		var random = Math.floor(Math.random()*(2147483647)).toString(36),
+		var random = Math.random().toString(36),
 		    cache_bust = "" + (new Date().getTime()) + (Math.random());
 
 		impl.gen_url = impl.base_url.replace(/\*/, random);
