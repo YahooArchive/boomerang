@@ -32,36 +32,6 @@ var impl = {
 	r: undefined,
 	r2: undefined,
 
-	initFromCookie: function() {
-		var subcookies;
-
-		// A beacon may be fired automatically on page load or if the page dev fires
-		// it manually with their own timers.  It may not always contain a referrer
-		// (eg: XHR calls).  We set default values for these cases
-
-		this.r = this.r2 = d.referrer.replace(/#.*/, '');
-
-		if(!this.cookie) {
-			return;
-		}
-
-		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
-
-		if(!subcookies) {
-			return;
-		}
-
-		if(subcookies && subcookies.s && subcookies.r) {
-			this.r = subcookies.r;
-			if(!this.strict_referrer || this.r === this.r2) {
-				this.t_start = parseInt(subcookies.s, 10);
-			}
-		}
-
-	},
-
-	// The start method is fired on page unload.  It is called with the scope
-	// of the BOOMR.plugins.RT object
 	setCookie: function() {
 		var t_end, t_start = new Date().getTime();
 
@@ -94,6 +64,34 @@ var impl = {
 		}
 
 		return this;
+	},
+
+	initFromCookie: function() {
+		var subcookies;
+
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases
+
+		this.r = this.r2 = d.referrer.replace(/#.*/, '');
+
+		if(!this.cookie) {
+			return;
+		}
+
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+
+		if(!subcookies) {
+			return;
+		}
+
+		if(subcookies && subcookies.s && subcookies.r) {
+			this.r = subcookies.r;
+			if(!this.strict_referrer || this.r === this.r2) {
+				this.t_start = parseInt(subcookies.s, 10);
+			}
+		}
+
 	},
 
 	checkPreRender: function() {
