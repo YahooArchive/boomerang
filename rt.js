@@ -79,7 +79,7 @@ var impl = {
 			return;
 		}
 
-		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie));
 
 		if(!subcookies) {
 			return;
@@ -348,7 +348,7 @@ BOOMR.plugins.RT = {
 		if(ntimers) {
 			BOOMR.addVar("r", impl.r);
 
-			if(r2 !== r) {
+			if(impl.r2 !== impl.r) {
 				BOOMR.addVar("r2", impl.r2);
 			}
 
