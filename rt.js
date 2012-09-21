@@ -62,7 +62,7 @@ var impl = {
 
 	// The start method is fired on page unload.  It is called with the scope
 	// of the BOOMR.plugins.RT object
-	start: function() {
+	setCookie: function() {
 		var t_end, t_start = new Date().getTime();
 
 		// Disable use of RT cookie by setting its name to a falsy value
@@ -174,7 +174,7 @@ BOOMR.plugins.RT = {
 
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
-		BOOMR.subscribe("page_unload", impl.start, null, impl);
+		BOOMR.subscribe("page_unload", impl.setCookie, null, impl);
 
 		if(BOOMR.t_start) {
 			// How long does it take Boomerang to load up and execute
