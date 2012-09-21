@@ -85,7 +85,7 @@ var impl = {
 			return;
 		}
 
-		if(subcookies && subcookies.s && subcookies.r) {
+		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
 			if(!this.strict_referrer || this.r === this.r2) {
 				this.t_start = parseInt(subcookies.s, 10);
