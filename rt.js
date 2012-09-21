@@ -111,9 +111,9 @@ var impl = {
 		// http://code.google.com/chrome/whitepapers/prerender.html
 
 		BOOMR.plugins.RT.startTimer("t_load", this.navigationStart);
-		BOOMR.plugins.RT.endTimer("t_load");		// this will measure actual onload time for a prerendered page
+		BOOMR.plugins.RT.endTimer("t_load");					// this will measure actual onload time for a prerendered page
 		BOOMR.plugins.RT.startTimer("t_prerender", this.navigationStart);
-		BOOMR.plugins.RT.startTimer("t_postrender");	// time from prerender to visible or hidden
+		BOOMR.plugins.RT.startTimer("t_postrender");				// time from prerender to visible or hidden
 
 		BOOMR.subscribe("visibility_changed", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
 
@@ -258,7 +258,7 @@ BOOMR.plugins.RT = {
 		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
 
-		impl.complete = false
+		impl.complete = false;
 
 		impl.initNavTiming();
 
@@ -311,7 +311,7 @@ BOOMR.plugins.RT = {
 
 		BOOMR.addVar('rt.tstart', t_start);
 		BOOMR.addVar('rt.bstart', BOOMR.t_start);
-		BOOMR.addVar('rt.end', impl.timers.t_done.end);
+		BOOMR.addVar('rt.end', impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
