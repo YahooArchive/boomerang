@@ -28,6 +28,37 @@ var impl = {
 	navigationType: 0,
 	navigationStart: undefined,
 	responseStart: undefined,
+	t_start: undefined,
+	r: undefined,
+	r2: undefined,
+
+	initFromCookie: function() {
+		var subcookies;
+
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases
+
+		this.r = this.r2 = d.referrer.replace(/#.*/, '');
+
+		if(!this.cookie) {
+			return;
+		}
+
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
+
+		if(!subcookies) {
+			return;
+		}
+
+		if(subcookies && subcookies.s && subcookies.r) {
+			this.r = subcookies.r;
+			if(!this.strict_referrer || this.r === this.r2) {
+				this.t_start = parseInt(subcookies.s, 10);
+			}
+		}
+
+	},
 
 	// The start method is fired on page unload.  It is called with the scope
 	// of the BOOMR.plugins.RT object
@@ -193,8 +224,7 @@ BOOMR.plugins.RT = {
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
 	done: function() {
-		var t_start, r, r2,
-		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
+		var basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
 
 		if(impl.complete) {
@@ -251,30 +281,13 @@ BOOMR.plugins.RT = {
 			this.endTimer("t_prerender");
 		}
 
-		// A beacon may be fired automatically on page load or if the page dev fires
-		// it manually with their own timers.  It may not always contain a referrer
-		// (eg: XHR calls).  We set default values for these cases
+		impl.initFromCookie();
 
-		r = r2 = d.referrer.replace(/#.*/, '');
-
-		// If impl.cookie is not set, the dev does not want to use cookie time
-		if(impl.cookie) {
-			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
-			BOOMR.utils.removeCookie(impl.cookie);
-
-			if(subcookies && subcookies.s && subcookies.r) {
-				r = subcookies.r;
-				if(!impl.strict_referrer || r === r2) {
-					t_start = parseInt(subcookies.s, 10);
-				}
-			}
-		}
-
-		if(t_start && impl.navigationType != 2) {	// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+		if(impl.t_start && impl.navigationType != 2) {	// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
 			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
 		}						// but will have time of previous page start, so t_done will be wrong
 		else {
-			t_start = impl.navigationStart;
+			impl.t_start = impl.navigationStart;
 		}
 
 		// make sure old variables don't stick around
@@ -294,7 +307,7 @@ BOOMR.plugins.RT = {
 			// if not, then we have to calculate it using start & end
 			if(typeof timer.delta !== "number") {
 				if(typeof timer.start !== "number") {
-					timer.start = t_start;
+					timer.start = impl.t_start;
 				}
 				timer.delta = timer.end - timer.start;
 			}
@@ -315,10 +328,10 @@ BOOMR.plugins.RT = {
 		}
 
 		if(ntimers) {
-			BOOMR.addVar("r", r);
+			BOOMR.addVar("r", impl.r);
 
 			if(r2 !== r) {
-				BOOMR.addVar("r2", r2);
+				BOOMR.addVar("r2", impl.r2);
 			}
 
 			if(t_other.length) {
