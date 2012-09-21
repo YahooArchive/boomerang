@@ -190,11 +190,17 @@ BOOMR.plugins.RT = {
 	// Methods
 
 	init: function(config) {
-		impl.complete = false;
-		impl.timers = {};
-
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
+
+		// if complete is already true
+		// then we've already collected t_done so no point running init
+		if(impl.complete) {
+			return this;
+		}
+
+		impl.complete = false;
+		impl.timers = {};
 
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
@@ -248,22 +254,17 @@ BOOMR.plugins.RT = {
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
 	done: function() {
-		var basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
+		var t_start, t_done=new Date().getTime(),
+		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
 
-		if(impl.complete) {
-			return this;
-		}
+		impl.complete = false
 
 		impl.initNavTiming();
 
 		if(impl.checkPreRender()) {
 			return this;
 		}
-
-		// If the dev has already called endTimer, then this call will do nothing
-		// else, it will stop the page load timer
-		this.endTimer("t_done");
 
 		if(impl.responseStart) {
 			// Use NavTiming API to figure out resp latency and page time
@@ -273,7 +274,7 @@ BOOMR.plugins.RT = {
 				this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
 			}
 			else {
-				this.setTimer("t_page", new Date().getTime() - impl.responseStart);
+				this.setTimer("t_page", t_done - impl.responseStart);
 			}
 		}
 		else if(impl.timers.hasOwnProperty('t_page')) {
@@ -287,18 +288,28 @@ BOOMR.plugins.RT = {
 			this.endTimer("t_prerender");
 		}
 
-		impl.initFromCookie();
-
-		if(impl.t_start && impl.navigationType != 2) {	// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+		if(impl.navigationStart) {
+			t_start = impl.navigationStart;
+		}
+		else if(impl.t_start && impl.navigationType !== 2) {
+			t_start = impl.t_start;			// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
 			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
 		}						// but will have time of previous page start, so t_done will be wrong
 		else {
-			impl.t_start = impl.navigationStart;
+			BOOMR.addVar("rt.start", "none");
+			t_start = undefined;			// force all timers to NaN state
 		}
 
-		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.bstart', 'rt.end');
+		impl.initFromCookie();
 
+		// If the dev has already called endTimer, then this call will do nothing
+		// else, it will stop the page load timer
+		this.endTimer("t_done", t_done);
+
+		// make sure old variables don't stick around
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.tstart', 'rt.bstart', 'rt.end', 't_postrender', 't_prerender', 't_load');
+
+		BOOMR.addVar('rt.tstart', t_start);
 		BOOMR.addVar('rt.bstart', BOOMR.t_start);
 		BOOMR.addVar('rt.end', impl.timers.t_done.end);
 
@@ -313,12 +324,13 @@ BOOMR.plugins.RT = {
 			// if not, then we have to calculate it using start & end
 			if(typeof timer.delta !== "number") {
 				if(typeof timer.start !== "number") {
-					timer.start = impl.t_start;
+					timer.start = t_start;
 				}
 				timer.delta = timer.end - timer.start;
 			}
 
 			// If the caller did not set a start time, and if there was no start cookie
+			// Or if there was no end time for this timer,
 			// then timer.delta will be NaN, in which case we discard it.
 			if(isNaN(timer.delta)) {
 				continue;
