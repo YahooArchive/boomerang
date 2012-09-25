@@ -28,10 +28,11 @@ var impl = {
 	navigationType: 0,
 	navigationStart: undefined,
 	responseStart: undefined,
+	t_start: undefined,
+	r: undefined,
+	r2: undefined,
 
-	// The start method is fired on page unload.  It is called with the scope
-	// of the BOOMR.plugins.RT object
-	start: function() {
+	setCookie: function() {
 		var t_end, t_start = new Date().getTime();
 
 		// Disable use of RT cookie by setting its name to a falsy value
@@ -63,6 +64,60 @@ var impl = {
 		}
 
 		return this;
+	},
+
+	initFromCookie: function() {
+		var subcookies;
+
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases
+
+		this.r = this.r2 = d.referrer.replace(/#.*/, '');
+
+		if(!this.cookie) {
+			return;
+		}
+
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie));
+
+		if(!subcookies) {
+			return;
+		}
+
+		if(subcookies.s && subcookies.r) {
+			this.r = subcookies.r;
+			if(!this.strict_referrer || this.r === this.r2) {
+				this.t_start = parseInt(subcookies.s, 10);
+			}
+		}
+
+	},
+
+	checkPreRender: function() {
+		if(
+			!(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
+			&&
+			!(d.msVisibilityState && d.msVisibilityState === 3)
+		) {
+			return false;
+		}
+
+		// This means that onload fired through a pre-render.  We'll capture this
+		// time, but wait for t_done until after the page has become either visible
+		// or hidden (ie, it moved out of the pre-render state)
+		// http://code.google.com/chrome/whitepapers/pagevisibility.html
+		// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
+		// http://code.google.com/chrome/whitepapers/prerender.html
+
+		BOOMR.plugins.RT.startTimer("t_load", this.navigationStart);
+		BOOMR.plugins.RT.endTimer("t_load");					// this will measure actual onload time for a prerendered page
+		BOOMR.plugins.RT.startTimer("t_prerender", this.navigationStart);
+		BOOMR.plugins.RT.startTimer("t_postrender");				// time from prerender to visible or hidden
+
+		BOOMR.subscribe("visibility_changed", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
+
+		return true;
 	},
 
 	initNavTiming: function() {
@@ -135,15 +190,21 @@ BOOMR.plugins.RT = {
 	// Methods
 
 	init: function(config) {
-		impl.complete = false;
-		impl.timers = {};
-
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
+		// if complete is already true
+		// then we've already collected t_done so no point running init
+		if(impl.complete) {
+			return this;
+		}
+
+		impl.complete = false;
+		impl.timers = {};
+
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
-		BOOMR.subscribe("page_unload", impl.start, null, impl);
+		BOOMR.subscribe("page_unload", impl.setCookie, null, impl);
 
 		if(BOOMR.t_start) {
 			// How long does it take Boomerang to load up and execute
@@ -193,41 +254,17 @@ BOOMR.plugins.RT = {
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
 	done: function() {
-		var t_start, r, r2,
-		    subcookies, basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
+		var t_start, t_done=new Date().getTime(),
+		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
 
-		if(impl.complete) {
-			return this;
-		}
+		impl.complete = false;
 
 		impl.initNavTiming();
 
-		if(
-			(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
-			||
-			(d.msVisibilityState && d.msVisibilityState === 3)
-		) {
-			// This means that onload fired through a pre-render.  We'll capture this
-			// time, but wait for t_done until after the page has become either visible
-			// or hidden (ie, it moved out of the pre-render state)
-			// http://code.google.com/chrome/whitepapers/pagevisibility.html
-			// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
-			// http://code.google.com/chrome/whitepapers/prerender.html
-
-			this.startTimer("t_load", impl.navigationStart);
-			this.endTimer("t_load");		// this will measure actual onload time for a prerendered page
-			this.startTimer("t_prerender", impl.navigationStart);
-			this.startTimer("t_postrender");	// time from prerender to visible or hidden
-
-			BOOMR.subscribe("visibility_changed", this.done, null, this);
-
+		if(impl.checkPreRender()) {
 			return this;
 		}
-
-		// If the dev has already called endTimer, then this call will do nothing
-		// else, it will stop the page load timer
-		this.endTimer("t_done");
 
 		if(impl.responseStart) {
 			// Use NavTiming API to figure out resp latency and page time
@@ -237,7 +274,7 @@ BOOMR.plugins.RT = {
 				this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
 			}
 			else {
-				this.setTimer("t_page", new Date().getTime() - impl.responseStart);
+				this.setTimer("t_page", t_done - impl.responseStart);
 			}
 		}
 		else if(impl.timers.hasOwnProperty('t_page')) {
@@ -251,37 +288,30 @@ BOOMR.plugins.RT = {
 			this.endTimer("t_prerender");
 		}
 
-		// A beacon may be fired automatically on page load or if the page dev fires
-		// it manually with their own timers.  It may not always contain a referrer
-		// (eg: XHR calls).  We set default values for these cases
-
-		r = r2 = d.referrer.replace(/#.*/, '');
-
-		// If impl.cookie is not set, the dev does not want to use cookie time
-		if(impl.cookie) {
-			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
-			BOOMR.utils.removeCookie(impl.cookie);
-
-			if(subcookies && subcookies.s && subcookies.r) {
-				r = subcookies.r;
-				if(!impl.strict_referrer || r === r2) {
-					t_start = parseInt(subcookies.s, 10);
-				}
-			}
+		if(impl.navigationStart) {
+			t_start = impl.navigationStart;
 		}
-
-		if(t_start && impl.navigationType != 2) {	// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+		else if(impl.t_start && impl.navigationType !== 2) {
+			t_start = impl.t_start;			// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
 			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
 		}						// but will have time of previous page start, so t_done will be wrong
 		else {
-			t_start = impl.navigationStart;
+			BOOMR.addVar("rt.start", "none");
+			t_start = undefined;			// force all timers to NaN state
 		}
 
-		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.bstart', 'rt.end');
+		impl.initFromCookie();
 
+		// If the dev has already called endTimer, then this call will do nothing
+		// else, it will stop the page load timer
+		this.endTimer("t_done", t_done);
+
+		// make sure old variables don't stick around
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.tstart', 'rt.bstart', 'rt.end', 't_postrender', 't_prerender', 't_load');
+
+		BOOMR.addVar('rt.tstart', t_start);
 		BOOMR.addVar('rt.bstart', BOOMR.t_start);
-		BOOMR.addVar('rt.end', impl.timers.t_done.end);
+		BOOMR.addVar('rt.end', impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
 
 		for(t_name in impl.timers) {
 			if(!impl.timers.hasOwnProperty(t_name)) {
@@ -300,6 +330,7 @@ BOOMR.plugins.RT = {
 			}
 
 			// If the caller did not set a start time, and if there was no start cookie
+			// Or if there was no end time for this timer,
 			// then timer.delta will be NaN, in which case we discard it.
 			if(isNaN(timer.delta)) {
 				continue;
@@ -315,10 +346,10 @@ BOOMR.plugins.RT = {
 		}
 
 		if(ntimers) {
-			BOOMR.addVar("r", r);
+			BOOMR.addVar("r", impl.r);
 
-			if(r2 !== r) {
-				BOOMR.addVar("r2", r2);
+			if(impl.r2 !== impl.r) {
+				BOOMR.addVar("r2", impl.r2);
 			}
 
 			if(t_other.length) {
