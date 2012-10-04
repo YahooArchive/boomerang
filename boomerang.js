@@ -59,12 +59,24 @@ impl = {
 		"page_unload": [],
 		"dom_loaded": [],
 		"visibility_changed": [],
-		"before_beacon": []
+		"before_beacon": [],
+		"click": []
 	},
 
 	vars: {},
 
 	disabled_plugins: {},
+
+	onclick_handler: function(ev) {
+		var target;
+		if (!ev) ev = w.event;
+		if (ev.target) target = ev.target;
+		else if (ev.srcElement) target = ev.srcElement;
+		if (target.nodeType == 3) // defeat Safari bug
+			target = target.parentNode;
+
+		impl.fireEvent("click", target);
+	},
 
 	fireEvent: function(e_name, data) {
 		var i, h, e;
@@ -265,6 +277,8 @@ boomr = {
 			impl.addListener(d, "msvisibilitychange", fire_visible);
 		else if(d.visibilityState)
 			impl.addListener(d, "visibilitychange", fire_visible);
+
+		impl.addListener(d, "mouseup", impl.onclick_handler);
 
 		if(!("onpagehide" in w)) {
 			// This must be the last one to fire
