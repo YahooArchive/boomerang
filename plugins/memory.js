@@ -24,11 +24,9 @@ var impl = {
 		    c = w.console,
 		    d = w.document,
 		    f = (({}).toString.call(window.opera) == '[object Opera]' ? d.querySelectorAll : d.getElementsByTagName),
-		    m, spdy = false;
+		    m;
 
 		m = (p && p.memory ? p.memory : (c && c.memory ? c.memory : null));
-
-		spdy = (w.chrome && w.chrome.loadTimes() ? w.chrome.loadTimes().wasFetchedViaSpdy);
 
 		if(m) {
 			BOOMR.addVar({
@@ -37,14 +35,15 @@ var impl = {
 			});
 		}
 
-		if(spdy) {
-			BOOMR.addVar({'spdy': 1});
-		}
 		
 		BOOMR.addVar({
 			'dom.ln': f.call(d, '*').length,
 			'dom.sz': f.call(d, 'html')[0].innerHTML.length
 		}); 
+
+		if(w.chrome && w.chrome.loadTimes() && w.chrome.loadTimes().wasFetchedViaSpdy) {
+			BOOMR.addVar('dom.spdy', 1);
+		}
 
 		this.complete = true;
 		BOOMR.sendBeacon();
