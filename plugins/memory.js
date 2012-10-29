@@ -43,10 +43,6 @@ var impl = {
 			'dom.script': f.call(d, 'script').length
 		}); 
 
-		if(w.chrome && w.chrome.loadTimes() && w.chrome.loadTimes().wasFetchedViaSpdy) {
-			BOOMR.addVar('dom.spdy', 1);
-		}
-
 		this.complete = true;
 		BOOMR.sendBeacon();
 	}
