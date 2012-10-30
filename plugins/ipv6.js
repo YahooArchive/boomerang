@@ -29,7 +29,7 @@ Beacon parameters:
 		to the ipv6 host.
 */
 
-(function(w) {
+(function() {
 
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
@@ -162,9 +162,9 @@ BOOMR.plugins.IPv6 = {
 		}
 
 		// make sure that test images use the same protocol as the host page
-		if(w.location.protocol === 'https:') {
-			impl.ipv6_url = impl.ipv6_url.replace(/^http:/, 'https:');
-			impl.host_url = impl.host_url.replace(/^http:/, 'https:');
+		if(BOOMR.window.location.protocol === 'https:') {
+			impl.complete = true;
+			return this;
 		}
 		else {
 			impl.ipv6_url = impl.ipv6_url.replace(/^https:/, 'http:');
@@ -182,5 +182,5 @@ BOOMR.plugins.IPv6 = {
 	}
 };
 
-}(window));
+}());
 

@@ -8,8 +8,7 @@ Plugin to collect metrics from the W3C Navigation Timing API. For more informati
 see: http://www.w3.org/TR/navigation-timing/
 */
 
-// w is the window object
-(function(w) {
+(function() {
 
 // First make sure BOOMR is actually defined.  It's possible that your plugin is loaded before boomerang, in which case
 // you'll need this.
@@ -20,12 +19,12 @@ BOOMR.plugins = BOOMR.plugins || {};
 var impl = {
 	complete: false,
 	done: function() {
-		var p, pn, pt, data;
+		var w = BOOMR.window, p, pn, pt, data;
 		p = w.performance || w.msPerformance || w.webkitPerformance || w.mozPerformance;
 		if(p && p.timing && p.navigation) {
 			BOOMR.info("This user agent supports NavigationTiming.", "nt");
-			pn = w.performance.navigation;
-			pt = w.performance.timing;
+			pn = p.navigation;
+			pt = p.timing;
 			data = {
 				nt_red_cnt: pn.redirectCount,
 				nt_nav_type: pn.type,
@@ -54,8 +53,22 @@ var impl = {
 				// secureConnectionStart is OPTIONAL in the spec
 				data.nt_ssl_st = pt.secureConnectionStart;
 			}
+
 			BOOMR.addVar(data);
 		}
+
+		if(w.chrome && w.chrome.loadTimes) {
+			pt = w.chrome.loadTimes();
+			if(pt) {
+				data = {
+					nt_spdy: (pt.wasFetchedViaSpdy?1:0),
+					nt_first_paint: pt.firstPaintTime
+				};
+
+				BOOMR.addVar(data);
+			}
+		}
+
 		this.complete = true;
 		BOOMR.sendBeacon();
 	}
@@ -72,5 +85,5 @@ BOOMR.plugins.NavigationTiming = {
 	}
 };
 
-}(window));
+}());
 

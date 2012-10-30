@@ -26,18 +26,27 @@ BOOMR_start = new Date().getTime();
 // the parameter is the window
 (function(w) {
 
+// This is the only block where we use document without the w. qualifier
+if(w.parent != w
+		&& document.getElementById('boomr-if-as')
+		&& document.getElementById('boomr-if-as').nodeName.toLowerCase() == 'script') {
+	w = w.parent;
+}
+
 var impl, boomr, k, d=w.document;
 
 // Short namespace because I don't want to keep typing BOOMERANG
-if(typeof BOOMR === "undefined") {
-	BOOMR = {};
+if(typeof w.BOOMR === "undefined") {
+	w.BOOMR = {};
 }
+BOOMR = w.BOOMR;
 // don't allow this code to be included twice
 if(BOOMR.version) {
 	return;
 }
 
 BOOMR.version = "0.9";
+BOOMR.window = w;
 
 
 // impl is a private object not reachable from outside the BOOMR object
@@ -59,12 +68,24 @@ impl = {
 		"page_unload": [],
 		"dom_loaded": [],
 		"visibility_changed": [],
-		"before_beacon": []
+		"before_beacon": [],
+		"click": []
 	},
 
 	vars: {},
 
 	disabled_plugins: {},
+
+	onclick_handler: function(ev) {
+		var target;
+		if (!ev) ev = w.event;
+		if (ev.target) target = ev.target;
+		else if (ev.srcElement) target = ev.srcElement;
+		if (target.nodeType == 3) // defeat Safari bug
+			target = target.parentNode;
+
+		impl.fireEvent("click", target);
+	},
 
 	fireEvent: function(e_name, data) {
 		var i, h, e;
@@ -266,12 +287,14 @@ boomr = {
 		else if(d.visibilityState)
 			impl.addListener(d, "visibilitychange", fire_visible);
 
+		impl.addListener(d, "mouseup", impl.onclick_handler);
+
 		if(!("onpagehide" in w)) {
 			// This must be the last one to fire
 			// We only clear w on browsers that don't support onpagehide because
 			// those that do are new enough to not have memory leak problems of
 			// some older browsers
-			impl.addListener(w, "unload", function() { w=null; });
+			impl.addListener(w, "unload", function() { BOOMR.window=w=null; });
 		}
 
 		return this;

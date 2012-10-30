@@ -1,7 +1,7 @@
 # Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
 # Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
 
-PLUGINS := rt.js bw.js
+PLUGINS := plugins/rt.js plugins/bw.js
 
 VERSION := $(shell sed -ne '/^BOOMR\.version/{s/^.*"\([^"]*\)".*/\1/;p;q;}' boomerang.js)
 DATE := $(shell date +%s)
@@ -15,7 +15,7 @@ usage:
 	echo "	make"
 	echo ""
 	echo "Create a release version of boomerang with the rt, bw & dns plugins:"
-	echo "	make PLUGINS=\"rt.js bw.js dns.js\""
+	echo "	make PLUGINS=\"plugins/rt.js plugins/bw.js plugins/dns.js\""
 	echo ""
 	echo "Create a yuicompressor minified release version of boomerang:"
 	echo "	make MINIFIER=\"java -jar /path/to/yuicompressor-2.4.2.jar --type js\""
@@ -28,7 +28,7 @@ boomerang-$(VERSION).$(DATE).js: boomerang.js $(PLUGINS)
 	echo
 	echo "Making $@ ..."
 	echo "using plugins: $(PLUGINS)..."
-	cat boomerang.js $(PLUGINS) zzz_last_plugin.js | sed -e 's/^\(BOOMR\.version = "\)$(VERSION)\("\)/\1$(VERSION).$(DATE)\2/' | $(MINIFIER) | perl -pe "s/\(window\)\);/\(window\)\);\n/g" > $@ && echo "done"
+	cat boomerang.js $(PLUGINS) plugins/zzz_last_plugin.js | sed -e 's/^\(BOOMR\.version = "\)$(VERSION)\("\)/\1$(VERSION).$(DATE)\2/' | $(MINIFIER) | perl -pe "s/\(window\)\);/\(window\)\);\n/g" > $@ && echo "done"
 	echo
 
 .PHONY: all
