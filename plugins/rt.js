@@ -32,20 +32,22 @@ var impl = {
 	r: undefined,
 	r2: undefined,
 
-	setCookie: function() {
-		var t_end, t_start = new Date().getTime();
+	setCookie: function(how) {
+		var t_end, t_start = new Date().getTime(), subcookies;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
 			return this;
 		}
 
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
+		subcookies.s = t_start;
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		if(!BOOMR.utils.setCookie(this.cookie,
-						{ s: t_start, r: d.URL.replace(/#.*/, '') },
-						this.cookie_exp)
-		) {
+		subcookies.r = d.URL.replace(/#.*/, '');
+		subcookies[how] = t_start
+
+		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
 			return this;
 		}
@@ -177,7 +179,7 @@ var impl = {
 
 	page_unload: function(edata) {
 		// set cookie for next page
-		this.setCookie();
+		this.setCookie(edata.persisted?'hd':'ul');
 	},
 
 	onclick: function(etarget) {
@@ -186,7 +188,7 @@ var impl = {
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
 			// cookie on click
-			this.setCookie();
+			this.setCookie('cl');
 		}
 	},
 
