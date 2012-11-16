@@ -175,6 +175,11 @@ var impl = {
 		return;
 	},
 
+	page_unload: function(edata) {
+		// set cookie for next page
+		this.setCookie();
+	},
+
 	domloaded: function() {
 		BOOMR.plugins.RT.endTimer("t_domloaded");
 	}
@@ -203,7 +208,7 @@ BOOMR.plugins.RT = {
 
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
-		BOOMR.subscribe("page_unload", impl.setCookie, null, impl);
+		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 
 		if(BOOMR.t_start) {
 			// How long does it take Boomerang to load up and execute
