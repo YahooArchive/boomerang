@@ -180,6 +180,16 @@ var impl = {
 		this.setCookie();
 	},
 
+	onclick: function(etarget) {
+		if(etarget && etarget.nodeName.toUpperCase()=="A") {
+			// user clicked a link, they may be going to another page
+			// if this page is being opened in a different tab, then
+			// our unload handler won't fire, so we need to set our
+			// cookie on click
+			this.setCookie();
+		}
+	},
+
 	domloaded: function() {
 		BOOMR.plugins.RT.endTimer("t_domloaded");
 	}
@@ -209,6 +219,7 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("page_ready", this.done, null, this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
+		BOOMR.subscribe("click", impl.onclick, null, impl);
 
 		if(BOOMR.t_start) {
 			// How long does it take Boomerang to load up and execute
