@@ -29,6 +29,7 @@ var impl = {
 	navigationStart: undefined,
 	responseStart: undefined,
 	t_start: undefined,
+	t_fb_approx: undefined,
 	r: undefined,
 	r2: undefined,
 
@@ -86,6 +87,7 @@ var impl = {
 			this.r = subcookies.r;
 			if(!this.strict_referrer || this.r === this.r2) {
 				this.t_start = parseInt(subcookies.s, 10);
+				this.t_fb_approx = parseInt(subcookies.hd, 10);
 			}
 		}
 
@@ -305,6 +307,10 @@ BOOMR.plugins.RT = {
 		else if(impl.timers.hasOwnProperty('t_page')) {
 			// If the dev has already started t_page timer, we can end it now as well
 			this.endTimer("t_page");
+		}
+		else if(impl.t_fb_approx) {
+			this.endTimer('t_resp', impl.t_fb_approx);
+			this.setTimer("t_page", t_done - impl.t_fb_approx);
 		}
 
 		// If a prerender timer was started, we can end it now as well
