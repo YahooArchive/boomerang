@@ -41,10 +41,9 @@ var impl = {
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
-		subcookies.s = t_start;
+		subcookies[how] = t_start
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		subcookies[how] = t_start
 		subcookies.r = d.URL.replace(/#.*/, '');
 
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
@@ -80,6 +79,8 @@ var impl = {
 		if(!subcookies) {
 			return;
 		}
+
+		subcookies.s = subcookies.ul || subcookies.cl;
 
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
@@ -179,7 +180,7 @@ var impl = {
 
 	page_unload: function(edata) {
 		// set cookie for next page
-		this.setCookie(edata.persisted?'hd':'ul');
+		this.setCookie(edata.type == 'beforeunload'?'ul':'hd');
 	},
 
 	onclick: function(etarget) {
