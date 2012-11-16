@@ -44,8 +44,8 @@ var impl = {
 		subcookies.s = t_start;
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		subcookies.r = d.URL.replace(/#.*/, '');
 		subcookies[how] = t_start
+		subcookies.r = d.URL.replace(/#.*/, '');
 
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
