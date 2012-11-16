@@ -29,6 +29,7 @@ var impl = {
 	navigationStart: undefined,
 	responseStart: undefined,
 	t_start: undefined,
+	t_fb_approx: undefined,
 	r: undefined,
 	r2: undefined,
 
@@ -41,10 +42,9 @@ var impl = {
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
-		subcookies.s = t_start;
+		subcookies[how] = t_start
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		subcookies[how] = t_start
 		subcookies.r = d.URL.replace(/#.*/, '');
 
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
@@ -81,10 +81,13 @@ var impl = {
 			return;
 		}
 
+		subcookies.s = subcookies.ul || subcookies.cl;
+
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
 			if(!this.strict_referrer || this.r === this.r2) {
 				this.t_start = parseInt(subcookies.s, 10);
+				this.t_fb_approx = parseInt(subcookies.hd, 10);
 			}
 		}
 
@@ -179,7 +182,7 @@ var impl = {
 
 	page_unload: function(edata) {
 		// set cookie for next page
-		this.setCookie(edata.persisted?'hd':'ul');
+		this.setCookie(edata.type == 'beforeunload'?'ul':'hd');
 	},
 
 	onclick: function(etarget) {
@@ -304,6 +307,10 @@ BOOMR.plugins.RT = {
 		else if(impl.timers.hasOwnProperty('t_page')) {
 			// If the dev has already started t_page timer, we can end it now as well
 			this.endTimer("t_page");
+		}
+		else if(impl.t_fb_approx) {
+			this.endTimer('t_resp', impl.t_fb_approx);
+			this.setTimer("t_page", t_done - impl.t_fb_approx);
 		}
 
 		// If a prerender timer was started, we can end it now as well
