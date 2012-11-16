@@ -69,12 +69,6 @@ var impl = {
 	initFromCookie: function() {
 		var subcookies;
 
-		// A beacon may be fired automatically on page load or if the page dev fires
-		// it manually with their own timers.  It may not always contain a referrer
-		// (eg: XHR calls).  We set default values for these cases
-
-		this.r = this.r2 = d.referrer.replace(/#.*/, '');
-
 		if(!this.cookie) {
 			return;
 		}
@@ -220,6 +214,13 @@ BOOMR.plugins.RT = {
 			this.endTimer('boomr_fb', BOOMR.t_start);
 		}
 
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases
+		impl.r = impl.r2 = d.referrer.replace(/#.*/, '');
+
+		impl.initFromCookie();
+
 		return this;
 	},
 
@@ -304,8 +305,6 @@ BOOMR.plugins.RT = {
 			BOOMR.addVar("rt.start", "none");
 			t_start = undefined;			// force all timers to NaN state
 		}
-
-		impl.initFromCookie();
 
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
