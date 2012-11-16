@@ -336,16 +336,15 @@ boomr = {
 							if(fn) {
 								fn.call(cb_scope, ev || w.event, cb_data);
 							}
-							if(!("onpagehide" in w)) {
-								fn=cb_scope=cb_data=null;
-							}
 						};
 			// pagehide is for iOS devices
 			// see http://www.webkit.org/blog/516/webkit-page-cache-ii-the-unload-event/
 			if("onpagehide" in w) {
 				impl.addListener(w, "pagehide", unload_handler);
 			}
-			impl.addListener(w, "unload", unload_handler);
+			else {
+				impl.addListener(w, "unload", unload_handler);
+			}
 			impl.addListener(w, "beforeunload", unload_handler);
 		}
 
