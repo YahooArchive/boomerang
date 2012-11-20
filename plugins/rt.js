@@ -89,6 +89,9 @@ var impl = {
 				this.t_start = parseInt(subcookies.s, 10);
 				this.t_fb_approx = parseInt(subcookies.hd, 10);
 			}
+			else {
+				this.t_start = this.t_fb_approx = undefined;
+			}
 		}
 
 	},
@@ -287,6 +290,7 @@ BOOMR.plugins.RT = {
 
 		impl.complete = false;
 
+		impl.initFromCookie();
 		impl.initNavTiming();
 
 		if(impl.checkPreRender()) {
