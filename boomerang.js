@@ -64,6 +64,8 @@ impl = {
 	//! User's ip address determined on the server.  Used for the BA cookie
 	user_ip: '',
 
+	onloadfired: false,
+
 	events: {
 		"page_ready": [],
 		"page_unload": [],
@@ -265,7 +267,7 @@ boomr = {
 		}
 
 		// The developer can override onload by setting autorun to false
-		if(!("autorun" in config) || config.autorun !== false) {
+		if(!impl.onloadfired && (!("autorun" in config) || config.autorun !== false)) {
 			if("onpagehide" in w) {
 				impl.addListener(w, "pageshow", BOOMR.page_ready);
 			}
@@ -304,7 +306,11 @@ boomr = {
 	// The page dev calls this method when they determine the page is usable.
 	// Only call this if autorun is explicitly set to false
 	page_ready: function() {
+		if(impl.onloadfired) {
+			return this;
+		}
 		impl.fireEvent("page_ready");
+		impl.onloadfired = true;
 		return this;
 	},
 
@@ -325,6 +331,13 @@ boomr = {
 			}
 		}
 		e.push([ fn, cb_data || {}, cb_scope || null ]);
+
+		// attaching to page_ready after onload fires, so call soon
+		if(e_name == 'page_ready' && impl.onloadfired) {
+			setTimeout(function() {
+					fn.call(cb_scope || null, null, cb_data || {});
+				}, 50);
+		}
 
 		// Attach unload handlers directly to the window.onunload and
 		// window.onbeforeunload events. The first of the two to fire will clear
