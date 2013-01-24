@@ -15,6 +15,7 @@ BOOMR.plugins = BOOMR.plugins || {};
 
 // private object
 var impl = {
+	initialized: false,	//! Set when init has completed to prevent double initialization
 	complete: false,	//! Set when this plugin has completed
 
 	timers: {},		//! Custom timers that the developer can use
@@ -213,6 +214,7 @@ BOOMR.plugins.RT = {
 	// Methods
 
 	init: function(config) {
+		BOOMR.debug("init RT", "rt");
 		if(w != BOOMR.window) {
 			w = BOOMR.window;
 			d = w.document;
@@ -221,9 +223,9 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
-		// if complete is already true
-		// then we've already collected t_done so no point running init
-		if(impl.complete) {
+		// only initialize once.  we still collect config every time init is called, but we set
+		// event handlers only once
+		if(impl.initialized) {
 			return this;
 		}
 
@@ -251,6 +253,7 @@ BOOMR.plugins.RT = {
 
 		impl.initFromCookie();
 
+		impl.initialized = true;
 		return this;
 	},
 
