@@ -15,6 +15,7 @@ BOOMR.plugins = BOOMR.plugins || {};
 
 // private object
 var impl = {
+	initialized: false,	//! Set when init has completed to prevent double initialization
 	complete: false,	//! Set when this plugin has completed
 
 	timers: {},		//! Custom timers that the developer can use
@@ -33,7 +34,7 @@ var impl = {
 	r: undefined,
 	r2: undefined,
 
-	setCookie: function(how) {
+	setCookie: function(how, url) {
 		var t_end, t_start = new Date().getTime(), subcookies;
 
 		// Disable use of RT cookie by setting its name to a falsy value
@@ -47,6 +48,17 @@ var impl = {
 		// where location.href is URL decoded
 		subcookies.r = d.URL.replace(/#.*/, '');
 
+		if(how === "cl") {
+			if(url)
+				subcookies.nu = url;
+			else if(subcookies.nu)
+				delete subcookies.nu;
+		}
+		if(url === false) {
+			delete subcookies.nu;
+		}
+
+		BOOMR.debug("Setting cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
 			return this;
@@ -81,19 +93,22 @@ var impl = {
 			return;
 		}
 
-		subcookies.s = subcookies.ul || subcookies.cl;
+		subcookies.s = Math.max(+subcookies.ul||0, +subcookies.cl||0);
 
+		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
-			if(!this.strict_referrer || this.r === this.r2) {
-				this.t_start = parseInt(subcookies.s, 10);
-				this.t_fb_approx = parseInt(subcookies.hd, 10);
+			if(!this.strict_referrer || this.r === this.r2 ||
+					( subcookies.s === +subcookies.cl && subcookies.nu === d.URL.replace(/#.*/, '') )
+			) {
+				this.t_start = subcookies.s;
+				if(+subcookies.hd > subcookies.s)
+					this.t_fb_approx = parseInt(subcookies.hd, 10);
 			}
 			else {
 				this.t_start = this.t_fb_approx = undefined;
 			}
 		}
-
 	},
 
 	checkPreRender: function() {
@@ -184,17 +199,26 @@ var impl = {
 	},
 
 	page_unload: function(edata) {
+		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
 		// set cookie for next page
 		this.setCookie(edata.type == 'beforeunload'?'ul':'hd');
 	},
 
 	onclick: function(etarget) {
+		if(!etarget) {
+			return;
+		}
+		BOOMR.debug("Click called with " + etarget.nodeName, "rt");
+		while(etarget && etarget.nodeName.toUpperCase() != "A") {
+			etarget = etarget.parentNode;
+		}
 		if(etarget && etarget.nodeName.toUpperCase()=="A") {
+			BOOMR.debug("passing through", "rt");
 			// user clicked a link, they may be going to another page
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
 			// cookie on click
-			this.setCookie('cl');
+			this.setCookie('cl', etarget.href);
 		}
 	},
 
@@ -207,6 +231,7 @@ BOOMR.plugins.RT = {
 	// Methods
 
 	init: function(config) {
+		BOOMR.debug("init RT", "rt");
 		if(w != BOOMR.window) {
 			w = BOOMR.window;
 			d = w.document;
@@ -215,9 +240,9 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
-		// if complete is already true
-		// then we've already collected t_done so no point running init
-		if(impl.complete) {
+		// only initialize once.  we still collect config every time init is called, but we set
+		// event handlers only once
+		if(impl.initialized) {
 			return this;
 		}
 
@@ -230,11 +255,11 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("click", impl.onclick, null, impl);
 
 		if(BOOMR.t_start) {
-			// How long does it take Boomerang to load up and execute
+			// How long does it take Boomerang to load up and execute (fb to lb)
 			this.startTimer('boomerang', BOOMR.t_start);
 			this.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
 
-			// How long did it take till Boomerang started
+			// How long did it take from page request to boomerang fb
 			this.endTimer('boomr_fb', BOOMR.t_start);
 		}
 
@@ -245,6 +270,7 @@ BOOMR.plugins.RT = {
 
 		impl.initFromCookie();
 
+		impl.initialized = true;
 		return this;
 	},
 
@@ -284,6 +310,7 @@ BOOMR.plugins.RT = {
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
 	done: function() {
+		BOOMR.debug("Called done", "rt");
 		var t_start, t_done=new Date().getTime(),
 		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];

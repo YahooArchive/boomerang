@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
  * Copyright (c) 2012, Log-Normal, Inc.  All rights reserved.
+ * Copyright (c) 2013, SOASTA, Inc. All rights reserved.
  * Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
  */
 
@@ -64,6 +65,9 @@ impl = {
 	//! User's ip address determined on the server.  Used for the BA cookie
 	user_ip: '',
 
+	onloadfired: false,
+
+	handlers_attached: false,
 	events: {
 		"page_ready": [],
 		"page_unload": [],
@@ -124,6 +128,23 @@ boomr = {
 
 	// Utility functions
 	utils: {
+		objectToString: function(o, separator) {
+			var value = [], k;
+
+			if(!o || typeof o != "object")
+				return o;
+			if(typeof separator === "undefined")
+				separator="\n\t";
+
+			for(k in o) {
+				if(Object.prototype.hasOwnProperty.call(o, k)) {
+					value.push(encodeURIComponent(k) + '=' + encodeURIComponent(o[k]));
+				}
+			}
+
+			return value.join(separator);
+		},
+
 		getCookie: function(name) {
 			if(!name) {
 				return null;
@@ -143,20 +164,13 @@ boomr = {
 		},
 
 		setCookie: function(name, subcookies, max_age) {
-			var value=[], k, nameval, c, exp;
+			var value, nameval, c, exp;
 
 			if(!name || !impl.site_domain) {
 				return false;
 			}
 
-			for(k in subcookies) {
-				if(subcookies.hasOwnProperty(k)) {
-					value.push(encodeURIComponent(k) + '=' + encodeURIComponent(subcookies[k]));
-				}
-			}
-
-			value = value.join('&');
-
+			value = this.objectToString(subcookies, "&");
 			nameval = name + '=' + value;
 
 			c = [nameval, "path=/", "domain=" + impl.site_domain];
@@ -264,13 +278,21 @@ boomr = {
 			}
 		}
 
+		if(impl.handlers_attached)
+			return this;
+
 		// The developer can override onload by setting autorun to false
-		if(!("autorun" in config) || config.autorun !== false) {
-			if("onpagehide" in w) {
-				impl.addListener(w, "pageshow", BOOMR.page_ready);
+		if(!impl.onloadfired && (!("autorun" in config) || config.autorun !== false)) {
+			if(d.readyState && d.readyState === "complete") {
+				this.setImmediate(BOOMR.page_ready, null, null, BOOMR);
 			}
 			else {
-				impl.addListener(w, "load", BOOMR.page_ready);
+				if("onpagehide" in w) {
+					impl.addListener(w, "pageshow", BOOMR.page_ready);
+				}
+				else {
+					impl.addListener(w, "load", BOOMR.page_ready);
+				}
 			}
 		}
 
@@ -298,14 +320,42 @@ boomr = {
 			impl.addListener(w, "unload", function() { BOOMR.window=w=null; });
 		}
 
+		impl.handlers_attached = true;
 		return this;
 	},
 
 	// The page dev calls this method when they determine the page is usable.
 	// Only call this if autorun is explicitly set to false
 	page_ready: function() {
+		if(impl.onloadfired) {
+			return this;
+		}
 		impl.fireEvent("page_ready");
+		impl.onloadfired = true;
 		return this;
+	},
+
+	setImmediate: function(fn, data, cb_data, cb_scope) {
+		var cb = function() {
+			fn.call(cb_scope || null, data, cb_data || {});
+			cb=null;
+		};
+
+		if(w.setImmediate) {
+			w.setImmediate(cb);
+		}
+		else if(w.msSetImmediate) {
+			w.msSetImmediate(cb);
+		}
+		else if(w.webkitSetImmediate) {
+			w.webkitSetImmediate(cb);
+		}
+		else if(w.mozSetImmediate) {
+			w.mozSetImmediate(cb);
+		}
+		else {
+			setTimeout(cb, 10);
+		}
 	},
 
 	subscribe: function(e_name, fn, cb_data, cb_scope) {
@@ -325,6 +375,11 @@ boomr = {
 			}
 		}
 		e.push([ fn, cb_data || {}, cb_scope || null ]);
+
+		// attaching to page_ready after onload fires, so call soon
+		if(e_name == 'page_ready' && impl.onloadfired) {
+			this.setImmediate(fn, null, cb_data, cb_scope);
+		}
 
 		// Attach unload handlers directly to the window.onunload and
 		// window.onbeforeunload events. The first of the two to fire will clear
@@ -444,6 +499,8 @@ boomr = {
 		}
 
 		url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url.join('&');
+
+		BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
 
 		// only send beacon if we actually have something to beacon back
 		if(nparams) {
