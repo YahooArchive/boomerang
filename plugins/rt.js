@@ -48,6 +48,7 @@ var impl = {
 		// where location.href is URL decoded
 		subcookies.r = d.URL.replace(/#.*/, '');
 
+		BOOMR.debug("Setting cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
 			return this;
@@ -84,6 +85,7 @@ var impl = {
 
 		subcookies.s = subcookies.ul || subcookies.cl;
 
+		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
 			if(!this.strict_referrer || this.r === this.r2) {
@@ -185,6 +187,7 @@ var impl = {
 	},
 
 	page_unload: function(edata) {
+		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
 		// set cookie for next page
 		this.setCookie(edata.type == 'beforeunload'?'ul':'hd');
 	},
@@ -193,10 +196,12 @@ var impl = {
 		if(!etarget) {
 			return;
 		}
+		BOOMR.debug("Click called with " + etarget.nodeName, "rt");
 		while(etarget != d.body && etarget.nodeName.toUpperCase() != "A") {
 			etarget = etarget.parentNode;
 		}
 		if(etarget.nodeName.toUpperCase()=="A") {
+			BOOMR.debug("passing through", "rt");
 			// user clicked a link, they may be going to another page
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
@@ -293,6 +298,7 @@ BOOMR.plugins.RT = {
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
 	done: function() {
+		BOOMR.debug("Called done", "rt");
 		var t_start, t_done=new Date().getTime(),
 		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
