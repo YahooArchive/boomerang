@@ -34,7 +34,7 @@ var impl = {
 	r: undefined,
 	r2: undefined,
 
-	setCookie: function(how) {
+	setCookie: function(how, url) {
 		var t_end, t_start = new Date().getTime(), subcookies;
 
 		// Disable use of RT cookie by setting its name to a falsy value
@@ -47,6 +47,16 @@ var impl = {
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
 		subcookies.r = d.URL.replace(/#.*/, '');
+
+		if(how === "cl") {
+			if(url)
+				subcookies.nu = url;
+			else if(subcookies.nu)
+				delete subcookies.nu;
+		}
+		if(url === false) {
+			delete subcookies.nu;
+		}
 
 		BOOMR.debug("Setting cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
@@ -88,9 +98,12 @@ var impl = {
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
-			if(!this.strict_referrer || this.r === this.r2) {
+			if(!this.strict_referrer || this.r === this.r2 ||
+					( subcookies.s === +subcookies.cl && subcookies.nu === d.URL.replace(/#.*/, '') )
+			) {
 				this.t_start = subcookies.s;
-				this.t_fb_approx = parseInt(subcookies.hd, 10);
+				if(+subcookies.hd > subcookies.s)
+					this.t_fb_approx = parseInt(subcookies.hd, 10);
 			}
 			else {
 				this.t_start = this.t_fb_approx = undefined;
@@ -205,7 +218,7 @@ var impl = {
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
 			// cookie on click
-			this.setCookie('cl');
+			this.setCookie('cl', etarget.href);
 		}
 	},
 
