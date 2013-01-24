@@ -83,20 +83,19 @@ var impl = {
 			return;
 		}
 
-		subcookies.s = subcookies.ul || subcookies.cl;
+		subcookies.s = Math.max(+subcookies.ul||0, +subcookies.cl||0);
 
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
 			if(!this.strict_referrer || this.r === this.r2) {
-				this.t_start = parseInt(subcookies.s, 10);
+				this.t_start = subcookies.s;
 				this.t_fb_approx = parseInt(subcookies.hd, 10);
 			}
 			else {
 				this.t_start = this.t_fb_approx = undefined;
 			}
 		}
-
 	},
 
 	checkPreRender: function() {
