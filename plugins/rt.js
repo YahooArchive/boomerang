@@ -8,13 +8,13 @@
 // the parameter is the window
 (function(w) {
 
-var d=w.document;
+var d=w.document, impl;
 
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
 
 // private object
-var impl = {
+impl = {
 	initialized: false,	//! Set when init has completed to prevent double initialization
 	complete: false,	//! Set when this plugin has completed
 
@@ -43,16 +43,20 @@ var impl = {
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
-		subcookies[how] = t_start
+		if(how) {
+			subcookies[how] = t_start;
+		}
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
 		subcookies.r = d.URL.replace(/#.*/, '');
 
 		if(how === "cl") {
-			if(url)
+			if(url) {
 				subcookies.nu = url;
-			else if(subcookies.nu)
+			}
+			else if(subcookies.nu) {
 				delete subcookies.nu;
+			}
 		}
 		if(url === false) {
 			delete subcookies.nu;
@@ -102,8 +106,9 @@ var impl = {
 					( subcookies.s === +subcookies.cl && subcookies.nu === d.URL.replace(/#.*/, '') )
 			) {
 				this.t_start = subcookies.s;
-				if(+subcookies.hd > subcookies.s)
+				if(+subcookies.hd > subcookies.s) {
 					this.t_fb_approx = parseInt(subcookies.hd, 10);
+				}
 			}
 			else {
 				this.t_start = this.t_fb_approx = undefined;
@@ -201,7 +206,7 @@ var impl = {
 	page_unload: function(edata) {
 		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
 		// set cookie for next page
-		this.setCookie(edata.type == 'beforeunload'?'ul':'hd');
+		this.setCookie(edata.type === 'beforeunload'?'ul':'hd');
 	},
 
 	onclick: function(etarget) {
@@ -209,10 +214,10 @@ var impl = {
 			return;
 		}
 		BOOMR.debug("Click called with " + etarget.nodeName, "rt");
-		while(etarget && etarget.nodeName.toUpperCase() != "A") {
+		while(etarget && etarget.nodeName.toUpperCase() !== "A") {
 			etarget = etarget.parentNode;
 		}
-		if(etarget && etarget.nodeName.toUpperCase()=="A") {
+		if(etarget && etarget.nodeName.toUpperCase() === "A") {
 			BOOMR.debug("passing through", "rt");
 			// user clicked a link, they may be going to another page
 			// if this page is being opened in a different tab, then
@@ -232,7 +237,7 @@ BOOMR.plugins.RT = {
 
 	init: function(config) {
 		BOOMR.debug("init RT", "rt");
-		if(w != BOOMR.window) {
+		if(w !== BOOMR.window) {
 			w = BOOMR.window;
 			d = w.document;
 		}
@@ -289,7 +294,7 @@ BOOMR.plugins.RT = {
 	endTimer: function(timer_name, time_value) {
 		if(timer_name) {
 			impl.timers[timer_name] = impl.timers[timer_name] || {};
-			if(!("end" in impl.timers[timer_name])) {
+			if(impl.timers[timer_name].end === undefined) {
 				impl.timers[timer_name].end =
 						(typeof time_value === "number" ? time_value : new Date().getTime());
 			}
@@ -374,35 +379,33 @@ BOOMR.plugins.RT = {
 		BOOMR.addVar('rt.end', impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
 
 		for(t_name in impl.timers) {
-			if(!impl.timers.hasOwnProperty(t_name)) {
-				continue;
-			}
+			if(impl.timers.hasOwnProperty(t_name)) {
+				timer = impl.timers[t_name];
 
-			timer = impl.timers[t_name];
-
-			// if delta is a number, then it was set using setTimer
-			// if not, then we have to calculate it using start & end
-			if(typeof timer.delta !== "number") {
-				if(typeof timer.start !== "number") {
-					timer.start = t_start;
+				// if delta is a number, then it was set using setTimer
+				// if not, then we have to calculate it using start & end
+				if(typeof timer.delta !== "number") {
+					if(typeof timer.start !== "number") {
+						timer.start = t_start;
+					}
+					timer.delta = timer.end - timer.start;
 				}
-				timer.delta = timer.end - timer.start;
-			}
 
-			// If the caller did not set a start time, and if there was no start cookie
-			// Or if there was no end time for this timer,
-			// then timer.delta will be NaN, in which case we discard it.
-			if(isNaN(timer.delta)) {
-				continue;
-			}
+				// If the caller did not set a start time, and if there was no start cookie
+				// Or if there was no end time for this timer,
+				// then timer.delta will be NaN, in which case we discard it.
+				if(isNaN(timer.delta)) {
+					continue;
+				}
 
-			if(basic_timers.hasOwnProperty(t_name)) {
-				BOOMR.addVar(t_name, timer.delta);
+				if(basic_timers.hasOwnProperty(t_name)) {
+					BOOMR.addVar(t_name, timer.delta);
+				}
+				else {
+					t_other.push(t_name + '|' + timer.delta);
+				}
+				ntimers++;
 			}
-			else {
-				t_other.push(t_name + '|' + timer.delta);
-			}
-			ntimers++;
 		}
 
 		if(ntimers) {
