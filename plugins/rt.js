@@ -35,7 +35,7 @@ impl = {
 	r2: undefined,
 
 	setCookie: function(how, url) {
-		var t_end, t_start = new Date().getTime(), subcookies;
+		var t_end, t_start, subcookies;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
@@ -43,9 +43,6 @@ impl = {
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
-		if(how) {
-			subcookies[how] = t_start;
-		}
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
 		subcookies.r = d.URL.replace(/#.*/, '');
@@ -60,6 +57,12 @@ impl = {
 		}
 		if(url === false) {
 			delete subcookies.nu;
+		}
+
+		t_start = new Date().getTime();
+
+		if(how) {
+			subcookies[how] = t_start;
 		}
 
 		BOOMR.debug("Setting cookie " + BOOMR.utils.objectToString(subcookies), "rt");
