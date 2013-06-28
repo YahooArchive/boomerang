@@ -35,7 +35,7 @@ impl = {
 	r2: undefined,
 
 	setCookie: function(how, url) {
-		var t_end, t_start = new Date().getTime(), subcookies;
+		var t_end, t_start, subcookies;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
@@ -43,12 +43,11 @@ impl = {
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
-		if(how) {
-			subcookies[how] = t_start;
-		}
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		subcookies.r = d.URL.replace(/#.*/, '');
+		if(how === "ul") {
+			subcookies.r = d.URL.replace(/#.*/, '');
+		}
 
 		if(how === "cl") {
 			if(url) {
@@ -60,6 +59,12 @@ impl = {
 		}
 		if(url === false) {
 			delete subcookies.nu;
+		}
+
+		t_start = new Date().getTime();
+
+		if(how) {
+			subcookies[how] = t_start;
 		}
 
 		BOOMR.debug("Setting cookie " + BOOMR.utils.objectToString(subcookies), "rt");
@@ -102,8 +107,13 @@ impl = {
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(subcookies.s && subcookies.r) {
 			this.r = subcookies.r;
+
+			BOOMR.debug(this.r + " =?= " + this.r2, "rt");
+			BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl+15), "rt");
+			BOOMR.debug(subcookies.nu + " =?= " + d.URL.replace(/#.*/, ''), "rt");
+
 			if(!this.strict_referrer || this.r === this.r2 ||
-					( subcookies.s === +subcookies.cl && subcookies.nu === d.URL.replace(/#.*/, '') )
+					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === d.URL.replace(/#.*/, '') )
 			) {
 				this.t_start = subcookies.s;
 				if(+subcookies.hd > subcookies.s) {
