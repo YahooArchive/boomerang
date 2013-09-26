@@ -45,7 +45,7 @@ impl = {
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		if(how === "ul") {
+		if(how === "ul" || how == "hd") {
 			subcookies.r = d.URL.replace(/#.*/, '');
 		}
 
@@ -105,7 +105,7 @@ impl = {
 		subcookies.s = Math.max(+subcookies.ul||0, +subcookies.cl||0);
 
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
-		if(subcookies.s && subcookies.r) {
+		if(subcookies.s && (subcookies.r || subcookies.nu)) {
 			this.r = subcookies.r;
 
 			BOOMR.debug(this.r + " =?= " + this.r2, "rt");
