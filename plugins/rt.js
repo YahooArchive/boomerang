@@ -421,10 +421,10 @@ BOOMR.plugins.RT = {
 		}
 
 		if(ntimers) {
-			BOOMR.addVar("r", impl.r);
+			BOOMR.addVar("r", BOOMR.utils.cleanupURL(impl.r));
 
 			if(impl.r2 !== impl.r) {
-				BOOMR.addVar("r2", impl.r2);
+				BOOMR.addVar("r2", BOOMR.utils.cleanupURL(impl.r2));
 			}
 
 			if(t_other.length) {
