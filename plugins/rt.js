@@ -46,12 +46,12 @@ impl = {
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
 		if(how === "ul" || how === "hd") {
-			subcookies.r = d.URL.replace(/#.*/, '');
+			subcookies.r = BOOMR.utils.hashQueryString(d.URL, true);
 		}
 
 		if(how === "cl") {
 			if(url) {
-				subcookies.nu = url;
+				subcookies.nu = BOOMR.utils.hashQueryString(url);
 			}
 			else if(subcookies.nu) {
 				delete subcookies.nu;
@@ -90,7 +90,7 @@ impl = {
 	},
 
 	initFromCookie: function() {
-		var subcookies;
+		var subcookies, url;
 
 		if(!this.cookie) {
 			return;
@@ -107,13 +107,14 @@ impl = {
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 		if(subcookies.s && (subcookies.r || subcookies.nu)) {
 			this.r = subcookies.r;
+			url = BOOMR.utils.hashQueryString(d.URL, true);
 
 			BOOMR.debug(this.r + " =?= " + this.r2, "rt");
 			BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl+15), "rt");
-			BOOMR.debug(subcookies.nu + " =?= " + d.URL.replace(/#.*/, ''), "rt");
+			BOOMR.debug(subcookies.nu + " =?= " + url, "rt");
 
 			if(!this.strict_referrer || this.r === this.r2 ||
-					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === d.URL.replace(/#.*/, '') )
+					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === url )
 			) {
 				this.t_start = subcookies.s;
 				if(+subcookies.hd > subcookies.s) {
@@ -283,7 +284,7 @@ BOOMR.plugins.RT = {
 		// A beacon may be fired automatically on page load or if the page dev fires
 		// it manually with their own timers.  It may not always contain a referrer
 		// (eg: XHR calls).  We set default values for these cases
-		impl.r = impl.r2 = d.referrer.replace(/#.*/, '');
+		impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
 
 		impl.initialized = true;
 		return this;
