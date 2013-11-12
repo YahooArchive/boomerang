@@ -325,6 +325,13 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases.
+		// This is done before reading from the cookie because the cookie overwrites
+		// impl.r
+		impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
+
 		// Now pull out start time information from the cookie
 		// We'll do this every time init is called, and every time we call it, it will
 		// overwrite values already set (provided there are values to read out)
@@ -349,11 +356,6 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
 		BOOMR.subscribe("form_submit", impl.onsubmit, null, impl);
-
-		// A beacon may be fired automatically on page load or if the page dev fires
-		// it manually with their own timers.  It may not always contain a referrer
-		// (eg: XHR calls).  We set default values for these cases
-		impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
 
 		impl.initialized = true;
 		return this;
