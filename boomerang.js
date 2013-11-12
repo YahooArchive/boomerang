@@ -79,7 +79,8 @@ impl = {
 		"dom_loaded": [],
 		"visibility_changed": [],
 		"before_beacon": [],
-		"click": []
+		"click": [],
+		"form_submit": []
 	},
 
 	vars: {},
@@ -101,6 +102,18 @@ impl = {
 			return;
 		}
 		impl.fireEvent("click", target);
+	},
+
+	onsubmit_handler: function(ev) {
+		var target;
+		if (!ev) { ev = w.event; }
+		if (ev.target) { target = ev.target; }
+		else if (ev.srcElement) { target = ev.srcElement; }
+		if (target.nodeType === 3) {// defeat Safari bug
+			target = target.parentNode;
+		}
+
+		impl.fireEvent("form_submit", target);
 	},
 
 	fireEvent: function(e_name, data) {
@@ -352,11 +365,12 @@ boomr = {
 		boomr.utils.addListener(w, "DOMContentLoaded", function() { impl.fireEvent("dom_loaded"); });
 
 		(function() {
+			var fire_visible, forms, iterator;
 			// visibilitychange is useful to detect if the page loaded through prerender
 			// or if the page never became visible
 			// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
 			// http://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
-			var fire_visible = function() { impl.fireEvent("visibility_changed"); };
+			fire_visible = function() { impl.fireEvent("visibility_changed"); };
 			if(d.webkitVisibilityState) {
 				boomr.utils.addListener(d, "webkitvisibilitychange", fire_visible);
 			}
@@ -368,6 +382,11 @@ boomr = {
 			}
 
 			boomr.utils.addListener(d, "mouseup", impl.onclick_handler);
+
+			forms = d.getElementsByTagName("form");
+			for(iterator = 0; iterator < forms.length; iterator++) {
+				boomr.utils.addListener(forms[iterator], "submit", impl.onsubmit_handler);
+			}
 
 			if(!w.onpagehide && w.onpagehide !== null) {
 				// This must be the last one to fire
