@@ -597,7 +597,19 @@ boomr = {
 delete BOOMR_start;
 
 (function() {
-	var make_logger = function(l) {
+	var make_logger;
+
+	if(w.YAHOO && w.YAHOO.widget && w.YAHOO.widget.Logger) {
+		boomr.log = w.YAHOO.log;
+	}
+	else if(w.Y && w.Y.log) {
+		boomr.log = w.Y.log;
+	}
+	else if(typeof console === "object" && console.log !== undefined) {
+		boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
+	}
+
+	make_logger = function(l) {
 		return function(m, s) {
 			this.log(m, l, "boomerang" + (s?"."+s:""));
 			return this;
@@ -609,16 +621,6 @@ delete BOOMR_start;
 	boomr.warn = make_logger("warn");
 	boomr.error = make_logger("error");
 }());
-
-if(w.YAHOO && w.YAHOO.widget && w.YAHOO.widget.Logger) {
-	boomr.log = w.YAHOO.log;
-}
-else if(w.Y && w.Y.log) {
-	boomr.log = w.Y.log;
-}
-else if(typeof console === "object" && console.log !== undefined) {
-	boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
-}
 
 
 for(ident in boomr) {
