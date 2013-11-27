@@ -27,7 +27,7 @@ BOOMR_start = new Date().getTime();
 // the parameter is the window
 (function(w) {
 
-var impl, boomr, ident, d, myurl;
+var impl, boomr, d, myurl;
 
 // This is the only block where we use document without the w. qualifier
 if(w.parent !== w
@@ -623,18 +623,20 @@ delete BOOMR_start;
 }());
 
 
+(function() {
+var ident;
 for(ident in boomr) {
 	if(boomr.hasOwnProperty(ident)) {
 		BOOMR[ident] = boomr[ident];
 	}
 }
+}());
 
 BOOMR.plugins = BOOMR.plugins || {};
 
 }(window));
 
 // end of boomerang beaconing section
-// Now we start built in plugins.
 
 
 
