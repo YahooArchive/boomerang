@@ -331,8 +331,12 @@ BOOMR.plugins.RT = {
 		impl.initFromCookie();
 		impl.updateCookie();
 
-		// only initialize once.  we still collect config and read from cookie
-		// every time init is called, but we set event handlers only once
+		// We'll get BoomerangTimings every time init is called because it could also
+		// include additional timers which might happen on a subsequent init call.
+		impl.getBoomerangTimings();
+
+		// only initialize once.  we still collect config and check/set cookies
+		// every time init is called, but we attach event handlers only once
 		if(impl.initialized) {
 			return this;
 		}
@@ -345,15 +349,6 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
 		BOOMR.subscribe("form_submit", impl.onsubmit, null, impl);
-
-		if(BOOMR.t_start) {
-			// How long does it take Boomerang to load up and execute (fb to lb)
-			this.startTimer('boomerang', BOOMR.t_start);
-			this.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
-
-			// How long did it take from page request to boomerang fb
-			this.endTimer('boomr_fb', BOOMR.t_start);
-		}
 
 		// A beacon may be fired automatically on page load or if the page dev fires
 		// it manually with their own timers.  It may not always contain a referrer
