@@ -34,7 +34,7 @@ if(w.parent !== w
 	w = w.parent;
 }
 
-var impl, boomr, k, d=w.document;
+var impl, boomr, ident, d=w.document;
 
 // Short namespace because I don't want to keep typing BOOMERANG
 if(w.BOOMR === undefined) {
@@ -64,6 +64,8 @@ impl = {
 				toLowerCase(),
 	//! User's ip address determined on the server.  Used for the BA cookie
 	user_ip: '',
+
+	strip_query_string: false,
 
 	onloadfired: false,
 
@@ -163,7 +165,7 @@ boomr = {
 		},
 
 		setCookie: function(name, subcookies, max_age) {
-			var value, nameval, c, exp;
+			var value, nameval, savedval, c, exp;
 
 			if(!name || !impl.site_domain) {
 				BOOMR.debug("No cookie name or site domain: " + name + "/" + impl.site_domain);
@@ -184,11 +186,11 @@ boomr = {
 			if ( nameval.length < 4000 ) {
 				d.cookie = c.join('; ');
 				// confirm cookie was set (could be blocked by user's settings, etc.)
-				var savedVal = this.getCookie(name);
-				if(value === savedVal) {
+				savedval = this.getCookie(name);
+				if(value === savedval) {
 					return true;
 				}
-				BOOMR.warn("Saved cookie value doesn't match what we tried to set:\n" + value + "\n" + savedVal);
+				BOOMR.warn("Saved cookie value doesn't match what we tried to set:\n" + value + "\n" + savedval);
 			}
 			else {
 				BOOMR.warn("Cookie too long: " + nameval.length);
@@ -223,6 +225,26 @@ boomr = {
 
 		removeCookie: function(name) {
 			return this.setCookie(name, {}, 0);
+		},
+
+		cleanupURL: function(url) {
+			if(impl.strip_query_string) {
+				return url.replace(/\?.*/, '?qs-redacted');
+			}
+			return url;
+		},
+
+		hashQueryString: function(url, stripHash) {
+			if(!url) {
+				return url;
+			}
+			if(stripHash) {
+				url = url.replace(/#.*/, '');
+			}
+			if(!BOOMR.utils.MD5) {
+				return url;
+			}
+			return url.replace(/\?(.*)/, function(m0, m1) { return '?' + BOOMR.utils.MD5(m1); });
 		},
 
 		pluginConfig: function(o, config, plugin_name, properties) {
@@ -261,7 +283,7 @@ boomr = {
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "site_domain", "user_ip"];
+		    properties = ["beacon_url", "site_domain", "user_ip", "strip_query_string"];
 
 		if(!config) {
 			config = {};
@@ -282,7 +304,7 @@ boomr = {
 
 		for(k in this.plugins) {
 			if(this.plugins.hasOwnProperty(k)) {
-				// config[pugin].enabled has been set to false
+				// config[plugin].enabled has been set to false
 				if( config[k]
 					&& config[k].hasOwnProperty("enabled")
 					&& config[k].enabled === false
@@ -290,7 +312,9 @@ boomr = {
 					impl.disabled_plugins[k] = 1;
 					continue;
 				}
-				else if(impl.disabled_plugins[k]) {
+
+				// plugin was previously disabled but is now enabled
+				if(impl.disabled_plugins[k]) {
 					delete impl.disabled_plugins[k];
 				}
 
@@ -495,8 +519,8 @@ boomr = {
 		}
 
 		impl.vars.v = BOOMR.version;
-		impl.vars.u = d.URL.replace(/#.*/, '');
 		// use d.URL instead of location.href because of a safari bug
+		impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ''));
 		if(w !== window) {
 			impl.vars["if"] = "";
 		}
@@ -572,9 +596,9 @@ else if(typeof console === "object" && console.log !== undefined) {
 }
 
 
-for(k in boomr) {
-	if(boomr.hasOwnProperty(k)) {
-		BOOMR[k] = boomr[k];
+for(ident in boomr) {
+	if(boomr.hasOwnProperty(ident)) {
+		BOOMR[ident] = boomr[ident];
 	}
 }
 
