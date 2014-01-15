@@ -318,7 +318,7 @@ boomr = {
 			}
 		}
 
-		if(config.log  !== undefined) {
+		if(config.log !== undefined) {
 			this.log = config.log;
 		}
 		if(!this.log) {
