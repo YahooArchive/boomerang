@@ -45,13 +45,13 @@ impl = {
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
-		if(how === "ul" || how == "hd") {
-			subcookies.r = d.URL.replace(/#.*/, '');
+		if(how === "ul" || how === "hd") {
+			subcookies.r = BOOMR.utils.hashQueryString(d.URL, true);
 		}
 
 		if(how === "cl") {
 			if(url) {
-				subcookies.nu = url;
+				subcookies.nu = BOOMR.utils.hashQueryString(url);
 			}
 			else if(subcookies.nu) {
 				delete subcookies.nu;
@@ -90,7 +90,7 @@ impl = {
 	},
 
 	initFromCookie: function() {
-		var subcookies;
+		var subcookies, url;
 
 		if(!this.cookie) {
 			return;
@@ -105,17 +105,29 @@ impl = {
 		subcookies.s = Math.max(+subcookies.ul||0, +subcookies.cl||0);
 
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
+		// If we have a start time, and either a referrer, or a clicked on URL,
+		// we check if the start time is usable
 		if(subcookies.s && (subcookies.r || subcookies.nu)) {
 			this.r = subcookies.r;
+			url = BOOMR.utils.hashQueryString(d.URL, true);
 
+			// Either the URL of the page setting the cookie needs to match document.referrer
 			BOOMR.debug(this.r + " =?= " + this.r2, "rt");
+
+			// Or the start timer was no more than 15ms after a click 
+			// and the URL clicked or submitted to matches the current page's URL
+			// (note the start timer may be later than click if both click and beforeunload fired
+			// on the previous page)
 			BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl+15), "rt");
-			BOOMR.debug(subcookies.nu + " =?= " + d.URL.replace(/#.*/, ''), "rt");
+			BOOMR.debug(subcookies.nu + " =?= " + url, "rt");
 
 			if(!this.strict_referrer || this.r === this.r2 ||
-					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === d.URL.replace(/#.*/, '') )
+					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === url )
 			) {
 				this.t_start = subcookies.s;
+
+				// additionally, if we have a pagehide, or unload event, that's a proxy
+				// for the first byte of the current page, so use that wisely
 				if(+subcookies.hd > subcookies.s) {
 					this.t_fb_approx = parseInt(subcookies.hd, 10);
 				}
@@ -255,6 +267,9 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
+		// Now pull out start time information from the cookie
+		// We'll do this every time init is called, and every time we call it, it will
+		// overwrite values already set (provided there are values to read out)
 		impl.initFromCookie();
 
 		// only initialize once.  we still collect config and read from cookie
@@ -283,7 +298,7 @@ BOOMR.plugins.RT = {
 		// A beacon may be fired automatically on page load or if the page dev fires
 		// it manually with their own timers.  It may not always contain a referrer
 		// (eg: XHR calls).  We set default values for these cases
-		impl.r = impl.r2 = d.referrer.replace(/#.*/, '');
+		impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
 
 		impl.initialized = true;
 		return this;
@@ -421,10 +436,10 @@ BOOMR.plugins.RT = {
 		}
 
 		if(ntimers) {
-			BOOMR.addVar("r", impl.r);
+			BOOMR.addVar("r", BOOMR.utils.cleanupURL(impl.r));
 
 			if(impl.r2 !== impl.r) {
-				BOOMR.addVar("r2", impl.r2);
+				BOOMR.addVar("r2", BOOMR.utils.cleanupURL(impl.r2));
 			}
 
 			if(t_other.length) {
