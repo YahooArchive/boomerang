@@ -157,6 +157,17 @@ impl = {
 		});
 	},
 
+	getBoomerangTimings: function() {
+		if(BOOMR.t_start) {
+			// How long does it take Boomerang to load up and execute (fb to lb)?
+			BOOMR.plugins.RT.startTimer('boomerang', BOOMR.t_start);
+			BOOMR.plugins.RT.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
+
+			// How long did it take from page request to boomerang fb?
+			BOOMR.plugins.RT.endTimer('boomr_fb', BOOMR.t_start);
+		}
+	},
+
 	checkPreRender: function() {
 		if(
 			!(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
