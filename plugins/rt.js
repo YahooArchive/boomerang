@@ -156,6 +156,7 @@ impl = {
 	},
 
 	getBoomerangTimings: function() {
+		var res, k, urls, url;
 		if(BOOMR.t_start) {
 			// How long does it take Boomerang to load up and execute (fb to lb)?
 			BOOMR.plugins.RT.startTimer('boomerang', BOOMR.t_start);
@@ -163,6 +164,27 @@ impl = {
 
 			// How long did it take from page request to boomerang fb?
 			BOOMR.plugins.RT.endTimer('boomr_fb', BOOMR.t_start);
+		}
+
+		// use window and not w because we want the inner iframe
+		if (window.performance && window.performance.getEntriesByName) {
+			urls = { "rt.bmr." : BOOMR.url };
+
+			for(url in urls) {
+				if(urls.hasOwnProperty(url) && urls[url]) {
+					res = window.performance.getEntriesByName(urls[url]);
+					if(!res || res.length === 0) {
+						continue;
+					}
+					res = res[0];
+
+					for(k in res) {
+						if(res.hasOwnProperty(k) && k.match(/(Start|End)$/) && res[k] > 0) {
+							BOOMR.addVar(url + k.replace(/^(...).*(St|En).*$/, '$1$2'), res[k]);
+						}
+					}
+				}
+			}
 		}
 	},
 
