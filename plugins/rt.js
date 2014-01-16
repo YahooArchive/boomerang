@@ -101,12 +101,7 @@ impl = {
 	},
 
 	initFromCookie: function() {
-		var subcookies, url;
-
-		if(!this.cookie) {
-			return;
-		}
-
+		var url, subcookies;
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie));
 
 		if(!subcookies) {
@@ -125,15 +120,16 @@ impl = {
 			// Either the URL of the page setting the cookie needs to match document.referrer
 			BOOMR.debug(this.r + " =?= " + this.r2, "rt");
 
-			// Or the start timer was no more than 15ms after a click 
+			// Or the start timer was no more than 15ms after a click or form submit
 			// and the URL clicked or submitted to matches the current page's URL
 			// (note the start timer may be later than click if both click and beforeunload fired
 			// on the previous page)
 			BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl+15), "rt");
 			BOOMR.debug(subcookies.nu + " =?= " + url, "rt");
 
-			if(!this.strict_referrer || this.r === this.r2 ||
-					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === url )
+			if (!this.strict_referrer ||
+				(subcookies.nu && subcookies.nu === url && subcookies.s < +subcookies.cl + 15) ||
+				(subcookies.s === +subcookies.ul && this.r === this.r2)
 			) {
 				this.t_start = subcookies.s;
 
