@@ -18,9 +18,11 @@ var impl = {
 			r = p.getEntriesByType('resource');
 			if(r) {
 				BOOMR.info("Client supports Resource Timing API", "rt");
-				data = new Array(r.length);
+				data = {
+					restiming: new Array(r.length)
+				};
 				for(i = 0; i < r.length; ++i) {
-					data[i] = {
+					data.restiming[i] = {
 						rt_name: r[i].name,
 						rt_type: r[i].entryType,
 						rt_st: r[i].startTime,

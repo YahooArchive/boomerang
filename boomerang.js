@@ -280,6 +280,30 @@ boomr = {
 			} else {
 				el.detachEvent('on' + type, fn);
 			}
+		},
+
+		pushVars: function (arr, vars, prefix) {
+			var k, e, n=0;
+
+			for(k in vars) {
+				if(vars.hasOwnProperty(k)) {
+					e = encodeURIComponent(k);
+					if(Object.prototype.toString.call(vars[k]) === "[object Array]") {
+						for(i = 0; i < vars[k].length; ++i) {
+							n += BOOMR.utils.pushVars(arr, vars[k][i], e + "[" + i + "]");
+						}
+					} else {
+						++n;
+						arr.push(
+							(prefix ? (prefix + "[" + e + "]") : e)
+							+ "="
+							+ (vars[k]===undefined || vars[k]===null ? '' : encodeURIComponent(vars[k]))
+						);
+					}
+				}
+			}
+
+			return n;
 		}
 	},
 
@@ -501,7 +525,7 @@ boomr = {
 	},
 
 	sendBeacon: function() {
-		var k, url, img, nparams=0, xhr;
+		var k, kk, i, url, img, nparams=0, xhr;
 
 		BOOMR.debug("Checking if we can send beacon");
 
@@ -537,24 +561,8 @@ boomr = {
 			return this;
 		}
 
-		// if there are already url parameters in the beacon url,
-		// change the first parameter prefix for the boomerang url parameters to &
-
 		url = [];
-
-		for(k in impl.vars) {
-			if(impl.vars.hasOwnProperty(k)) {
-				nparams++;
-				url.push(encodeURIComponent(k)
-					+ "="
-					+ (
-						impl.vars[k]===undefined || impl.vars[k]===null
-						? ''
-						: encodeURIComponent(impl.vars[k])
-					)
-				);
-			}
-		}
+		nparams = BOOMR.utils.pushVars(url, impl.vars);
 
 		if(!nparams) {
 			// do not make the request if there is no data
@@ -564,6 +572,8 @@ boomr = {
 		url = url.join('&');
 
 		if (impl.beacon_url) {
+			// if there are already url parameters in the beacon url,
+			// change the first parameter prefix for the boomerang url parameters to &
 			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url;
 
 			BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
