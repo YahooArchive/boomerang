@@ -556,10 +556,10 @@ boomr = {
 			}
 		}
 
-		url = ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url.join('&');
+		url = url.join('&');
 
 		if (impl.beacon_url) {
-			url = impl.beacon_url + url;
+			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url;
 
 			BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
 
@@ -574,6 +574,8 @@ boomr = {
 			if(window.XDomainRequest && xhr.withCredentials === undefined) {
 				xhr = new XDomainRequest();
 			}
+
+			BOOMR.debug("Posting to impl.post_url: " + url.replace(/&/g, "\n\t"));
 
 			xhr.open('POST', impl.post_url, true);
 			xhr.send(url);
