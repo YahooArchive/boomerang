@@ -1,7 +1,7 @@
 /**
 \file restiming.js
 Plugin to collect metrics from the W3C Resource Timing API.
-For more information about Navigation Timing,
+For more information about Resource Timing,
 see: http://www.w3.org/TR/resource-timing/
 */
 
