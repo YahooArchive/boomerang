@@ -556,6 +556,11 @@ boomr = {
 			}
 		}
 
+		if(!nparams) {
+			// do not make the request if there is no data
+			return this;
+		}
+
 		url = url.join('&');
 
 		if (impl.beacon_url) {
@@ -563,11 +568,8 @@ boomr = {
 
 			BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
 
-			// only send beacon if we actually have something to beacon back
-			if(nparams) {
-				img = new Image();
-				img.src=url;
-			}
+			img = new Image();
+			img.src=url;
 		} else {
 			xhr = new XMLHttpRequest();
 
