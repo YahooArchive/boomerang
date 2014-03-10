@@ -46,7 +46,7 @@ var impl = {
 	}
 };
 
-BOOMR.plugins.NavigationTiming = {
+BOOMR.plugins.ResourceTiming = {
 	init: function() {
 		BOOMR.subscribe("page_ready", impl.done, null, impl);
 		return this;
