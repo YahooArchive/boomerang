@@ -55,6 +55,8 @@ BOOMR.window = w;
 impl = {
 	// properties
 	beacon_url: "",
+	// if beacon_url is unset and post_url is set, POST data to post_url
+	post_url: "",
 	// strip out everything except last two parts of hostname.
 	// This doesn't work well for domains that end with a country tld,
 	// but we allow the developer to override site_domain for that.
@@ -283,7 +285,7 @@ boomr = {
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "site_domain", "user_ip", "strip_query_string"];
+		    properties = ["beacon_url", "post_url", "site_domain", "user_ip", "strip_query_string"];
 
 		if(!config) {
 			config = {};
@@ -528,10 +530,10 @@ boomr = {
 		// If we reach here, all plugins have completed
 		impl.fireEvent("before_beacon", impl.vars);
 
-		// Don't send a beacon if no beacon_url has been set
+		// Don't make a request if no beacon_url or post_url has been set
 		// you would do this if you want to do some fancy beacon handling
 		// in the `before_beacon` event instead of a simple GET request
-		if(!impl.beacon_url) {
+		if(!impl.beacon_url && !impl.post_url) {
 			return this;
 		}
 
@@ -554,14 +556,27 @@ boomr = {
 			}
 		}
 
-		url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url.join('&');
+		url = ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url.join('&');
 
-		BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
+		if (impl.beacon_url) {
+			url = impl.beacon_url + url;
 
-		// only send beacon if we actually have something to beacon back
-		if(nparams) {
-			img = new Image();
-			img.src=url;
+			BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
+
+			// only send beacon if we actually have something to beacon back
+			if(nparams) {
+				img = new Image();
+				img.src=url;
+			}
+		} else {
+			xhr = new XMLHttpRequest();
+
+			if(window.XDomainRequest && xhr.withCredentials === undefined) {
+				xhr = new XDomainRequest();
+			}
+
+			xhr.open('POST', impl.post_url, true);
+			xhr.send(url);
 		}
 
 		return this;
