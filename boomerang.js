@@ -525,7 +525,7 @@ boomr = {
 	},
 
 	sendBeacon: function() {
-		var k, kk, i, url, img, nparams=0, xhr;
+		var k, url, img, nparams, xhr;
 
 		BOOMR.debug("Checking if we can send beacon");
 
