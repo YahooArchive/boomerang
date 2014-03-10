@@ -577,7 +577,7 @@ boomr = {
 				xhr = new XDomainRequest();
 			}
 
-			BOOMR.debug("Posting to impl.post_url: " + url.replace(/&/g, "\n\t"));
+			BOOMR.debug("Posting to " + impl.post_url + ": " + url.replace(/&/g, "\n\t"));
 
 			xhr.open('POST', impl.post_url, true);
 			xhr.send(url);
