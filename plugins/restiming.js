@@ -38,7 +38,6 @@ var impl = {
 						rt_res_end: r.responseEnd
 					};
 				}
-
 				BOOMR.addVar(data);
 			}
 			this.complete = true;
