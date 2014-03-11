@@ -597,12 +597,11 @@ boomr = {
 			// http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 			if(url.length > 2000 && impl.beacon_type === "AUTO") {
 				BOOMR.utils.postData();
+			} else {
+				BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
+				img = new Image();
+				img.src=url;
 			}
-
-			BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
-
-			img = new Image();
-			img.src=url;
 		}
 
 		return this;
