@@ -336,7 +336,6 @@ BOOMR.plugins.RT = {
 		// We'll do this every time init is called, and every time we call it, it will
 		// overwrite values already set (provided there are values to read out)
 		impl.initFromCookie();
-		impl.updateCookie();
 
 		// We'll get BoomerangTimings every time init is called because it could also
 		// include additional timers which might happen on a subsequent init call.
