@@ -55,8 +55,10 @@ BOOMR.window = w;
 impl = {
 	// properties
 	beacon_url: "",
-	// if beacon_url is unset and post_url is set, POST data to post_url
-	post_url: "",
+	// beacon request method, either GET, POST or AUTO. AUTO will check the
+	// request size then use GET if the request URL is less than 2000 chars
+	// otherwise it will fall back to a POST request.
+	beacon_type: "AUTO",
 	// strip out everything except last two parts of hostname.
 	// This doesn't work well for domains that end with a country tld,
 	// but we allow the developer to override site_domain for that.
@@ -304,12 +306,25 @@ boomr = {
 			}
 
 			return n;
+		},
+
+		postData: function () {
+			var xhr = new XMLHttpRequest(), data = JSON.stringify(impl.vars);
+
+			if(window.XDomainRequest && xhr.withCredentials === undefined) {
+				xhr = new XDomainRequest();
+			}
+
+			BOOMR.debug("Posting to " + impl.beacon_url + ": " + data);
+
+			xhr.open('POST', impl.beacon_url, true);
+			xhr.send(data);
 		}
 	},
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "post_url", "site_domain", "user_ip", "strip_query_string"];
+		    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string"];
 
 		if(!config) {
 			config = {};
@@ -525,7 +540,7 @@ boomr = {
 	},
 
 	sendBeacon: function() {
-		var k, url, img, nparams, xhr;
+		var k, url, img, nparams;
 
 		BOOMR.debug("Checking if we can send beacon");
 
@@ -554,43 +569,40 @@ boomr = {
 		// If we reach here, all plugins have completed
 		impl.fireEvent("before_beacon", impl.vars);
 
-		// Don't make a request if no beacon_url or post_url has been set
+		// Don't send a beacon if no beacon_url has been set
 		// you would do this if you want to do some fancy beacon handling
 		// in the `before_beacon` event instead of a simple GET request
-		if(!impl.beacon_url && !impl.post_url) {
+		if(!impl.beacon_url) {
 			return this;
 		}
 
-		url = [];
-		nparams = BOOMR.utils.pushVars(url, impl.vars);
+		if(impl.beacon_type === 'POST') {
+			BOOMR.utils.postData();
+		} else {
+			url = [];
+			nparams = BOOMR.utils.pushVars(url, impl.vars);
 
-		if(!nparams) {
-			// do not make the request if there is no data
-			return this;
-		}
+			if(!nparams) {
+				// do not make the request if there is no data
+				return this;
+			}
 
-		url = url.join('&');
+			url = url.join('&');
 
-		if (impl.beacon_url) {
 			// if there are already url parameters in the beacon url,
 			// change the first parameter prefix for the boomerang url parameters to &
 			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url;
+
+			// using 2000 here as a de facto maximum URL length based on:
+			// http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+			if(url.length > 2000 && impl.beacon_type === 'AUTO') {
+				BOOMR.utils.postData();
+			}
 
 			BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
 
 			img = new Image();
 			img.src=url;
-		} else {
-			xhr = new XMLHttpRequest();
-
-			if(window.XDomainRequest && xhr.withCredentials === undefined) {
-				xhr = new XDomainRequest();
-			}
-
-			BOOMR.debug("Posting to " + impl.post_url + ": " + url.replace(/&/g, "\n\t"));
-
-			xhr.open('POST', impl.post_url, true);
-			xhr.send(url);
 		}
 
 		return this;
