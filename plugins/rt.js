@@ -207,7 +207,7 @@ impl = {
 		BOOMR.plugins.RT.startTimer("t_prerender", this.navigationStart);
 		BOOMR.plugins.RT.startTimer("t_postrender");				// time from prerender to visible or hidden
 
-		BOOMR.subscribe("visibility_changed", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
+		BOOMR.subscribe("visibility_changed", BOOMR.plugins.RT.done, "visible", BOOMR.plugins.RT);
 
 		return true;
 	},
@@ -340,7 +340,7 @@ BOOMR.plugins.RT = {
 		impl.complete = false;
 		impl.timers = {};
 
-		BOOMR.subscribe("page_ready", this.done, null, this);
+		BOOMR.subscribe("page_ready", this.done, "load", this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
@@ -399,8 +399,8 @@ BOOMR.plugins.RT = {
 	// Called when the page has reached a "usable" state.  This may be when the
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
-	done: function() {
-		BOOMR.debug("Called done", "rt");
+	done: function(edata, ename) {
+		BOOMR.debug("Called done with " + BOOMR.utils.objectToString(edata) + ", " + ename, "rt");
 		var t_start, t_done=new Date().getTime(),
 		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
@@ -452,7 +452,7 @@ BOOMR.plugins.RT = {
 			t_start = undefined;			// force all timers to NaN state
 		}
 
-		BOOMR.debug("Got start time: " + t_start);
+		BOOMR.debug("Got start time: " + t_start, "rt");
 
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
