@@ -34,17 +34,12 @@ impl = {
 	r: undefined,
 	r2: undefined,
 
-	updateCookie: function(timer, params) {
+	updateCookie: function(params, timer) {
 		var t_end, t_start, subcookies, k;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
 			return this;
-		}
-
-		if ( typeof timer === "object" && params === undefined ) {
-			params = timer;
-			timer = undefined;
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
@@ -67,10 +62,6 @@ impl = {
 				}
 			}
 		}
-
-		// We use document.URL instead of location.href because of a bug in safari 4
-		// where location.href is URL decoded
-		subcookies.r = BOOMR.utils.hashQueryString(d.URL, true);
 
 		t_start = new Date().getTime();
 
@@ -278,7 +269,9 @@ impl = {
 	page_unload: function(edata) {
 		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
 		// set cookie for next page
-		this.updateCookie(edata.type === 'beforeunload'?'ul':'hd');
+		// We use document.URL instead of location.href because of a bug in safari 4
+		// where location.href is URL decoded
+		this.updateCookie({ 'r': d.URL }, edata.type === 'beforeunload'?'ul':'hd');
 	},
 
 	_iterable_click: function(name, element, etarget, value_cb) {
@@ -295,7 +288,7 @@ impl = {
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
 			// cookie on click or submit
-			this.updateCookie('cl', { "nu": value_cb(etarget) } );
+			this.updateCookie({ "nu": value_cb(etarget) }, 'cl' );
 		}
 	},
 
@@ -329,7 +322,7 @@ BOOMR.plugins.RT = {
 		// We'll do this every time init is called, and every time we call it, it will
 		// overwrite values already set (provided there are values to read out)
 		impl.initFromCookie();
-		impl.updateCookie(null, false);
+		impl.updateCookie();
 
 		// only initialize once.  we still collect config and read from cookie
 		// every time init is called, but we set event handlers only once
