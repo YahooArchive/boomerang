@@ -34,17 +34,12 @@ impl = {
 	r: undefined,
 	r2: undefined,
 
-	updateCookie: function(timer, params) {
+	updateCookie: function(params, timer) {
 		var t_end, t_start, subcookies, k;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
 			return this;
-		}
-
-		if ( typeof timer === "object" && params === undefined ) {
-			params = timer;
-			timer = undefined;
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
@@ -67,10 +62,6 @@ impl = {
 				}
 			}
 		}
-
-		// We use document.URL instead of location.href because of a bug in safari 4
-		// where location.href is URL decoded
-		subcookies.r = BOOMR.utils.hashQueryString(d.URL, true);
 
 		t_start = new Date().getTime();
 
@@ -164,6 +155,13 @@ impl = {
 
 			// How long did it take from page request to boomerang fb?
 			BOOMR.plugins.RT.endTimer('boomr_fb', BOOMR.t_start);
+
+			if(BOOMR.t_lstart) {
+				// when did the boomerang loader start loading boomerang on the page?
+				BOOMR.plugins.RT.endTimer('boomr_ld', BOOMR.t_lstart);
+				// What was the network latency for boomerang (request to first byte)?
+				BOOMR.plugins.RT.setTimer('boomr_lat', BOOMR.t_start - BOOMR.t_lstart);
+			}
 		}
 
 		// use window and not w because we want the inner iframe
@@ -209,7 +207,7 @@ impl = {
 		BOOMR.plugins.RT.startTimer("t_prerender", this.navigationStart);
 		BOOMR.plugins.RT.startTimer("t_postrender");				// time from prerender to visible or hidden
 
-		BOOMR.subscribe("visibility_changed", BOOMR.plugins.RT.done, null, BOOMR.plugins.RT);
+		BOOMR.subscribe("visibility_changed", BOOMR.plugins.RT.done, "visible", BOOMR.plugins.RT);
 
 		return true;
 	},
@@ -278,7 +276,9 @@ impl = {
 	page_unload: function(edata) {
 		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
 		// set cookie for next page
-		this.updateCookie(edata.type === 'beforeunload'?'ul':'hd');
+		// We use document.URL instead of location.href because of a bug in safari 4
+		// where location.href is URL decoded
+		this.updateCookie({ 'r': d.URL }, edata.type === 'beforeunload'?'ul':'hd');
 	},
 
 	_iterable_click: function(name, element, etarget, value_cb) {
@@ -295,16 +295,16 @@ impl = {
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
 			// cookie on click or submit
-			this.updateCookie('cl', { "nu": value_cb(etarget) } );
+			this.updateCookie({ "nu": value_cb(etarget) }, 'cl' );
 		}
 	},
 
 	onclick: function(etarget) {
-		impl._iterable_click("Click", "A", etarget, function(t) { return t.href });
+		impl._iterable_click("Click", "A", etarget, function(t) { return t.href; });
 	},
 
 	onsubmit: function(etarget) {
-		impl._iterable_click("Submit", "FORM", etarget, function(t) { var v = t.action || d.URL; return v.match(/\?/) ? v : v + "?" });
+		impl._iterable_click("Submit", "FORM", etarget, function(t) { var v = t.action || d.URL; return v.match(/\?/) ? v : v + "?"; });
 	},
 
 	domloaded: function() {
@@ -325,14 +325,24 @@ BOOMR.plugins.RT = {
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
 
+		// A beacon may be fired automatically on page load or if the page dev fires
+		// it manually with their own timers.  It may not always contain a referrer
+		// (eg: XHR calls).  We set default values for these cases.
+		// This is done before reading from the cookie because the cookie overwrites
+		// impl.r
+		impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
+
 		// Now pull out start time information from the cookie
 		// We'll do this every time init is called, and every time we call it, it will
 		// overwrite values already set (provided there are values to read out)
 		impl.initFromCookie();
-		impl.updateCookie(null, false);
 
-		// only initialize once.  we still collect config and read from cookie
-		// every time init is called, but we set event handlers only once
+		// We'll get BoomerangTimings every time init is called because it could also
+		// include additional timers which might happen on a subsequent init call.
+		impl.getBoomerangTimings();
+
+		// only initialize once.  we still collect config and check/set cookies
+		// every time init is called, but we attach event handlers only once
 		if(impl.initialized) {
 			return this;
 		}
@@ -340,25 +350,11 @@ BOOMR.plugins.RT = {
 		impl.complete = false;
 		impl.timers = {};
 
-		BOOMR.subscribe("page_ready", this.done, null, this);
+		BOOMR.subscribe("page_ready", this.done, "load", this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
 		BOOMR.subscribe("form_submit", impl.onsubmit, null, impl);
-
-		if(BOOMR.t_start) {
-			// How long does it take Boomerang to load up and execute (fb to lb)
-			this.startTimer('boomerang', BOOMR.t_start);
-			this.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
-
-			// How long did it take from page request to boomerang fb
-			this.endTimer('boomr_fb', BOOMR.t_start);
-		}
-
-		// A beacon may be fired automatically on page load or if the page dev fires
-		// it manually with their own timers.  It may not always contain a referrer
-		// (eg: XHR calls).  We set default values for these cases
-		impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
 
 		impl.initialized = true;
 		return this;
@@ -370,7 +366,6 @@ BOOMR.plugins.RT = {
 				this.endTimer('t_resp', time_value);
 			}
 			impl.timers[timer_name] = {start: (typeof time_value === "number" ? time_value : new Date().getTime())};
-			impl.complete = false;
 		}
 
 		return this;
@@ -399,8 +394,8 @@ BOOMR.plugins.RT = {
 	// Called when the page has reached a "usable" state.  This may be when the
 	// onload event fires, or it could be at some other moment during/after page
 	// load when the page is usable by the user
-	done: function() {
-		BOOMR.debug("Called done", "rt");
+	done: function(edata, ename) {
+		BOOMR.debug("Called done with " + BOOMR.utils.objectToString(edata) + ", " + ename, "rt");
 		var t_start, t_done=new Date().getTime(),
 		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
 		    ntimers = 0, t_name, timer, t_other=[];
@@ -452,7 +447,7 @@ BOOMR.plugins.RT = {
 			t_start = undefined;			// force all timers to NaN state
 		}
 
-		BOOMR.debug("Got start time: " + t_start);
+		BOOMR.debug("Got start time: " + t_start, "rt");
 
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
