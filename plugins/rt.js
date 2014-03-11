@@ -34,40 +34,51 @@ impl = {
 	r: undefined,
 	r2: undefined,
 
-	setCookie: function(how, url) {
-		var t_end, t_start, subcookies;
+	updateCookie: function(timer, params) {
+		var t_end, t_start, subcookies, k;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
 			return this;
 		}
 
-		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
-		// We use document.URL instead of location.href because of a bug in safari 4
-		// where location.href is URL decoded
-		if(how === "ul" || how === "hd") {
-			subcookies.r = BOOMR.utils.hashQueryString(d.URL, true);
+		if ( typeof timer === "object" && params === undefined ) {
+			params = timer;
+			timer = undefined;
 		}
 
-		if(how === "cl") {
-			if(url) {
-				subcookies.nu = BOOMR.utils.hashQueryString(url);
-			}
-			else if(subcookies.nu) {
-				delete subcookies.nu;
+		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
+
+		if (typeof params === "object") {
+			for(k in params) {
+				if(params.hasOwnProperty(k)) {
+					if (params[k] === undefined ) {
+						if (subcookies.hasOwnProperty(k)) {
+							delete subcookies[k];
+						}
+					}
+					else {
+						if (k==="nu" || k==="r") {
+							params[k] = BOOMR.utils.hashQueryString(params[k], true);
+						}
+
+						subcookies[k] = params[k];
+					}
+				}
 			}
 		}
-		if(url === false) {
-			delete subcookies.nu;
-		}
+
+		// We use document.URL instead of location.href because of a bug in safari 4
+		// where location.href is URL decoded
+		subcookies.r = BOOMR.utils.hashQueryString(d.URL, true);
 
 		t_start = new Date().getTime();
 
-		if(how) {
-			subcookies[how] = t_start;
+		if(timer) {
+			subcookies[timer] = t_start;
 		}
 
-		BOOMR.debug("Setting cookie (how=" + how + ")\n" + BOOMR.utils.objectToString(subcookies), "rt");
+		BOOMR.debug("Setting cookie (timer=" + timer + ")\n" + BOOMR.utils.objectToString(subcookies), "rt");
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
 			return this;
@@ -90,12 +101,7 @@ impl = {
 	},
 
 	initFromCookie: function() {
-		var subcookies, url;
-
-		if(!this.cookie) {
-			return;
-		}
-
+		var url, subcookies;
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie));
 
 		if(!subcookies) {
@@ -114,15 +120,16 @@ impl = {
 			// Either the URL of the page setting the cookie needs to match document.referrer
 			BOOMR.debug(this.r + " =?= " + this.r2, "rt");
 
-			// Or the start timer was no more than 15ms after a click 
+			// Or the start timer was no more than 15ms after a click or form submit
 			// and the URL clicked or submitted to matches the current page's URL
 			// (note the start timer may be later than click if both click and beforeunload fired
 			// on the previous page)
 			BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl+15), "rt");
 			BOOMR.debug(subcookies.nu + " =?= " + url, "rt");
 
-			if(!this.strict_referrer || this.r === this.r2 ||
-					( subcookies.s < +subcookies.cl + 15 && subcookies.nu === url )
+			if (!this.strict_referrer ||
+				(subcookies.nu && subcookies.nu === url && subcookies.s < +subcookies.cl + 15) ||
+				(subcookies.s === +subcookies.ul && this.r === this.r2)
 			) {
 				this.t_start = subcookies.s;
 
@@ -134,6 +141,49 @@ impl = {
 			}
 			else {
 				this.t_start = this.t_fb_approx = undefined;
+			}
+		}
+
+		// Now that we've pulled out the timers, we'll clear them so they don't pollute future calls
+		this.updateCookie({
+			s: undefined,	// start timer
+			r: undefined,	// referrer
+			nu: undefined,	// clicked url
+			ul: undefined,	// onbeforeunload time
+			cl: undefined,	// onclick time
+			hd: undefined	// onunload or onpagehide time
+		});
+	},
+
+	getBoomerangTimings: function() {
+		var res, k, urls, url;
+		if(BOOMR.t_start) {
+			// How long does it take Boomerang to load up and execute (fb to lb)?
+			BOOMR.plugins.RT.startTimer('boomerang', BOOMR.t_start);
+			BOOMR.plugins.RT.endTimer('boomerang', BOOMR.t_end);	// t_end === null defaults to current time
+
+			// How long did it take from page request to boomerang fb?
+			BOOMR.plugins.RT.endTimer('boomr_fb', BOOMR.t_start);
+		}
+
+		// use window and not w because we want the inner iframe
+		if (window.performance && window.performance.getEntriesByName) {
+			urls = { "rt.bmr." : BOOMR.url };
+
+			for(url in urls) {
+				if(urls.hasOwnProperty(url) && urls[url]) {
+					res = window.performance.getEntriesByName(urls[url]);
+					if(!res || res.length === 0) {
+						continue;
+					}
+					res = res[0];
+
+					for(k in res) {
+						if(res.hasOwnProperty(k) && k.match(/(Start|End)$/) && res[k] > 0) {
+							BOOMR.addVar(url + k.replace(/^(...).*(St|En).*$/, '$1$2'), res[k]);
+						}
+					}
+				}
 			}
 		}
 	},
@@ -228,25 +278,33 @@ impl = {
 	page_unload: function(edata) {
 		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
 		// set cookie for next page
-		this.setCookie(edata.type === 'beforeunload'?'ul':'hd');
+		this.updateCookie(edata.type === 'beforeunload'?'ul':'hd');
 	},
 
-	onclick: function(etarget) {
+	_iterable_click: function(name, element, etarget, value_cb) {
 		if(!etarget) {
 			return;
 		}
-		BOOMR.debug("Click called with " + etarget.nodeName, "rt");
-		while(etarget && etarget.nodeName.toUpperCase() !== "A") {
+		BOOMR.debug(name + " called with " + etarget.nodeName, "rt");
+		while(etarget && etarget.nodeName.toUpperCase() !== element) {
 			etarget = etarget.parentNode;
 		}
-		if(etarget && etarget.nodeName.toUpperCase() === "A") {
+		if(etarget && etarget.nodeName.toUpperCase() === element) {
 			BOOMR.debug("passing through", "rt");
-			// user clicked a link, they may be going to another page
+			// user event, they may be going to another page
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
-			// cookie on click
-			this.setCookie('cl', etarget.href);
+			// cookie on click or submit
+			this.updateCookie('cl', { "nu": value_cb(etarget) } );
 		}
+	},
+
+	onclick: function(etarget) {
+		impl._iterable_click("Click", "A", etarget, function(t) { return t.href });
+	},
+
+	onsubmit: function(etarget) {
+		impl._iterable_click("Submit", "FORM", etarget, function(t) { var v = t.action || d.URL; return v.match(/\?/) ? v : v + "?" });
 	},
 
 	domloaded: function() {
@@ -271,6 +329,7 @@ BOOMR.plugins.RT = {
 		// We'll do this every time init is called, and every time we call it, it will
 		// overwrite values already set (provided there are values to read out)
 		impl.initFromCookie();
+		impl.updateCookie(null, false);
 
 		// only initialize once.  we still collect config and read from cookie
 		// every time init is called, but we set event handlers only once
@@ -285,6 +344,7 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
+		BOOMR.subscribe("form_submit", impl.onsubmit, null, impl);
 
 		if(BOOMR.t_start) {
 			// How long does it take Boomerang to load up and execute (fb to lb)
