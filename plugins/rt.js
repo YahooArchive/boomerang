@@ -155,6 +155,13 @@ impl = {
 
 			// How long did it take from page request to boomerang fb?
 			BOOMR.plugins.RT.endTimer('boomr_fb', BOOMR.t_start);
+
+			if(BOOMR.t_lstart) {
+				// when did the boomerang loader start loading boomerang on the page?
+				BOOMR.plugins.RT.endTimer('boomr_ld', BOOMR.t_lstart);
+				// What was the network latency for boomerang (request to first byte)?
+				BOOMR.plugins.RT.setTimer('boomr_lat', BOOMR.t_start - BOOMR.t_lstart);
+			}
 		}
 
 		// use window and not w because we want the inner iframe
