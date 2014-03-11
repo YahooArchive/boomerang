@@ -10,12 +10,28 @@ see: http://www.w3.org/TR/resource-timing/
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
 
-var impl = {
+var restricted = {
+	redirectStart: "rt_red_st",
+	redirectEnd: "rt_red_end",
+	domainLookupStart: "rt_dns_st",
+	domainLookupEnd: "rt_dns_end",
+	connectStart: "rt_con_st",
+	connectEnd: "rt_con_end",
+	secureConnectionStart: "rt_scon_st",
+	requestStart: "rt_req_st",
+	responseStart: "rt_res_st"
+},
+
+impl = {
 	complete: false,
 	done: function() {
-		var p = BOOMR.window.performance, r, data, i;
-		if(p && typeof p.getEntriesByType === 'function') {
-			r = p.getEntriesByType('resource');
+		var p = BOOMR.window.performance, r, data, i, k;
+		if(impl.complete) {
+			return;
+		}
+		BOOMR.removeVar("restiming");
+		if(p && typeof p.getEntriesByType === "function") {
+			r = p.getEntriesByType("resource");
 			if(r) {
 				BOOMR.info("Client supports Resource Timing API", "rt");
 				data = {
@@ -27,18 +43,14 @@ var impl = {
 						rt_type: r[i].entryType,
 						rt_st: r[i].startTime,
 						rt_dur: r[i].duration,
-						rt_red_st: r[i].redirectStart,
-						rt_red_end: r[i].redirectEnd,
 						rt_fet_st: r[i].fetchStart,
-						rt_dns_st: r[i].domainLookupStart,
-						rt_dns_end: r[i].domainLookupEnd,
-						rt_con_st: r[i].connectStart,
-						rt_con_end: r[i].connectEnd,
-						rt_scon_st: r[i].secureConnectionStart,
-						rt_req_st: r[i].requestStart,
-						rt_res_st: r[i].responseStart,
 						rt_res_end: r[i].responseEnd
 					};
+					for(k in restricted) {
+						if(restricted.hasOwnProperty(k) && r[i][k] > 0) {
+							data.restiming[i][restricted[k]] = r[i][k];
+						}
+					}
 				}
 				BOOMR.addVar(data);
 			}

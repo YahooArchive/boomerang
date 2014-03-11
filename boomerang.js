@@ -595,7 +595,7 @@ boomr = {
 
 			// using 2000 here as a de facto maximum URL length based on:
 			// http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
-			if(url.length > 2000 && impl.beacon_type === 'AUTO') {
+			if(url.length > 2000 && impl.beacon_type === "AUTO") {
 				BOOMR.utils.postData();
 			}
 
