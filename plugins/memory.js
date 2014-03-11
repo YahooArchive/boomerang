@@ -19,6 +19,10 @@ BOOMR.plugins = BOOMR.plugins || {};
 var impl = {
 	complete: false,
 	done: function() {
+		if(this.complete) {
+			return this;
+		}
+
 		var w  = BOOMR.window,
 		    p  = w.performance,
 		    c  = w.console,
@@ -31,6 +35,11 @@ var impl = {
 		f  = (fn.call === undefined ? function(tag) { return fn(tag); } : fn);
 
 		m = (p && p.memory ? p.memory : (c && c.memory ? c.memory : null));
+
+		// If we have resource timing, get number of resources
+		if(p && p.getEntries && p.getEntries().length) {
+			BOOMR.addVar("dom.res", p.getEntries().length);
+		}
 
 		if(m) {
 			BOOMR.addVar({
