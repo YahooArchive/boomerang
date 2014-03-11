@@ -309,16 +309,31 @@ boomr = {
 		},
 
 		postData: function () {
-			var xhr = new XMLHttpRequest(), data = JSON.stringify(impl.vars);
+			var iframe = document.createElement("iframe"),
+				form = document.createElement("form"),
+				input = document.createElement("input");
 
-			if(window.XDomainRequest && xhr.withCredentials === undefined) {
-				xhr = new XDomainRequest();
-			}
+			iframe.name = "boomerang_post";
+			iframe.style.display = form.style.display = "none";
 
-			BOOMR.debug("Posting to " + impl.beacon_url + ": " + data);
+			form.method = "POST";
+			form.action = impl.beacon_url;
+			form.target = iframe.name;
+			form.enctype = "text/plain";
 
-			xhr.open('POST', impl.beacon_url, true);
-			xhr.send(data);
+			input.name = "data";
+			input.value = JSON.stringify(impl.vars);
+
+			document.body.appendChild(iframe);
+			form.appendChild(input);
+			document.body.appendChild(form);
+
+			BOOMR.utils.addListener(iframe, "load", function() {
+				document.body.removeChild(form);
+				document.body.removeChild(iframe);
+			});
+
+			form.submit();
 		}
 	},
 
