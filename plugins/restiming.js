@@ -55,9 +55,9 @@ impl = {
 				}
 				BOOMR.addVar(data);
 			}
-			this.complete = true;
-			BOOMR.sendBeacon();
 		}
+		this.complete = true;
+		BOOMR.sendBeacon();
 	}
 };
 
