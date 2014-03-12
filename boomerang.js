@@ -113,6 +113,10 @@ BOOMR.window = w;
 impl = {
 	// properties
 	beacon_url: "",
+	// beacon request method, either GET, POST or AUTO. AUTO will check the
+	// request size then use GET if the request URL is less than 2000 chars
+	// otherwise it will fall back to a POST request.
+	beacon_type: "AUTO",
 	// strip out everything except last two parts of hostname.
 	// This doesn't work well for domains that end with a country tld,
 	// but we allow the developer to override site_domain for that.
@@ -358,12 +362,69 @@ boomr = {
 			} else {
 				el.detachEvent('on' + type, fn);
 			}
+		},
+
+		pushVars: function (arr, vars, prefix) {
+			var k, i, n=0;
+
+			for(k in vars) {
+				if(vars.hasOwnProperty(k)) {
+					if(Object.prototype.toString.call(vars[k]) === "[object Array]") {
+						for(i = 0; i < vars[k].length; ++i) {
+							n += BOOMR.utils.pushVars(arr, vars[k][i], k + "[" + i + "]");
+						}
+					} else {
+						++n;
+						arr.push(
+							encodeURIComponent(prefix ? (prefix + "[" + k + "]") : k)
+							+ "="
+							+ (vars[k]===undefined || vars[k]===null ? '' : encodeURIComponent(vars[k]))
+						);
+					}
+				}
+			}
+
+			return n;
+		},
+
+		postData: function (urlenc) {
+			var iframe = document.createElement("iframe"),
+				form = document.createElement("form"),
+				input = document.createElement("input");
+
+			iframe.name = "boomerang_post";
+			iframe.style.display = form.style.display = "none";
+
+			form.method = "POST";
+			form.action = impl.beacon_url;
+			form.target = iframe.name;
+
+			input.name = "data";
+
+			if (window.JSON) {
+				form.enctype = "text/plain";
+				input.value = JSON.stringify(impl.vars);
+			} else {
+				form.enctype = "application/x-www-form-urlencoded";
+				input.value = urlenc;
+			}
+
+			document.body.appendChild(iframe);
+			form.appendChild(input);
+			document.body.appendChild(form);
+
+			BOOMR.utils.addListener(iframe, "load", function() {
+				document.body.removeChild(form);
+				document.body.removeChild(iframe);
+			});
+
+			form.submit();
 		}
 	},
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "site_domain", "user_ip", "strip_query_string"];
+		    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string"];
 
 		BOOMR_check_doc_domain();
 
@@ -605,7 +666,7 @@ boomr = {
 	},
 
 	sendBeacon: function() {
-		var k, url, img, nparams=0;
+		var k, data, url, img, nparams;
 
 		BOOMR.debug("Checking if we can send beacon");
 
@@ -642,33 +703,32 @@ boomr = {
 			return this;
 		}
 
-		// if there are already url parameters in the beacon url,
-		// change the first parameter prefix for the boomerang url parameters to &
+		data = [];
+		nparams = BOOMR.utils.pushVars(data, impl.vars);
 
-		url = [];
-
-		for(k in impl.vars) {
-			if(impl.vars.hasOwnProperty(k)) {
-				nparams++;
-				url.push(encodeURIComponent(k)
-					+ "="
-					+ (
-						impl.vars[k]===undefined || impl.vars[k]===null
-						? ''
-						: encodeURIComponent(impl.vars[k])
-					)
-				);
-			}
+		if(!nparams) {
+			// do not make the request if there is no data
+			return this;
 		}
 
-		url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url.join('&');
+		data = data.join('&');
 
-		BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
+		if(impl.beacon_type === 'POST') {
+			BOOMR.utils.postData(data);
+		} else {
+			// if there are already url parameters in the beacon url,
+			// change the first parameter prefix for the boomerang url parameters to &
+			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + data;
 
-		// only send beacon if we actually have something to beacon back
-		if(nparams) {
-			img = new Image();
-			img.src=url;
+			// using 2000 here as a de facto maximum URL length based on:
+			// http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+			if(url.length > 2000 && impl.beacon_type === "AUTO") {
+				BOOMR.utils.postData(data);
+			} else {
+				BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
+				img = new Image();
+				img.src=url;
+			}
 		}
 
 		return this;
