@@ -308,7 +308,7 @@ boomr = {
 			return n;
 		},
 
-		postData: function () {
+		postData: function (urlenc) {
 			var iframe = document.createElement("iframe"),
 				form = document.createElement("form"),
 				input = document.createElement("input");
@@ -319,10 +319,16 @@ boomr = {
 			form.method = "POST";
 			form.action = impl.beacon_url;
 			form.target = iframe.name;
-			form.enctype = "text/plain";
 
 			input.name = "data";
-			input.value = JSON.stringify(impl.vars);
+
+			if (window.JSON) {
+				form.enctype = "application/json";
+				input.value = JSON.stringify(impl.vars);
+			} else {
+				form.enctype = "application/x-www-form-urlencoded";
+				input.value = urlenc;
+			}
 
 			document.body.appendChild(iframe);
 			form.appendChild(input);
@@ -555,7 +561,7 @@ boomr = {
 	},
 
 	sendBeacon: function() {
-		var k, url, img, nparams;
+		var k, data, url, img, nparams;
 
 		BOOMR.debug("Checking if we can send beacon");
 
@@ -591,27 +597,27 @@ boomr = {
 			return this;
 		}
 
+		data = [];
+		nparams = BOOMR.utils.pushVars(data, impl.vars);
+
+		if(!nparams) {
+			// do not make the request if there is no data
+			return this;
+		}
+
+		data = data.join('&');
+
 		if(impl.beacon_type === 'POST') {
-			BOOMR.utils.postData();
+			BOOMR.utils.postData(data);
 		} else {
-			url = [];
-			nparams = BOOMR.utils.pushVars(url, impl.vars);
-
-			if(!nparams) {
-				// do not make the request if there is no data
-				return this;
-			}
-
-			url = url.join('&');
-
 			// if there are already url parameters in the beacon url,
 			// change the first parameter prefix for the boomerang url parameters to &
-			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + url;
+			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + data;
 
 			// using 2000 here as a de facto maximum URL length based on:
 			// http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 			if(url.length > 2000 && impl.beacon_type === "AUTO") {
-				BOOMR.utils.postData();
+				BOOMR.utils.postData(data);
 			} else {
 				BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
 				img = new Image();
