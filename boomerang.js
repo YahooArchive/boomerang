@@ -289,15 +289,14 @@ boomr = {
 
 			for(k in vars) {
 				if(vars.hasOwnProperty(k)) {
-					enc = encodeURIComponent(k);
 					if(Object.prototype.toString.call(vars[k]) === "[object Array]") {
 						for(i = 0; i < vars[k].length; ++i) {
-							n += BOOMR.utils.pushVars(arr, vars[k][i], enc + "[" + i + "]");
+							n += BOOMR.utils.pushVars(arr, vars[k][i], k + "[" + i + "]");
 						}
 					} else {
 						++n;
 						arr.push(
-							(prefix ? (prefix + "[" + enc + "]") : enc)
+							encodeURIComponent(prefix ? (prefix + "[" + k + "]") : k)
 							+ "="
 							+ (vars[k]===undefined || vars[k]===null ? '' : encodeURIComponent(vars[k]))
 						);
