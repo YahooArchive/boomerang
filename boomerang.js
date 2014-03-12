@@ -285,7 +285,7 @@ boomr = {
 		},
 
 		pushVars: function (arr, vars, prefix) {
-			var k, n=0;
+			var k, i, n=0;
 
 			for(k in vars) {
 				if(vars.hasOwnProperty(k)) {
