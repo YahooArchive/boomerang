@@ -40,8 +40,7 @@ impl = {
 				for(i = 0; i < r.length; ++i) {
 					data.restiming[i] = {
 						rt_name: r[i].name,
-						// reinstate this if entryType is ever something other than "resource"
-						//rt_type: r[i].entryType,
+						rt_type: r[i].initiatorType,
 						rt_st: r[i].startTime,
 						rt_dur: r[i].duration,
 						rt_fet_st: r[i].fetchStart,
