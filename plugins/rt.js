@@ -296,6 +296,11 @@ impl = {
 
 	page_unload: function(edata) {
 		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata) + " when unloadfired = " + this.unloadfired, "rt");
+		if(!this.unloadfired) {
+			// run done on abort or on page_unload to measure session length
+			BOOMR.plugins.RT.done(edata, "unload");
+		}
+
 		// set cookie for next page
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
@@ -541,6 +546,14 @@ BOOMR.plugins.RT = {
 
 			if(t_other.length) {
 				BOOMR.addVar("t_other", t_other.join(','));
+			}
+		}
+
+		if(ename==='unload' && !impl.onloadfired) {
+			BOOMR.addVar('rt.abld', '');
+
+			if(!impl.visiblefired) {
+				BOOMR.addVar('rt.ntvu', '');
 			}
 		}
 
