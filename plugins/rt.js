@@ -108,6 +108,7 @@ impl = {
 		subcookies.s = Math.max(+subcookies.ul||0, +subcookies.cl||0);
 
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
+
 		// If we have a start time, and either a referrer, or a clicked on URL,
 		// we check if the start time is usable
 		if(subcookies.s && (subcookies.r || subcookies.nu)) {
