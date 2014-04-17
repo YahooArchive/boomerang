@@ -491,9 +491,12 @@ BOOMR.plugins.RT = {
 		this.endTimer("t_done", t_done);
 
 		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.tstart', 'rt.bstart', 'rt.end', 't_postrender', 't_prerender', 't_load');
+		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.tstart', 'rt.cstart', 'rt.bstart', 'rt.end', 't_postrender', 't_prerender', 't_load');
 
 		BOOMR.addVar('rt.tstart', t_start);
+		if(typeof impl.t_start === 'number' && impl.t_start !== t_start) {
+			BOOMR.addVar('rt.cstart', impl.t_start);
+		}
 		BOOMR.addVar('rt.bstart', BOOMR.t_start);
 		BOOMR.addVar('rt.end', impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
 
