@@ -374,6 +374,7 @@ BOOMR.plugins.RT = {
 			BOOMR.subscribe("visibility_changed", impl.visibility_changed, null, impl);
 		}
 		BOOMR.subscribe("page_ready", this.done, "load", this);
+		BOOMR.subscribe("xhr_load", this.done, "xhr", this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
@@ -425,40 +426,48 @@ BOOMR.plugins.RT = {
 
 		impl.complete = false;
 
-		impl.initFromCookie();
-		impl.initNavTiming();
+		if(ename==="load" || ename==="visible") {
+			impl.initFromCookie();
+			impl.initNavTiming();
 
-		if(impl.checkPreRender()) {
-			return this;
-		}
-
-		if(impl.responseStart) {
-			// Use NavTiming API to figure out resp latency and page time
-			// t_resp will use the cookie if available or fallback to NavTiming
-			this.endTimer("t_resp", impl.responseStart);
-			if(impl.timers.t_load) {
-				this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
+			if(impl.checkPreRender()) {
+				return this;
 			}
-			else {
-				this.setTimer("t_page", t_done - impl.responseStart);
+
+			if(impl.responseStart) {
+				// Use NavTiming API to figure out resp latency and page time
+				// t_resp will use the cookie if available or fallback to NavTiming
+				this.endTimer("t_resp", impl.responseStart);
+				if(impl.timers.t_load) {	// t_load is the actual time load completed if using prerender
+					this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
+				}
+				else {
+					this.setTimer("t_page", t_done - impl.responseStart);
+				}
+			}
+			else if(impl.timers.hasOwnProperty('t_page')) {
+				// If the dev has already started t_page timer, we can end it now as well
+				this.endTimer("t_page");
+			}
+			else if(impl.t_fb_approx) {
+				this.endTimer('t_resp', impl.t_fb_approx);
+				this.setTimer("t_page", t_done - impl.t_fb_approx);
+			}
+
+			// If a prerender timer was started, we can end it now as well
+			if(impl.timers.hasOwnProperty('t_postrender')) {
+				this.endTimer("t_postrender");
+				this.endTimer("t_prerender");
 			}
 		}
-		else if(impl.timers.hasOwnProperty('t_page')) {
-			// If the dev has already started t_page timer, we can end it now as well
-			this.endTimer("t_page");
-		}
-		else if(impl.t_fb_approx) {
-			this.endTimer('t_resp', impl.t_fb_approx);
-			this.setTimer("t_page", t_done - impl.t_fb_approx);
-		}
 
-		// If a prerender timer was started, we can end it now as well
-		if(impl.timers.hasOwnProperty('t_postrender')) {
-			this.endTimer("t_postrender");
-			this.endTimer("t_prerender");
+		if(ename==="xhr" && edata.name && impl.timers[edata.name]) {
+			// For xhr timers, t_start is stored in impl.timers.xhr_{page group name}
+			// and xhr.pg is set to {page group name}
+			t_start = impl.timers[edata.name].start;
+			BOOMR.addVar("rt.start", "manual");
 		}
-
-		if(impl.navigationStart) {
+		else if(impl.navigationStart) {
 			t_start = impl.navigationStart;
 		}
 		else if(impl.t_start && impl.navigationType !== 2) {
@@ -514,10 +523,12 @@ BOOMR.plugins.RT = {
 		}
 
 		if(ntimers) {
-			BOOMR.addVar("r", BOOMR.utils.cleanupURL(impl.r));
+			if(ename !== "xhr") {
+				BOOMR.addVar("r", BOOMR.utils.cleanupURL(impl.r));
 
-			if(impl.r2 !== impl.r) {
-				BOOMR.addVar("r2", BOOMR.utils.cleanupURL(impl.r2));
+				if(impl.r2 !== impl.r) {
+					BOOMR.addVar("r2", BOOMR.utils.cleanupURL(impl.r2));
+				}
 			}
 
 			if(t_other.length) {
