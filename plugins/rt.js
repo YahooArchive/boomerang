@@ -17,6 +17,8 @@ BOOMR.plugins = BOOMR.plugins || {};
 impl = {
 	onloadfired: false,	//! Set when the page_ready event fires
 				//  Use this to determine if unload fires before onload
+	unloadfired: false,	//! Set when the first unload event fires
+				//  Use this to make sure we don't beacon twice for beforeunload and unload
 	visiblefired: false,	//! Set when page becomes visible (Chrome/IE)
 				//  Use this to determine if user bailed without opening the tab
 	initialized: false,	//! Set when init has completed to prevent double initialization
@@ -297,6 +299,8 @@ impl = {
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
 		this.updateCookie({ 'r': d.URL }, edata.type === 'beforeunload'?'ul':'hd');
+
+		this.unloadfired = true;
 	},
 
 	_iterable_click: function(name, element, etarget, value_cb) {
