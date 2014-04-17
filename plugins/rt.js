@@ -15,6 +15,10 @@ BOOMR.plugins = BOOMR.plugins || {};
 
 // private object
 impl = {
+	onloadfired: false,	//! Set when the page_ready event fires
+				//  Use this to determine if unload fires before onload
+	visiblefired: false,	//! Set when page becomes visible (Chrome/IE)
+				//  Use this to determine if user bailed without opening the tab
 	initialized: false,	//! Set when init has completed to prevent double initialization
 	complete: false,	//! Set when this plugin has completed
 
@@ -186,6 +190,20 @@ impl = {
 		}
 	},
 
+	page_ready: function() {
+		// we need onloadfired because it's possible to reset "impl.complete"
+		// if you're measuring multiple xhr loads, but not possible to reset
+		// impl.onloadfired
+		this.onloadfired = true;
+	},
+
+	visibility_changed: function() {
+		// we care if the page became visible at some point
+		if(!(d.hidden || d.msHidden || d.webkitHidden)) {
+			impl.visiblefired = true;
+		}
+	},
+
 	checkPreRender: function() {
 		if(
 			!(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
@@ -350,6 +368,11 @@ BOOMR.plugins.RT = {
 		impl.complete = false;
 		impl.timers = {};
 
+		BOOMR.subscribe("page_ready", impl.page_ready, null, impl);
+		impl.visiblefired = !(d.hidden || d.msHidden || d.webkitHidden);
+		if(!impl.visiblefired) {
+			BOOMR.subscribe("visibility_changed", impl.visibility_changed, null, impl);
+		}
 		BOOMR.subscribe("page_ready", this.done, "load", this);
 		BOOMR.subscribe("dom_loaded", impl.domloaded, null, impl);
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
