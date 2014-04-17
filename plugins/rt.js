@@ -294,7 +294,7 @@ impl = {
 	},
 
 	page_unload: function(edata) {
-		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata), "rt");
+		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata) + " when unloadfired = " + this.unloadfired, "rt");
 		// set cookie for next page
 		// We use document.URL instead of location.href because of a bug in safari 4
 		// where location.href is URL decoded
