@@ -573,6 +573,8 @@ boomr = {
 	subscribe: function(e_name, fn, cb_data, cb_scope) {
 		var i, h, e, unload_handler;
 
+		e_name = e_name.toLowerCase();
+
 		if(!impl.events.hasOwnProperty(e_name)) {
 			return this;
 		}
