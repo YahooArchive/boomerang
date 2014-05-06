@@ -138,6 +138,7 @@ impl = {
 		"dom_loaded": [],
 		"visibility_changed": [],
 		"before_beacon": [],
+		"onbeacon": [],
 		"xhr_load": [],
 		"click": [],
 		"form_submit": []
@@ -572,6 +573,8 @@ boomr = {
 	subscribe: function(e_name, fn, cb_data, cb_scope) {
 		var i, h, e, unload_handler;
 
+		e_name = e_name.toLowerCase();
+
 		if(!impl.events.hasOwnProperty(e_name)) {
 			return this;
 		}
@@ -712,6 +715,9 @@ boomr = {
 
 		data = [];
 		nparams = BOOMR.utils.pushVars(data, impl.vars);
+
+		// If we reach here, we've transferred all vars to the beacon URL.
+		this.setImmediate(impl.fireEvent, "onbeacon", impl.vars, impl);
 
 		if(!nparams) {
 			// do not make the request if there is no data
