@@ -57,7 +57,7 @@ function BOOMR_check_doc_domain(domain) {
 	// 1. Test without setting document.domain
 	try {
 		test = window.parent.document;
-		return true;	// all okay
+		return test !== undefined;	// all okay
 	}
 	// 2. Test with document.domain
 	catch(err) {
@@ -65,7 +65,7 @@ function BOOMR_check_doc_domain(domain) {
 	}
 	try {
 		test = window.parent.document;
-		return true;	// all okay
+		return test !== undefined;	// all okay
 	}
 	// 3. Strip off leading part and try again
 	catch(err) {
@@ -82,7 +82,7 @@ BOOMR_check_doc_domain();
 // the parameter is the window
 (function(w) {
 
-var impl, boomr, d, myurl;
+var impl, boomr, d, myurl, createCustomEvent;
 
 // This is the only block where we use document without the w. qualifier
 if(w.parent !== w
@@ -108,20 +108,29 @@ BOOMR.version = "0.9";
 BOOMR.window = w;
 
 // CustomEvent proxy for IE9 & 10 from https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent
-function createCustomEvent(e_name, params) {
-	var evt;
+(function() {
 	try {
-		evt = new w.CustomEvent(e_name, params);
+		if (new w.CustomEvent("CustomEvent") !== undefined) {
+			createCustomEvent = function (e_name, params) {
+				return new w.CustomEvent(e_name, params);
+			};
+		}
 	}
 	catch(e) {
 		if (d.createEvent) {
-			params = params || { bubbles: false, cancelable: false, detail: undefined };
-			evt = d.createEvent( 'CustomEvent' );
-			evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+			createCustomEvent = function (e_name, params) {
+				var evt = d.createEvent( 'CustomEvent' );
+				params = params || { cancelable: false, bubbles: false, details: undefined };
+				evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+
+				return evt;
+			};
 		}
 	}
-	return evt;
-}
+	if(!createCustomEvent) {
+		createCustomEvent = function() { return undefined; };
+	}
+}());
 
 function dispatchEvent(e_name, e_data) {
 	var ev = createCustomEvent(e_name, {"detail": e_data});
@@ -489,7 +498,7 @@ boomr = {
 			this.log = config.log;
 		}
 		if(!this.log) {
-			this.log = function(/* m,l,s */) { };
+			this.log = function(/* m,l,s */) { return; };
 		}
 
 		for(k in this.plugins) {
