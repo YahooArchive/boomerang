@@ -12,7 +12,7 @@ window.onerror = function() {
 }
 if (document.addEventListener) {
 	document.addEventListener("onBoomerangLoaded", function(e) {
-		document.body.innerHTML += "<pre>" + BOOMR.utils.objectToString(e) + "</pre>";
+		document.body.innerHTML += "<pre>Boomerang Loaded:\n" + BOOMR.utils.objectToString(e) + "</pre>";
 	});
 }
 </script>
