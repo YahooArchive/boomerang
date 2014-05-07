@@ -44,14 +44,14 @@ function BOOMR_check_doc_domain(domain) {
 	if(!domain) {
 		// If we're running in the main window, then we don't need this
 		if(window.parent === window || !document.getElementById('boomr-if-as')) {
-			return true;
+			return true;	// nothing to do
 		}
 
 		domain = document.domain;
 	}
 
 	if(domain.indexOf(".") === -1) {
-		return false;
+		return false;	// not okay, but we did our best
 	}
 
 	// 1. Test without setting document.domain
@@ -69,7 +69,7 @@ function BOOMR_check_doc_domain(domain) {
 	}
 	// 3. Strip off leading part and try again
 	catch(err) {
-		domain = domain.replace(/^[\w-]+\./, '');
+		domain = domain.replace(/^[\w\-]+\./, '');
 	}
 
 	return BOOMR_check_doc_domain(domain);
@@ -107,6 +107,33 @@ if(BOOMR.version) {
 BOOMR.version = "0.9";
 BOOMR.window = w;
 
+// CustomEvent polyfill for IE9 & 10 from https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent
+if (!w.CustomEvent && d.createEvent) {
+	(function () {
+		function CustomEvent ( event, params ) {
+			params = params || { bubbles: false, cancelable: false, detail: undefined };
+			var evt = d.createEvent( 'CustomEvent' );
+			evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+			return evt;
+		}
+
+		CustomEvent.prototype = w.Event.prototype;
+
+		w.CustomEvent = CustomEvent;
+	}());
+}
+
+function dispatchEvent(e_name, e_data) {
+	if (!w.CustomEvent) {
+		return;
+	}
+
+	BOOMR.setImmediate(function() {
+		var ev;
+		ev = new w.CustomEvent(e_name, {"detail": e_data});
+		d.dispatchEvent(ev);
+	});
+}
 
 // impl is a private object not reachable from outside the BOOMR object
 // users can set properties by passing in to the init() method
@@ -144,6 +171,12 @@ impl = {
 		"form_submit": []
 	},
 
+	public_events: {
+		"before_beacon": "onBeforeBoomerangBeacon",
+		"onbeacon": "onBoomerangBeacon",
+		"onboomerangloaded": "onBoomerangLoaded"
+	},
+
 	vars: {},
 
 	disabled_plugins: {},
@@ -179,6 +212,9 @@ impl = {
 
 	fireEvent: function(e_name, data) {
 		var i, h, e;
+
+		e_name = e_name.toLowerCase();
+
 		if(!this.events.hasOwnProperty(e_name)) {
 			return false;
 		}
@@ -188,6 +224,10 @@ impl = {
 		for(i=0; i<e.length; i++) {
 			h = e[i];
 			h[0].call(h[2], data, h[1]);
+		}
+
+		if (this.public_events.hasOwnProperty(e_name)) {
+			dispatchEvent(this.public_events[e_name], data);
 		}
 
 		return true;
@@ -796,6 +836,8 @@ for(ident in boomr) {
 }());
 
 BOOMR.plugins = BOOMR.plugins || {};
+
+dispatchEvent("onBoomerangLoaded", { "BOOMR": BOOMR } );
 
 }(window));
 

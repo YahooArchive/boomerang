@@ -10,6 +10,9 @@ window.onerror = function() {
 	st.style.backgroundColor="red";
 	st.innerHTML = "FAIL";
 }
+if (document.addEventListener) {
+	document.addEventListener("onBoomerangLoaded", function(e) { console.log(BOOMR.utils.objectToString(e)); });
+}
 </script>
 <script src="../boomerang.js" type="text/javascript"></script>
 </body>
