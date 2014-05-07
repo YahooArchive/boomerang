@@ -16,8 +16,9 @@ if (document.addEventListener) {
 	});
 }
 else if (document.attachEvent) {
-	document.attachEvent("onpropertychange", function() {
-		if (event.propertyName === "onBoomerangLoaded") {
+	document.attachEvent("onpropertychange", function(e) {
+		if (!e) e=event;
+		if (e.propertyName === "onBoomerangLoaded") {
 			document.body.innerHTML += "<pre>Boomerang Loaded:\n" + BOOMR.utils.objectToString(e) + "</pre>";
 		}
 	});
