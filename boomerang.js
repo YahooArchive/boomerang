@@ -121,7 +121,7 @@ BOOMR.window = w;
 			createCustomEvent = function (e_name, params) {
 				var evt = d.createEvent( 'CustomEvent' );
 				params = params || { cancelable: false, bubbles: false, details: undefined };
-				evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+				evt.initCustomEvent( e_name, params.bubbles, params.cancelable, params.detail );
 
 				return evt;
 			};
