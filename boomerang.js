@@ -120,8 +120,20 @@ BOOMR.window = w;
 		if (d.createEvent) {
 			createCustomEvent = function (e_name, params) {
 				var evt = d.createEvent( 'CustomEvent' );
-				params = params || { cancelable: false, bubbles: false, details: undefined };
+				params = params || { cancelable: false, bubbles: false };
 				evt.initCustomEvent( e_name, params.bubbles, params.cancelable, params.detail );
+
+				return evt;
+			};
+		}
+		else if (d.createEventObject) {
+			createCustomEvent = function (e_name, params) {
+				var evt = d.createEventObject();
+				params = params || { cancelable: false, bubbles: false };
+
+				evt.cancelable = params.cancelable;
+				evt.bubbles = params.bubbles;
+				evt.detail = params.detail;
 
 				return evt;
 			};
