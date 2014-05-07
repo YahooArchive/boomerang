@@ -15,6 +15,13 @@ if (document.addEventListener) {
 		document.body.innerHTML += "<pre>Boomerang Loaded:\n" + BOOMR.utils.objectToString(e) + "</pre>";
 	});
 }
+else if (document.attachEvent) {
+	document.attachEvent("onpropertychange", function() {
+		if (event.propertyName === "onBoomerangLoaded") {
+			document.body.innerHTML += "<pre>Boomerang Loaded:\n" + BOOMR.utils.objectToString(e) + "</pre>";
+		}
+	});
+}
 </script>
 <script src="../boomerang.js" type="text/javascript"></script>
 </body>
