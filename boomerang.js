@@ -126,18 +126,6 @@ BOOMR.window = w;
 				return evt;
 			};
 		}
-		else if (d.createEventObject) {
-			createCustomEvent = function (e_name, params) {
-				var evt = d.createEventObject();
-				params = params || { cancelable: false, bubbles: false };
-
-				evt.cancelable = params.cancelable;
-				evt.bubbles = params.bubbles;
-				evt.detail = params.detail;
-
-				return evt;
-			};
-		}
 	}
 	if(!createCustomEvent) {
 		createCustomEvent = function() { return undefined; };
