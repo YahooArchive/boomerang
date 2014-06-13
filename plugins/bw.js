@@ -106,7 +106,8 @@ impl = {
 		lat_filtered = this.iqr(this.latencies.sort(this.ncmp));
 		n = lat_filtered.length;
 
-		BOOMR.debug("latencies: " + lat_filtered, "bw");
+		BOOMR.debug("latencies: " + this.latencies, "bw");
+		BOOMR.debug("lat_filtered: " + lat_filtered, "bw");
 
 		// First we get the arithmetic mean, standard deviation and standard error
 		for(i=0; i<n; i++) {
