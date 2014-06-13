@@ -287,7 +287,7 @@ boomr = {
 					if (nest_level > 0 && o[k] !== null && typeof o[k] === "object") {
 						value.push(
 							this.objectToString(
-								encodeURIComponent(o[k]),
+								o[k],
 								separator + (separator === "\n\t" ? "\t" : ""),
 								nest_level-1
 							)
@@ -305,7 +305,7 @@ boomr = {
 						if (nest_level > 0 && o[k] !== null && typeof o[k] === "object") {
 							value.push(encodeURIComponent(k) + '=' +
 								this.objectToString(
-									encodeURIComponent(o[k]),
+									o[k],
 									separator + (separator === "\n\t" ? "\t" : ""),
 									nest_level-1
 								)
