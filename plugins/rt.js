@@ -244,7 +244,7 @@ impl = {
 	 */
 	checkPreRender: function() {
 		if(
-			!(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
+			!(d.visibilityState && d.visibilityState === "prerender")
 			&&
 			!(d.msVisibilityState && d.msVisibilityState === 3)
 		) {
