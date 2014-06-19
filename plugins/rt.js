@@ -54,7 +54,7 @@ impl = {
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
-			return this;
+			return false;
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
@@ -87,7 +87,7 @@ impl = {
 		BOOMR.debug("Setting cookie (timer=" + timer + ")\n" + BOOMR.utils.objectToString(subcookies), "rt");
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
-			return this;
+			return false;
 		}
 
 		t_end = new Date().getTime();
@@ -103,7 +103,7 @@ impl = {
 					+ t_start + " -> " + t_end, "rt");
 		}
 
-		return this;
+		return true;
 	},
 
 	/**
