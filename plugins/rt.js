@@ -32,14 +32,23 @@ impl = {
 				// If set to false, beacon both referrer values and let
 				// the back end decide
 
-	navigationType: 0,
+	navigationType: 0,	// Navigation Type from the NavTiming API.  We mainly care if this was BACK_FORWARD
+				// since cookie time will be incorrect in that case
 	navigationStart: undefined,
 	responseStart: undefined,
-	t_start: undefined,
-	t_fb_approx: undefined,
-	r: undefined,
-	r2: undefined,
+	t_start: undefined,	// t_start that came off the cookie
+	t_fb_approx: undefined,	// approximate first byte time for browsers that don't support navtiming
+	r: undefined,		// referrer from the cookie
+	r2: undefined,		// referrer from document.referer
 
+	/**
+	 * Merge new cookie `params` onto current cookie, and set `timer` param on cookie to current timestamp
+	 * @param params object containing keys & values to merge onto current cookie.  A value of `undefined`
+	 *		 will remove the key from the cookie
+	 * @param timer  string key name that will be set to the current timestamp on the cookie
+	 *
+	 * @returns true if the cookie was updated, false if the cookie could not be set for any reason
+	 */
 	updateCookie: function(params, timer) {
 		var t_end, t_start, subcookies, k;
 
@@ -97,6 +106,18 @@ impl = {
 		return this;
 	},
 
+	/**
+	 * Read initial values from cookie and clear out cookie values it cares about after reading.
+	 * This makes sure that other pages (eg: loaded in new tabs) do not get an invalid cookie time.
+	 * This method should only be called from init, and may be called more than once.
+	 *
+	 * Request start time is the greater of last page beforeunload or last click time
+	 * If start time came from a click, we check that the clicked URL matches the current URL
+	 * If it came from a beforeunload, we check that cookie referrer matches document.referrer
+	 *
+	 * If we had a pageHide time or unload time, we use that as a proxy for first byte on non-navtiming
+	 * browsers.
+	 */
 	initFromCookie: function() {
 		var url, subcookies;
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie));
@@ -153,6 +174,9 @@ impl = {
 		});
 	},
 
+	/**
+	 * Figure out how long boomerang and config.js took to load using resource timing if available, or built in timestamps
+	 */
 	getBoomerangTimings: function() {
 		var res, k, urls, url;
 		if(BOOMR.t_start) {
@@ -207,6 +231,17 @@ impl = {
 		}
 	},
 
+	/**
+	 * Check if we're in a prerender state, and if we are, set additional timers.
+	 * In Chrome/IE, a prerender state is when a page is completely rendered in an in-memory buffer, before
+	 * a user requests that page.  We do not beacon at this point because the user has not shown intent
+	 * to view the page.  If the user opens the page, the visibility state changes to visible, and we
+	 * fire the beacon at that point, including any timing details for prerendering.
+	 *
+	 * Sets the `t_load` timer to the actual value of page load time (request initiated by browser to onload)
+	 *
+	 * @returns true if this is a prerender state, false if not (or not supported)
+	 */
 	checkPreRender: function() {
 		if(
 			!(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
@@ -233,6 +268,11 @@ impl = {
 		return true;
 	},
 
+	/**
+	 * Initialise timers from the NavigationTiming API.  This method looks at various sources for
+	 * Navigation Timing, and also patches around bugs in various browser implementations.
+	 * It sets the beacon parameter `rt.start` to the source of the timer
+	 */
 	initNavTiming: function() {
 		var ti, p, source;
 
