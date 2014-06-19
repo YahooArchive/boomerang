@@ -681,8 +681,8 @@ BOOMR.plugins.RT = {
 		impl.timers = {};
 		impl.complete = true;
 
-		BOOMR.sendBeacon();	// we call sendBeacon() anyway because some other plugin
-					// may have blocked waiting for RT to complete
+		BOOMR.sendBeacon();
+
 		return this;
 	},
 
