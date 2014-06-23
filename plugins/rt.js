@@ -641,10 +641,6 @@ BOOMR.plugins.RT = {
 
 		t_start = impl.determineTStart(ename, edata.name);
 
-		impl.refreshSession();
-
-		impl.maybeResetSession(t_done, t_start);
-
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
 		this.endTimer("t_done", t_done);
