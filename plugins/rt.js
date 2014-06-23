@@ -32,20 +32,33 @@ impl = {
 				// If set to false, beacon both referrer values and let
 				// the back end decide
 
-	navigationType: 0,
+	navigationType: 0,	// Navigation Type from the NavTiming API.  We mainly care if this was BACK_FORWARD
+				// since cookie time will be incorrect in that case
 	navigationStart: undefined,
 	responseStart: undefined,
-	t_start: undefined,
-	t_fb_approx: undefined,
-	r: undefined,
-	r2: undefined,
+	t_start: undefined,	// t_start that came off the cookie
+	cached_t_start: undefined,	// cached value of t_start once we know its real value
+	t_fb_approx: undefined,	// approximate first byte time for browsers that don't support navtiming
+	r: undefined,		// referrer from the cookie
+	r2: undefined,		// referrer from document.referer
 
+	// These timers are added directly as beacon variables
+	basic_timers: { t_done: 1, t_resp: 1, t_page: 1},
+
+	/**
+	 * Merge new cookie `params` onto current cookie, and set `timer` param on cookie to current timestamp
+	 * @param params object containing keys & values to merge onto current cookie.  A value of `undefined`
+	 *		 will remove the key from the cookie
+	 * @param timer  string key name that will be set to the current timestamp on the cookie
+	 *
+	 * @returns true if the cookie was updated, false if the cookie could not be set for any reason
+	 */
 	updateCookie: function(params, timer) {
 		var t_end, t_start, subcookies, k;
 
 		// Disable use of RT cookie by setting its name to a falsy value
 		if(!this.cookie) {
-			return this;
+			return false;
 		}
 
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
@@ -78,7 +91,7 @@ impl = {
 		BOOMR.debug("Setting cookie (timer=" + timer + ")\n" + BOOMR.utils.objectToString(subcookies), "rt");
 		if(!BOOMR.utils.setCookie(this.cookie, subcookies, this.cookie_exp)) {
 			BOOMR.error("cannot set start cookie", "rt");
-			return this;
+			return false;
 		}
 
 		t_end = new Date().getTime();
@@ -94,9 +107,21 @@ impl = {
 					+ t_start + " -> " + t_end, "rt");
 		}
 
-		return this;
+		return true;
 	},
 
+	/**
+	 * Read initial values from cookie and clear out cookie values it cares about after reading.
+	 * This makes sure that other pages (eg: loaded in new tabs) do not get an invalid cookie time.
+	 * This method should only be called from init, and may be called more than once.
+	 *
+	 * Request start time is the greater of last page beforeunload or last click time
+	 * If start time came from a click, we check that the clicked URL matches the current URL
+	 * If it came from a beforeunload, we check that cookie referrer matches document.referrer
+	 *
+	 * If we had a pageHide time or unload time, we use that as a proxy for first byte on non-navtiming
+	 * browsers.
+	 */
 	initFromCookie: function() {
 		var url, subcookies;
 		subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie));
@@ -153,6 +178,9 @@ impl = {
 		});
 	},
 
+	/**
+	 * Figure out how long boomerang and config.js took to load using resource timing if available, or built in timestamps
+	 */
 	getBoomerangTimings: function() {
 		var res, k, urls, url;
 		if(BOOMR.t_start) {
@@ -193,23 +221,20 @@ impl = {
 		}
 	},
 
-	page_ready: function() {
-		// we need onloadfired because it's possible to reset "impl.complete"
-		// if you're measuring multiple xhr loads, but not possible to reset
-		// impl.onloadfired
-		this.onloadfired = true;
-	},
-
-	visibility_changed: function() {
-		// we care if the page became visible at some point
-		if(!(d.hidden || d.msHidden || d.webkitHidden)) {
-			impl.visiblefired = true;
-		}
-	},
-
+	/**
+	 * Check if we're in a prerender state, and if we are, set additional timers.
+	 * In Chrome/IE, a prerender state is when a page is completely rendered in an in-memory buffer, before
+	 * a user requests that page.  We do not beacon at this point because the user has not shown intent
+	 * to view the page.  If the user opens the page, the visibility state changes to visible, and we
+	 * fire the beacon at that point, including any timing details for prerendering.
+	 *
+	 * Sets the `t_load` timer to the actual value of page load time (request initiated by browser to onload)
+	 *
+	 * @returns true if this is a prerender state, false if not (or not supported)
+	 */
 	checkPreRender: function() {
 		if(
-			!(d.webkitVisibilityState && d.webkitVisibilityState === "prerender")
+			!(d.visibilityState && d.visibilityState === "prerender")
 			&&
 			!(d.msVisibilityState && d.msVisibilityState === 3)
 		) {
@@ -233,7 +258,12 @@ impl = {
 		return true;
 	},
 
-	initNavTiming: function() {
+	/**
+	 * Initialise timers from the NavigationTiming API.  This method looks at various sources for
+	 * Navigation Timing, and also patches around bugs in various browser implementations.
+	 * It sets the beacon parameter `rt.start` to the source of the timer
+	 */
+	initFromNavTiming: function() {
 		var ti, p, source;
 
 		if(this.navigationStart) {
@@ -294,6 +324,129 @@ impl = {
 		return;
 	},
 
+	/**
+	 * Set timers appropriate at page load time.  This method should be called from done() only when
+	 * the page_ready event fires.  It sets the following timer values:
+	 *		- t_resp:	time from request start to first byte
+	 *		- t_page:	time from first byte to load
+	 *		- t_postrender	time from prerender state to visible state
+	 *		- t_prerender	time from navigation start to visible state
+	 *
+	 * @param t_done The timestamp when the done() method was called
+	 *
+	 * @returns true if timers were set, false if we're in a prerender state, caller should abort on false.
+	 */
+	setPageLoadTimers: function(t_done) {
+		impl.initFromCookie();
+		impl.initFromNavTiming();
+
+		if(impl.checkPreRender()) {
+			return false;
+		}
+
+		if(impl.responseStart) {
+			// Use NavTiming API to figure out resp latency and page time
+			// t_resp will use the cookie if available or fallback to NavTiming
+			BOOMR.plugins.RT.endTimer("t_resp", impl.responseStart);
+			if(impl.timers.t_load) {	// t_load is the actual time load completed if using prerender
+				BOOMR.plugins.RT.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
+			}
+			else {
+				BOOMR.plugins.RT.setTimer("t_page", t_done - impl.responseStart);
+			}
+		}
+		else if(impl.timers.hasOwnProperty("t_page")) {
+			// If the dev has already started t_page timer, we can end it now as well
+			BOOMR.plugins.RT.endTimer("t_page");
+		}
+		else if(impl.t_fb_approx) {
+			BOOMR.plugins.RT.endTimer("t_resp", impl.t_fb_approx);
+			BOOMR.plugins.RT.setTimer("t_page", t_done - impl.t_fb_approx);
+		}
+
+		// If a prerender timer was started, we can end it now as well
+		if(impl.timers.hasOwnProperty("t_postrender")) {
+			BOOMR.plugins.RT.endTimer("t_postrender");
+			BOOMR.plugins.RT.endTimer("t_prerender");
+		}
+
+		return true;
+	},
+
+	/**
+	 * Writes a bunch of timestamps onto the beacon that help in request tracing on the server
+	 * 	- rt.tstart: The value of t_start that we determined was appropriate
+	 *	- rt.cstart: The value of t_start from the cookie if different from rt.tstart
+	 *	- rt.bstart: The timestamp when boomerang started
+	 *	- rt.end:    The timestamp when the t_done timer ended
+	 *
+	 * @param t_start The value of t_start that we plan to use
+	 */
+	setSupportingTimestamps: function(t_start) {
+		BOOMR.addVar('rt.tstart', t_start);
+		if(typeof impl.t_start === 'number' && impl.t_start !== t_start) {
+			BOOMR.addVar('rt.cstart', impl.t_start);
+		}
+		BOOMR.addVar('rt.bstart', BOOMR.t_start);
+		BOOMR.addVar('rt.end', impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
+	},
+
+	/**
+	 * Determines the best value to use for t_start.
+	 * If called from an xhr call, then use the start time for that call
+	 * Else, If we have navigation timing, use that
+	 * Else, If we have a cookie time, and this isn't the result of a BACK button, use the cookie time
+	 * Else, if we have a cached timestamp from an earlier call, use that
+	 * Else, give up
+	 *
+	 * @param ename	 The event name that resulted in this call. Special consideration for "xhr"
+	 * @param pgname If the event name is "xhr", this should be the page group name for the xhr call
+	 *
+	 * @returns the determined value of t_start or undefined if unknown
+	 */
+	determineTStart: function(ename, pgname) {
+		var t_start;
+		if(ename==="xhr" && pgname && impl.timers[pgname]) {
+			// For xhr timers, t_start is stored in impl.timers.xhr_{page group name}
+			// and xhr.pg is set to {page group name}
+			t_start = impl.timers[pgname].start;
+			BOOMR.addVar("rt.start", "manual");
+		}
+		else if(impl.navigationStart) {
+			t_start = impl.navigationStart;
+		}
+		else if(impl.t_start && impl.navigationType !== 2) {
+			t_start = impl.t_start;			// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
+		}						// but will have time of previous page start, so t_done will be wrong
+		else if(impl.cached_t_start) {
+			t_start = impl.cached_t_start;
+		}
+		else {
+			BOOMR.addVar("rt.start", "none");
+			t_start = undefined;			// force all timers to NaN state
+		}
+
+		BOOMR.debug("Got start time: " + t_start, "rt");
+		impl.cached_t_start = t_start;
+
+		return t_start;
+	},
+
+	page_ready: function() {
+		// we need onloadfired because it's possible to reset "impl.complete"
+		// if you're measuring multiple xhr loads, but not possible to reset
+		// impl.onloadfired
+		this.onloadfired = true;
+	},
+
+	visibility_changed: function() {
+		// we care if the page became visible at some point
+		if(!(d.hidden || d.msHidden || d.webkitHidden)) {
+			impl.visiblefired = true;
+		}
+	},
+
 	page_unload: function(edata) {
 		BOOMR.debug("Unload called with " + BOOMR.utils.objectToString(edata) + " when unloadfired = " + this.unloadfired, "rt");
 		if(!this.unloadfired) {
@@ -310,6 +463,7 @@ impl = {
 	},
 
 	_iterable_click: function(name, element, etarget, value_cb) {
+		var value;
 		if(!etarget) {
 			return;
 		}
@@ -323,7 +477,9 @@ impl = {
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
 			// cookie on click or submit
-			this.updateCookie({ "nu": value_cb(etarget) }, 'cl' );
+			value = value_cb(etarget);
+			this.updateCookie({ "nu": value }, 'cl' );
+			BOOMR.addVar("nu", BOOMR.utils.cleanupURL(value));
 		}
 	},
 
@@ -389,6 +545,7 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("page_unload", impl.page_unload, null, impl);
 		BOOMR.subscribe("click", impl.onclick, null, impl);
 		BOOMR.subscribe("form_submit", impl.onsubmit, null, impl);
+		BOOMR.subscribe("before_beacon", this.addTimersToBeacon, "beacon", this);
 
 		impl.initialized = true;
 		return this;
@@ -425,85 +582,9 @@ BOOMR.plugins.RT = {
 		return this;
 	},
 
-	// Called when the page has reached a "usable" state.  This may be when the
-	// onload event fires, or it could be at some other moment during/after page
-	// load when the page is usable by the user
-	done: function(edata, ename) {
-		BOOMR.debug("Called done with " + BOOMR.utils.objectToString(edata) + ", " + ename, "rt");
-		var t_start, t_done=new Date().getTime(),
-		    basic_timers = { t_done: 1, t_resp: 1, t_page: 1},
-		    ntimers = 0, t_name, timer, t_other=[];
-
-		impl.complete = false;
-
-		if(ename==="load" || ename==="visible") {
-			impl.initFromCookie();
-			impl.initNavTiming();
-
-			if(impl.checkPreRender()) {
-				return this;
-			}
-
-			if(impl.responseStart) {
-				// Use NavTiming API to figure out resp latency and page time
-				// t_resp will use the cookie if available or fallback to NavTiming
-				this.endTimer("t_resp", impl.responseStart);
-				if(impl.timers.t_load) {	// t_load is the actual time load completed if using prerender
-					this.setTimer("t_page", impl.timers.t_load.end - impl.responseStart);
-				}
-				else {
-					this.setTimer("t_page", t_done - impl.responseStart);
-				}
-			}
-			else if(impl.timers.hasOwnProperty('t_page')) {
-				// If the dev has already started t_page timer, we can end it now as well
-				this.endTimer("t_page");
-			}
-			else if(impl.t_fb_approx) {
-				this.endTimer('t_resp', impl.t_fb_approx);
-				this.setTimer("t_page", t_done - impl.t_fb_approx);
-			}
-
-			// If a prerender timer was started, we can end it now as well
-			if(impl.timers.hasOwnProperty('t_postrender')) {
-				this.endTimer("t_postrender");
-				this.endTimer("t_prerender");
-			}
-		}
-
-		if(ename==="xhr" && edata.name && impl.timers[edata.name]) {
-			// For xhr timers, t_start is stored in impl.timers.xhr_{page group name}
-			// and xhr.pg is set to {page group name}
-			t_start = impl.timers[edata.name].start;
-			BOOMR.addVar("rt.start", "manual");
-		}
-		else if(impl.navigationStart) {
-			t_start = impl.navigationStart;
-		}
-		else if(impl.t_start && impl.navigationType !== 2) {
-			t_start = impl.t_start;			// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
-			BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
-		}						// but will have time of previous page start, so t_done will be wrong
-		else {
-			BOOMR.addVar("rt.start", "none");
-			t_start = undefined;			// force all timers to NaN state
-		}
-
-		BOOMR.debug("Got start time: " + t_start, "rt");
-
-		// If the dev has already called endTimer, then this call will do nothing
-		// else, it will stop the page load timer
-		this.endTimer("t_done", t_done);
-
-		// make sure old variables don't stick around
-		BOOMR.removeVar('t_done', 't_page', 't_resp', 'r', 'r2', 'rt.tstart', 'rt.cstart', 'rt.bstart', 'rt.end', 't_postrender', 't_prerender', 't_load');
-
-		BOOMR.addVar('rt.tstart', t_start);
-		if(typeof impl.t_start === 'number' && impl.t_start !== t_start) {
-			BOOMR.addVar('rt.cstart', impl.t_start);
-		}
-		BOOMR.addVar('rt.bstart', BOOMR.t_start);
-		BOOMR.addVar('rt.end', impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
+	addTimersToBeacon: function(vars, source) {
+		var t_name, timer,
+		    t_other=[];
 
 		for(t_name in impl.timers) {
 			if(impl.timers.hasOwnProperty(t_name)) {
@@ -513,7 +594,7 @@ BOOMR.plugins.RT = {
 				// if not, then we have to calculate it using start & end
 				if(typeof timer.delta !== "number") {
 					if(typeof timer.start !== "number") {
-						timer.start = t_start;
+						timer.start = impl.cached_t_start;
 					}
 					timer.delta = timer.end - timer.start;
 				}
@@ -525,43 +606,85 @@ BOOMR.plugins.RT = {
 					continue;
 				}
 
-				if(basic_timers.hasOwnProperty(t_name)) {
+				if(impl.basic_timers.hasOwnProperty(t_name)) {
 					BOOMR.addVar(t_name, timer.delta);
 				}
 				else {
 					t_other.push(t_name + '|' + timer.delta);
 				}
-				ntimers++;
 			}
 		}
 
-		if(ntimers) {
-			if(ename !== "xhr") {
-				BOOMR.addVar("r", BOOMR.utils.cleanupURL(impl.r));
+		if (t_other.length) {
+			BOOMR.addVar("t_other", t_other.join(','));
+		}
 
-				if(impl.r2 !== impl.r) {
-					BOOMR.addVar("r2", BOOMR.utils.cleanupURL(impl.r2));
-				}
-			}
+		if (source === "beacon") {
+			impl.timers = {};
+		}
+	},
 
-			if(t_other.length) {
-				BOOMR.addVar("t_other", t_other.join(','));
+	// Called when the page has reached a "usable" state.  This may be when the
+	// onload event fires, or it could be at some other moment during/after page
+	// load when the page is usable by the user
+	done: function(edata, ename) {
+		BOOMR.debug("Called done with " + BOOMR.utils.objectToString(edata) + ", " + ename, "rt");
+		var t_start, t_done=new Date().getTime();
+
+		impl.complete = false;
+
+		if(ename==="load" || ename==="visible") {
+			if (!impl.setPageLoadTimers(t_done)) {
+				return this;
 			}
 		}
 
-		if(ename==='unload' && !impl.onloadfired) {
-			BOOMR.addVar('rt.abld', '');
+		t_start = impl.determineTStart(ename, edata.name);
+
+		impl.refreshSession();
+
+		impl.maybeResetSession(t_done, t_start);
+
+		// If the dev has already called endTimer, then this call will do nothing
+		// else, it will stop the page load timer
+		this.endTimer("t_done", t_done);
+
+		// make sure old variables don't stick around
+		BOOMR.removeVar(
+			't_done', 't_page', 't_resp', 't_postrender', 't_prerender', 't_load', 't_other',
+			'r', 'r2', 'rt.tstart', 'rt.cstart', 'rt.bstart', 'rt.end', 'rt.abld'
+		);
+
+		impl.setSupportingTimestamps(t_start);
+
+		this.addTimersToBeacon();
+
+		if(ename !== "xhr") {
+			BOOMR.addVar("r", BOOMR.utils.cleanupURL(impl.r));
+
+			if(impl.r2 !== impl.r) {
+				BOOMR.addVar("r2", BOOMR.utils.cleanupURL(impl.r2));
+			}
+		}
+
+		impl.updateCookie();
+
+		if(ename==='unload') {
+			BOOMR.addVar('rt.quit', '');
+
+			if(!impl.onloadfired) {
+				BOOMR.addVar('rt.abld', '');
+			}
 
 			if(!impl.visiblefired) {
 				BOOMR.addVar('rt.ntvu', '');
 			}
 		}
 
-		impl.timers = {};
 		impl.complete = true;
 
-		BOOMR.sendBeacon();	// we call sendBeacon() anyway because some other plugin
-					// may have blocked waiting for RT to complete
+		BOOMR.sendBeacon();
+
 		return this;
 	},
 
