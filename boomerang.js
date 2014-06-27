@@ -762,15 +762,18 @@ boomr = {
 		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
 
 		return {
-			loaded: function() {
-				BOOMR.responseEnd(name, t_start);
+			loaded: function(data) {
+				BOOMR.responseEnd(name, t_start, data);
 			}
 		};
 	},
 
-	responseEnd: function(name, t_start) {
+	responseEnd: function(name, t_start, data) {
 		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
-		impl.fireEvent("xhr_load", { "name": "xhr_" + name });
+		impl.fireEvent("xhr_load", {
+			"name": "xhr_" + name,
+			"data": data
+		});
 	},
 
 	sendBeacon: function() {
