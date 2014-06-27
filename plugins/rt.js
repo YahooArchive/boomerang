@@ -630,7 +630,8 @@ BOOMR.plugins.RT = {
 	// load when the page is usable by the user
 	done: function(edata, ename) {
 		BOOMR.debug("Called done with " + BOOMR.utils.objectToString(edata) + ", " + ename, "rt");
-		var t_start, t_done=new Date().getTime();
+		var t_start, t_done=new Date().getTime(),
+		    subresource = false;
 
 		impl.complete = false;
 
@@ -638,6 +639,10 @@ BOOMR.plugins.RT = {
 			if (!impl.setPageLoadTimers(t_done)) {
 				return this;
 			}
+		}
+
+		if(ename === "xhr" && edata && edata.data) {
+			subresource = edata.data.subresource;
 		}
 
 		t_start = impl.determineTStart(ename, edata.name);
@@ -649,7 +654,7 @@ BOOMR.plugins.RT = {
 		// make sure old variables don't stick around
 		BOOMR.removeVar(
 			't_done', 't_page', 't_resp', 't_postrender', 't_prerender', 't_load', 't_other',
-			'r', 'r2', 'rt.tstart', 'rt.cstart', 'rt.bstart', 'rt.end', 'rt.abld'
+			'r', 'r2', 'rt.tstart', 'rt.cstart', 'rt.bstart', 'rt.end', 'rt.subres', 'rt.abld'
 		);
 
 		impl.setSupportingTimestamps(t_start);
@@ -664,6 +669,9 @@ BOOMR.plugins.RT = {
 			}
 		}
 
+		if(subresource) {
+			BOOMR.addVar("rt.subres", 1);
+		}
 		impl.updateCookie();
 
 		if(ename==='unload') {
