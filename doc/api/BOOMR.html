@@ -142,15 +142,6 @@ Each plugin is configured through a sub-object of the config object.  The key is
 of the plugin.  Each plugin's documentation will have details on its configuration object.
 </dd>
 
-<dt>test_https</dt>
-<dd>
-<strong>[optional]</strong>
-By default, boomerang will skip the bandwidth test over an HTTPS connection. Establishing
-an SSL connection takes time, which could skew the bandwidth results. If all your traffic
-is sent over SSL, then running the test over SSL probably gets you what you want. If you
-set <code>test_https</code> to <code>true</code>, boomerang will run the test instead of skipping.
-</dd>
-
 </dl>
 
 <h2 id="methods">Methods</h2>

@@ -472,14 +472,10 @@ BOOMR.plugins.BW = {
 		}
 
 		BOOMR.utils.pluginConfig(impl, config, "BW",
-						["base_url", "timeout", "nruns", "cookie", "cookie_exp"]);
+						["base_url", "timeout", "nruns", "cookie", "cookie_exp", "test_https"]);
 
 		if(config && config.user_ip) {
 			impl.user_ip = config.user_ip;
-		}
-
-		if(config && config.test_https) {
-			impl.test_https = config.test_https;
 		}
 
 		if(!impl.base_url) {
