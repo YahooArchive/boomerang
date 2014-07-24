@@ -648,7 +648,7 @@ BOOMR.plugins.RT = {
 			subresource = edata.data.subresource;
 		}
 
-		t_start = impl.determineTStart(ename, edata.name);
+		t_start = impl.determineTStart(ename, edata ? edata.name : null);
 
 		// If the dev has already called endTimer, then this call will do nothing
 		// else, it will stop the page load timer
