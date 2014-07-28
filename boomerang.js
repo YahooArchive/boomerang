@@ -246,8 +246,13 @@ impl = {
 		ev = this.events[e_name];
 
 		for(i=0; i<ev.length; i++) {
-			handler = ev[i];
-			handler.fn.call(handler.scope, data, handler.cb_data);
+			try {
+				handler = ev[i];
+				handler.fn.call(handler.scope, data, handler.cb_data);
+			}
+			catch(err) {
+				BOOMR.addError(err, 'fireEvent');
+			}
 		}
 
 		if (this.public_events.hasOwnProperty(e_name)) {
@@ -571,7 +576,12 @@ boomr = {
 
 				// plugin exists and has an init method
 				if(typeof this.plugins[k].init === "function") {
-					this.plugins[k].init(config);
+					try {
+						this.plugins[k].init(config);
+					}
+					catch(err) {
+						BOOMR.addError(err, this.plugins[k] + '.init');
+					}
 				}
 			}
 		}
