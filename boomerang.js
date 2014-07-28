@@ -201,6 +201,8 @@ impl = {
 
 	vars: {},
 
+	errors: {},
+
 	disabled_plugins: {},
 
 	onclick_handler: function(ev) {
@@ -233,7 +235,7 @@ impl = {
 	},
 
 	fireEvent: function(e_name, data) {
-		var i, h, e;
+		var i, handler, ev;
 
 		e_name = e_name.toLowerCase();
 
@@ -241,11 +243,16 @@ impl = {
 			return false;
 		}
 
-		e = this.events[e_name];
+		ev = this.events[e_name];
 
-		for(i=0; i<e.length; i++) {
-			h = e[i];
-			h[0].call(h[2], data, h[1]);
+		for(i=0; i<ev.length; i++) {
+			try {
+				handler = ev[i];
+				handler.fn.call(handler.scope, data, handler.cb_data);
+			}
+			catch(err) {
+				BOOMR.addError(err, 'fireEvent');
+			}
 		}
 
 		if (this.public_events.hasOwnProperty(e_name)) {
@@ -569,7 +576,12 @@ boomr = {
 
 				// plugin exists and has an init method
 				if(typeof this.plugins[k].init === "function") {
-					this.plugins[k].init(config);
+					try {
+						this.plugins[k].init(config);
+					}
+					catch(err) {
+						BOOMR.addError(err, this.plugins[k] + '.init');
+					}
 				}
 			}
 		}
@@ -669,7 +681,7 @@ boomr = {
 	},
 
 	subscribe: function(e_name, fn, cb_data, cb_scope) {
-		var i, h, e, unload_handler;
+		var i, handler, ev, unload_handler;
 
 		e_name = e_name.toLowerCase();
 
@@ -677,16 +689,16 @@ boomr = {
 			return this;
 		}
 
-		e = impl.events[e_name];
+		ev = impl.events[e_name];
 
 		// don't allow a handler to be attached more than once to the same event
-		for(i=0; i<e.length; i++) {
-			h = e[i];
-			if(h[0] === fn && h[1] === cb_data && h[2] === cb_scope) {
+		for(i=0; i<ev.length; i++) {
+			handler = ev[i];
+			if(handler.fn === fn && handler.cb_data === cb_data && handler.scope === cb_scope) {
 				return this;
 			}
 		}
-		e.push([ fn, cb_data || {}, cb_scope || null ]);
+		ev.push({ "fn": fn, "cb_data": cb_data || {}, "scope": cb_scope || null });
 
 		// attaching to page_ready after onload fires, so call soon
 		if(e_name === 'page_ready' && impl.onloadfired) {
@@ -717,6 +729,22 @@ boomr = {
 		}
 
 		return this;
+	},
+
+	addError: function(err, src) {
+		if (typeof err !== "string") {
+			err = String(err);
+		}
+		if (src !== undefined) {
+			err = "[" + src + "] " + err;
+		}
+
+		if (impl.errors[err]) {
+			impl.errors[err]++;
+		}
+		else {
+			impl.errors[err] = 1;
+		}
 	},
 
 	addVar: function(name, value) {
@@ -762,19 +790,22 @@ boomr = {
 		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
 
 		return {
-			loaded: function() {
-				BOOMR.responseEnd(name, t_start);
+			loaded: function(data) {
+				BOOMR.responseEnd(name, t_start, data);
 			}
 		};
 	},
 
-	responseEnd: function(name, t_start) {
+	responseEnd: function(name, t_start, data) {
 		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
-		impl.fireEvent("xhr_load", { "name": "xhr_" + name });
+		impl.fireEvent("xhr_load", {
+			"name": "xhr_" + name,
+			"data": data
+		});
 	},
 
 	sendBeacon: function() {
-		var k, data, url, img, nparams;
+		var k, data, url, img, nparams, errors=[];
 
 		BOOMR.debug("Checking if we can send beacon");
 
@@ -799,6 +830,18 @@ boomr = {
 		if(w !== window) {
 			impl.vars["if"] = "";
 		}
+
+		for (k in impl.errors) {
+			if (impl.errors.hasOwnProperty(k)) {
+				errors.push(k + (impl.errors[k] > 1 ? " (*" + impl.errors[k] + ")" : ""));
+			}
+		}
+
+		if(errors.length > 0) {
+			impl.vars.errors = errors.join("\n");
+		}
+
+		impl.errors = {};
 
 		// If we reach here, all plugins have completed
 		impl.fireEvent("before_beacon", impl.vars);
