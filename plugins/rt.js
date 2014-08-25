@@ -8,6 +8,8 @@
 // the parameter is the window
 (function(w) {
 
+/*eslint no-underscore-dangle:0*/
+
 var d=w.document, impl;
 
 BOOMR = BOOMR || {};
