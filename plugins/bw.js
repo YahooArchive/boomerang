@@ -42,14 +42,14 @@ images.l = { name: "image-l.gif", size: 35, timeout: 1000 };
 // private object
 impl = {
 	// properties
-	base_url: '',
+	base_url: "",
 	timeout: 15000,
 	nruns: 5,
 	latency_runs: 10,
-	user_ip: '',
+	user_ip: "",
 	test_https: false,
 	cookie_exp: 7*86400,
-	cookie: 'BA',
+	cookie: "BA",
 
 	// state
 	results: [],
@@ -184,10 +184,10 @@ impl = {
 			}
 		}
 
-		BOOMR.debug('got ' + n + ' readings', "bw");
+		BOOMR.debug("got " + n + " readings", "bw");
 
-		BOOMR.debug('bandwidths: ' + bandwidths, "bw");
-		BOOMR.debug('corrected: ' + bandwidths_corrected, "bw");
+		BOOMR.debug("bandwidths: " + bandwidths, "bw");
+		BOOMR.debug("corrected: " + bandwidths_corrected, "bw");
 
 		// First do IQR filtering since we use the median here
 		// and should use the stddev after filtering.
@@ -199,8 +199,8 @@ impl = {
 			bandwidths_corrected = bandwidths_corrected.sort(this.ncmp);
 		}
 
-		BOOMR.debug('after iqr: ' + bandwidths, "bw");
-		BOOMR.debug('corrected: ' + bandwidths_corrected, "bw");
+		BOOMR.debug("after iqr: " + bandwidths, "bw");
+		BOOMR.debug("corrected: " + bandwidths_corrected, "bw");
 
 		// Now get the mean & median.
 		// Also get corrected values that eliminate latency
@@ -228,8 +228,8 @@ impl = {
 			);
 
 		if (bandwidths_corrected.length < 1) {
-			BOOMR.debug('not enough valid corrected datapoints, falling back to uncorrected', 'bw');
-			debug_info.push('l==' + bandwidths_corrected.length);
+			BOOMR.debug("not enough valid corrected datapoints, falling back to uncorrected", "bw");
+			debug_info.push("l==" + bandwidths_corrected.length);
 
 			amean_corrected = amean;
 			std_dev_corrected = std_dev;
@@ -252,8 +252,8 @@ impl = {
 					);
 		}
 
-		BOOMR.debug('amean: ' + amean + ', median: ' + median, "bw");
-		BOOMR.debug('corrected amean: ' + amean_corrected + ', ' + 'median: ' + median_corrected, "bw");
+		BOOMR.debug("amean: " + amean + ", median: " + median, "bw");
+		BOOMR.debug("corrected amean: " + amean_corrected + ", " + "median: " + median_corrected, "bw");
 
 		return {
 			mean: amean,
@@ -271,7 +271,7 @@ impl = {
 	load_img: function(i, run, callback)
 	{
 		var url = this.base_url + images[i].name
-			+ '?t=' + (new Date().getTime()) + Math.random(),	// Math.random() is slow, but we get it before we start the timer
+			+ "?t=" + (new Date().getTime()) + Math.random(),	// Math.random() is slow, but we get it before we start the timer
 		    timer=0, tstart=0,
 		    img = new Image(),
 		    that=this, handler;
@@ -384,7 +384,7 @@ impl = {
 
 		BOOMR.addVar(o);
 		if(bw.debug_info.length > 0) {
-			BOOMR.addVar("bw_debug", bw.debug_info.join(','));
+			BOOMR.addVar("bw_debug", bw.debug_info.join(","));
 		}
 
 		// If we have an IP address we can make the BA cookie persistent for a while
@@ -418,7 +418,7 @@ impl = {
 			this.finish();
 		}
 		else if(this.latency_runs) {
-			this.load_img('l', this.latency_runs--, this.lat_loaded);
+			this.load_img("l", this.latency_runs--, this.lat_loaded);
 		}
 		else {
 			this.results.push({r:[]});
@@ -431,9 +431,9 @@ impl = {
 		    bw_e = parseFloat(cookies.be, 10),
 		    lat = parseInt(cookies.l, 10) || 0,
 		    lat_e = parseFloat(cookies.le, 10) || 0,
-		    c_sn = cookies.ip.replace(/\.\d+$/, '0'),	// Note this is IPv4 only
+		    c_sn = cookies.ip.replace(/\.\d+$/, "0"),	// Note this is IPv4 only
 		    t = parseInt(cookies.t, 10),
-		    p_sn = this.user_ip.replace(/\.\d+$/, '0'),
+		    p_sn = this.user_ip.replace(/\.\d+$/, "0"),
 
 		// We use the subnet instead of the IP address because some people
 		// on DHCP with the same ISP may get different IPs on the same subnet
@@ -446,10 +446,10 @@ impl = {
 		if(c_sn === p_sn && t >= t_now - this.cookie_exp && ba > 0) {
 			this.complete = true;
 			BOOMR.addVar({
-				'bw': ba,
-				'lat': lat,
-				'bw_err': bw_e,
-				'lat_err': lat_e
+				"bw": ba,
+				"lat": lat,
+				"bw_err": bw_e,
+				"lat_err": lat_e
 			});
 
 			return true;
@@ -488,7 +488,7 @@ BOOMR.plugins.BW = {
 		impl.complete = false;
 		impl.aborted = false;
 
-		BOOMR.removeVar('ba', 'ba_err', 'lat', 'lat_err');
+		BOOMR.removeVar("ba", "ba_err", "lat", "lat_err");
 
 		cookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie));
 
@@ -507,7 +507,7 @@ BOOMR.plugins.BW = {
 			return this;
 		}
 
-		if( !impl.test_https && BOOMR.window.location.protocol === 'https:') {
+		if( !impl.test_https && BOOMR.window.location.protocol === "https:") {
 			// we don't run the test for https because SSL stuff will mess up b/w
 			// calculations we could run the test itself over HTTP, but then IE
 			// will complain about insecure resources, so the best is to just bail
