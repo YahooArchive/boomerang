@@ -48,7 +48,7 @@ function BOOMR_check_doc_domain(domain) {
 	// skip the frame check at that point
 	if(!domain) {
 		// If we're running in the main window, then we don't need this
-		if(window.parent === window || !document.getElementById('boomr-if-as')) {
+		if(window.parent === window || !document.getElementById("boomr-if-as")) {
 			return true;	// nothing to do
 		}
 
@@ -74,7 +74,7 @@ function BOOMR_check_doc_domain(domain) {
 	}
 	// 3. Strip off leading part and try again
 	catch(err) {
-		domain = domain.replace(/^[\w\-]+\./, '');
+		domain = domain.replace(/^[\w\-]+\./, "");
 	}
 
 	return BOOMR_check_doc_domain(domain);
@@ -91,10 +91,10 @@ var impl, boomr, d, myurl, createCustomEvent;
 
 // This is the only block where we use document without the w. qualifier
 if(w.parent !== w
-		&& document.getElementById('boomr-if-as')
-		&& document.getElementById('boomr-if-as').nodeName.toLowerCase() === 'script') {
+		&& document.getElementById("boomr-if-as")
+		&& document.getElementById("boomr-if-as").nodeName.toLowerCase() === "script") {
 	w = w.parent;
-	myurl = document.getElementById('boomr-if-as').src;
+	myurl = document.getElementById("boomr-if-as").src;
 }
 
 d = w.document;
@@ -125,9 +125,9 @@ BOOMR.window = w;
 	}
 
 	try {
-		if (!createCustomEvent && d.createEvent && d.createEvent( 'CustomEvent' )) {
+		if (!createCustomEvent && d.createEvent && d.createEvent( "CustomEvent" )) {
 			createCustomEvent = function (e_name, params) {
-				var evt = d.createEvent( 'CustomEvent' );
+				var evt = d.createEvent( "CustomEvent" );
 				params = params || { cancelable: false, bubbles: false };
 				evt.initCustomEvent( e_name, params.bubbles, params.cancelable, params.detail );
 
@@ -183,10 +183,10 @@ impl = {
 	// but we allow the developer to override site_domain for that.
 	// You can disable all cookies by setting site_domain to a falsy value
 	site_domain: w.location.hostname.
-				replace(/.*?([^.]+\.[^.]+)\.?$/, '$1').
+				replace(/.*?([^.]+\.[^.]+)\.?$/, "$1").
 				toLowerCase(),
 	//! User's ip address determined on the server.  Used for the BA cookie
-	user_ip: '',
+	user_ip: "",
 
 	strip_query_string: false,
 
@@ -267,7 +267,7 @@ impl = {
 				handler.fn.call(handler.scope, data, handler.cb_data);
 			}
 			catch(err) {
-				BOOMR.addError(err, 'fireEvent.' + e_name);
+				BOOMR.addError(err, "fireEvent." + e_name);
 			}
 		}
 
@@ -322,7 +322,7 @@ boomr = {
 				for(k in o) {
 					if(Object.prototype.hasOwnProperty.call(o, k)) {
 						if (nest_level > 0 && o[k] !== null && typeof o[k] === "object") {
-							value.push(encodeURIComponent(k) + '=' +
+							value.push(encodeURIComponent(k) + "=" +
 								this.objectToString(
 									o[k],
 									separator + (separator === "\n\t" ? "\t" : ""),
@@ -331,7 +331,7 @@ boomr = {
 							);
 						}
 						else {
-							value.push(encodeURIComponent(k) + '=' + encodeURIComponent(o[k]));
+							value.push(encodeURIComponent(k) + "=" + encodeURIComponent(o[k]));
 						}
 					}
 				}
@@ -345,13 +345,13 @@ boomr = {
 				return null;
 			}
 
-			name = ' ' + name + '=';
+			name = " " + name + "=";
 
 			var i, cookies;
-			cookies = ' ' + d.cookie + ';';
+			cookies = " " + d.cookie + ";";
 			if ( (i=cookies.indexOf(name)) >= 0 ) {
 				i += name.length;
-				cookies = cookies.substring(i, cookies.indexOf(';', i));
+				cookies = cookies.substring(i, cookies.indexOf(";", i));
 				return cookies;
 			}
 
@@ -367,7 +367,7 @@ boomr = {
 			}
 
 			value = this.objectToString(subcookies, "&");
-			nameval = name + '=' + value;
+			nameval = name + "=" + value;
 
 			c = [nameval, "path=/", "domain=" + impl.site_domain];
 			if(max_age) {
@@ -378,7 +378,7 @@ boomr = {
 			}
 
 			if ( nameval.length < 500 ) {
-				d.cookie = c.join('; ');
+				d.cookie = c.join("; ");
 				// confirm cookie was set (could be blocked by user's settings, etc.)
 				savedval = this.getCookie(name);
 				if(value === savedval) {
@@ -408,10 +408,10 @@ boomr = {
 				return null;
 			}
 
-			cookies_a = cookie.split('&');
+			cookies_a = cookie.split("&");
 
 			for(i=0, l=cookies_a.length; i<l; i++) {
-				kv = cookies_a[i].split('=');
+				kv = cookies_a[i].split("=");
 				if(kv[0]) {
 					kv.push("");	// just in case there's no value
 					cookies[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
@@ -431,7 +431,7 @@ boomr = {
 				return "";
 			}
 			if(impl.strip_query_string) {
-				return url.replace(/\?.*/, '?qs-redacted');
+				return url.replace(/\?.*/, "?qs-redacted");
 			}
 			return url;
 		},
@@ -448,12 +448,12 @@ boomr = {
 				return "";
 			}
 			if(stripHash) {
-				url = url.replace(/#.*/, '');
+				url = url.replace(/#.*/, "");
 			}
 			if(!BOOMR.utils.MD5) {
 				return url;
 			}
-			return url.replace(/\?([^#]*)/, function(m0, m1) { return '?' + (m1.length > 10 ? BOOMR.utils.MD5(m1) : m1); });
+			return url.replace(/\?([^#]*)/, function(m0, m1) { return "?" + (m1.length > 10 ? BOOMR.utils.MD5(m1) : m1); });
 		},
 
 		pluginConfig: function(o, config, plugin_name, properties) {
@@ -477,7 +477,7 @@ boomr = {
 			if (el.addEventListener) {
 				el.addEventListener(type, fn, false);
 			} else if (el.attachEvent) {
-				el.attachEvent( 'on' + type, fn );
+				el.attachEvent( "on" + type, fn );
 			}
 		},
 
@@ -485,7 +485,7 @@ boomr = {
 			if (el.removeEventListener) {
 				el.removeEventListener(type, fn, false);
 			} else if (el.detachEvent) {
-				el.detachEvent('on' + type, fn);
+				el.detachEvent("on" + type, fn);
 			}
 		},
 
@@ -503,7 +503,7 @@ boomr = {
 						arr.push(
 							encodeURIComponent(prefix ? (prefix + "[" + k + "]") : k)
 							+ "="
-							+ (vars[k]===undefined || vars[k]===null ? '' : encodeURIComponent(vars[k]))
+							+ (vars[k]===undefined || vars[k]===null ? "" : encodeURIComponent(vars[k]))
 						);
 					}
 				}
@@ -592,7 +592,7 @@ boomr = {
 						this.plugins[k].init(config);
 					}
 					catch(err) {
-						BOOMR.addError(err, this.plugins[k] + '.init');
+						BOOMR.addError(err, this.plugins[k] + ".init");
 					}
 				}
 			}
@@ -713,7 +713,7 @@ boomr = {
 		ev.push({ "fn": fn, "cb_data": cb_data || {}, "scope": cb_scope || null });
 
 		// attaching to page_ready after onload fires, so call soon
-		if(e_name === 'page_ready' && impl.onloadfired) {
+		if(e_name === "page_ready" && impl.onloadfired) {
 			this.setImmediate(fn, null, cb_data, cb_scope);
 		}
 
@@ -723,7 +723,7 @@ boomr = {
 		// onbeforeunload is the right event to fire, but all browsers don't
 		// support it.  This allows us to fall back to onunload when onbeforeunload
 		// isn't implemented
-		if(e_name === 'page_unload') {
+		if(e_name === "page_unload") {
 			unload_handler = function(ev) {
 							if(fn) {
 								fn.call(cb_scope, ev || w.event, cb_data);
@@ -838,7 +838,7 @@ boomr = {
 
 		impl.vars.v = BOOMR.version;
 		// use d.URL instead of location.href because of a safari bug
-		impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ''));
+		impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
 		if(w !== window) {
 			impl.vars["if"] = "";
 		}
@@ -877,14 +877,14 @@ boomr = {
 			return this;
 		}
 
-		data = data.join('&');
+		data = data.join("&");
 
-		if(impl.beacon_type === 'POST') {
+		if(impl.beacon_type === "POST") {
 			BOOMR.utils.postData(data);
 		} else {
 			// if there are already url parameters in the beacon url,
 			// change the first parameter prefix for the boomerang url parameters to &
-			url = impl.beacon_url + ((impl.beacon_url.indexOf('?') > -1)?'&':'?') + data;
+			url = impl.beacon_url + ((impl.beacon_url.indexOf("?") > -1)?"&":"?") + data;
 
 			// using 2000 here as a de facto maximum URL length based on:
 			// http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
@@ -904,11 +904,11 @@ boomr = {
 
 delete BOOMR_start;
 
-if(typeof BOOMR_lstart === 'number') {
+if(typeof BOOMR_lstart === "number") {
 	boomr.t_lstart = BOOMR_lstart;
 	delete BOOMR_lstart;
 }
-else if(typeof BOOMR.window.BOOMR_lstart === 'number') {
+else if(typeof BOOMR.window.BOOMR_lstart === "number") {
 	boomr.t_lstart = BOOMR.window.BOOMR_lstart;
 }
 
