@@ -268,12 +268,6 @@ impl = {
 		};
 	},
 
-	defer: function(method)
-	{
-		var that=this;
-		return setTimeout(function() { method.call(that); that=null;}, 10);
-	},
-
 	load_img: function(i, run, callback)
 	{
 		var url = this.base_url + images[i].name
@@ -335,7 +329,7 @@ impl = {
 			this.latency = this.calc_latency();
 		}
 
-		this.defer(this.iterate);
+		BOOMR.setImmediate(this.iterate, null, null, this);
 	},
 
 	img_loaded: function(i, tstart, run, success)
@@ -376,7 +370,7 @@ impl = {
 			if(run === this.nruns) {
 				images.start = i;
 			}
-			this.defer(this.iterate);
+			BOOMR.setImmediate(this.iterate, null, null, this);
 		} else {
 			this.load_img(i+1, run, this.img_loaded);
 		}
@@ -537,7 +531,7 @@ BOOMR.plugins.BW = {
 
 		setTimeout(this.abort, impl.timeout);
 
-		impl.defer(impl.iterate);
+		BOOMR.setImmediate(impl.iterate, null, null, impl);
 
 		return this;
 	},
