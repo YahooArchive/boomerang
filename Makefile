@@ -6,6 +6,7 @@ PLUGINS := plugins/rt.js plugins/bw.js
 VERSION := $(shell sed -ne '/^BOOMR\.version/{s/^.*"\([^"]*\)".*/\1/;p;q;}' boomerang.js)
 DATE := $(shell date +%s)
 
+ESLINT := $(shell which eslint)
 MINIFIER := cat
 
 all: boomerang-$(VERSION).$(DATE).js
@@ -34,6 +35,7 @@ boomerang-$(VERSION).$(DATE)-debug.js: boomerang.js $(PLUGINS)
 	echo "Making $@ ..."
 	echo "using plugins: $(PLUGINS)..."
 	cat boomerang.js $(PLUGINS) plugins/zzz_last_plugin.js | sed -e 's/^\(BOOMR\.version = "\)$(VERSION)\("\)/\1$(VERSION).$(DATE)\2/' > $@ && echo "done"
+	if [ -n "$(ESLINT)" ]; then echo "Linting..."; $(ESLINT) $@ && echo "OK"; else echo "Install eslint to check syntax"; fi
 	echo
 
 .PHONY: all
