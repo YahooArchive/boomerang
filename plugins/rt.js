@@ -14,6 +14,9 @@ var d=w.document, impl;
 
 BOOMR = BOOMR || {};
 BOOMR.plugins = BOOMR.plugins || {};
+if (BOOMR.plugins.RT) {
+	return;
+}
 
 // private object
 impl = {
@@ -515,8 +518,8 @@ BOOMR.plugins.RT = {
 		BOOMR.debug("init RT", "rt");
 		if(w !== BOOMR.window) {
 			w = BOOMR.window;
-			d = w.document;
 		}
+		d = w.document;
 
 		BOOMR.utils.pluginConfig(impl, config, "RT",
 					["cookie", "cookie_exp", "strict_referrer"]);
