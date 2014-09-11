@@ -1,0 +1,21 @@
+{
+  "name": "boomerang",
+  "main": "boomerang.js",
+  "version": "0.0.1",
+  "homepage": "http://lognormal.github.com/boomerang/doc/",
+  "authors": [
+    "Philip Tellis"
+  ],
+  "description": "End user oriented web performance testing and beaconing",
+  "keywords": [
+    "boomerang"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
