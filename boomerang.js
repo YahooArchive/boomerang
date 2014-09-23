@@ -414,7 +414,7 @@ boomr = {
 		},
 
 		removeCookie: function(name) {
-			this.setCookie(name, {}, -86400);
+			return this.setCookie(name, {}, -86400);
 		},
 
 		cleanupURL: function(url) {
@@ -451,7 +451,7 @@ boomr = {
 			var i, props=0;
 
 			if(!config || !config[plugin_name]) {
-				return;
+				return false;
 			}
 
 			for(i=0; i<properties.length; i++) {
@@ -461,7 +461,7 @@ boomr = {
 				}
 			}
 
-			return;
+			return (props>0);
 		},
 
 		addListener: function(el, type, fn) {
