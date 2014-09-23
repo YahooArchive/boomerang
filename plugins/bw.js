@@ -459,7 +459,7 @@ impl = {
 					bw_time: t
 				});
 
-				return 1;
+				return true;
 			}
 		}
 
