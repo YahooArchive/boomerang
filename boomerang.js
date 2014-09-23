@@ -41,6 +41,7 @@ BOOMR_start = new Date().getTime();
  it.
  */
 function BOOMR_check_doc_domain(domain) {
+	/*eslint no-unused-vars:0*/
 	var test;
 
 	// If domain is not passed in, then this is a global call
@@ -49,20 +50,20 @@ function BOOMR_check_doc_domain(domain) {
 	if(!domain) {
 		// If we're running in the main window, then we don't need this
 		if(window.parent === window || !document.getElementById("boomr-if-as")) {
-			return true;	// nothing to do
+			return;// true;	// nothing to do
 		}
 
 		domain = document.domain;
 	}
 
 	if(domain.indexOf(".") === -1) {
-		return false;	// not okay, but we did our best
+		return;// false;	// not okay, but we did our best
 	}
 
 	// 1. Test without setting document.domain
 	try {
 		test = window.parent.document;
-		return test !== undefined;	// all okay
+		return;// test !== undefined;	// all okay
 	}
 	// 2. Test with document.domain
 	catch(err) {
@@ -70,14 +71,14 @@ function BOOMR_check_doc_domain(domain) {
 	}
 	try {
 		test = window.parent.document;
-		return test !== undefined;	// all okay
+		return;// test !== undefined;	// all okay
 	}
 	// 3. Strip off leading part and try again
 	catch(err) {
 		domain = domain.replace(/^[\w\-]+\./, "");
 	}
 
-	return BOOMR_check_doc_domain(domain);
+	BOOMR_check_doc_domain(domain);
 }
 
 BOOMR_check_doc_domain();
@@ -87,7 +88,7 @@ BOOMR_check_doc_domain();
 // the parameter is the window
 (function(w) {
 
-var impl, boomr, d, myurl, createCustomEvent;
+var impl, boomr, d, myurl, createCustomEvent, dispatchEvent;
 
 // This is the only block where we use document without the w. qualifier
 if(w.parent !== w
@@ -100,9 +101,7 @@ if(w.parent !== w
 d = w.document;
 
 // Short namespace because I don't want to keep typing BOOMERANG
-if(w.BOOMR === undefined) {
-	w.BOOMR = {};
-}
+if(!w.BOOMR) { w.BOOMR = {}; }
 BOOMR = w.BOOMR;
 // don't allow this code to be included twice
 if(BOOMR.version) {
@@ -153,21 +152,21 @@ BOOMR.window = w;
 	}
 }());
 
-function dispatchEvent(e_name, e_data) {
+dispatchEvent = function(e_name, e_data) {
 	var ev = createCustomEvent(e_name, {"detail": e_data});
 	if (!ev) {
 		return;
 	}
 
 	BOOMR.setImmediate(function() {
-		if (d.dispatchEvent) {
+		if(d.dispatchEvent) {
 			d.dispatchEvent(ev);
 		}
 		else if(d.fireEvent) {
 			d.fireEvent("onpropertychange", ev);
 		}
 	});
-}
+};
 
 // impl is a private object not reachable from outside the BOOMR object
 // users can set properties by passing in to the init() method
@@ -413,7 +412,7 @@ boomr = {
 		},
 
 		removeCookie: function(name) {
-			return this.setCookie(name, {}, -86400);
+			this.setCookie(name, {}, -86400);
 		},
 
 		cleanupURL: function(url) {
@@ -450,7 +449,7 @@ boomr = {
 			var i, props=0;
 
 			if(!config || !config[plugin_name]) {
-				return false;
+				return;
 			}
 
 			for(i=0; i<properties.length; i++) {
@@ -460,7 +459,7 @@ boomr = {
 				}
 			}
 
-			return (props>0);
+			return;
 		},
 
 		addListener: function(el, type, fn) {
@@ -557,7 +556,7 @@ boomr = {
 			this.log = config.log;
 		}
 		if(!this.log) {
-			this.log = function(/* m,l,s */) { return; };
+			this.log = function(/* m,l,s */) {};
 		}
 
 		for(k in this.plugins) {
