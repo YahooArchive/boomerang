@@ -17,7 +17,7 @@
     "grunt-string-replace": "^1.0.0"
   },
   "scripts": {
-    "test": "grunt jshint"
+    "test": "grunt eslint"
   },
   "repository": {
     "type": "git",
