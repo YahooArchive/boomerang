@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/andreas-marschke/boomerang.git"
+    "url": "https://github.com/lognormal/boomerang.git"
   },
   "keywords": [
     "rum",
@@ -35,19 +35,107 @@
     "analytics"
   ],
   "author": {
-    "name": "Log-Normal Inc.",
-    "url": "http://www.lognormal.com"
+      "name": "Philip Tellis",
+      "email": "philip@bluesmoon.info",
+      "url": "http://bluesmoon.info"
   },
   "contributors": [
-    {
-      "name": "Andreas Marschke",
-      "url": "http://www.andreas-marschke.name",
-      "email": "andreas.marschke@gmail.com"
-    }
+      {
+	  "name": "abarre",
+	  "email": "a@fasterize.com"
+      },
+      {
+	  "name": "Ariel Barreiro",
+	  "email": "abarrei@gmail.com"
+      },
+      {
+	  "name": "Buddy Brewer",
+	  "email": "buddy@buddybrewer.com"
+      },
+      {
+	  "name": "Callum Macdonald",
+	  "email": "github.com@callum-macdonald.com"
+      },
+      {
+	  "name": "Chirag Shah",
+	  "email": "chiragshah1@gmail.com"
+      },
+      {
+	  "name": "Dominick",
+	  "email": "dguzzo@gmail.com"
+      },
+      {
+	  "name": "Drew Miller",
+	  "email": "drew@drewmiller.net"
+      },
+      {
+	  "name": "dweitemeyer",
+	  "email": "weitemeyer@weikatec.com"
+      },
+      {
+	  "name": "Edgar Klein",
+	  "email": "edgar@ididic.com"
+      },
+      {
+	  "name": "edgarklein",
+	  "email": "edgar@me.com"
+      },
+      {
+	  "name": "Eric Goldsmith",
+	  "email": "eric@ericgoldsmith.com"
+      },
+      {
+	  "name": "Erik Fried",
+	  "email": "erikmfried@gmail.com"
+      },
+      {
+	  "name": "Gun.io Whitespace Robot",
+	  "email": "contact@gun.io"
+      },
+      {
+	  "name": "Jamis Charles",
+	  "email": "Jamis82@gmail.com"
+      },
+      {
+	  "name": "Jason Martin",
+	  "email": "jhmartin@toger.us"
+      },
+      {
+	  "name": "Jon Pliske",
+	  "email": "jpliske@groupon.com"
+      },
+      {
+	  "name": "Marcel Duran",
+	  "email": "contact@marcelduran.com"
+      },
+      {
+	  "name": "Parker Seidel",
+	  "email": "pseidel@predictivetechnologies.com"
+      },
+      {
+	  "name": "Phil Booth",
+	  "email": "pmbooth@gmail.com"
+      },
+      {
+	  "name": "Ryuichi Okumura",
+	  "email": "okuryu@okuryu.com"
+      },
+      {
+	  "name": "Tyler Mauthe",
+	  "email": "tmauthe@hatsize.com"
+      },
+      {
+	  "name": "xzyfer",
+	  "email": "xzyfer@gmail.com"
+      },
+      {
+	  "name": "Andreas Marschke",
+	  "email": "andreas.marschke@gmail.com"
+      }
   ],
   "license": "BSD",
   "bugs": {
-    "url": "https://github.com/andreas-marschke/boomerang/issues"
+    "url": "https://github.com/lognormal/boomerang/issues"
   },
-  "homepage": "https://github.com/andreas-marschke/boomerang"
+  "homepage": "https://github.com/lognormal/boomerang"
 }
