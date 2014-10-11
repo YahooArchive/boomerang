@@ -2,3 +2,6 @@
 *.gz
 *.swp
 boomerang-*.js
+node_modules*
+build/*
+hint.log
