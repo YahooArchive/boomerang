@@ -75,14 +75,38 @@ module.exports = function (grunt) {
 	    options: {},
 	    build: ["build/"],
 	    src: ["plugins/*~","*.js~"]
+	},
+	karma: {
+	    options: {
+		port: 5000,
+		configFile: "./karma.config.js",
+		reporters: "dots",
+		files: [
+		    "./index.html",
+		    "./vendor/*/mocha.css",
+		    "./vendor/*/mocha.js",
+		    "./vendor/*/chai.js",
+		    "./library/*.js",
+		    "../build/<%= pkg.name %>-<%= pkg.version %>.js"
+		]
+	    },
+	    unit: { 
+		singleRun: true
+	    },
+	    dev: { 
+		singleRun: false,
+		browsers: ['Chrome']
+	    }
 	}
     });
 
     grunt.loadNpmTasks("grunt-eslint");
+    grunt.loadNpmTasks("grunt-karma");
     grunt.loadNpmTasks("grunt-contrib-concat");
     grunt.loadNpmTasks("grunt-string-replace");
     grunt.loadNpmTasks("grunt-contrib-uglify");
     grunt.loadNpmTasks("grunt-contrib-clean");
 
     grunt.registerTask("default",["clean","concat","string-replace","uglify"]);
+    grunt.registerTask("test",["default","karma"]);
 };
