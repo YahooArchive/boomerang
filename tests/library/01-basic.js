@@ -1,5 +1,3 @@
-var assert = chai.assert;
-
 describe ("Basic Checks",function() {
     describe("Object existence",function() {
 	it("Should have an existing BOOMR object",function() {
@@ -15,17 +13,12 @@ describe ("Basic Checks",function() {
 	});
 
 	it("Should have an existing BOOMR.session Object",function() {
+	    console.log("Not sure if this is still relevant please report feedback in issue #40 on lognormal/boomerang");
 	    assert.isObject(BOOMR.session);
 	});
 
 	it("Should have an existing BOOMR.init() Function",function() {
 	    assert.isFunction(BOOMR.init);
-	});
-
-	it("Should have an existing BOOMR.debug(), BOOMR.warn() and info() Function",function() {
-	    assert.isFunction(BOOMR.debug, "debug() exists");
-	    assert.isFunction(BOOMR.warn, "warn() exists");
-	    assert.isFunction(BOOMR.info,"info() exits");
 	});
 
 	it("Should have an existing BOOMR.plugins Object", function(){

@@ -112,7 +112,11 @@ describe ("Cookie Tests",function() {
 	it("Should return null when calling with null as first argument",function(){
 	    assert.isNull(BOOMR.utils.getSubCookies(null));
 	});
-
+	
+	it("Should return null when calling with a non-string object",function() {
+	    assert.isNull(BOOMR.utils.getSubCookies({key: "value"}));
+	});
+	
 	it("Should return the value that we've set previously",function () {
 	    var value = {value : { subValue: "value" }};
 	    BOOMR.utils.setCookie(cookieName,value);
