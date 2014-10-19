@@ -78,24 +78,25 @@ module.exports = function (grunt) {
 	},
 	karma: {
 	    options: {
-		port: 5000,
 		configFile: "./karma.config.js",
-		reporters: "dots",
+		preprocessors: {
+		    "../build/*.js": ["coverage"],
+		},
 		files: [
-		    "./index.html",
-		    "./vendor/*/mocha.css",
-		    "./vendor/*/mocha.js",
-		    "./vendor/*/chai.js",
+		    "./vendor/mocha/mocha.css",
+		    "./vendor/mocha/mocha.js",
+		    "./vendor/chai/chai.js",
 		    "./library/*.js",
 		    "../build/<%= pkg.name %>-<%= pkg.version %>.js"
 		]
 	    },
 	    unit: { 
-		singleRun: true
+		singleRun: true,
+		browsers: ['PhantomJS']
 	    },
 	    dev: { 
 		singleRun: false,
-		browsers: ['Chrome']
+		browsers: ['PhantomJS']
 	    }
 	}
     });
