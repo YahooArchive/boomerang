@@ -3,6 +3,7 @@ describe ("Cookie Tests",function() {
 
     /* 
        NOTE:
+
        These tests can only run in a client-server setup with a properly 
        configured FQDN for the server.
        
@@ -56,6 +57,10 @@ describe ("Cookie Tests",function() {
 	    assert.isFunction(BOOMR.utils.setCookie);
 	});
 
+	it("Should return false if no name was passed as first argument to setCookie()",function()  {
+	    assert.isFalse(BOOMR.utils.setCookie());
+	});
+
 	it("Should return false when setting only Cookie name",function() {
 	    assert.isFalse(BOOMR.utils.setCookie(cookieName));
 	});
@@ -88,7 +93,7 @@ describe ("Cookie Tests",function() {
 
 	it("Should return false when trying to set a cookie bigger than 500 characters",function() {
 	    var value = "";
-	    for (var index = 0; index <= 501;index++) {
+	    for (var index = 0; index <= 500;index++) {
 		value += "1";
 	    }
 	    assert.isFalse(BOOMR.utils.setCookie("failCookie",value));
