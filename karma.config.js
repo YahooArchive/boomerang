@@ -4,13 +4,13 @@
 module.exports = function(config) {
   config.set({
 
-      basePath: "./tests",
+      basePath: "./",
 
       port: 4000,
       runnerPort: 4001,
       logLevel: config.LOG_INFO,
 
-      colors: true,
+      colors: false,
       autoWatch: false,
 
       frameworks: ["mocha"],
@@ -19,7 +19,7 @@ module.exports = function(config) {
 
       coverageReporter: {
 	  type : 'html',
-	  dir : 'coverage/'
+	  dir : 'tests/coverage/'
       }
   });
 };

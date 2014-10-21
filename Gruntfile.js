@@ -80,23 +80,26 @@ module.exports = function (grunt) {
 	    options: {
 		configFile: "./karma.config.js",
 		preprocessors: {
-		    "../build/*.js": ["coverage"],
+		    "./build/*.js": ["coverage"],
 		},
+		basePath: "./",
 		files: [
-		    "./vendor/mocha/mocha.css",
-		    "./vendor/mocha/mocha.js",
-		    "./vendor/chai/chai.js",
-		    "./library/*.js",
-		    "../build/<%= pkg.name %>-<%= pkg.version %>.js"
+		    "tests/vendor/mocha/mocha.css",
+		    "tests/vendor/mocha/mocha.js",
+		    "tests/vendor/chai/chai.js",
+		    "tests/library/*.js",
+		    "./build/<%= pkg.name %>-<%= pkg.version %>.js"
 		]
 	    },
 	    unit: { 
 		singleRun: true,
-		browsers: ['PhantomJS']
+		colors: false,
+		browsers: ['PhantomJS']		
 	    },
 	    dev: { 
 		singleRun: false,
-		browsers: ['PhantomJS']
+		colors: false,
+		browsers: ['Chrome']
 	    }
 	}
     });
