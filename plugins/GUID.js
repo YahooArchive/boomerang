@@ -30,7 +30,7 @@
 
 		BOOMR.info("Setting GUID Cookie value to: " + guid + " expiring in: " + impl.expires + "s", "GUID");
 	    } else {
-		BOOMR.info("Found a cookie named: " + impl.cookieName + " value: " + BOOMR.getCookie(impl.cookieName) , "GUID");
+		BOOMR.info("Found a cookie named: " + impl.cookieName + " value: " + BOOMR.utils.getCookie(impl.cookieName) , "GUID");
 	    }
 	    return this;
 	},
