@@ -977,11 +977,17 @@ boomr = {
 			}
 		}
 
-		impl.vars.v = BOOMR.version;
 		// use d.URL instead of location.href because of a safari bug
+		impl.vars.pgu = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
 		if(!impl.vars.u) {
-			impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
+			impl.vars.u = impl.vars.pgu;
 		}
+
+		if(impl.vars.pgu === impl.vars.u) {
+			delete impl.vars.pgu;
+		}
+
+		impl.vars.v = BOOMR.version;
 
 		if(BOOMR.visibilityState()) {
 			impl.vars["vis.st"] = BOOMR.visibilityState();
