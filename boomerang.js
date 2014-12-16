@@ -1060,13 +1060,7 @@ else if(typeof BOOMR.window.BOOMR_lstart === "number") {
 (function() {
 	var make_logger;
 
-	if(w.YAHOO && w.YAHOO.widget && w.YAHOO.widget.Logger) {
-		boomr.log = w.YAHOO.log;
-	}
-	else if(w.Y && w.Y.log) {
-		boomr.log = w.Y.log;
-	}
-	else if(typeof console === "object" && console.log !== undefined) {
+	if(typeof console === "object" && console.log !== undefined) {
 		boomr.log = function(m,l,s) { console.log(s + ": [" + l + "] " + m); };
 	}
 
