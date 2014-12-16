@@ -824,6 +824,10 @@ boomr = {
 		return this;
 	},
 
+	hasVar: function(name) {
+		return impl.vars.hasOwnProperty(name);
+	},
+
 	requestStart: function(name) {
 		var t_start = BOOMR.now();
 		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
