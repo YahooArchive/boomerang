@@ -1098,13 +1098,8 @@ if (!BOOMR.xhr_excludes) {
 
 }());
 
-BOOMR.plugins = BOOMR.plugins || {};
-
 dispatchEvent("onBoomerangLoaded", { "BOOMR": BOOMR } );
 
 }(window));
 
 // end of boomerang beaconing section
-
-
-
