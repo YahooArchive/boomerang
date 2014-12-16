@@ -304,7 +304,12 @@ boomr = {
 						);
 					}
 					else {
-						value.push(encodeURIComponent(o[k]));
+						if (separator === "&") {
+							value.push(encodeURIComponent(o[k]));
+						}
+						else {
+							value.push(o[k]);
+						}
 					}
 				}
 				separator = ",";
@@ -322,7 +327,12 @@ boomr = {
 							);
 						}
 						else {
-							value.push(encodeURIComponent(k) + "=" + encodeURIComponent(o[k]));
+							if (separator === "&") {
+								value.push(encodeURIComponent(k) + "=" + encodeURIComponent(o[k]));
+							}
+							else {
+								value.push(k + "=" + o[k]);
+							}
 						}
 					}
 				}
@@ -852,8 +862,9 @@ boomr = {
 		// Don't send a beacon if no beacon_url has been set
 		// you would do this if you want to do some fancy beacon handling
 		// in the `before_beacon` event instead of a simple GET request
+		BOOMR.debug("Ready to send beacon: " + BOOMR.utils.objectToString(impl.vars));
 		if(!impl.beacon_url) {
-			BOOMR.debug("No beacon_url, but would have sent: " + BOOMR.utils.objectToString(impl.vars));
+			BOOMR.debug("No beacon URL, so skipping.");
 			return true;
 		}
 
@@ -882,7 +893,6 @@ boomr = {
 			if(url.length > 2000 && impl.beacon_type === "AUTO") {
 				BOOMR.utils.postData(data);
 			} else {
-				BOOMR.debug("Sending url: " + url.replace(/&/g, "\n\t"));
 				img = new Image();
 				img.src=url;
 			}
