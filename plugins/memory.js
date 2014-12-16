@@ -9,7 +9,7 @@ see: http://code.google.com/p/chromium/issues/detail?id=43281
 */
 
 (function() {
-
+var w, p={}, d, m, impl;
 // First make sure BOOMR is actually defined.  It's possible that your plugin is loaded before boomerang, in which case
 // you'll need this.
 BOOMR = BOOMR || {};
@@ -18,26 +18,30 @@ if (BOOMR.plugins.Memory) {
 	return;
 }
 
+function nodeList(type) {
+	return d.getElementsByTagName(type);
+}
+
 // A private object to encapsulate all your implementation details
-var impl = {
-	complete: false,
+impl = {
 	done: function() {
-		var w  = BOOMR.window,
-		    p  = w.performance,
-		    c  = w.console,
-		    d  = w.document,
-		    fn = d.getElementsByTagName,
-		    m, f;
-
-		// handle IE6/7 weirdness regarding host objects
-		// See: http://stackoverflow.com/questions/7125288/what-is-document-getelementbyid
-		f  = (fn.call === undefined ? function(tag) { return fn(tag); } : fn);
-
-		m = (p && p.memory ? p.memory : (c && c.memory ? c.memory : null));
-
+		var res, doms={}, a;
 		// If we have resource timing, get number of resources
-		if(p && p.getEntries && p.getEntries().length) {
-			BOOMR.addVar("dom.res", p.getEntries().length);
+		if(p && p.getEntriesByType && p.getEntriesByType("resource").length) {
+			res = p.getEntriesByType("resource");
+			BOOMR.addVar("dom.res", res.length);
+
+			a = document.createElement("a");
+
+			res.forEach(function(r) {
+				a.href=r.name;
+				doms[a.hostname] = true;
+			});
+
+			BOOMR.addVar("dom.doms", Object.keys(doms).length);
+		}
+		else {
+			BOOMR.removeVar("dom.res");
 		}
 
 		if(m) {
@@ -47,30 +51,46 @@ var impl = {
 			});
 		}
 
+		try {
+			BOOMR.addVar({
+				"dom.ln": nodeList("*").length,
+				"dom.sz": nodeList("html")[0].innerHTML.length,
+				"dom.img": nodeList("img").length,
+				"dom.script": nodeList("script").length
+			});
+		}
+		catch(err) {
+			BOOMR.addError(err, "Memory.done.dom");
+		}
 
-		BOOMR.addVar({
-			"dom.ln": f.call(d, "*").length,
-			"dom.sz": f.call(d, "html")[0].innerHTML.length,
-			"dom.img": f.call(d, "img").length,
-			"dom.script": f.call(d, "script").length
-		});
-
-		this.complete = true;
-		BOOMR.sendBeacon();
+		// no need of sendBeacon because we're called when the beacon is being sent
 	}
 };
 
 BOOMR.plugins.Memory = {
 	init: function() {
-		// we do this on onload so that we take a memory and dom snapshot after most things have run
-		BOOMR.subscribe("page_ready", impl.done, null, impl);
-		BOOMR.subscribe("xhr_load", impl.done, null, impl);
-		BOOMR.subscribe("page_unload", impl.done, null, impl);
+		var c;
+
+		try {
+			w  = BOOMR.window;
+			d  = w.document;
+			p  = w.performance;
+			c  = w.console;
+		}
+		catch(err) {
+			BOOMR.addError(err, "Memory.init");
+		}
+
+		m = (p && p.memory ? p.memory : (c && c.memory ? c.memory : null));
+
+		// we do this before sending a beacon to get the snapshot when the beacon is sent
+		BOOMR.subscribe("before_beacon", impl.done, null, impl);
 		return this;
 	},
 
 	is_complete: function() {
-		return impl.complete;
+		// Always true since we run on before_beacon, which happens after the check
+		return true;
 	}
 };
 
