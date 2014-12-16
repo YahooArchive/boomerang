@@ -540,15 +540,11 @@ boomr = {
 		},
 
 		sendData: function (form, method) {
-			var iframe = document.createElement("iframe"),
-			    input  = document.createElement("input");
-
-			iframe.name = "boomerang_post";
-			iframe.style.display = form.style.display = "none";
+			var input  = document.createElement("input"),
+			    urls = [ impl.beacon_url ];
 
 			form.method = method;
-			form.action = impl.beacon_url;
-			form.target = iframe.name;
+			form.id = "beacon_form";
 
 			// TODO: Determine if we want to send as JSON
 			//if (window.JSON) {
@@ -561,15 +557,51 @@ boomr = {
 				form.enctype = "application/x-www-form-urlencoded";
 			//}
 
-			document.body.appendChild(iframe);
-			document.body.appendChild(form);
+			if(impl.secondary_beacons && impl.secondary_beacons.length) {
+				urls.push.apply(urls, impl.secondary_beacons);
+			}
 
-			BOOMR.utils.addListener(iframe, "load", function() {
-				document.body.removeChild(form);
-				document.body.removeChild(iframe);
-			});
 
-			form.submit();
+			function remove(id) {
+				var el = document.getElementById(id);
+				if (el) {
+					el.parentNode.removeChild(el);
+				}
+			}
+
+			function submit() {
+				var iframe,
+				    name = "boomerang_post-" + encodeURIComponent(form.action) + "-" + Math.random();
+
+				// ref: http://terminalapp.net/submitting-a-form-with-target-set-to-a-script-generated-iframe-on-ie/
+				try {
+					iframe = document.createElement('<iframe name="' + name + '">');	// IE <= 8
+				}
+				catch (ignore) {
+					iframe = document.createElement("iframe");				// everything else
+				}
+
+				form.action = urls.shift();
+				form.target = iframe.name = iframe.id = name;
+				iframe.style.display = form.style.display = "none";
+				iframe.src="javascript:false";
+
+				remove(iframe.id);
+				remove(form.id);
+
+				document.body.appendChild(iframe);
+				document.body.appendChild(form);
+
+				form.submit();
+
+				if (urls.length) {
+					BOOMR.setImmediate(submit);
+				}
+
+				setTimeout(function() { remove(iframe.id); }, 10000);
+			}
+
+			submit();
 		}
 	},
 
