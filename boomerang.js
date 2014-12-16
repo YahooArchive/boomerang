@@ -876,7 +876,7 @@ boomr = {
 		nparams = BOOMR.utils.pushVars(data, impl.vars);
 
 		// If we reach here, we've transferred all vars to the beacon URL.
-		this.setImmediate(impl.fireEvent, "onbeacon", impl.vars, impl);
+		impl.fireEvent("onbeacon", impl.vars);
 
 		if(!nparams) {
 			// do not make the request if there is no data
