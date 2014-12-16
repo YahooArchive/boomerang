@@ -677,7 +677,7 @@ boomr = {
 
 	init: function(config) {
 		var i, k,
-		    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string"];
+		    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string", "secondary_beacons"];
 
 		BOOMR_check_doc_domain();
 
