@@ -840,7 +840,10 @@ boomr = {
 
 		impl.vars.v = BOOMR.version;
 		// use d.URL instead of location.href because of a safari bug
-		impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
+		if(!impl.vars.u) {
+			impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
+		}
+
 		if(w !== window) {
 			impl.vars["if"] = "";
 		}
