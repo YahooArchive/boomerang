@@ -506,11 +506,16 @@ BOOMR.plugins.BW = {
 	},
 
 	run: function() {
+		var a;
 		if(impl.running || impl.complete) {
 			return this;
 		}
 
-		if( !impl.test_https && BOOMR.window.location.protocol === "https:") {
+		// Turn image url into an absolute url if it isn't already
+		a = document.createElement("a");
+		a.href = impl.base_url;
+
+		if( !impl.test_https && a.protocol === "https:") {
 			// we don't run the test for https because SSL stuff will mess up b/w
 			// calculations we could run the test itself over HTTP, but then IE
 			// will complain about insecure resources, so the best is to just bail
@@ -522,6 +527,7 @@ BOOMR.plugins.BW = {
 			return this;
 		}
 
+		impl.base_url = a.href;
 		impl.running = true;
 
 		setTimeout(this.abort, impl.timeout);
