@@ -694,6 +694,8 @@ boomr = {
 		}
 	},
 
+	now: (window.performance && window.performance.now ? function() { return Math.round(window.performance.now() + window.performance.timing.navigationStart); } : Date.now || function() { return new Date().getTime(); }),
+
 	subscribe: function(e_name, fn, cb_data, cb_scope) {
 		var i, handler, ev, unload_handler;
 
@@ -750,7 +752,7 @@ boomr = {
 			err = String(err);
 		}
 		if (src !== undefined) {
-			err = "[" + src + ":" + (new Date().getTime()) + "] " + err;
+			err = "[" + src + ":" + BOOMR.now() + "] " + err;
 		}
 
 		if (impl.errors[err]) {
@@ -800,7 +802,7 @@ boomr = {
 	},
 
 	requestStart: function(name) {
-		var t_start = new Date().getTime();
+		var t_start = BOOMR.now();
 		BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
 
 		return {
