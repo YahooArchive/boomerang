@@ -174,14 +174,8 @@ MutationHandler.prototype.sendEvent = function(i) {
 
 	this.watch--;
 
-	if(BOOMR.hasVar("h.cr")) {
-		BOOMR.responseEnd(ev.resource);
-		this.pending_events[i] = undefined;
-	}
-	else {
-		// No crumb, so try again after 5 seconds
-		setTimeout(function() { self.send_event(i); }, 5000);
-	}
+	BOOMR.responseEnd(ev.resource);
+	this.pending_events[i] = undefined;
 };
 
 MutationHandler.prototype.setTimeout = function(timeout, index) {
