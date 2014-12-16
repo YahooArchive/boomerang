@@ -746,7 +746,8 @@ BOOMR.plugins.RT = {
 		// make sure old variables don't stick around
 		BOOMR.removeVar(
 			"t_done", "t_page", "t_resp", "t_postrender", "t_prerender", "t_load", "t_other",
-			"r", "r2", "rt.tstart", "rt.cstart", "rt.bstart", "rt.end", "rt.subres", "rt.abld", "http.errno"
+			"r", "r2", "rt.tstart", "rt.cstart", "rt.bstart", "rt.end", "rt.subres", "rt.abld",
+			"http.errno", "http.method"
 		);
 
 		impl.setSupportingTimestamps(t_start);
@@ -761,9 +762,16 @@ BOOMR.plugins.RT = {
 			}
 		}
 
-		if(edata && edata.status && edata.status !== "200") {
-			BOOMR.addVar("http.errno", edata.status);
-			impl.addedVars.push("http.errno");
+		if(edata) {
+			if(edata.status && edata.status !== 200) {
+				BOOMR.addVar("http.errno", edata.status);
+				impl.addedVars.push("http.errno");
+			}
+
+			if(edata.method && edata.method !== "GET") {
+				BOOMR.addVar("http.method", edata.method);
+				impl.addedVars.push("http.method");
+			}
 		}
 
 		if(subresource) {
