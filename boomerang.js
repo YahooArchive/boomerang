@@ -951,6 +951,11 @@ for(ident in boomr) {
 		BOOMR[ident] = boomr[ident];
 	}
 }
+if (!BOOMR.xhr_excludes) {
+	//! URLs to exclude from automatic XHR instrumentation
+	BOOMR.xhr_excludes={};
+}
+
 }());
 
 BOOMR.plugins = BOOMR.plugins || {};
