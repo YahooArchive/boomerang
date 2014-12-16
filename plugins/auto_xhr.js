@@ -332,11 +332,18 @@ function instrumentClick() {
 }
 
 function instrumentXHR() {
-	var proxy_XMLHttpRequest,
-	    orig_XMLHttpRequest = BOOMR.window.XMLHttpRequest;
+	var orig_XMLHttpRequest = BOOMR.window.XMLHttpRequest;
 
 	if (BOOMR.XMLHttpRequest && BOOMR.XMLHttpRequest === orig_XMLHttpRequest) {
 		// already instrumented
+		return;
+	}
+	else if(BOOMR.proxy_XMLHttpRequest) {
+		// was once instrumented and then uninstrumented, so just reapply the old instrumented object
+
+		BOOMR.window.XMLHttpRequest = BOOMR.proxy_XMLHttpRequest;
+		MutationHandler.start();
+
 		return;
 	}
 
@@ -348,7 +355,7 @@ function instrumentXHR() {
 
 	// We could also inherit from window.XMLHttpRequest, but for this implementation,
 	// we'll use composition
-	proxy_XMLHttpRequest = function() {
+	BOOMR.proxy_XMLHttpRequest = function() {
 		var req, resource = { timing: {}, initiator: "xhr" }, orig_open, orig_send;
 
 		req = new orig_XMLHttpRequest();
@@ -425,13 +432,15 @@ function instrumentXHR() {
 		return req;
 	};
 
-	BOOMR.window.XMLHttpRequest = proxy_XMLHttpRequest;
+	BOOMR.window.XMLHttpRequest = BOOMR.proxy_XMLHttpRequest;
 }
 
 function uninstrumentXHR() {
 	if (BOOMR.XMLHttpRequest && BOOMR.XMLHttpRequest !== BOOMR.window.XMLHttpRequest) {
 		BOOMR.window.XMLHttpRequest = BOOMR.XMLHttpRequest;
 	}
+
+	MutationHandler.stop();
 }
 
 BOOMR.plugins.AutoXHR = {
@@ -440,6 +449,8 @@ BOOMR.plugins.AutoXHR = {
 		d = BOOMR.window.document;
 		a = d.createElement("A");
 
+		// Expose these methods on the global BOOMR object so that in-page callers can also manually
+		// instrument or uninstrument.
 		BOOMR.instrumentXHR = instrumentXHR;
 		BOOMR.uninstrumentXHR = uninstrumentXHR;
 
