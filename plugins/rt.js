@@ -50,6 +50,9 @@ impl = {
 	// These timers are added directly as beacon variables
 	basic_timers: { t_done: 1, t_resp: 1, t_page: 1},
 
+	// Vars that were added to the beacon that we can remove after beaconing
+	addedVars: [],
+
 	/**
 	 * Merge new cookie `params` onto current cookie, and set `timer` param on cookie to current timestamp
 	 * @param params object containing keys & values to merge onto current cookie.  A value of `undefined`
@@ -221,6 +224,7 @@ impl = {
 						for(k in res) {
 							if(res.hasOwnProperty(k) && k.match(/(Start|End)$/) && res[k] > 0) {
 								BOOMR.addVar(url + k.replace(/^(...).*(St|En).*$/, "$1$2"), res[k]);
+								impl.addedVars.push(url + k.replace(/^(...).*(St|En).*$/, "$1$2"));
 							}
 						}
 					}
@@ -522,6 +526,7 @@ impl = {
 			value = value_cb(etarget);
 			this.updateCookie({ "nu": value }, "cl" );
 			BOOMR.addVar("nu", BOOMR.utils.cleanupURL(value));
+			impl.addedVars.push("nu");
 		}
 	},
 
@@ -535,6 +540,13 @@ impl = {
 
 	domloaded: function() {
 		BOOMR.plugins.RT.endTimer("t_domloaded");
+	},
+
+	clear: function(vars) {
+		if (impl.addedVars && impl.addedVars.length > 0) {
+			BOOMR.removeVar(impl.addedVars);
+			impl.addedVars = [];
+		}
 	}
 };
 
@@ -588,6 +600,7 @@ BOOMR.plugins.RT = {
 		BOOMR.subscribe("click", impl.onclick, null, impl);
 		BOOMR.subscribe("form_submit", impl.onsubmit, null, impl);
 		BOOMR.subscribe("before_beacon", this.addTimersToBeacon, "beacon", this);
+		BOOMR.subscribe("onbeacon", impl.clear, null, impl);
 
 		impl.initialized = true;
 		return this;
@@ -650,6 +663,7 @@ BOOMR.plugins.RT = {
 
 				if(impl.basic_timers.hasOwnProperty(t_name)) {
 					BOOMR.addVar(t_name, timer.delta);
+					impl.addedVars.push(t_name);
 				}
 				else {
 					t_other.push(t_name + "|" + timer.delta);
@@ -659,6 +673,7 @@ BOOMR.plugins.RT = {
 
 		if (t_other.length) {
 			BOOMR.addVar("t_other", t_other.join(","));
+			impl.addedVars.push("t_other");
 		}
 
 		if (source === "beacon") {
@@ -715,6 +730,7 @@ BOOMR.plugins.RT = {
 
 		if(subresource) {
 			BOOMR.addVar("rt.subres", 1);
+			impl.addedVars.push("rt.subres");
 		}
 		impl.updateCookie();
 
