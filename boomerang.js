@@ -88,7 +88,7 @@ BOOMR_check_doc_domain();
 // the parameter is the window
 (function(w) {
 
-var impl, boomr, d, myurl, createCustomEvent, dispatchEvent;
+var impl, boomr, d, myurl, createCustomEvent, dispatchEvent, visibilityState, visibilityChange;
 
 // This is the only block where we use document without the w. qualifier
 if(w.parent !== w
@@ -169,6 +169,31 @@ dispatchEvent = function(e_name, e_data) {
 		}
 	});
 };
+
+// visibilitychange is useful to detect if the page loaded through prerender
+// or if the page never became visible
+// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
+// http://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
+// https://developer.mozilla.org/en-US/docs/Web/Guide/User_experience/Using_the_Page_Visibility_API
+
+// Set the name of the hidden property and the change event for visibility
+if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support 
+	visibilityState = "visibilityState";
+	visibilityChange = "visibilitychange";
+}
+else if (typeof document.mozHidden !== "undefined") {
+	visibilityState = "mozVisibilityState";
+	visibilityChange = "mozvisibilitychange";
+}
+else if (typeof document.msHidden !== "undefined") {
+	visibilityState = "msVisibilityState";
+	visibilityChange = "msvisibilitychange";
+}
+else if (typeof document.webkitHidden !== "undefined") {
+	visibilityState = "webkitVisibilityState";
+	visibilityChange = "webkitvisibilitychange";
+}
+
 
 // impl is a private object not reachable from outside the BOOMR object
 // users can set properties by passing in to the init() method
@@ -622,20 +647,14 @@ boomr = {
 		boomr.utils.addListener(w, "DOMContentLoaded", function() { impl.fireEvent("dom_loaded"); });
 
 		(function() {
-			var fire_visible, forms, iterator;
-			// visibilitychange is useful to detect if the page loaded through prerender
-			// or if the page never became visible
-			// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
-			// http://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
-			fire_visible = function() { impl.fireEvent("visibility_changed"); };
-			if(d.webkitVisibilityState) {
-				boomr.utils.addListener(d, "webkitvisibilitychange", fire_visible);
-			}
-			else if(d.msVisibilityState) {
-				boomr.utils.addListener(d, "msvisibilitychange", fire_visible);
-			}
-			else if(d.visibilityState) {
-				boomr.utils.addListener(d, "visibilitychange", fire_visible);
+			var forms, iterator;
+			if(visibilityChange !== undefined) {
+				BOOMR.utils.addListener(d, visibilityChange, function() { impl.fireEvent("visibility_changed"); });
+
+				// record the last time each visibility state occurred
+				BOOMR.subscribe("visibility_changed", function() {
+					BOOMR.lastVisibilityEvent[BOOMR.visibilityState()] = BOOMR.now();
+				});
 			}
 
 			boomr.utils.addListener(d, "mouseup", impl.xb_handler("click"));
@@ -695,6 +714,10 @@ boomr = {
 	},
 
 	now: (window.performance && window.performance.now ? function() { return Math.round(window.performance.now() + window.performance.timing.navigationStart); } : Date.now || function() { return new Date().getTime(); }),
+
+	visibilityState: ( visibilityState === undefined ? function() { return "visible"; } : function() { return d[visibilityState]; } ),
+
+	lastVisibilityEvent: {},
 
 	subscribe: function(e_name, fn, cb_data, cb_scope) {
 		var i, handler, ev, unload_handler;
@@ -844,6 +867,16 @@ boomr = {
 		// use d.URL instead of location.href because of a safari bug
 		if(!impl.vars.u) {
 			impl.vars.u = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
+		}
+
+		if(BOOMR.visibilityState()) {
+			impl.vars["vis.st"] = BOOMR.visibilityState();
+			if(BOOMR.lastVisibilityEvent.visible) {
+				impl.vars["vis.lv"] = BOOMR.now() - BOOMR.lastVisibilityEvent.visible;
+			}
+			if(BOOMR.lastVisibilityEvent.hidden) {
+				impl.vars["vis.lh"] = BOOMR.now() - BOOMR.lastVisibilityEvent.hidden;
+			}
 		}
 
 		if(w !== window) {
