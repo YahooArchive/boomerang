@@ -114,6 +114,7 @@ MutationHandler.prototype.addEvent = function(resource) {
 		type: resource.initiator,
 		resource: resource,
 		nodes_to_wait: 0,
+		resources: [],
 		complete: false
 	    },
 	    i,
@@ -174,6 +175,8 @@ MutationHandler.prototype.sendEvent = function(i) {
 
 	this.watch--;
 
+	ev.resource.resources = ev.resources;
+
 	BOOMR.responseEnd(ev.resource);
 	this.pending_events[i] = undefined;
 };
@@ -218,8 +221,11 @@ MutationHandler.prototype.load_cb = function(ev) {
 		return;
 	}
 
+	target._bmr.end = BOOMR.now();
+	target._bmr.state = ev.type;
+
 	index = target._bmr.res;
-        current_event = this.pending_events[index];
+	current_event = this.pending_events[index];
 
 	// event aborted
 	if(!current_event) {
@@ -256,6 +262,7 @@ MutationHandler.prototype.wait_for_node = function(node, index) {
 		current_event = this.pending_events[index];
 
 		current_event.nodes_to_wait++;
+		current_event.resources.push(node);
 
 		if(!current_event.resource.url && node.nodeName === "SCRIPT") {
 			a.href = url;
