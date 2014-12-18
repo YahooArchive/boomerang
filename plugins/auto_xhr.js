@@ -258,6 +258,10 @@ MutationHandler.prototype.wait_for_node = function(node, index) {
 				// img already loaded
 				return false;
 			}
+
+			if(node.getAttribute("src") === "" || node.getAttribute("src") === null) {
+				return false;
+			}
 		}
 
 		// no URL or javascript: or about: URL, so no network activity
