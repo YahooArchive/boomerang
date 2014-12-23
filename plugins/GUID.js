@@ -21,7 +21,7 @@
 	    BOOMR.utils.pluginConfig(impl, config, "GUID", properties);
 	    BOOMR.info("Initializing plugin GUID " + impl.cookieName , "GUID");
 
-	    if( BOOMR.utils.getCookie(impl.cookieName) == null ) {
+	    if(!BOOMR.utils.getCookie(impl.cookieName)) {
 		BOOMR.info("Could not find a cookie for " + impl.cookieName, "GUID");
 
 		var guid = impl.generate();
