@@ -26,7 +26,11 @@
 
 		var guid = impl.generate();
 
-		BOOMR.utils.setCookie(impl.cookieName,guid, impl.expires);
+		if (!BOOMR.utils.setCookie(impl.cookieName,guid, impl.expires)) {
+		    BOOMR.subscribe("before_beacon", function() {
+			BOOMR.utils.setCookie(impl.cookieName,guid, impl.expires);
+		    });
+		}
 
 		BOOMR.info("Setting GUID Cookie value to: " + guid + " expiring in: " + impl.expires + "s", "GUID");
 	    } else {
