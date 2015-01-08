@@ -884,8 +884,13 @@ boomr = {
 	},
 
 	addError: function(err, src, extra) {
+		var str;
 		if (typeof err !== "string") {
-			err = String(err);
+			str = String(err);
+			if(str.match(/^\[object/)) {
+				str = err.name + ": " + (err.description || err.message).replace(/\r\n$/, "");
+			}
+			err = str;
 		}
 		if (src !== undefined) {
 			err = "[" + src + ":" + BOOMR.now() + "] " + err;
