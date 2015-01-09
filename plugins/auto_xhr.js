@@ -87,6 +87,7 @@ function MutationHandler() {
 MutationHandler.stop = function() {
 	if(MutationHandler.observer && MutationHandler.observer.observer) {
 		MutationHandler.observer.observer.disconnect();
+		MutationHandler.observer = null;
 	}
 };
 
