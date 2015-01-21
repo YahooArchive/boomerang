@@ -1,25 +1,21 @@
-// Karma configuration
-// Generated on %DATE%
-
 module.exports = function(config) {
-  config.set({
+    config.set({
+        basePath: "./",
 
-      basePath: "./",
+        port: 4000,
+        runnerPort: 4001,
+        logLevel: config.LOG_INFO,
 
-      port: 4000,
-      runnerPort: 4001,
-      logLevel: config.LOG_INFO,
+        colors: true,
+        autoWatch: false,
 
-      colors: false,
-      autoWatch: false,
+        frameworks: ["mocha"],
+        reporters: ["progress", "coverage"],
+        browsers: ["PhantomJS"],
 
-      frameworks: ["mocha"],
-      reporters: ["progress","coverage"],
-      browsers: ['PhantomJS'],
-
-      coverageReporter: {
-	  type : 'html',
-	  dir : 'tests/coverage/'
-      }
-  });
+        coverageReporter: {
+            type : "html",
+            dir : "tests/coverage/"
+        }
+    });
 };

@@ -21,7 +21,12 @@
     "karma-chrome-launcher": "^0.1.5",
     "karma-coverage": "^0.2.6",
     "karma-mocha": "^0.1.9",
-    "karma-phantomjs-launcher": "^0.1.4"
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-ie-launcher": "^0.1.5",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-opera-launcher": "^0.1.0",
+    "karma-safari-launcher": "^0.1.1",
+    "grunt-contrib-copy": "^0.7.0"
   },
   "scripts": {
     "test": "grunt eslint"

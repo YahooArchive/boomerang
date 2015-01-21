@@ -2,8 +2,14 @@
 *.gz
 *.swp
 boomerang-*.js
-node_modules*
 build/*
 hint.log
 tests/vendor/
 tests/coverage/
+*.diff
+.project
+.settings/
+tests/vendor/
+tests/coverage/
+node_modules/
+build/

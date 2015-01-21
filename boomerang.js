@@ -469,7 +469,7 @@ boomr = {
 		},
 
 		cleanupURL: function(url) {
-			if (!url) {
+			if (!url || Object.prototype.toString.call(url) === "[object Array]") {
 				return "";
 			}
 			if(impl.strip_query_string) {
@@ -684,7 +684,10 @@ boomr = {
 				document.body.appendChild(iframe);
 				document.body.appendChild(form);
 
-				form.submit();
+				try {
+					form.submit();
+				} catch (ignore) {
+				}
 
 				if (urls.length) {
 					BOOMR.setImmediate(submit);
