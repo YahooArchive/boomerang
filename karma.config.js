@@ -23,7 +23,3 @@ module.exports = function(config) {
       }
   });
 };
-
-
-
-
