@@ -90,7 +90,7 @@ BOOMR.plugins.DNS = {
 		}
 
 		// do not run test over https
-		if(BOOMR.window.location.protocol === 'https:') {
+		if(BOOMR.window.location.protocol === "https:") {
 			impl.complete = true;
 			return this;
 		}
@@ -106,4 +106,3 @@ BOOMR.plugins.DNS = {
 };
 
 }());
-

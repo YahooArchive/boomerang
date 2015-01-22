@@ -168,7 +168,7 @@ var impl = {
 		BOOMR.sendBeacon();
 	},
 
-	clear: function(vars) {
+	clear: function() {
 		if (impl.addedVars && impl.addedVars.length > 0) {
 			BOOMR.removeVar(impl.addedVars);
 			impl.addedVars = [];
@@ -197,4 +197,3 @@ BOOMR.plugins.NavigationTiming = {
 };
 
 }());
-

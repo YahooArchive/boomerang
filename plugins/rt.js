@@ -190,7 +190,7 @@ impl = {
 	 * Figure out how long boomerang and config.js took to load using resource timing if available, or built in timestamps
 	 */
 	getBoomerangTimings: function() {
-		var res, k, urls, url, startTime, data;
+		var res, urls, url, startTime, data;
 
 		function trimTiming(time, st) {
 			// strip from microseconds to milliseconds only
@@ -600,7 +600,7 @@ impl = {
 		BOOMR.plugins.RT.endTimer("t_domloaded");
 	},
 
-	clear: function(vars) {
+	clear: function() {
 		if (impl.addedVars && impl.addedVars.length > 0) {
 			BOOMR.removeVar(impl.addedVars);
 			impl.addedVars = [];
@@ -862,5 +862,3 @@ BOOMR.plugins.RT = {
 
 }(window));
 // End of RT plugin
-
-

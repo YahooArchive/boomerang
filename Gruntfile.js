@@ -2,6 +2,7 @@
 
 "use strict";
 module.exports = function (grunt) {
+    // boomerang.js and plugins/*.js order
     var src = [ "boomerang.js" ];
     var plugins = grunt.file.readJSON("plugins.json");
     src.push(plugins.plugins);
@@ -28,7 +29,8 @@ module.exports = function (grunt) {
             target: [
                 "Gruntfile.js",
                 "boomerang.js",
-                "plugins/*.js"
+                "plugins/*.js",
+                "tests/library/*.js"
             ]
         },
         "string-replace": {
@@ -46,14 +48,17 @@ module.exports = function (grunt) {
                 options: {
                     replacements: [
                         {
+                            // Replace 0.9 with 0.9.[date]
                             pattern: /BOOMR.version\s*=\s*".*";/,
                             replacement: "BOOMR.version = \"<%= buildDate %>\";"
                         },
                         {
+                            // strip out BOOMR = BOOMR || {}; in plugins
                             pattern: /BOOMR\s*=\s*BOOMR\s*\|\|\s*{};/g,
                             replacement: ""
                         },
                         {
+                            // strip out BOOMR.plugins = BOOMR.plugins || {}; in plugins
                             pattern: /BOOMR\.plugins\s*=\s*BOOMR\.plugins\s*\|\|\s*{};/g,
                             replacement: ""
                         }
@@ -68,6 +73,7 @@ module.exports = function (grunt) {
                 options: {
                     replacements: [
                         {
+                            // Add &debug key to request
                             pattern: /key=%client_apikey%/,
                             replacement: "debug=\&key=%client_apikey%"
                         }
@@ -80,6 +86,7 @@ module.exports = function (grunt) {
                     dest: "build/<%= pkg.name %>-<%= buildDate %>.js"
                 }],
                 options: {
+                    // strip out some NOPs
                     replacements: [
                         {
                             pattern: /else{}/g,
@@ -98,28 +105,29 @@ module.exports = function (grunt) {
             }
         },
         copy: {
+            // copy files to -latest so test/index.html points to the latest version always
             latest: {
                 files: [
                     {
                         nonull: true,
                         src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
-                        dest: "build/<%= pkg.name %>-latest-debug.js",
+                        dest: "build/<%= pkg.name %>-latest-debug.js"
                     },
                     {
                         nonull: true,
                         src: "build/<%= pkg.name %>-<%= buildDate %>-debug.min.js",
-                        dest: "build/<%= pkg.name %>-latest-debug.min.js",
+                        dest: "build/<%= pkg.name %>-latest-debug.min.js"
                     },
                     {
                         nonull: true,
                         src: "build/<%= pkg.name %>-<%= buildDate %>-debug.min.js.map",
-                        dest: "build/<%= pkg.name %>-latest-debug.min.js.map",
-                    },
+                        dest: "build/<%= pkg.name %>-latest-debug.min.js.map"
+                    }
                 ]
             }
         },
         uglify: {
-            options : {
+            options: {
                 preserveComments: false,
                 mangle: false,
                 sourceMap: true
@@ -144,7 +152,7 @@ module.exports = function (grunt) {
             options: {
             configFile: "./karma.config.js",
             preprocessors: {
-                "./build/*.js": ["coverage"],
+                "./build/*.js": ["coverage"]
             },
             basePath: "./",
             files: [

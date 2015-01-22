@@ -59,6 +59,6 @@ describe("BOOMR.utils.objectToString()", function() {
         var expected = "one=1&two=2&three=3rd&four=null&five=undefined&six=0&seven=1.2&eight=" + encodeURIComponent("a=b") + "&nine=" + encodeURIComponent("1,2");
 
         assert.strictEqual(expected, BOOMR.utils.objectToString(o, "&"));
-        assert.strictEqual(decodeURIComponent(expected.replace(/&/g, '\n\t')), BOOMR.utils.objectToString(o));
+        assert.strictEqual(decodeURIComponent(expected.replace(/&/g, "\n\t")), BOOMR.utils.objectToString(o));
     });
 });
