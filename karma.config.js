@@ -14,8 +14,8 @@ module.exports = function(config) {
         browsers: ["PhantomJS"],
 
         coverageReporter: {
-            type : "html",
-            dir : "tests/coverage/"
+            type: "html",
+            dir: "tests/coverage/"
         }
     });
 };
