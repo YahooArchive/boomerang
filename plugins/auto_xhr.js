@@ -420,7 +420,6 @@ function instrumentXHR() {
 
 		req.open = function(method, url, async) {
 			a.href = url;
-			url = a.href;
 
 			if (BOOMR.xhr_excludes.hasOwnProperty(a.href)
 			    || BOOMR.xhr_excludes.hasOwnProperty(a.hostname)
@@ -465,7 +464,7 @@ function instrumentXHR() {
 
 			addListener("loadend");
 
-			resource.url = url;
+			resource.url = a.href;
 			resource.method = method;
 			if (!async) {
 				resource.synchronous = true;
