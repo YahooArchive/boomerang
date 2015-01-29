@@ -501,7 +501,7 @@ BOOMR.plugins.AutoXHR = {
 	is_complete: function() { return true; },
 	init: function(config) {
 		d = BOOMR.window.document;
-		a = document.createElement("A");
+		a = BOOMR.window.document.createElement("A");
 
 		// Expose these methods on the global BOOMR object so that in-page callers can also manually
 		// instrument or uninstrument.
