@@ -55,6 +55,8 @@ impl = {
 	nruns: 5,
 	latency_runs: 10,
 	user_ip: "",
+	run_always: false,
+	block_for_beacon: false,
 	test_https: false,
 	cookie_exp: 7*86400,
 	cookie: "BA",
@@ -411,7 +413,10 @@ impl = {
 		}
 
 		this.complete = true;
-		//BOOMR.sendBeacon();
+
+		if (this.block_for_beacon === true)
+			BOOMR.sendBeacon();
+
 		this.running = false;
 	},
 
@@ -486,6 +491,14 @@ BOOMR.plugins.BW = {
 			impl.user_ip = config.user_ip;
 		}
 
+		if(config && config.BW && config.BW.run_always) {
+			impl.run_always = config.BW.run_always;
+		}
+
+		if(config && config.BW && config.BW.block_for_beacon) {
+			impl.block_for_beacon = config.BW.block_for_beacon;
+		}
+
 		if(!impl.base_url) {
 			return this;
 		}
@@ -500,7 +513,7 @@ BOOMR.plugins.BW = {
 
 		BOOMR.removeVar("ba", "ba_err", "lat", "lat_err");
 
-		if(!impl.setVarsFromCookie()) {
+		if(impl.run_always || !impl.setVarsFromCookie()) {
 			BOOMR.subscribe("page_ready", this.run, null, this);
 		}
 
@@ -527,7 +540,10 @@ BOOMR.plugins.BW = {
 
 			BOOMR.info("HTTPS detected, skipping bandwidth test", "bw");
 			impl.complete = true;
-			//BOOMR.sendBeacon();
+
+			if (impl.block_for_beacon === true)
+				BOOMR.sendBeacon();
+
 			return this;
 		}
 
@@ -550,7 +566,15 @@ BOOMR.plugins.BW = {
 		}
 	},
 
-	is_complete: function() { return true; }
+	is_complete: function() {
+		if (impl.block_for_beacon === true)
+		{
+			return impl.complete;
+		}
+		else {
+			return true;
+		}
+	}
 };
 
 }());
