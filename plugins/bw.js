@@ -55,6 +55,7 @@ impl = {
 	nruns: 5,
 	latency_runs: 10,
 	user_ip: "",
+	block_beacon: false,
 	test_https: false,
 	cookie_exp: 7*86400,
 	cookie: "BA",
@@ -411,7 +412,10 @@ impl = {
 		}
 
 		this.complete = true;
-		//BOOMR.sendBeacon();
+
+		if (this.block_beacon === true)
+			BOOMR.sendBeacon();
+
 		this.running = false;
 	},
 
@@ -480,7 +484,7 @@ BOOMR.plugins.BW = {
 		}
 
 		BOOMR.utils.pluginConfig(impl, config, "BW",
-						["base_url", "timeout", "nruns", "cookie", "cookie_exp", "test_https"]);
+						["base_url", "timeout", "nruns", "cookie", "cookie_exp", "test_https", "block_beacon"]);
 
 		if(config && config.user_ip) {
 			impl.user_ip = config.user_ip;
@@ -527,7 +531,10 @@ BOOMR.plugins.BW = {
 
 			BOOMR.info("HTTPS detected, skipping bandwidth test", "bw");
 			impl.complete = true;
-			//BOOMR.sendBeacon();
+
+			if (impl.block_beacon === true)
+				BOOMR.sendBeacon();
+
 			return this;
 		}
 
@@ -550,7 +557,15 @@ BOOMR.plugins.BW = {
 		}
 	},
 
-	is_complete: function() { return true; }
+	is_complete: function() {
+		if (impl.block_beacon === true)
+		{
+			return impl.complete;
+		}
+		else {
+			return true;
+		}
+	}
 };
 
 }());
