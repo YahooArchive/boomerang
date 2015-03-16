@@ -661,6 +661,7 @@ boomr = {
 			}
 
 			function submit() {
+				/*eslint-disable no-script-url*/
 				var iframe,
 				    name = "boomerang_post-" + encodeURIComponent(form.action) + "-" + Math.random();
 
