@@ -25,7 +25,7 @@ if(BOOMR.plugins.BW) {
 // See https://spreadsheets.google.com/ccc?key=0AplxPyCzmQi6dDRBN2JEd190N1hhV1N5cHQtUVdBMUE&hl=en_GB
 // for a spreadsheet with the details
 //
-// The images were generated with ImageMagic, using random uncompressed data. 
+// The images were generated with ImageMagic, using random uncompressed data.
 // As input data (image-3.bin) I used the original images that were encrypted using AES256.
 // The IM command used was : convert -size 618x618 -depth 8 gray:image-3.bin image-3.png
 // Vary the image dimensions to change the filesize. The image dimensions are more or less the square of the desired filesize.
