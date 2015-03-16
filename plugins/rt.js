@@ -32,7 +32,7 @@ impl = {
 	timers: {},		//! Custom timers that the developer can use
 				// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 	cookie: "RT",		//! Name of the cookie that stores the start time and referrer
-	cookie_exp:600,		//! Cookie expiry in seconds
+	cookie_exp: 600,	//! Cookie expiry in seconds
 	strict_referrer: true,	//! By default, don't beacon if referrers don't match.
 				// If set to false, beacon both referrer values and let
 				// the back end decide
@@ -222,7 +222,7 @@ impl = {
 		try
 		{
 			if (window.performance && window.performance.getEntriesByName) {
-				urls = { "rt.bmr" : BOOMR.url };
+				urls = { "rt.bmr": BOOMR.url };
 
 				for(url in urls) {
 					if(urls.hasOwnProperty(url) && urls[url]) {
