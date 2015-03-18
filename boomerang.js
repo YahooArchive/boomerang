@@ -1151,11 +1151,7 @@ else if(typeof BOOMR.window.BOOMR_lstart === "number") {
 	boomr.t_lstart = BOOMR.window.BOOMR_lstart;
 }
 
-if(typeof BOOMR_onload === "number") {
-	boomr.t_onload = BOOMR_onload;
-	delete BOOMR_onload;
-}
-else if(typeof BOOMR.window.BOOMR_onload === "number") {
+if(typeof BOOMR.window.BOOMR_onload === "number") {
 	boomr.t_onload = BOOMR.window.BOOMR_onload;
 }
 
