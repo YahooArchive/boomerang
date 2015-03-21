@@ -138,7 +138,7 @@ impl = {
 			return;
 		}
 
-		subcookies.s = Math.max(+subcookies.ul||0, +subcookies.cl||0);
+		subcookies.s = Math.max(+subcookies.ld||0,Math.max(+subcookies.ul||0, +subcookies.cl||0));
 
 		BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 
@@ -579,6 +579,12 @@ impl = {
 		}
 		if(etarget && etarget.nodeName.toUpperCase() === element) {
 			BOOMR.debug("passing through", "rt");
+
+			// we might need to reset the session first, as updateCookie()
+			// below sets the lastActionTime
+			this.refreshSession();
+			this.maybeResetSession(BOOMR.now());
+
 			// user event, they may be going to another page
 			// if this page is being opened in a different tab, then
 			// our unload handler won't fire, so we need to set our
