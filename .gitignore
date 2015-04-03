@@ -1,6 +1,6 @@
 *.gz
 *.swp
-boomerang-*.js
+/boomerang-*.js
 build/*
 hint.log
 tests/vendor/
