@@ -8,6 +8,8 @@ boomerang always comes back, except when it hits something.
 summary
 ---
 
+[![Join the chat at https://gitter.im/lognormal/boomerang](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lognormal/boomerang?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 boomerang is a JavaScript library that measures the page load time experienced by real users, commonly called RUM.
 
 Apart from page load time, boomerang measures a whole bunch of performance characteristics of your user's web browsing experience.  All you have to do is stick it into your web pages and call the
