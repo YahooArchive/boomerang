@@ -24,6 +24,37 @@ if (BOOMR.plugins.AutoXHR) {
 	return;
 }
 
+function getPathName(anchor) {
+	if (!anchor) {
+		return null;
+	}
+
+	/*
+	correct relativism in IE
+	anchor.href = "./path/file";
+	anchor.pathname == "./path/file"; //should be "/path/file"
+	*/
+	anchor.href = anchor.href;
+
+	/*
+	correct missing leading slash in IE
+	anchor.href = "path/file";
+	anchor.pathname === "path/file"; //should be "/path/file"
+	*/
+	var pathName = anchor.pathname;
+	if (pathName.charAt(0) !== "/") {
+		pathName = "/" + pathName;
+	}
+
+	return pathName;
+}
+
+function shouldExcludeXhr(anchor) {
+	return BOOMR.xhr_excludes.hasOwnProperty(anchor.href) ||
+		BOOMR.xhr_excludes.hasOwnProperty(anchor.hostname) ||
+		BOOMR.xhr_excludes.hasOwnProperty(getPathName(anchor));
+}
+
 /*
 How should this work?
 
@@ -297,10 +328,7 @@ MutationHandler.prototype.wait_for_node = function(node, index) {
 		if (!current_event.resource.url && node.nodeName === "SCRIPT") {
 			a.href = url;
 
-			if (BOOMR.xhr_excludes.hasOwnProperty(a.href)
-			    || BOOMR.xhr_excludes.hasOwnProperty(a.hostname)
-			    || BOOMR.xhr_excludes.hasOwnProperty(a.pathname)
-			) {
+			if (shouldExcludeXhr(a)) {
 				// excluded resource, so abort
 				return false;
 			}
@@ -421,10 +449,7 @@ function instrumentXHR() {
 		req.open = function(method, url, async) {
 			a.href = url;
 
-			if (BOOMR.xhr_excludes.hasOwnProperty(a.href)
-			    || BOOMR.xhr_excludes.hasOwnProperty(a.hostname)
-			    || BOOMR.xhr_excludes.hasOwnProperty(a.pathname)
-			) {
+			if (shouldExcludeXhr(a)) {
 				// skip instrumentation and call the original open method
 				return orig_open.apply(req, arguments);
 			}
@@ -514,7 +539,8 @@ BOOMR.plugins.AutoXHR = {
 		else if (config.instrument_xhr === false) {
 			BOOMR.uninstrumentXHR();
 		}
-	}
+	},
+	getPathname: getPathName
 };
 
 })();
