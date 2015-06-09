@@ -128,8 +128,8 @@ module.exports = function() {
 			},
 			"debug-tests": {
 				files: [{
-					src: "build/<%= pkg.name %>-<%= pkg.releaseVersion %>.<%= buildDate %>-debug.js",
-					dest: "build/<%= pkg.name %>-<%= pkg.releaseVersion %>.<%= buildDate %>-debug-tests.js"
+					src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
+					dest: "build/<%= pkg.name %>-<%= buildDate %>-debug-tests.js"
 				}],
 				options: {
 					replacements: [
@@ -195,18 +195,36 @@ module.exports = function() {
 			}
 		},
 		uglify: {
-			options: {
-				preserveComments: false,
-				mangle: true,
-				sourceMap: true
+			default: {
+				options: {
+					preserveComments: false,
+					mangle: true,
+					sourceMap: true
+				},
+				files: [{
+					expand: true,
+					cwd: "build/",
+					src: ["<%= pkg.name %>-<%= buildDate %>-debug.js",
+					      "<%= pkg.name %>-<%= buildDate %>.js"],
+					dest: "build/",
+					ext: ".min.js",
+					extDot: "last"
+				}]
 			},
-			min_release: {
-				src: "build/<%= pkg.name %>-<%= buildDate %>.js",
-				dest: "build/<%= pkg.name %>-<%= buildDate %>.min.js"
-			},
-			min_debug: {
-				src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
-				dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.min.js"
+			plugins: {
+				options: {
+					preserveComments: false,
+					mangle: true,
+					sourceMap: true
+				},
+				files: [{
+					expand: true,
+					cwd: "plugins/",
+					src: ["./*.js"],
+					dest: "build/plugins/",
+					ext: ".min.js",
+					extDot: "first"
+				}]
 			}
 		},
 		compress: {
@@ -233,10 +251,39 @@ module.exports = function() {
 						dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.min.js.gz"
 					}
 				]
+			},
+			plugins: {
+				options: {
+					mode: "gzip",
+					level: 9
+				},
+				files: [{
+					expand: true,
+					cwd: "build/plugins",
+					src: "./*.js",
+					dest: "build/plugins/",
+					ext: ".min.js.gz",
+					extDot: "first"
+				}]
 			}
 		},
 		filesize: {
-			files: [ "build/<%= pkg.name %>-<%= buildDate %>.min.js.gz" ]
+			default: {
+				files: [{
+					expand: true,
+					cwd: "build",
+					src: "./**/*.min.js*",
+					ext: ".min.js.gz",
+					extDot: "first"
+				}],
+				options: {
+					output: {
+						path: "tests/results/filesizes.csv",
+						format: "\"{filename}\",{size},{kb},{now:YYYYMMDDhhmmss};", /* https://github.com/k-maru/grunt-filesize/issues/8 */
+						append: true
+					}
+				}
+			}
 		},
 		clean: {
 			options: {},
