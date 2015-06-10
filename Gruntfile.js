@@ -334,7 +334,7 @@ module.exports = function() {
 			// NOTE: https://github.com/angular/protractor/issues/1512 Selenium+PhantomJS not working in 1.6.1
 			options: {
 				noColor: false,
-				keepAlive: true
+				keepAlive: false
 			},
 			phantomjs: {
 				configFile: "protractor.config.phantom.js"
