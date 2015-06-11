@@ -17,6 +17,8 @@ build/
 tasks/mpulse-test.config.json
 tests/server/env.json
 npm-debug.log
+/tests/e2e/e2e.json
+/tests/e2e/e2e-debug.json
 *.#*
 *#*
 *~
