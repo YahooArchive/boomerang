@@ -4,9 +4,9 @@
 	function boomerangSaveLoadTime(e) {
 		win.BOOMR_onload=(e && e.timeStamp) || new Date().getTime();
 	}
-	if (document.body.addEventListener) {
+	if (win.addEventListener) {
 		win.addEventListener("load", boomerangSaveLoadTime, false);
-	} else if (document.body.attachEvent) {
+	} else if (win.attachEvent) {
 		win.attachEvent("onload", boomerangSaveLoadTime);
 	}
 
