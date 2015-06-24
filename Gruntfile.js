@@ -430,7 +430,7 @@ module.exports = function() {
 					"tests/page-templates/**/*",
 					"tests/unit/**/*"
 				],
-				tasks: ["test:build"]
+				tasks: ["pages-builder"]
 			},
 			boomerang: {
 				files: [
