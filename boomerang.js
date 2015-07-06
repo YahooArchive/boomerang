@@ -757,12 +757,6 @@ BOOMR_check_doc_domain();
 				return this;
 			}
 
-			for (i=0; i<properties.length; i++) {
-				if (config[properties[i]] !== undefined) {
-					impl[properties[i]] = config[properties[i]];
-				}
-			}
-
 			if (config.site_domain !== undefined) {
 				this.session.domain = config.site_domain;
 			}
@@ -809,6 +803,12 @@ BOOMR_check_doc_domain();
 							BOOMR.addError(err, k + ".init");
 						}
 					}
+				}
+			}
+
+			for (i=0; i<properties.length; i++) {
+				if (config[properties[i]] !== undefined) {
+					impl[properties[i]] = config[properties[i]];
 				}
 			}
 
