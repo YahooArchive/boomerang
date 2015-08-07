@@ -239,6 +239,8 @@ BOOMR_check_doc_domain();
 					toLowerCase(),
 		//! User's ip address determined on the server.  Used for the BA cookie
 		user_ip: "",
+		// Whether or not to send beacons on page load
+		autorun: true,
 
 		strip_query_string: false,
 
@@ -743,7 +745,7 @@ BOOMR_check_doc_domain();
 
 		init: function(config) {
 			var i, k,
-			    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string", "secondary_beacons"];
+			    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string", "secondary_beacons", "autorun"];
 
 			BOOMR_check_doc_domain();
 
@@ -818,14 +820,14 @@ BOOMR_check_doc_domain();
 			if (!impl.onloadfired && (config.autorun === undefined || config.autorun !== false)) {
 				if (d.readyState && d.readyState === "complete") {
 					BOOMR.loadedLate = true;
-					this.setImmediate(BOOMR.page_ready, null, null, BOOMR);
+					this.setImmediate(BOOMR.page_ready_autorun, null, null, BOOMR);
 				}
 				else {
 					if (w.onpagehide || w.onpagehide === null) {
-						BOOMR.utils.addListener(w, "pageshow", BOOMR.page_ready);
+						BOOMR.utils.addListener(w, "pageshow", BOOMR.page_ready_autorun);
 					}
 					else {
-						BOOMR.utils.addListener(w, "load", BOOMR.page_ready);
+						BOOMR.utils.addListener(w, "load", BOOMR.page_ready_autorun);
 					}
 				}
 			}
@@ -861,6 +863,15 @@ BOOMR_check_doc_domain();
 
 			impl.handlers_attached = true;
 			return this;
+		},
+		/**
+		 * Sends the page_ready beacon only if 'autorun' is still true after config.js
+		 * arrives.
+		 */
+		page_ready_autorun: function(ev) {
+			if (impl.autorun) {
+				BOOMR.page_ready(ev);
+			}
 		},
 
 		// The page dev calls this method when they determine the page is usable.
@@ -1123,9 +1134,16 @@ BOOMR_check_doc_domain();
 				}
 			}
 
-			// use d.URL instead of location.href because of a safari bug
-			impl.vars.pgu = BOOMR.utils.cleanupURL(d.URL.replace(/#.*/, ""));
-			if (!impl.vars.u) {
+			// For SPA apps, don't strip hashtags as some SPA frameworks use #s for tracking routes
+			// instead of History pushState() APIs. Use d.URL instead of location.href because of a
+			// Safari bug.
+			var isSPA = impl.vars["http.initiator"] === "spa";
+			var pgu = isSPA ? d.URL : d.URL.replace(/#.*/, "");
+			impl.vars.pgu = BOOMR.utils.cleanupURL(pgu);
+
+			// Use the current document.URL if it hasn't already been set, or for SPA apps,
+			// on each new beacon (since each SPA soft navigation might change the URL)
+			if (!impl.vars.u || isSPA) {
 				impl.vars.u = impl.vars.pgu;
 			}
 
