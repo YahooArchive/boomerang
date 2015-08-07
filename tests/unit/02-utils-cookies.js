@@ -61,78 +61,6 @@ describe("BOOMR.utils cookies", function() {
 		it("Should return null when calling with null as first argument", function() {
 			assert.isNull(BOOMR.utils.getCookie(null));
 		});
-
-		it("Should return undefined when calling with not existing cookie", function() {
-			assert.isUndefined(BOOMR.utils.getCookie("some-none-existing-cooke"));
-		});
-	});
-
-	describe("BOOMR.utils.setCookie()", function() {
-		it("Should have an exisiting BOOMR.utils.setCookie function", function() {
-			BOOMR.session.domain = cookieDomain;
-
-			assert.isFunction(BOOMR.utils.setCookie);
-		});
-
-		it("Should return null if no domain is set", function()  {
-			BOOMR.session.domain = null;
-
-			assert.isNull(BOOMR.utils.setCookie());
-			assert.isNull(BOOMR.utils.setCookie(cookieName));
-		});
-
-		it("Should return null if no name was passed as first argument to setCookie()", function()  {
-			BOOMR.session.domain = cookieDomain;
-
-			assert.isNull(BOOMR.utils.setCookie());
-		});
-
-		if (canSetCookies) {
-			it("Should return false when setting only Cookie name", function() {
-				BOOMR.session.domain = cookieDomain;
-
-				assert.isFalse(BOOMR.utils.setCookie(cookieName));
-			});
-
-			it("Should return true when setting Cookie with value", function() {
-				BOOMR.session.domain = cookieDomain;
-
-				assert.isTrue(BOOMR.utils.setCookie(cookieName, "value"));
-			});
-
-			it("Should return the cookie value string that we've set previously", function() {
-				BOOMR.session.domain = cookieDomain;
-
-				var value = "value";
-				BOOMR.utils.setCookie(cookieName, value);
-
-				assert.equal(BOOMR.utils.getCookie(cookieName), value);
-				BOOMR.utils.removeCookie(cookieName);
-			});
-
-			it("Should return the EXACT value string that we've set previously", function() {
-				BOOMR.session.domain = cookieDomain;
-
-				var value = "1";
-				var value_strict_false = 1;
-
-				BOOMR.utils.setCookie(cookieName, value);
-				assert.strictEqual(BOOMR.utils.getCookie(cookieName), value);
-				assert.notStrictEqual(BOOMR.utils.getCookie(cookieName), value_strict_false);
-				BOOMR.utils.removeCookie(cookieName);
-			});
-		}
-
-		it("Should return false when trying to set a cookie bigger than 500 characters", function() {
-			BOOMR.session.domain = cookieDomain;
-
-			var value = "";
-			for (var index = 0; index <= 500; index++) {
-				value += "1";
-			}
-
-			assert.isFalse(BOOMR.utils.setCookie("failCookie", value));
-		});
 	});
 
 	describe("BOOMR.utils.getSubCookies()", function() {
@@ -204,28 +132,5 @@ describe("BOOMR.utils cookies", function() {
 			assert.strictEqual(o["10"], "11");
 			assert.strictEqual(o["11"], "");
 		});
-	});
-
-	describe("BOOMR.utils.removeCookie()", function() {
-		it("Should return null when given no argurments", function() {
-			BOOMR.session.domain = cookieDomain;
-
-			assert.isNull(BOOMR.utils.removeCookie());
-		});
-
-		it("Should return null when the session domain isn't set", function() {
-			BOOMR.session.domain = undefined;
-
-			assert.isNull(BOOMR.utils.removeCookie(cookieName));
-		});
-
-		if (canSetCookies) {
-			it("Should return false when removing previously set Cookie", function() {
-				BOOMR.session.domain = cookieDomain;
-
-				assert.isTrue(BOOMR.utils.setCookie(cookieName, "value"));
-				assert.isFalse(BOOMR.utils.removeCookie(cookieName));
-			});
-		}
 	});
 });
