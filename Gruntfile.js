@@ -464,7 +464,9 @@ module.exports = function() {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 
 	// tasks/*.js
-	grunt.loadTasks("tasks");
+	if (grunt.file.exists("tasks")) {
+		grunt.loadTasks("tasks");
+	}
 
 	grunt.registerTask("pages-builder", "Builds our HTML tests/pages", require(path.join(testsDir, "builder")));
 

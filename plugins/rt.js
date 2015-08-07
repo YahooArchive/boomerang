@@ -515,7 +515,7 @@
 					BOOMR.addVar("rt.start", "none");
 				}
 				else {
-				BOOMR.addVar("rt.start", "manual");
+					BOOMR.addVar("rt.start", "manual");
 				}
 			}
 			else if (impl.navigationStart) {
@@ -585,11 +585,6 @@
 			}
 			if (etarget && etarget.nodeName.toUpperCase() === element) {
 				BOOMR.debug("passing through", "rt");
-
-				// we might need to reset the session first, as updateCookie()
-				// below sets the lastActionTime
-				this.refreshSession();
-				this.maybeResetSession(BOOMR.now());
 
 				// user event, they may be going to another page
 				// if this page is being opened in a different tab, then
