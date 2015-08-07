@@ -44,6 +44,7 @@ module.exports = function() {
 		e2eUrls.push(TEST_URL_BASE + "pages/" + e2eTests[i].path + "/" + e2eTests[i].file + ".html");
 	}
 
+<<<<<<< HEAD
 	//
 	// Config
 	//
@@ -69,6 +70,7 @@ module.exports = function() {
 				"Gruntfile.js",
 				"boomerang.js",
 				"plugins/*.js",
+				"tasks/*.js",
 				"tests/*.js",
 				"tests/unit/*.js",
 				"tests/e2e/*.js",
@@ -384,7 +386,6 @@ module.exports = function() {
 			}
 		}
 	});
-
 	grunt.loadNpmTasks("grunt-eslint");
 	grunt.loadNpmTasks("grunt-express-server");
 	grunt.loadNpmTasks("grunt-karma");
@@ -403,7 +404,14 @@ module.exports = function() {
 
 	// custom tasks
 	grunt.registerTask("pages-builder", "Builds our HTML tests/pages", require(path.join(testsDir, "builder")));
+	grunt.registerTask("lint", "eslint");
+	grunt.registerTask("build", ["concat", "string-replace", "uglify", "compress", "copy:debug", "filesize"]);
+	grunt.registerTask("build:test", ["concat:debug", "string-replace", "copy:debug"]);
+	grunt.loadTasks("tasks");
 
+	// custom tasks
+	grunt.registerTask("pages-builder", "Builds our HTML tests/pages", require(path.join(testsDir, "builder")));
+	grunt.registerTask("mpulse:test", ["build", "mpulse-test:release"]);
 	grunt.registerTask("lint", "eslint");
 	grunt.registerTask("build", ["concat", "string-replace", "uglify", "compress", "copy:debug", "filesize"]);
 	grunt.registerTask("build:test", ["concat:debug", "string-replace", "copy:debug"]);
