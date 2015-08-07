@@ -37,7 +37,10 @@ module.exports = function() {
 	}
 
 	// Build SauceLabs E2E test URLs
-	var e2eTests = JSON.parse(stripJsonComments(grunt.file.read("tests/e2e/e2e.json")));
+	var e2eTests = [];
+	if (grunt.file.exists("tests/e2e/e2e.json")) {
+		e2eTests = JSON.parse(stripJsonComments(grunt.file.read("tests/e2e/e2e.json")));
+	}
 	var e2eUrls = [];
 
 	for (var i = 0; i < e2eTests.length; i++) {
@@ -68,15 +71,18 @@ module.exports = function() {
 			target: [
 				"Gruntfile.js",
 				"boomerang.js",
+				"*.config*.js",
 				"plugins/*.js",
 				"tasks/*.js",
 				"tests/*.js",
 				"tests/unit/*.js",
+				"tests/unit/*.html",
 				"tests/e2e/*.js",
 				"tests/server/*.js",
 				"tests/page-templates/**/*.js",
 				"tests/page-templates/**/*.html",
-				"tests/page-templates/**/*.js"
+				"tests/page-templates/**/*.js",
+				"tests/test-templates/**/*.js"
 			]
 		},
 		"string-replace": {
@@ -171,7 +177,7 @@ module.exports = function() {
 			}
 		},
 		copy: {
-			// copy files to tests\build\boomerang-latest.js so test/index.html points to the latest version always
+			// copy files to tests\build\boomerang-latest.js so tests/index.html points to the latest version always
 			debug: {
 				files: [
 					{
@@ -302,24 +308,32 @@ module.exports = function() {
 		},
 		clean: {
 			options: {},
-			build: ["build/*", "tests/build/*", "tests/results/*.tap", "tests/results/*.xml", "tests/coverage/*"],
-			src: ["plugins/*~", "*.js~"]
+			build: [
+				"build/*",
+				"tests/build/*",
+				"tests/results/*.tap",
+				"tests/results/*.xml",
+				"tests/coverage/*",
+				"tests/pages/**/*"
+			],
+			src: ["plugins/*~", "*.js~", "*.html~"]
 		},
 		karma: {
 			options: {
 				singleRun: true,
 				colors: true,
-				configFile: "./karma.config.js",
+				configFile: "./tests/karma.config.js",
 				preprocessors: {
 					"./build/*.js": ["coverage"]
 				},
 				basePath: "./",
 				files: [
-					"tests/vendor/mocha/mocha.css",
-					"tests/vendor/mocha/mocha.js",
-					"tests/vendor/assertive-chai/dist/assertive-chai.js",
-					"tests/unit/*.js",
-					"tests/build/*.js"
+					// relative to tests/ dir
+					"vendor/mocha/mocha.css",
+					"vendor/mocha/mocha.js",
+					"vendor/assertive-chai/dist/assertive-chai.js",
+					"unit/*.js",
+					"build/*.js"
 				]
 			},
 			unit: {
@@ -352,10 +366,13 @@ module.exports = function() {
 				keepAlive: false
 			},
 			phantomjs: {
-				configFile: "protractor.config.phantom.js"
+				configFile: "tests/protractor.config.phantom.js"
 			},
 			chrome: {
-				configFile: "protractor.config.chrome.js"
+				configFile: "tests/protractor.config.chrome.js"
+			},
+			debug: {
+				configFile: "tests/protractor.config.debug.js"
 			}
 		},
 		protractor_webdriver: {
@@ -428,14 +445,16 @@ module.exports = function() {
 					"tests/e2e/*.js",
 					"tests/page-template-snippets/**/*",
 					"tests/page-templates/**/*",
-					"tests/unit/**/*"
+					"tests/unit/**/*",
+					"tests/test-templates/**/*.js"
 				],
 				tasks: ["pages-builder"]
 			},
 			boomerang: {
 				files: [
 					"boomerang.js",
-					"plugins/*.js"
+					"plugins/*.js",
+					"plugins.json"
 				],
 				tasks: ["build:test"]
 			},
