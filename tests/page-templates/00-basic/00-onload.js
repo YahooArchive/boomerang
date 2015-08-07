@@ -45,9 +45,6 @@ describe("e2e/00-basic/00-onload", function() {
 
 		assert.isNumber(tf.lastBeacon()["rt.bstart"], "rt.bstart");
 		assert.isNumber(tf.lastBeacon()["rt.end"], "rt.end");
-		assert.isString(tf.lastBeacon()["rt.si"], "rt.si");
-		assert.isNumber(tf.lastBeacon()["rt.sl"], "rt.sl");
-		assert.isNumber(tf.lastBeacon()["rt.ss"], "rt.ss");
 		assert.isString(tf.lastBeacon()["rt.start"], "rt.start");
 
 		// optional
