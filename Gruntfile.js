@@ -430,6 +430,12 @@ module.exports = function() {
 				],
 				tasks: ["express"]
 			}
+		},
+		"mpulse-build-repository-xml": {
+			options: {
+				filePrefix: "build/<%= pkg.name %>-<%= pkg.releaseVersion %>.<%= buildDate %>",
+				version: "<%= pkg.releaseVersion %>.<%= buildDate %>"
+			}
 		}
 	});
 	grunt.loadNpmTasks("grunt-eslint");
@@ -448,17 +454,14 @@ module.exports = function() {
 	grunt.loadNpmTasks("grunt-saucelabs");
 	grunt.loadNpmTasks("grunt-contrib-watch");
 
-	// custom tasks
-	grunt.registerTask("pages-builder", "Builds our HTML tests/pages", require(path.join(testsDir, "builder")));
-	grunt.registerTask("lint", "eslint");
-	grunt.registerTask("build", ["concat", "string-replace", "uglify", "compress", "copy:debug", "filesize"]);
-	grunt.registerTask("build:test", ["concat:debug", "string-replace", "copy:debug"]);
+	// tasks/*.js
 	grunt.loadTasks("tasks");
 
-	// custom tasks
 	grunt.registerTask("pages-builder", "Builds our HTML tests/pages", require(path.join(testsDir, "builder")));
+
 	grunt.registerTask("lint", "eslint");
-	grunt.registerTask("build", ["concat", "string-replace", "uglify", "compress", "copy:debug", "filesize"]);
+
+	grunt.registerTask("build", ["concat", "string-replace", "uglify", "compress", "copy:debug", "filesize", "mpulse-build-repository-xml"]);
 	grunt.registerTask("build:test", ["concat:debug", "string-replace", "copy:debug"]);
 
 	grunt.registerTask("test", ["test:build", "test:unit", "test:e2e"]);
@@ -484,7 +487,8 @@ module.exports = function() {
 	grunt.registerTask("test:matrix:e2e:debug", ["saucelabs-mocha:e2e-debug"]);
 
 	grunt.registerTask("test:build", ["pages-builder"]);
-	grunt.registerTask("webserver:build", ["build", "copy:webserver"]);
 
-	grunt.registerTask("default", ["lint", "test"]);
+	grunt.registerTask("jenkins", ["lint", "build", "test", "copy:webserver"]);
+
+	grunt.registerTask("default", ["lint", "build", "test"]);
 };
