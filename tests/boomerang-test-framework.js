@@ -54,30 +54,7 @@
 		},
 		is_complete: function() {
 			return true;
-		},
-		ensureBeaconCount: function(done, beaconCount) {
-			function compareBeaconCount() {
-				return BOOMR.plugins.TestFramework.beaconCount() === beaconCount;
-			}
-			function testBeaconCount() {
-				if (compareBeaconCount()) {
-					setTimeout(
-						function() {
-							done(compareBeaconCount() ? undefined : new Error("beaconCount: " + BOOMR.plugins.TestFramework.beaconCount() + " !== " + beaconCount));
-						}, 1000);
-				}
-				else {
-					setTimeout(testBeaconCount, 100);
-				}
-			}
 
-			testBeaconCount();
-		},
-		ifAutoXHR: function(done, testXhr, testDegenerate) {
-			if (BOOMR.plugins.AutoXHR) {
-				return (testXhr || done)();
-			}
-			(testDegenerate || done)();
 		}
 	};
 })(window);
@@ -109,6 +86,7 @@
 	//
 	// Exports
 	//
+	t.templates = {};
 	t.isComplete = function() {
 		return complete;
 	};
