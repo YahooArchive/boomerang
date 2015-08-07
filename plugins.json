@@ -4,6 +4,7 @@
 		"plugins/ipv6.js",
 		"plugins/clicks.js",
 		"plugins/mobile.js",
+		"plugins/memory.js",
 		"plugins/restiming.js",
 		"plugins/cache-test-plugin.js",
 		"plugins/cache_reload.js",
