@@ -393,7 +393,7 @@ boomr = {
 			cookies = " " + d.cookie + ";";
 			if ( (i=cookies.indexOf(name)) >= 0 ) {
 				i += name.length;
-				cookies = cookies.substring(i, cookies.indexOf(";", i));
+				cookies = cookies.substring(i, cookies.indexOf(";", i)).replace(/^"/, "").replace(/"$/, "");
 				return cookies;
 			}
 
