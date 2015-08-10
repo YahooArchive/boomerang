@@ -409,7 +409,7 @@ boomr = {
 			}
 
 			value = this.objectToString(subcookies, "&");
-			nameval = name + "=" + value;
+			nameval = name + "=\"" + value + "\"";
 
 			c = [nameval, "path=/", "domain=" + impl.site_domain];
 			if(max_age) {
