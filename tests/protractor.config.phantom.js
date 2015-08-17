@@ -1,5 +1,5 @@
 /* eslint-env node */
-/* global jasmine:true */
+/*global jasmine*/
 exports.config = {
 	seleniumAddress: "http://localhost:4444/wd/hub",
 	specs: ["e2e/*.js"],
@@ -14,7 +14,7 @@ exports.config = {
 		// this until inside the onPrepare function.
 		require("jasmine-reporters");
 
-		var junitReporter = new jasmine.JUnitXmlReporter("results", true, true, "e2e", true);
+		var junitReporter = new jasmine.JUnitXmlReporter("tests/results", true, true, "e2e", true);
 
 		jasmine.getEnv().addReporter(new jasmine.ConsoleReporter());
 		jasmine.getEnv().addReporter(junitReporter);
