@@ -778,14 +778,6 @@
 
 			t_start = impl.determineTStart(ename, edata);
 
-			if (edata && edata.data) {
-				edata = edata.data;
-			}
-
-			if (ename === "xhr" && edata) {
-				subresource = edata.subresource;
-			}
-
 			// If the dev has already called endTimer, then this call will do nothing
 			// else, it will stop the page load timer
 			this.endTimer("t_done", t_done);
