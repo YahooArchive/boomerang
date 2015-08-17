@@ -1130,6 +1130,17 @@ BOOMR_check_doc_domain();
 			}
 		},
 
+		/**
+		 * Undo XMLHttpRequest instrumentation and reset the original
+		 */
+		uninstrumentXHR: function() {
+		},
+		/**
+		 * Instrument all requests made via XMLHttpRequest to send beacons
+		 * This is implemented in plugins/auto_xhr.js
+		 */
+		instrumentXHR: function() { },
+
 		sendBeacon: function(beacon_url_override) {
 			// This plugin wants the beacon to go somewhere else,
 			// so update the location
