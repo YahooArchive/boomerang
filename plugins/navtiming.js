@@ -97,7 +97,7 @@ see: http://www.w3.org/TR/navigation-timing/
 
 		done: function() {
 			var w = BOOMR.window, p, pn, pt, data;
-			if (this.complete || !w) {
+			if (this.complete) {
 				return this;
 			}
 
