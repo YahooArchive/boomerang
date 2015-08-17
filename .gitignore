@@ -2,9 +2,9 @@
 *.swp
 /boomerang-*.js
 build/*
+build/
 hint.log
-tests/vendor/
-tests/coverage/
+*.log
 *.diff
 .project
 .settings/
@@ -13,8 +13,6 @@ tests/coverage/
 tests/results/*
 tests/pages/*
 node_modules/
-build/
-tasks/mpulse-test.config.json
 tests/server/env.json
 npm-debug.log
 /tests/e2e/e2e.json
