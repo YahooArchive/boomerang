@@ -393,7 +393,7 @@ boomr = {
 			cookies = " " + d.cookie + ";";
 			if ( (i=cookies.indexOf(name)) >= 0 ) {
 				i += name.length;
-				cookies = cookies.substring(i, cookies.indexOf(";", i));
+				cookies = cookies.substring(i, cookies.indexOf(";", i)).replace(/^"/, "").replace(/"$/, "");
 				return cookies;
 			}
 
@@ -409,7 +409,7 @@ boomr = {
 			}
 
 			value = this.objectToString(subcookies, "&");
-			nameval = name + "=" + value;
+			nameval = name + "=\"" + value + "\"";
 
 			c = [nameval, "path=/", "domain=" + impl.site_domain];
 			if(max_age) {
