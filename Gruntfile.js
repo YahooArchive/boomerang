@@ -10,7 +10,7 @@ var grunt = require("grunt");
 //
 // Constants
 //
-var TEST_URL_BASE = "http://boomerang-test.soasta.com:3000/";
+var TEST_URL_BASE = "http://localhost:4002";
 
 //
 // Grunt config
