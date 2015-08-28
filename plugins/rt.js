@@ -551,7 +551,7 @@
 				impl.visiblefired = true;
 			}
 
-			if (impl.visibilityState === "prerender" && BOOMR.visibilityState() !== "prerender") {
+			if (impl.visibilityState === "prerender" && BOOMR.visibilityState() !== "prerender" && impl.onloadfired) {
 				BOOMR.plugins.RT.done(null, "visible");
 			}
 
