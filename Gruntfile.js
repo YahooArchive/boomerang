@@ -117,21 +117,6 @@ module.exports = function() {
 					]
 				}
 			},
-			debug: {
-				files: [{
-					src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
-					dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.js"
-				}],
-				options: {
-					replacements: [
-						{
-							// Add &debug key to request
-							pattern: /key=%client_apikey%/,
-							replacement: "debug=\&key=%client_apikey%"
-						}
-					]
-				}
-			},
 			"debug-tests": {
 				files: [{
 					src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
