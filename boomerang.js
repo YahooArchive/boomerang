@@ -335,6 +335,10 @@ BOOMR_check_doc_domain();
 
 		url: myurl,
 
+		constants: {
+			BEACON_TYPE_SPAS: ["spa", "spa_hard"]
+		},
+
 		// Utility functions
 		utils: {
 			objectToString: function(o, separator, nest_level) {
@@ -762,6 +766,21 @@ BOOMR_check_doc_domain();
 				}
 
 				submit();
+			},
+			inArray: function(val, ary) {
+				var i;
+
+				if (typeof val === "undefined" || typeof ary === "undefined" || !ary.length) {
+					return false;
+				}
+
+				for (i = 0; i < ary.length; i++) {
+					if (ary[i] === val) {
+						return true;
+					}
+				}
+
+				return false;
 			}
 		},
 
@@ -1186,7 +1205,7 @@ BOOMR_check_doc_domain();
 			// For SPA apps, don't strip hashtags as some SPA frameworks use #s for tracking routes
 			// instead of History pushState() APIs. Use d.URL instead of location.href because of a
 			// Safari bug.
-			var isSPA = impl.vars["http.initiator"] === "spa";
+			var isSPA = BOOMR.utils.inArray(impl.vars["http.initiator"], BOOMR.constants.BEACON_TYPE_SPAS);
 			var pgu = isSPA ? d.URL : d.URL.replace(/#.*/, "");
 			impl.vars.pgu = BOOMR.utils.cleanupURL(pgu);
 
