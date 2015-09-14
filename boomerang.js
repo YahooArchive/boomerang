@@ -1121,6 +1121,10 @@ BOOMR_check_doc_domain();
 			}
 		},
 
+		//
+		// uninstrumentXHR and instrumentXHR are stubs that will be replaced
+		// by auto_xhr.js if active.
+		//
 		/**
 		 * Undo XMLHttpRequest instrumentation and reset the original
 		 */
