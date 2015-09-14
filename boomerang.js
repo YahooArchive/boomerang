@@ -1113,7 +1113,6 @@ BOOMR_check_doc_domain();
 				impl.fireEvent("xhr_load", name);
 			}
 			else {
-				BOOMR.addVar("xhr.pg", name);
 				BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
 				impl.fireEvent("xhr_load", {
 					"name": "xhr_" + name,

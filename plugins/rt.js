@@ -503,7 +503,6 @@
 			if (ename==="xhr") {
 				if (data && data.name && impl.timers[data.name]) {
 					// For xhr timers, t_start is stored in impl.timers.xhr_{page group name}
-					// and xhr.pg is set to {page group name}
 					t_start = impl.timers[data.name].start;
 				}
 				else if (data && data.timing && data.timing.requestStart) {
