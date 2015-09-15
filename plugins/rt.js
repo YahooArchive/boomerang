@@ -658,7 +658,9 @@
 			// (eg: XHR calls).  We set default values for these cases.
 			// This is done before reading from the cookie because the cookie overwrites
 			// impl.r
-			impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
+			if (typeof d !== "undefined") {
+				impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
+			}
 
 			// Now pull out start time information from the cookie
 			// We'll do this every time init is called, and every time we call it, it will
