@@ -51,7 +51,7 @@ module.exports = function() {
 	// Config
 	//
 	grunt.initConfig({
-		pkg:  grunt.file.readJSON("package.json"),
+		pkg: grunt.file.readJSON("package.json"),
 		buildDate: Math.round(Date.now() / 1000),
 		concat: {
 			options: {
@@ -423,8 +423,8 @@ module.exports = function() {
 					testname: "Boomerang Unit Tests",
 					browsers: [{
 						"browserName": "internet explorer",
-						"version":	 "11",
-						"platform":	"Windows 8.1"
+						"version": "11",
+						"platform": "Windows 8.1"
 					}]
 				}
 			},
@@ -547,7 +547,7 @@ module.exports = function() {
 				if (isAlias(tasks[index])) {
 					var aliasTask = tasks[index];
 					var beforeTask = tasks.slice(0, index );
-					var afterTask = tasks.slice(index +1, tasks.length);
+					var afterTask = tasks.slice(index + 1, tasks.length);
 					var insertTask = aliases[aliasTask].filter(checkDuplicates);
 					tasks = [].concat(beforeTask, insertTask, afterTask);
 				}

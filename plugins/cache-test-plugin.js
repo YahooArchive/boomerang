@@ -3,11 +3,11 @@
 	BOOMR.plugins = BOOMR.plugins || {};
 
 	var dc=document,
-		s="script",
-		dom=location.hostname,
-		complete=false,
-		cached_url,
-		t_start, load;
+	    s="script",
+	    dom=location.hostname,
+	    complete=false,
+	    cached_url,
+	    t_start, load;
 
 	// Don't even bother creating the plugin if this is mhtml
 	if (!dom || dom === "localhost" || dom.match(/\.\d+$/) || dom.match(/^mhtml/) || dom.match(/^file:\//)) {
@@ -16,7 +16,7 @@
 
 	load=function() {
 		var s0=dc.getElementsByTagName(s)[0],
-			s1=dc.createElement(s);
+		    s1=dc.createElement(s);
 
 		s1.onload = BOOMR.plugins.CT.loaded;
 		s1.src=cached_url;

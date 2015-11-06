@@ -339,7 +339,7 @@
 
 			// if timeout, then we set the next image to the end of loop marker
 			if (success === null) {
-				this.results[this.nruns-run].r[i+1] = {t:null, state: null, run: run};
+				this.results[this.nruns-run].r[i+1] = {t: null, state: null, run: run};
 				return;
 			}
 
@@ -376,6 +376,7 @@
 			if (!this.latency) {
 				this.latency = this.calc_latency();
 			}
+
 			var bw = this.calc_bw(),
 			    o = {
 				    bw:         bw.median_corrected,
@@ -424,7 +425,7 @@
 					this.load_img("l", this.latency_runs--, this.lat_loaded);
 				}
 				else {
-					this.results.push({r:[]});
+					this.results.push({r: []});
 					this.load_img(images.start, this.runs_left--, this.img_loaded);
 				}
 			}
