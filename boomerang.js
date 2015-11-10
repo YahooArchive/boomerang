@@ -314,7 +314,7 @@ BOOMR_check_doc_domain();
 				BOOMR.real_sendBeacon();
 			}
 
-			for (i=0; i<handlers.length; i++) {
+			for (i = 0; i < handlers.length; i++) {
 				try {
 					handler = handlers[i];
 					handler.fn.call(handler.scope, data, handler.cb_data);
@@ -358,20 +358,20 @@ BOOMR_check_doc_domain();
 					return o;
 				}
 				if (separator === undefined) {
-					separator="\n\t";
+					separator = "\n\t";
 				}
 				if (!nest_level) {
-					nest_level=0;
+					nest_level = 0;
 				}
 
 				if (Object.prototype.toString.call(o) === "[object Array]") {
-					for (k=0; k<o.length; k++) {
+					for (k = 0; k < o.length; k++) {
 						if (nest_level > 0 && o[k] !== null && typeof o[k] === "object") {
 							value.push(
 								this.objectToString(
 									o[k],
 									separator + (separator === "\n\t" ? "\t" : ""),
-									nest_level-1
+									nest_level - 1
 								)
 							);
 						}
@@ -394,7 +394,7 @@ BOOMR_check_doc_domain();
 									this.objectToString(
 										o[k],
 										separator + (separator === "\n\t" ? "\t" : ""),
-										nest_level-1
+										nest_level - 1
 									)
 								);
 							}
@@ -422,7 +422,7 @@ BOOMR_check_doc_domain();
 
 				var i, cookies;
 				cookies = " " + d.cookie + ";";
-				if ( (i=cookies.indexOf(name)) >= 0 ) {
+				if ( (i = cookies.indexOf(name)) >= 0 ) {
 					i += name.length;
 					cookies = cookies.substring(i, cookies.indexOf(";", i)).replace(/^"/, "").replace(/"$/, "");
 					return cookies;
@@ -445,7 +445,7 @@ BOOMR_check_doc_domain();
 				c = [nameval, "path=/", "domain=" + impl.site_domain];
 				if (max_age) {
 					exp = new Date();
-					exp.setTime(exp.getTime() + max_age*1000);
+					exp.setTime(exp.getTime() + max_age * 1000);
 					exp = exp.toGMTString();
 					c.push("expires=" + exp);
 				}
@@ -469,8 +469,8 @@ BOOMR_check_doc_domain();
 			getSubCookies: function(cookie) {
 				var cookies_a,
 				    i, l, kv,
-				    gotcookies=false,
-				    cookies={};
+				    gotcookies = false,
+				    cookies = {};
 
 				if (!cookie) {
 					return null;
@@ -483,12 +483,12 @@ BOOMR_check_doc_domain();
 
 				cookies_a = cookie.split("&");
 
-				for (i=0, l=cookies_a.length; i<l; i++) {
+				for (i = 0, l = cookies_a.length; i < l; i++) {
 					kv = cookies_a[i].split("=");
 					if (kv[0]) {
 						kv.push("");	// just in case there's no value
 						cookies[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
-						gotcookies=true;
+						gotcookies = true;
 					}
 				}
 
@@ -534,20 +534,20 @@ BOOMR_check_doc_domain();
 			},
 
 			pluginConfig: function(o, config, plugin_name, properties) {
-				var i, props=0;
+				var i, props = 0;
 
 				if (!config || !config[plugin_name]) {
 					return false;
 				}
 
-				for (i=0; i<properties.length; i++) {
+				for (i = 0; i < properties.length; i++) {
 					if (config[plugin_name][properties[i]] !== undefined) {
 						o[properties[i]] = config[plugin_name][properties[i]];
 						props++;
 					}
 				}
 
-				return (props>0);
+				return (props > 0);
 			},
 			/**
 			 * `filter` for arrays
@@ -611,7 +611,7 @@ BOOMR_check_doc_domain();
 				}
 
 				function done(mutations) {
-					var run_again=false;
+					var run_again = false;
 
 					if (o.timer) {
 						clearTimeout(o.timer);
@@ -666,7 +666,7 @@ BOOMR_check_doc_domain();
 			},
 
 			pushVars: function(form, vars, prefix) {
-				var k, i, l=0, input;
+				var k, i, l = 0, input;
 
 				for (k in vars) {
 					if (vars.hasOwnProperty(k)) {
@@ -679,7 +679,7 @@ BOOMR_check_doc_domain();
 							input = document.createElement("input");
 							input.type = "hidden";	// we need `hidden` to preserve newlines. see commit message for more details
 							input.name = (prefix ? (prefix + "[" + k + "]") : k);
-							input.value = (vars[k]===undefined || vars[k]===null ? "" : vars[k]);
+							input.value = (vars[k] === undefined || vars[k] === null ? "" : vars[k]);
 
 							form.appendChild(input);
 
@@ -738,7 +738,7 @@ BOOMR_check_doc_domain();
 					form.target = iframe.name = iframe.id = name;
 
 					iframe.style.display = form.style.display = "none";
-					iframe.src="javascript:false";
+					iframe.src = "javascript:false";
 
 					remove(iframe.id);
 					remove(form.id);
@@ -854,7 +854,7 @@ BOOMR_check_doc_domain();
 				}
 			}
 
-			for (i=0; i<properties.length; i++) {
+			for (i = 0; i < properties.length; i++) {
 				if (config[properties[i]] !== undefined) {
 					impl[properties[i]] = config[properties[i]];
 				}
@@ -905,7 +905,7 @@ BOOMR_check_doc_domain();
 					// We only clear w on browsers that don't support onpagehide because
 					// those that do are new enough to not have memory leak problems of
 					// some older browsers
-					BOOMR.utils.addListener(w, "unload", function() { BOOMR.window=w=null; });
+					BOOMR.utils.addListener(w, "unload", function() { BOOMR.window = w = null; });
 				}
 			}());
 
@@ -947,7 +947,7 @@ BOOMR_check_doc_domain();
 
 			cb = function() {
 				fn.call(cb_scope || null, data, cb_data || {}, cstack);
-				cb=null;
+				cb = null;
 			};
 
 			if (w.setImmediate) {
@@ -1005,7 +1005,7 @@ BOOMR_check_doc_domain();
 			ev = impl.events[e_name];
 
 			// don't allow a handler to be attached more than once to the same event
-			for (i=0; i<ev.length; i++) {
+			for (i = 0; i < ev.length; i++) {
 				handler = ev[i];
 				if (handler && handler.fn === fn && handler.cb_data === cb_data && handler.scope === cb_scope) {
 					return this;
@@ -1118,7 +1118,7 @@ BOOMR_check_doc_domain();
 				params = arguments;
 			}
 
-			for (i=0; i<params.length; i++) {
+			for (i = 0; i < params.length; i++) {
 				if (impl.vars.hasOwnProperty(params[i])) {
 					delete impl.vars[params[i]];
 				}
@@ -1186,7 +1186,7 @@ BOOMR_check_doc_domain();
 		},
 
 		real_sendBeacon: function() {
-			var k, form, furl, img, length=0, errors=[], url, nparams=0, vars = {};
+			var k, form, furl, img, length = 0, errors = [], url, nparams = 0, vars = {};
 
 			if (!impl.beaconQueued) {
 				return false;
@@ -1287,7 +1287,7 @@ BOOMR_check_doc_domain();
 					url.push(encodeURIComponent(k)
 						+ "="
 						+ (
-							impl.vars[k]===undefined || impl.vars[k]===null
+							impl.vars[k] === undefined || impl.vars[k] === null
 							? ""
 							: encodeURIComponent(impl.vars[k])
 						)
@@ -1295,7 +1295,7 @@ BOOMR_check_doc_domain();
 				}
 			}
 
-			furl = impl.beacon_url + ((impl.beacon_url.indexOf("?") > -1)?"&":"?") + url.join("&");
+			furl = impl.beacon_url + ((impl.beacon_url.indexOf("?") > -1) ? "&" : "?") + url.join("&");
 
 			if (furl.length > BOOMR.constants.MAX_GET_LENGTH) {
 				// switch to a FORM beacon
@@ -1324,13 +1324,13 @@ BOOMR_check_doc_domain();
 
 			if (nparams) {
 				img = new Image();
-				img.src=furl;
+				img.src = furl;
 
 				if (impl.secondary_beacons) {
-					for (k = 0; k<impl.secondary_beacons.length; k++) {
+					for (k = 0; k < impl.secondary_beacons.length; k++) {
 						furl = impl.secondary_beacons[k] + "?" + url.join("&");
 						img = new Image();
-						img.src=furl;
+						img.src = furl;
 					}
 				}
 			}
@@ -1391,7 +1391,7 @@ BOOMR_check_doc_domain();
 
 		make_logger = function(l) {
 			return function(m, s) {
-				this.log(m, l, "boomerang" + (s?"."+s:""));
+				this.log(m, l, "boomerang" + (s ? "." + s : ""));
 				return this;
 			};
 		};
@@ -1412,7 +1412,7 @@ BOOMR_check_doc_domain();
 		}
 		if (!BOOMR.xhr_excludes) {
 			//! URLs to exclude from automatic XHR instrumentation
-			BOOMR.xhr_excludes={};
+			BOOMR.xhr_excludes = {};
 		}
 	}());
 

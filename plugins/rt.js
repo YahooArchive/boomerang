@@ -10,7 +10,7 @@
 
 /*eslint no-underscore-dangle:0*/
 
-	var d=w.document, impl;
+	var d = w.document, impl;
 
 	BOOMR = BOOMR || {};
 	BOOMR.plugins = BOOMR.plugins || {};
@@ -81,7 +81,7 @@
 							}
 						}
 						else {
-							if (k==="nu" || k==="r") {
+							if (k === "nu" || k === "r") {
 								params[k] = BOOMR.utils.hashQueryString(params[k], true);
 							}
 
@@ -139,7 +139,7 @@
 				return;
 			}
 
-			subcookies.s = Math.max(+subcookies.ld||0, Math.max(+subcookies.ul||0, +subcookies.cl||0));
+			subcookies.s = Math.max(+subcookies.ld || 0, Math.max(+subcookies.ul || 0, +subcookies.cl || 0));
 
 			BOOMR.debug("Read from cookie " + BOOMR.utils.objectToString(subcookies), "rt");
 
@@ -156,7 +156,7 @@
 				// and the URL clicked or submitted to matches the current page's URL
 				// (note the start timer may be later than click if both click and beforeunload fired
 				// on the previous page)
-				BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl+15), "rt");
+				BOOMR.debug(subcookies.s + " <? " + (+subcookies.cl + 15), "rt");
 				BOOMR.debug(subcookies.nu + " =?= " + url, "rt");
 
 				if (!this.strict_referrer ||
@@ -522,7 +522,7 @@
 		 */
 		determineTStart: function(ename, data) {
 			var t_start;
-			if (ename==="xhr") {
+			if (ename === "xhr") {
 				if (data && data.name && impl.timers[data.name]) {
 					// For xhr timers, t_start is stored in impl.timers.xhr_{page group name}
 					t_start = impl.timers[data.name].start;
@@ -594,7 +594,7 @@
 			// set cookie for next page
 			// We use document.URL instead of location.href because of a bug in safari 4
 			// where location.href is URL decoded
-			this.updateCookie({ "r": d.URL }, edata.type === "beforeunload"?"ul":"hd");
+			this.updateCookie({ "r": d.URL }, edata.type === "beforeunload" ? "ul" : "hd");
 
 			this.unloadfired = true;
 		},
@@ -744,7 +744,7 @@
 
 		addTimersToBeacon: function(vars, source) {
 			var t_name, timer,
-			    t_other=[];
+			    t_other = [];
 
 			for (t_name in impl.timers) {
 				if (impl.timers.hasOwnProperty(t_name)) {
@@ -798,7 +798,7 @@
 			catch (err) {
 				BOOMR.debug("Called done with " + err + ", " + ename, "rt");
 			}
-			var t_start, t_done, t_now=BOOMR.now(),
+			var t_start, t_done, t_now = BOOMR.now(),
 			    subresource = false;
 
 			// We may have to rerun if this was a pre-rendered page, so set complete to false, and only set to true when we're done
@@ -806,7 +806,7 @@
 
 			t_done = impl.validateLoadTimestamp(t_now, edata, ename);
 
-			if (ename==="load" || ename==="visible" || ename==="xhr") {
+			if (ename === "load" || ename === "visible" || ename === "xhr") {
 				if (!impl.setPageLoadTimers(ename, t_done, edata)) {
 					return this;
 				}
@@ -896,7 +896,7 @@
 
 			impl.updateCookie();
 
-			if (ename==="unload") {
+			if (ename === "unload") {
 				BOOMR.addVar("rt.quit", "");
 
 				if (!impl.onloadfired) {
