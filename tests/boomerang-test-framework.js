@@ -448,7 +448,7 @@
 			res = useLastMatch ? t.findLastResource(urlMatch) : t.findFirstResource(urlMatch);
 		}
 
-		if (res != null) {
+		if (res !== null) {
 			assert.closeTo(tf.beacons[beaconIndex].t_done, res.responseEnd, closeTo);
 		}
 		else {
