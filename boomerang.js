@@ -734,8 +734,16 @@ BOOMR_check_doc_domain();
 
 					document.body.appendChild(iframe);
 
-					// Add the form to the iframe
-					iframe.appendChild(form);
+                    // Add the form to the iframe
+                    var iFrmDocument = (iframe.contentWindow || iframe.contentDocument);
+                    if (iFrmDocument.document) iFrmDocument=iFrmDocument.document;
+                    if(iFrmDocument.body) {
+                        iFrmDocument.body.appendChild(form);
+                    }
+                    else {
+                        //body may be null, so add to the document
+                        iFrmDocument.appendChild(form);
+                    }
 
 					try {
 						form.submit();
