@@ -1,6 +1,9 @@
 /* eslint-env node */
 "use strict";
 
+//
+// Imports
+//
 var fs = require("fs");
 var path = require("path");
 var fse = require("fs-extra");
@@ -10,6 +13,9 @@ var grunt = require("grunt");
 //
 // Constants
 //
+var BUILD_PATH = "build";
+var TEST_BUILD_PATH = path.join("tests", "build");
+var TEST_DEBUG_PORT = 4002;
 var TEST_URL_BASE = "http://localhost:4002";
 
 //
@@ -17,18 +23,23 @@ var TEST_URL_BASE = "http://localhost:4002";
 //
 module.exports = function() {
 	//
-	// paths
+	// Paths
 	//
 	var testsDir = path.join(__dirname, "tests");
 	var pluginsDir = path.join(__dirname, "plugins");
 
-	// boomerang.js and plugins/*.js order
+	//
+	// Determine source files:
+	//  boomerang.js and plugins/*.js order
+	//
 	var src = [ "boomerang.js" ];
 	var plugins = grunt.file.readJSON("plugins.json");
 	src.push(plugins.plugins);
 	src.push(path.join(pluginsDir, "zzz_last_plugin.js"));
 
-	// ensure env.json exists
+	//
+	// Ensure env.json exists
+	//
 	var envFile = path.resolve(path.join(testsDir, "server", "env.json"));
 	if (!fs.existsSync(envFile)) {
 		var envFileSample = path.resolve(path.join(testsDir, "server", "env.json.sample"));
@@ -36,7 +47,11 @@ module.exports = function() {
 		fse.copySync(envFileSample, envFile);
 	}
 
+	var env = grunt.file.readJSON("tests/server/env.json");
+
+	//
 	// Build SauceLabs E2E test URLs
+	//
 	var e2eTests = [];
 	if (grunt.file.exists("tests/e2e/e2e.json")) {
 		e2eTests = JSON.parse(stripJsonComments(grunt.file.read("tests/e2e/e2e.json")));
@@ -48,11 +63,54 @@ module.exports = function() {
 	}
 
 	//
+	// Build numbers
+	//
+	var pkg = grunt.file.readJSON("package.json");
+	var buildNumber = grunt.option("buildNumber") || 0;
+	var releaseVersion = pkg.releaseVersion + "." + buildNumber;
+	var buildDate = Math.round(Date.now() / 1000);
+	var boomerangVersion = releaseVersion + "." + buildDate;
+
+	//
+	// Output files
+	//
+
+	// build file name is based on the version number
+	var buildFilePrefix = pkg.name + "-" + boomerangVersion;
+	var buildPathPrefix = path.join(BUILD_PATH, buildFilePrefix);
+
+	var testBuildFilePrefix = pkg.name;
+	var testBuildPathPrefix = path.join(TEST_BUILD_PATH, testBuildFilePrefix);
+
+	var buildDebug = buildPathPrefix + "-debug.js";
+	var buildRelease = buildPathPrefix + ".js";
+
+	//
+	// Build configuration
+	//
+	var buildConfig = {
+		server: grunt.option("server") || "localhost"
+	};
+
+	//
 	// Config
 	//
 	grunt.initConfig({
-		pkg: grunt.file.readJSON("package.json"),
-		buildDate: Math.round(Date.now() / 1000),
+		// package info
+		pkg: pkg,
+
+		//
+		// Variables to use in tasks
+		//
+		buildConfig: buildConfig,
+		boomerangVersion: boomerangVersion,
+		buildFilePrefix: buildFilePrefix,
+		buildPathPrefix: buildPathPrefix,
+		testBuildPathPrefix: testBuildPathPrefix,
+
+		//
+		// Tasks
+		//
 		concat: {
 			options: {
 				stripBanners: false,
@@ -60,11 +118,11 @@ module.exports = function() {
 			},
 			debug: {
 				src: src,
-				dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.js"
+				dest: buildDebug
 			},
 			release: {
 				src: src,
-				dest: "build/<%= pkg.name %>-<%= buildDate %>.js"
+				dest: buildRelease
 			}
 		},
 		eslint: {
@@ -90,20 +148,20 @@ module.exports = function() {
 			all: {
 				files: [
 					{
-						src: "build/<%= pkg.name %>-<%= buildDate %>.js",
-						dest: "build/<%= pkg.name %>-<%= buildDate %>.js"
+						src: buildRelease,
+						dest: buildRelease
 					},
 					{
-						src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
-						dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.js"
+						src: buildDebug,
+						dest: buildDebug
 					}
 				],
 				options: {
 					replacements: [
 						{
-							// Replace 0.9 with 0.9.[date]
-							pattern: /BOOMR.version\s*=\s*".*";/,
-							replacement: "BOOMR.version = \"<%= buildDate %>\";"
+							// Replace 1.0 with 1.[0 or jenkins build #].[date]
+							pattern: "%boomerang_version%",
+							replacement: boomerangVersion
 						},
 						{
 							// strip out BOOMR = BOOMR || {}; in plugins
@@ -120,28 +178,23 @@ module.exports = function() {
 			},
 			"debug-tests": {
 				files: [{
-					src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
-					dest: "build/<%= pkg.name %>-<%= buildDate %>-debug-tests.js"
+					src: buildDebug,
+					dest: "<%= testBuildPathPrefix %>-latest-debug.js"
 				}],
 				options: {
 					replacements: [
 						{
 							// Send beacons to null
-							pattern: /location\.protocol \+ \"\/\/%beacon_dest_host%%beacon_dest_path%/,
-							replacement: "\"/blackhole"
-						},
-						{
-							// Add config to null
-							pattern: /\/\/%config_host%%config_path%/,
-							replacement: "/blackhole"
+							pattern: /beacon_url: .*/,
+							replacement: "beacon_url: \"/blackhole\","
 						}
 					]
 				}
 			},
 			release: {
 				files: [{
-					src: "build/<%= pkg.name %>-<%= buildDate %>.js",
-					dest: "build/<%= pkg.name %>-<%= buildDate %>.js"
+					src: buildRelease,
+					dest: buildRelease
 				}],
 				options: {
 					// strip out some NOPs
@@ -162,17 +215,32 @@ module.exports = function() {
 				}
 			}
 		},
-		copy: {
-			// copy files to tests\build\boomerang-latest.js so tests/index.html points to the latest version always
+		strip_code: {
 			debug: {
+				files: [{
+					src: buildRelease
+				}],
+				options: {
+					start_comment: "BEGIN_DEBUG",
+					end_comment: "END_DEBUG"
+				}
+			},
+			prod: {
 				files: [
 					{
-						nonull: true,
-						src: "build/<%= pkg.name %>-<%= buildDate %>-debug-tests.js",
-						dest: "tests/build/<%= pkg.name %>-latest-debug.js"
+						src: buildDebug
+					},
+					{
+						src: "<%= testBuildPathPrefix %>*.js"
 					}
-				]
-			},
+				],
+				options: {
+					start_comment: "BEGIN_PROD",
+					end_comment: "END_PROD"
+				}
+			}
+		},
+		copy: {
 			webserver: {
 				files: [
 					{
@@ -181,7 +249,7 @@ module.exports = function() {
 						cwd: "tests/",
 						src: "**/*",
 						force: true,
-						dest: grunt.file.readJSON("tests/server/env.json").publish + "/"
+						dest: env.publish + "/"
 					}
 				]
 			}
@@ -199,8 +267,8 @@ module.exports = function() {
 				files: [{
 					expand: true,
 					cwd: "build/",
-					src: ["<%= pkg.name %>-<%= buildDate %>-debug.js",
-					      "<%= pkg.name %>-<%= buildDate %>.js"],
+					src: ["<%= buildFilePrefix %>-debug.js",
+					      "<%= buildFilePrefix %>.js"],
 					dest: "build/",
 					ext: ".min.js",
 					extDot: "last"
@@ -250,20 +318,20 @@ module.exports = function() {
 				},
 				files: [
 					{
-						src: "build/<%= pkg.name %>-<%= buildDate %>.js",
-						dest: "build/<%= pkg.name %>-<%= buildDate %>.js.gz"
+						src: buildRelease,
+						dest: "<%= buildPathPrefix %>.js.gz"
 					},
 					{
-						src: "build/<%= pkg.name %>-<%= buildDate %>-debug.js",
-						dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.js.gz"
+						src: buildDebug,
+						dest: "<%= buildPathPrefix %>-debug.js.gz"
 					},
 					{
-						src: "build/<%= pkg.name %>-<%= buildDate %>.min.js",
-						dest: "build/<%= pkg.name %>-<%= buildDate %>.min.js.gz"
+						src: "<%= buildPathPrefix %>.min.js",
+						dest: "<%= buildPathPrefix %>.min.js.gz"
 					},
 					{
-						src: "build/<%= pkg.name %>-<%= buildDate %>-debug.min.js",
-						dest: "build/<%= pkg.name %>-<%= buildDate %>-debug.min.js.gz"
+						src: "<%= buildPathPrefix %>-debug.min.js",
+						dest: "<%= buildPathPrefix %>-debug.min.js.gz"
 					}
 				]
 			},
@@ -318,7 +386,7 @@ module.exports = function() {
 					}
 				}
 			},
-			default: {
+			console: {
 				files: [{
 					expand: true,
 					cwd: "build",
@@ -418,7 +486,7 @@ module.exports = function() {
 		},
 		express: {
 			options: {
-				port: 4002,
+				port: TEST_DEBUG_PORT,
 				hostname: "0.0.0.0"
 			},
 			dev: {
@@ -517,6 +585,7 @@ module.exports = function() {
 	grunt.loadNpmTasks("grunt-protractor-webdriver");
 	grunt.loadNpmTasks("grunt-template");
 	grunt.loadNpmTasks("grunt-saucelabs");
+	grunt.loadNpmTasks("grunt-strip-code");
 	grunt.loadNpmTasks("grunt-contrib-watch");
 
 	// tasks/*.js
@@ -528,31 +597,66 @@ module.exports = function() {
 
 	// Custom aliases for configured grunt tasks
 	var aliases = {
-		"build": ["concat", "string-replace", "uglify", "compress", "copy:debug", "filesize:default"],
-		"build:test": ["concat:debug", "string-replace", "copy:debug"],
-		"default": ["lint", "build", "test", "filesize:default"],
-		"jenkins": ["lint", "build", "test", "copy:webserver", "filesize:csv"],
+		"default": ["lint", "build", "test", "metrics"],
+
+		//
+		// Build
+		//
+		"build": ["concat", "build:apply-templates", "uglify", "compress", "metrics"],
+		"build:test": ["concat:debug", "build:apply-templates"],
+
+		// Build steps
+		"build:apply-templates": [
+			"string-replace:all",
+			"string-replace:debug-tests",
+			"string-replace:release",
+			"strip_code:debug",
+			"strip_code:prod"
+		],
+
+		// metrics to generate
+		"metrics": ["filesize:console"],
+
+		//
+		// Lint
+		//
 		"lint": ["eslint"],
+
+		//
+		// Test tasks
+		//
 		"test": ["build", "test:build", "test:unit", "test:e2e"],
+
+		// builds test files
 		"test:build": ["test:build:react", "pages-builder", "build"],
+
+		// react test files
 		"test:build:react": ["babel:spa-react-test-templates", "browserify:spa-react-test-templates"],
+
+		// useful for debugging tests, leaves a webbrowser open at http://localhost:3001
 		"test:debug": ["test:build", "build:test", "express", "watch"],
-		"test:e2e": ["test:build", "build", "test:e2e:phantomjs"],
-		"test:e2e:chrome": ["build", "express", "protractor_webdriver", "protractor:chrome"],
-		"test:e2e:debug": ["build", "test:build", "build:test", "express", "protractor_webdriver", "protractor:debug"],
-		"test:e2e:phantomjs": ["build", "express", "protractor_webdriver", "protractor:phantomjs"],
-		"test:matrix": ["test:matrix:unit", "test:matrix:e2e"],
-		"test:matrix:e2e": ["pages-builder", "saucelabs-mocha:e2e"],
-		"test:matrix:e2e:debug": ["pages-builder", "saucelabs-mocha:e2e-debug"],
-		"test:matrix:unit": ["saucelabs-mocha:unit"],
-		"test:matrix:unit:debug": ["saucelabs-mocha:unit-debug"],
+
+		// unit tests
 		"test:unit": ["test:build", "build", "karma:unit"],
 		"test:unit:all": ["build", "karma:all"],
 		"test:unit:chrome": ["build", "karma:chrome"],
 		"test:unit:ff": ["build", "karma:ff"],
 		"test:unit:ie": ["build", "karma:ie"],
 		"test:unit:opera": ["build", "karma:opera"],
-		"test:unit:safari": ["build", "karma:safari"]
+		"test:unit:safari": ["build", "karma:safari"],
+
+		// End-to-End tests
+		"test:e2e": ["test:build", "build", "test:e2e:phantomjs"],
+		"test:e2e:chrome": ["build", "express", "protractor_webdriver", "protractor:chrome"],
+		"test:e2e:debug": ["build", "test:build", "build:test", "express", "protractor_webdriver", "protractor:debug"],
+		"test:e2e:phantomjs": ["build", "express", "protractor_webdriver", "protractor:phantomjs"],
+
+		// SauceLabs tests
+		"test:matrix": ["test:matrix:unit", "test:matrix:e2e"],
+		"test:matrix:e2e": ["pages-builder", "saucelabs-mocha:e2e"],
+		"test:matrix:e2e:debug": ["pages-builder", "saucelabs-mocha:e2e-debug"],
+		"test:matrix:unit": ["saucelabs-mocha:unit"],
+		"test:matrix:unit:debug": ["saucelabs-mocha:unit-debug"],
 	};
 
 	function isAlias(task) {

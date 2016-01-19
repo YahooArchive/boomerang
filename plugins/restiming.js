@@ -442,8 +442,7 @@ see: http://www.w3.org/TR/resource-timing/
 			}
 
 			// skip mPulse boomerang.js and config.js URLs
-			if (e.name.indexOf(BOOMR.url) > -1 ||
-			    e.name.indexOf(BOOMR.config_url) > -1) {
+			if (e.name.indexOf(BOOMR.url) > -1) {
 				continue;
 			}
 
@@ -872,7 +871,7 @@ see: http://www.w3.org/TR/resource-timing/
 		//
 		// Test Exports (only for debug)
 		//
-		/* BEGIN UNIT_TEST_CODE */,
+		/* BEGIN_DEBUG */,
 		trimTiming: trimTiming,
 		convertToTrie: convertToTrie,
 		optimizeTrie: optimizeTrie,
@@ -882,7 +881,7 @@ see: http://www.w3.org/TR/resource-timing/
 		reduceFetchStarts: reduceFetchStarts,
 		compressSize: compressSize,
 		decompressSize: decompressSize
-		/* END UNIT_TEST_CODE */
+		/* END_DEBUG */
 	};
 
 }());

@@ -26,7 +26,6 @@
 		"no-array-constructor": 2,
 		"no-caller": 2,
 		"no-catch-shadow": 2,
-		"no-delete-var": 1,
 		"no-empty-label": 2,
 		"no-eval": 2,
 		"no-extend-native": 2,
