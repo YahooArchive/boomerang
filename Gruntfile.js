@@ -84,6 +84,7 @@ module.exports = function() {
 
 	var buildDebug = buildPathPrefix + "-debug.js";
 	var buildRelease = buildPathPrefix + ".js";
+	var buildReleaseMin = buildPathPrefix + ".min.js";
 
 	//
 	// Build configuration
@@ -210,6 +211,22 @@ module.exports = function() {
 						{
 							pattern: /\(\)\);\(function\(/g,
 							replacement: "\(\)\);\n(function("
+						}
+					]
+				}
+			},
+			"remove-sourcemappingurl": {
+				files: [
+					{
+						src: buildReleaseMin,
+						dest: buildReleaseMin
+					}
+				],
+				options: {
+					replacements: [
+						{
+							pattern: /\/\/# sourceMappingURL=.*/g,
+							replacement: ""
 						}
 					]
 				}
@@ -602,7 +619,7 @@ module.exports = function() {
 		//
 		// Build
 		//
-		"build": ["concat", "build:apply-templates", "uglify", "compress", "metrics"],
+		"build": ["concat", "build:apply-templates", "uglify", "string-replace:remove-sourcemappingurl", "compress", "metrics"],
 		"build:test": ["concat:debug", "build:apply-templates"],
 
 		// Build steps
