@@ -1006,11 +1006,13 @@
 					return;
 				}
 
-				BOOMR.setImmediate(function() {
+				var sendNow = function() {
 					for (i = 0; i < resources.length; i++) {
 						sendResource(resources[i]);
 					}
-				});
+				};
+
+				BOOMR.setImmediate(sendNow);
 			}
 
 			if (singlePageApp) {
