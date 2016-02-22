@@ -28,7 +28,7 @@
 					//  Use this to determine if user bailed without opening the tab
 		initialized: false,	//! Set when init has completed to prevent double initialization
 		complete: false,	//! Set when this plugin has completed
-
+		autorun: true,
 		timers: {},		//! Custom timers that the developer can use
 					// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 		cookie: "RT",		//! Name of the cookie that stores the start time and referrer
@@ -594,16 +594,25 @@
 		},
 
 		check_visibility: function() {
+			var visState = BOOMR.visibilityState();
+
 			// we care if the page became visible at some point
-			if (BOOMR.visibilityState() === "visible") {
+			if (visState === "visible") {
 				impl.visiblefired = true;
 			}
 
-			if (impl.visibilityState === "prerender" && BOOMR.visibilityState() !== "prerender" && impl.onloadfired) {
+			if (impl.visibilityState === "prerender"
+			    && visState !== "prerender"
+			    && impl.onloadfired
+			    && impl.autorun) {
+
+				// note that we transitioned from prerender on the beacon for debugging
+				BOOMR.addVar("vis.pre", "1");
+
 				BOOMR.plugins.RT.done(null, "visible");
 			}
 
-			impl.visibilityState = BOOMR.visibilityState();
+			impl.visibilityState = visState;
 		},
 
 		page_unload: function(edata) {
