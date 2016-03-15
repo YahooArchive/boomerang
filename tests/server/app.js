@@ -57,6 +57,7 @@ app.post("/blackhole", function(req, res) {
 
 // /delay - delays a response
 app.get("/delay", require("./route-delay"));
+app.post("/delay", require("./route-delay"));
 
 // all static content follows afterwards
 /*eslint dot-notation:0*/
