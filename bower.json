@@ -1,10 +1,11 @@
 {
-  "name": "boomerang",
+  "name": "soasta-boomerang",
+  "private": true,
   "main": "boomerang.js",
-  "version": "0.9.0",
-  "homepage": "http://soasta.github.com/boomerang/doc/",
+  "version": "1.0.0",
+  "homepage": "https://github.com/SOASTA/boomerang/",
   "authors": [
-    "Philip Tellis"
+    "Philip Tellis",
   ],
   "description": "End user oriented web performance testing and beaconing",
   "keywords": [

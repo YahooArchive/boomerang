@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
- * Copyright (c) 2012, Log-Normal, Inc.  All rights reserved.
- * Copyright (c) 2014, SOASTA, Inc. All rights reserved.
+ * Copyright (c) 2011-2012, Log-Normal, Inc.  All rights reserved.
+ * Copyright (c) 2012-2016, SOASTA, Inc. All rights reserved.
  * Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
  */
 
@@ -1222,7 +1222,7 @@ BOOMR_check_doc_domain();
 		},
 		/**
 		 * Instrument all requests made via XMLHttpRequest to send beacons
-		 * This is implemented in plugins/auto_xhr.js
+		 * This is implemented in plugins/auto-xhr.js
 		 */
 		instrumentXHR: function() { },
 
