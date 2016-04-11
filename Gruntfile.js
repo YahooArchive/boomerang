@@ -132,7 +132,7 @@ module.exports = function() {
 				options: {
 					create: [TEST_RESULTS_PATH]
 				}
-			},
+			}
 		},
 		eslint: {
 			target: [
@@ -283,7 +283,10 @@ module.exports = function() {
 			default: {
 				options: {
 					preserveComments: false,
-					mangle: true,
+					mangle: {
+						// for errors.js
+						except: ["createStackForSend", "loadFinished"]
+					},
 					sourceMap: true,
 					compress: {
 						sequences: false
@@ -484,6 +487,9 @@ module.exports = function() {
 			},
 			safari: {
 				browsers: ["Safari"]
+			},
+			debug: {
+				singleRun: false
 			}
 		},
 		protractor: {
@@ -662,6 +668,9 @@ module.exports = function() {
 		// useful for debugging tests, leaves a webbrowser open at http://localhost:3001
 		"test:debug": ["test:build", "build:test", "express", "watch"],
 
+		// open your browser to http://localhost:4000/debug.html to debug
+		"test:karma:debug": ["test:build", "build:test", "karma:debug"],
+
 		// unit tests
 		"test:unit": ["test:build", "build", "karma:unit"],
 		"test:unit:all": ["build", "karma:all"],
@@ -682,7 +691,7 @@ module.exports = function() {
 		"test:matrix:e2e": ["pages-builder", "saucelabs-mocha:e2e"],
 		"test:matrix:e2e:debug": ["pages-builder", "saucelabs-mocha:e2e-debug"],
 		"test:matrix:unit": ["saucelabs-mocha:unit"],
-		"test:matrix:unit:debug": ["saucelabs-mocha:unit-debug"],
+		"test:matrix:unit:debug": ["saucelabs-mocha:unit-debug"]
 	};
 
 	function isAlias(task) {
