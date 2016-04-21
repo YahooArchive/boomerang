@@ -46,18 +46,34 @@ server.listen(port, function() {
 app.use(compress());
 
 //
+// Quick Handlers
+//
+function respond204(req, res) {
+	res.status(204).send();
+}
+
+function respond301(req, res) {
+	var q = require("url").parse(req.url, true).query;
+	var file = q.file;
+
+	res.set("Access-Control-Allow-Origin", "*");
+	res.redirect(301, file);
+}
+
+//
 // Routes
 //
-app.get("/blackhole", function(req, res) {
-	res.status(204).send();
-});
-app.post("/blackhole", function(req, res) {
-	res.status(204).send();
-});
+// /blackhole and /204: returns a 204
+app.get("/blackhole", respond204);
+app.post("/blackhole", respond204);
 
 // /delay - delays a response
 app.get("/delay", require("./route-delay"));
 app.post("/delay", require("./route-delay"));
+
+// /301 - 301 redirects
+app.get("/redirect", respond301);
+app.post("/redirect", respond301);
 
 // all static content follows afterwards
 /*eslint dot-notation:0*/
