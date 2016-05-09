@@ -55,7 +55,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lognormal/boomerang.git"
+    "url": "https://github.com/SOASTA/boomerang.git"
   },
   "keywords": [
     "rum",
@@ -161,7 +161,7 @@
   ],
   "license": "BSD",
   "bugs": {
-    "url": "https://github.com/lognormal/boomerang/issues"
+    "url": "https://github.com/SOASTA/boomerang/issues"
   },
-  "homepage": "https://github.com/lognormal/boomerang"
+  "homepage": "https://github.com/SOASTA/boomerang"
 }
