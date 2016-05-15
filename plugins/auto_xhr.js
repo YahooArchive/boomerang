@@ -258,35 +258,29 @@
 		this.watch--;
 
 		this.clearTimeout();
-		if (BOOMR.hasVar("h.cr")) {
-			ev.resource.resources = ev.resources;
+		ev.resource.resources = ev.resources;
 
-			// Add ResourceTiming data to the beacon, starting at when 'requestStart'
-			// was for this resource.
-			if (BOOMR.plugins.ResourceTiming &&
-				BOOMR.plugins.ResourceTiming.is_supported() &&
-				ev.resource.timing &&
-				ev.resource.timing.requestStart) {
-				var r = BOOMR.plugins.ResourceTiming.getResourceTiming(ev.resource.timing.requestStart);
-				BOOMR.addVar("restiming", JSON.stringify(r));
-			}
-
-			// If the resource has an onComplete event, trigger it.
-			if (ev.resource.onComplete) {
-				ev.resource.onComplete();
-			}
-
-			// Use 'requestStart' as the startTime of the resource, if given
-			var startTime = ev.resource.timing ? ev.resource.timing.requestStart : undefined;
-
-			BOOMR.responseEnd(ev.resource, startTime, ev.resource);
-
-			this.pending_events[i] = undefined;
+		// Add ResourceTiming data to the beacon, starting at when 'requestStart'
+		// was for this resource.
+		if (BOOMR.plugins.ResourceTiming &&
+			BOOMR.plugins.ResourceTiming.is_supported() &&
+			ev.resource.timing &&
+			ev.resource.timing.requestStart) {
+			var r = BOOMR.plugins.ResourceTiming.getResourceTiming(ev.resource.timing.requestStart);
+			BOOMR.addVar("restiming", JSON.stringify(r));
 		}
-		else {
-			// No crumb, so try again after 5 seconds
-			setTimeout(function() { self.sendEvent(i); }, 5000);
+
+		// If the resource has an onComplete event, trigger it.
+		if (ev.resource.onComplete) {
+			ev.resource.onComplete();
 		}
+
+		// Use 'requestStart' as the startTime of the resource, if given
+		var startTime = ev.resource.timing ? ev.resource.timing.requestStart : undefined;
+
+		BOOMR.responseEnd(ev.resource, startTime, ev.resource);
+
+		this.pending_events[i] = undefined;
 	};
 
 	MutationHandler.prototype.setTimeout = function(timeout, index) {
