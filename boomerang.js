@@ -779,10 +779,6 @@ BOOMR_check_doc_domain();
 				return this;
 			}
 
-			if (config.site_domain !== undefined) {
-				this.session.domain = config.site_domain;
-			}
-
 			if (config.log !== undefined) {
 				this.log = config.log;
 			}
