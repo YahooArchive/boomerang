@@ -968,6 +968,10 @@
 
 		is_complete: function() { return impl.complete; },
 
+		updateCookie: function() {
+			impl.updateCookie();
+		},
+
 		navigationStart: function() {
 			if (!impl.navigationStart) {
 				impl.initFromNavTiming();
