@@ -533,6 +533,12 @@ module.exports = function() {
 				options: {
 					script: "tests/server/app.js"
 				}
+			},
+			doc: {
+				options: {
+					port: 4002,
+					script: "tests/server/doc-server.js"
+				}
 			}
 		},
 		"saucelabs-mocha": {
@@ -581,6 +587,18 @@ module.exports = function() {
 				}
 			}
 		},
+		jsdoc: {
+			dist: {
+				src: ["boomerang.js", "plugins/*.js"],
+				jsdoc: "./node_modules/jsdoc/jsdoc.js",
+				options: {
+					destination: "build/doc",
+					package: "package.json",
+					readme: "README.md",
+					configure: "jsdoc.conf.json"
+				}
+			}
+		},
 		watch: {
 			test: {
 				files: [
@@ -611,7 +629,15 @@ module.exports = function() {
 				files: [
 					"tests/server/*.js"
 				],
-				tasks: ["express"]
+				tasks: ["express:dev"]
+			},
+			doc: {
+				files: [
+					"boomerang.js",
+					"plugins/*.js",
+					"doc/**/**"
+				],
+				tasks: ["clean", "jsdoc"]
 			}
 		}
 	});
@@ -635,6 +661,7 @@ module.exports = function() {
 	grunt.loadNpmTasks("grunt-saucelabs");
 	grunt.loadNpmTasks("grunt-strip-code");
 	grunt.loadNpmTasks("grunt-contrib-watch");
+	grunt.loadNpmTasks("grunt-jsdoc");
 
 	// tasks/*.js
 	if (grunt.file.exists("tasks")) {
@@ -682,7 +709,7 @@ module.exports = function() {
 		"test:build:react": ["babel:spa-react-test-templates", "browserify:spa-react-test-templates"],
 
 		// useful for debugging tests, leaves a webbrowser open at http://localhost:3001
-		"test:debug": ["test:build", "build:test", "express", "watch"],
+		"test:debug": ["test:build", "build:test", "express:dev", "watch"],
 
 		// open your browser to http://localhost:4000/debug.html to debug
 		"test:karma:debug": ["test:build", "build:test", "karma:debug"],
@@ -698,9 +725,11 @@ module.exports = function() {
 
 		// End-to-End tests
 		"test:e2e": ["test:build", "build", "test:e2e:phantomjs"],
-		"test:e2e:chrome": ["build", "express", "protractor_webdriver", "protractor:chrome"],
-		"test:e2e:debug": ["build", "test:build", "build:test", "express", "protractor_webdriver", "protractor:debug"],
-		"test:e2e:phantomjs": ["build", "express", "protractor_webdriver", "protractor:phantomjs"],
+		"test:e2e:chrome": ["build", "express:dev", "protractor_webdriver", "protractor:chrome"],
+		"test:e2e:debug": ["build", "test:build", "build:test", "express:dev", "protractor_webdriver", "protractor:debug"],
+		"test:e2e:phantomjs": ["build", "express:dev", "protractor_webdriver", "protractor:phantomjs"],
+
+		"test:doc": ["clean", "jsdoc", "express:doc", "watch:doc"],
 
 		// SauceLabs tests
 		"test:matrix": ["test:matrix:unit", "test:matrix:e2e"],

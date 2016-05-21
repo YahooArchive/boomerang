@@ -34,7 +34,6 @@
 		"no-label-var": 2,
 		"no-labels": 2,
 		"no-lone-blocks": 2,
-		"no-loop-func": 2,
 		"no-multi-str": 2,
 		"no-native-reassign": 2,
 		"no-new": 2,
@@ -104,6 +103,9 @@
 		"no-delete-var": 0,
 
 		// We use spaces for alignment in many places
-		"no-multi-spaces": 0
+		"no-multi-spaces": 0,
+
+		// Ignored
+		"no-loop-func": 0
 	}
 }
