@@ -463,7 +463,8 @@ see: http://www.w3.org/TR/resource-timing/
 			}
 
 			// skip mPulse boomerang.js and config.js URLs
-			if (e.name.indexOf(BOOMR.url) > -1) {
+			if (e.name.indexOf(BOOMR.url) > -1 ||
+			    (typeof BOOMR.getBeaconURL === "function" && BOOMR.getBeaconURL() && e.name.indexOf(BOOMR.getBeaconURL()) > -1)) {
 				continue;
 			}
 
