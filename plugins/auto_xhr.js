@@ -247,7 +247,7 @@
 	};
 
 	MutationHandler.prototype.sendEvent = function(i) {
-		var ev = this.pending_events[i], self=this;
+		var ev = this.pending_events[i];
 
 		if (!ev || ev.complete) {
 			return;

@@ -40,11 +40,6 @@ describe("BOOMR.utils cookies", function() {
 	// need to skip some tests this isn't on a TLD (eg localhost), because cookies can't get set
 	var canSetCookies = window.location.host.indexOf(".") !== -1;
 
-	// cookie domain can't have a port
-	var cookieDomain = window.location.host.indexOf(":") === -1 ?
-		window.location.host :
-		window.location.host.substring(0, window.location.host.indexOf(":"));
-
 	describe("BOOMR.utils.getCookie()", function() {
 		it("Should have an exisiting BOOMR.utils.getCookie function", function() {
 			assert.isFunction(BOOMR.utils.getCookie);
