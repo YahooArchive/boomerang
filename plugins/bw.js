@@ -29,7 +29,7 @@
 	// As input data (image-3.bin) I used the original images that were encrypted using AES256.
 	// The IM command used was : convert -size 618x618 -depth 8 gray:image-3.bin image-3.png
 	// Vary the image dimensions to change the filesize. The image dimensions are more or less the square of the desired filesize.
-	images=[
+	images = [
 		{ name: "image-0.png", size: 11773, timeout: 1400 },
 		{ name: "image-1.png", size: 40836, timeout: 1200 },
 		{ name: "image-2.png", size: 165544, timeout: 1300 },

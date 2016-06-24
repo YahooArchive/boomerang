@@ -6,7 +6,7 @@ A plugin beaconing clicked elements back to the server
 // w is the window object
 (function(w) {
 
-	var d=w.document;
+	var d = w.document;
 
 	// First make sure BOOMR is actually defined.  It's possible that your plugin is
 	// loaded before boomerang, in which case you'll need this.
@@ -20,7 +20,7 @@ A plugin beaconing clicked elements back to the server
 		click_url: "",
 		onbeforeunload: false,
 		retention: [],
-		handleEvent : function(event) {
+		handleEvent: function(event) {
 			if (typeof impl.click_url === "undefined" ) {
 				BOOMR.error("No Beacon URL defined will not send beacon");
 				return;
@@ -34,7 +34,7 @@ A plugin beaconing clicked elements back to the server
 			var data = {
 				element: target.nodeName,
 				id: target.id,
-				"class" : target.classList,
+				"class": target.classList,
 				x: event.x,
 				y: event.y,
 				document_height: document_res.height,
@@ -51,7 +51,7 @@ A plugin beaconing clicked elements back to the server
 				impl.retention.push(data);
 			}
 		},
-		sendData : function(data) {
+		sendData: function(data) {
 			var keys = Object.keys(data);
 			var urlenc = "";
 			for (var i in keys) {
@@ -63,12 +63,12 @@ A plugin beaconing clicked elements back to the server
 			img.src = url;
 			img.remove();
 		},
-		unload : function() {
+		unload: function() {
 			impl.retention.forEach(function(data){
 				impl.sendData(data);
 			});
 		},
-		getDocumentSize : function() {
+		getDocumentSize: function() {
 			return {
 				height: Math.max(
 					d.body.scrollHeight, d.documentElement.scrollHeight,
