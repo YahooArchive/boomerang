@@ -17,7 +17,7 @@ var BUILD_PATH = "build";
 var TEST_BUILD_PATH = path.join("tests", "build");
 var TEST_RESULTS_PATH = path.join("tests", "results");
 var TEST_DEBUG_PORT = 4002;
-var TEST_URL_BASE = "http://localhost:4002";
+var TEST_URL_BASE = grunt.option("test-url") || "http://localhost:4002";
 
 //
 // Grunt config
@@ -86,6 +86,7 @@ module.exports = function() {
 	var buildDebug = buildPathPrefix + "-debug.js";
 	var buildRelease = buildPathPrefix + ".js";
 	var buildReleaseMin = buildPathPrefix + ".min.js";
+	var buildTest = testBuildPathPrefix + "-latest-debug.js";
 
 	//
 	// Build configuration
@@ -125,6 +126,10 @@ module.exports = function() {
 			debug: {
 				src: src,
 				dest: buildDebug
+			},
+			"debug-tests": {
+				src: [src, "tests/boomerang-test-plugin.js"],
+				dest: buildTest
 			},
 			release: {
 				src: src,
@@ -167,6 +172,10 @@ module.exports = function() {
 					{
 						src: buildDebug,
 						dest: buildDebug
+					},
+					{
+						src: buildTest,
+						dest: buildTest
 					}
 				],
 				options: {
@@ -191,8 +200,8 @@ module.exports = function() {
 			},
 			"debug-tests": {
 				files: [{
-					src: buildDebug,
-					dest: "<%= testBuildPathPrefix %>-latest-debug.js"
+					src: buildTest,
+					dest: buildTest
 				}],
 				options: {
 					replacements: [
@@ -551,7 +560,7 @@ module.exports = function() {
 			all: {
 				options: {
 					// username: "", // SAUCE_USERNAME
-					// key: "",	  // SAUCE_ACCESS_KEY
+					// key: "",      // SAUCE_ACCESS_KEY
 					build: process.env.CI_BUILD_NUMBER,
 					tunneled: false
 				}
@@ -587,8 +596,8 @@ module.exports = function() {
 					testname: "Boomerang E2E Tests",
 					browsers: [{
 						"browserName": "internet explorer",
-						"version":	 "11",
-						"platform":	"Windows 8.1"
+						"version":     "11",
+						"platform":    "Windows 8.1"
 					}]
 				}
 			}
@@ -733,7 +742,7 @@ module.exports = function() {
 		"test:e2e": ["test:build", "build", "test:e2e:phantomjs"],
 		"test:e2e:chrome": ["build", "express:dev", "express:secondary", "protractor_webdriver", "protractor:chrome"],
 		"test:e2e:debug": ["build", "test:build", "build:test", "express:dev", "express:secondary", "protractor_webdriver", "protractor:debug"],
-		"test:e2e:phantomjs": ["build", "express", "protractor_webdriver", "protractor:phantomjs"],
+		"test:e2e:phantomjs": ["build", "express:dev", "express:secondary", "protractor_webdriver", "protractor:phantomjs"],
 
 		"test:doc": ["clean", "jsdoc", "express:doc", "watch:doc"],
 

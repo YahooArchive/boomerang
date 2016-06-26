@@ -170,20 +170,7 @@
 		}
 
 		if (!window.BOOMR || !window.BOOMR.version) {
-			if (window.document.addEventListener) {
-				window.document.addEventListener("onBoomerangLoaded", function() {
-					t.init(config);
-				});
-			}
-			else if (window.document.attachEvent) {
-				document.attachEvent("onpropertychange", function(e) {
-					e = e || window.event;
-					if (e && e.propertyName === "onBoomerangLoaded") {
-						t.init(config);
-					}
-				});
-			}
-
+			window.BOOMR_test_config = config;
 			return;
 		}
 
