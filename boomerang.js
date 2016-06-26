@@ -234,7 +234,6 @@ BOOMR_check_doc_domain();
 		visibilityChange = "webkitvisibilitychange";
 	}
 
-
 	// impl is a private object not reachable from outside the BOOMR object
 	// users can set properties by passing in to the init() method
 	impl = {
@@ -1263,27 +1262,73 @@ BOOMR_check_doc_domain();
 			};
 		},
 
+		/**
+		 * Determines is Boomerang can send a beacon.
+		 *
+		 * Queryies all plugins to see if they implement readyToSend(),
+		 * and if so, that they return true;
+		 *
+		 * If not, the beacon cannot be sent.
+		 *
+		 * @returns {boolean} True if Boomerang can send a beacon
+		 */
+		readyToSend: function() {
+			var plugin;
+
+			for (plugin in this.plugins) {
+				if (this.plugins.hasOwnProperty(plugin)) {
+					if (impl.disabled_plugins[plugin]) {
+						continue;
+					}
+
+					if (typeof this.plugins[plugin].readyToSend === "function"
+					    && this.plugins[plugin].readyToSend() === false) {
+						BOOMR.debug("Plugin " + plugin + " is not ready to send");
+						return false;
+					}
+				}
+			}
+
+			return true;
+		},
+
 		responseEnd: function(name, t_start, data) {
-			if (typeof name === "object" && name.url) {
-				impl.fireEvent("xhr_load", name);
+			if (BOOMR.readyToSend()) {
+				if (typeof name === "object" && name.url) {
+					impl.fireEvent("xhr_load", name);
+				}
+				else {
+					// flush out any queue'd beacons before we set the Page Group
+					// and timers
+					BOOMR.real_sendBeacon();
+
+					BOOMR.addVar("xhr.pg", name);
+					BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
+					impl.fireEvent("xhr_load", {
+						"name": "xhr_" + name,
+						"data": data
+					});
+				}
+			}
+			// Only add to the QT variable for named Page Groups, not resources
+			// with a .url
+			else if (typeof name !== "object") {
+				var timer = name + "|" + (BOOMR.now() - t_start);
+				if (impl.vars.qt) {
+					impl.vars.qt += "," + timer;
+				}
+				else {
+					impl.vars.qt = timer;
+				}
 			}
 			else {
-				// flush out any queue'd beacons before we set the Page Group
-				// and timers
-				BOOMR.real_sendBeacon();
-
-				BOOMR.addVar("xhr.pg", name);
-				BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
-				impl.fireEvent("xhr_load", {
-					"name": "xhr_" + name,
-					"data": data
-				});
+				BOOMR.debug("Attempt to send a resource before a security token");
 			}
 		},
 
 		//
 		// uninstrumentXHR and instrumentXHR are stubs that will be replaced
-		// by auto_xhr.js if active.
+		// by auto-xhr.js if active.
 		//
 		/**
 		 * Undo XMLHttpRequest instrumentation and reset the original
@@ -1431,6 +1476,8 @@ BOOMR_check_doc_domain();
 				// switch to a XHR beacon if the GET length is too long
 				useImg = false;
 			}
+
+			BOOMR.removeVar("qt");
 
 			// If we reach here, we've transferred all vars to the beacon URL.
 			// The only thing that can stop it now is if we're rate limited
@@ -1587,6 +1634,7 @@ BOOMR_check_doc_domain();
 		boomr.warn = make_logger("warn");
 		boomr.error = make_logger("error");
 	}());
+
 
 
 	(function() {
