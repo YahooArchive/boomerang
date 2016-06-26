@@ -300,7 +300,7 @@
 	 * @returns {undefined} - returns early if the event already completed
 	 */
 	MutationHandler.prototype.sendEvent = function(i) {
-		var ev = this.pending_events[i];
+		var ev = this.pending_events[i], self = this;
 
 		if (!ev || ev.complete) {
 			return;
@@ -311,16 +311,21 @@
 		this.watch--;
 
 		this.clearTimeout();
+		if (BOOMR.readyToSend()) {
+			ev.resource.resources = ev.resources;
 
-		ev.resource.resources = ev.resources;
+			// if this was an SPA nav that triggered no additional resources, substract the
+			// SPA_TIMEOUT from now to determine the end time
+			if (ev.type === "spa" && ev.resources.length === 0) {
+				ev.resource.timing.loadEventEnd = BOOMR.now() - SPA_TIMEOUT;
+			}
 
-		// if this was an SPA nav that triggered no additional resources, substract the
-		// SPA_TIMEOUT from now to determine the end time
-		if (ev.type === "spa" && ev.resources.length === 0) {
-			ev.resource.timing.loadEventEnd = BOOMR.now() - SPA_TIMEOUT;
+			this.sendResource(ev.resource, i);
 		}
-
-		this.sendResource(ev.resource, i);
+		else {
+			// No crumb, so try again after 5 seconds
+			setTimeout(function() { self.sendEvent(i); }, 5000);
+		}
 	};
 
 	/**
@@ -1278,18 +1283,35 @@
 			// listening for MutationObserver events after an XHR is complete.
 			alwaysSendXhr = config.AutoXHR && config.AutoXHR.alwaysSendXhr;
 			if (alwaysSendXhr && autoXhrEnabled && BOOMR.xhr && typeof BOOMR.xhr.stop === "function") {
-				var resources = BOOMR.xhr.stop(sendResource);
-				if (!resources || !resources.length) {
-					return;
+				var resources = BOOMR.xhr.stop(function(res) {
+					// any resource callbacks should happen in an setImmediate in case the rest
+					// of the plugins haven't yet been initialized
+					BOOMR.setImmediate(function sendAgain() {
+						// wait until we have a crumb to send
+						if (!BOOMR.readyToSend()) {
+							setTimeout(sendAgain, 1000);
+							return;
+						}
+
+						sendResource(res);
+					});
+				});
+
+				if (resources && resources.length) {
+					var sendNow = function() {
+						// wait until we have a crumb to send
+						if (!BOOMR.readyToSend()) {
+							setTimeout(sendNow, 1000);
+							return;
+						}
+
+						for (i = 0; i < resources.length; i++) {
+							sendResource(resources[i]);
+						}
+					};
+
+					BOOMR.setImmediate(sendNow);
 				}
-
-				var sendNow = function() {
-					for (i = 0; i < resources.length; i++) {
-						sendResource(resources[i]);
-					}
-				};
-
-				BOOMR.setImmediate(sendNow);
 			}
 
 			if (singlePageApp) {
