@@ -188,7 +188,8 @@
 		},
 
 		/**
-		 * Figure out how long boomerang and config.js took to load using resource timing if available, or built in timestamps
+		 * Figure out how long boomerang and other URLs took to load using
+		 * ResourceTiming if available, or built in timestamps.
 		 */
 		getBoomerangTimings: function() {
 			var res, urls, url, startTime, data;
@@ -226,6 +227,7 @@
 				    && window.performance
 				    && typeof window.performance.getEntriesByName === "function") {
 					urls = { "rt.bmr": BOOMR.url };
+
 
 					for (url in urls) {
 						if (urls.hasOwnProperty(url) && urls[url]) {
