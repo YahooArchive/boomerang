@@ -2,8 +2,6 @@
 *.swp
 /boomerang-*.js
 build/*
-build/
-hint.log
 *.log
 *.diff
 .project
