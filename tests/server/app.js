@@ -63,6 +63,7 @@ function respond301(req, res) {
 //
 // Routes
 //
+
 // /blackhole and /204: returns a 204
 app.get("/blackhole", respond204);
 app.post("/blackhole", respond204);
@@ -79,6 +80,7 @@ app.post("/redirect", respond301);
 app.get("/chunked", require("./route-chunked"));
 app.post("/chunked", require("./route-chunked"));
 
+// add CORS headers
 app.get("/pages/*/support/*", require("./headers"));
 
 // all static content follows afterwards

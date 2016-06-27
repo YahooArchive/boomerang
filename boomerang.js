@@ -255,11 +255,11 @@ BOOMR_check_doc_domain();
 		// Whether or not to send beacons on page load
 		autorun: true,
 
-		strip_query_string: false,
+		//! strip_query_string: false,
 
-		onloadfired: false,
+		//! onloadfired: false,
 
-		handlers_attached: false,
+		//! handlers_attached: false,
 		events: {
 			"page_ready": [],
 			"page_unload": [],
@@ -354,11 +354,9 @@ BOOMR_check_doc_domain();
 	// we don't overwrite anything additional that was added to BOOMR before this
 	// was called... for example, a plugin.
 	boomr = {
-		t_lstart: null,
+		//! t_lstart: value of BOOMR_lstart set in host page
 		t_start: BOOMR_start,
-		t_end: null,
-		//! t_pload: Value of the BOOMR_onload set in the host page
-		t_onload: undefined,
+		//! t_end: value set in zzz-last-plugin.js
 
 		url: myurl,
 
@@ -449,8 +447,6 @@ BOOMR_check_doc_domain();
 					cookies = cookies.substring(i, cookies.indexOf(";", i)).replace(/^"/, "").replace(/"$/, "");
 					return cookies;
 				}
-
-				return null;
 			},
 
 			setCookie: function(name, subcookies, max_age) {
@@ -795,7 +791,15 @@ BOOMR_check_doc_domain();
 
 		init: function(config) {
 			var i, k,
-			    properties = ["beacon_url", "beacon_type", "site_domain", "user_ip", "strip_query_string", "secondary_beacons", "autorun"];
+			    properties = [
+				    "beacon_url",
+				    "beacon_type",
+				    "site_domain",
+				    "user_ip",
+				    "strip_query_string",
+				    "secondary_beacons",
+				    "autorun"
+			    ];
 
 			BOOMR_check_doc_domain();
 
@@ -943,9 +947,10 @@ BOOMR_check_doc_domain();
 			impl.handlers_attached = true;
 			return this;
 		},
+
 		/**
-		 * Sends the page_ready beacon only if 'autorun' is still true after config.js
-		 * arrives.
+		 * Sends the page_ready beacon only if 'autorun' is still true after init
+		 * is called.
 		 */
 		page_ready_autorun: function(ev) {
 			if (impl.autorun) {
@@ -1345,7 +1350,7 @@ BOOMR_check_doc_domain();
 			// This plugin wants the beacon to go somewhere else,
 			// so update the location
 			if (beacon_url_override) {
-				impl.beacon_url = beacon_url_override;
+				impl.beacon_url_override = beacon_url_override;
 			}
 
 			if (!impl.beaconQueued) {
@@ -1435,6 +1440,9 @@ BOOMR_check_doc_domain();
 			// If we reach here, all plugins have completed
 			impl.fireEvent("before_beacon", impl.vars);
 
+			// Use the override URL if given
+			impl.beacon_url = impl.beacon_url_override || impl.beacon_url;
+
 			// Don't send a beacon if no beacon_url has been set
 			// you would do this if you want to do some fancy beacon handling
 			// in the `before_beacon` event instead of a simple GET request
@@ -1486,6 +1494,12 @@ BOOMR_check_doc_domain();
 			if (params.length === 0) {
 				// do not make the request if there is no data
 				return this;
+			}
+
+			if (!BOOMR.orig_XMLHttpRequest && (!BOOMR.window || !BOOMR.window.XMLHttpRequest)) {
+				// if we don't have XHR available, force an image beacon and hope
+				// for the best
+				useImg = true;
 			}
 
 			if (useImg) {

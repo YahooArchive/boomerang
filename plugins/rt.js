@@ -10,7 +10,9 @@
 
 /*eslint no-underscore-dangle:0*/
 
-	var d = w.document, impl;
+	var d, impl,
+	    COOKIE_EXP = 60 * 60 * 24 * 7;
+
 
 	BOOMR = BOOMR || {};
 	BOOMR.plugins = BOOMR.plugins || {};
@@ -32,7 +34,7 @@
 		timers: {},		//! Custom timers that the developer can use
 					// Format for each timer is { start: XXX, end: YYY, delta: YYY-XXX }
 		cookie: "RT",		//! Name of the cookie that stores the start time and referrer
-		cookie_exp: 600,	//! Cookie expiry in seconds
+		cookie_exp: COOKIE_EXP,	//! Cookie expiry in seconds (7 days)
 		strict_referrer: true,	//! By default, don't beacon if referrers don't match.
 					// If set to false, beacon both referrer values and let
 					// the back end decide
@@ -95,6 +97,7 @@
 
 			if (timer) {
 				subcookies[timer] = t_start;
+				impl.lastActionTime = t_start;
 			}
 
 			BOOMR.debug("Setting cookie (timer=" + timer + ")\n" + BOOMR.utils.objectToString(subcookies), "rt");
@@ -183,7 +186,9 @@
 				nu: undefined,	// clicked url
 				ul: undefined,	// onbeforeunload time
 				cl: undefined,	// onclick time
-				hd: undefined	// onunload or onpagehide time
+				hd: undefined,	// onunload or onpagehide time
+				ld: undefined,	// last load time
+				rl: undefined
 			});
 		},
 
@@ -555,12 +560,14 @@
 			if (ename === "xhr") {
 				if (data && data.name && impl.timers[data.name]) {
 					// For xhr timers, t_start is stored in impl.timers.xhr_{page group name}
+					// and xhr.pg is set to {page group name}
 					t_start = impl.timers[data.name].start;
 				}
 				else if (data && data.timing && data.timing.requestStart) {
 					// For automatically instrumented xhr timers, we have detailed timing information
 					t_start = data.timing.requestStart;
 				}
+
 				if (typeof t_start === "undefined" && data && BOOMR.utils.inArray(data.initiator, BOOMR.constants.BEACON_TYPE_SPAS)) {
 					// if we don't have a start time, set to none so it can possibly be fixed up
 					BOOMR.addVar("rt.start", "none");
@@ -632,6 +639,7 @@
 			// We use document.URL instead of location.href because of a bug in safari 4
 			// where location.href is URL decoded
 			this.updateCookie({ "r": d.URL }, edata.type === "beforeunload" ? "ul" : "hd");
+
 
 			this.unloadfired = true;
 		},
@@ -708,7 +716,11 @@
 			d = w.document;
 
 			BOOMR.utils.pluginConfig(impl, config, "RT",
-						["cookie", "cookie_exp", "strict_referrer"]);
+						["cookie", "cookie_exp", "session_exp", "strict_referrer"]);
+
+			if (config && typeof config.autorun !== "undefined") {
+				impl.autorun = config.autorun;
+			}
 
 			// A beacon may be fired automatically on page load or if the page dev fires
 			// it manually with their own timers.  It may not always contain a referrer
@@ -719,7 +731,7 @@
 				impl.r = impl.r2 = BOOMR.utils.hashQueryString(d.referrer, true);
 			}
 
-			// Now pull out start time information from the cookie
+			// Now pull out start time information and session information from the cookie
 			// We'll do this every time init is called, and every time we call it, it will
 			// overwrite values already set (provided there are values to read out)
 			impl.initFromCookie();
