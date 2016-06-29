@@ -551,7 +551,7 @@ module.exports = function() {
 			},
 			doc: {
 				options: {
-					port: 4002,
+					port: TEST_DEBUG_PORT - 1,
 					script: "tests/server/doc-server.js"
 				}
 			}

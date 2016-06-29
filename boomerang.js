@@ -38,7 +38,7 @@ BOOMR_start = new Date().getTime();
  * iframe.  If not, it will fudge around with document.domain until
  * it finds a value that works.
  *
- * This allows customers to change the value of document.domain at
+ * This allows site owners to change the value of document.domain at
  * any point within their page's load process, and we will adapt to
  * it.
  * @param {string} domain - domain name as retrieved from page url
