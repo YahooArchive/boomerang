@@ -248,7 +248,7 @@ BOOMR_check_doc_domain();
 		beacon_auth_key: "Authorization",
 		//  beacon authorization token.  This is only needed if your are using a POST and
 		//  the beacon requires an Authorization token to accept your data
-		beacon_auth_token: "",
+		beacon_auth_token: undefined,
 		// strip out everything except last two parts of hostname.
 		// This doesn't work well for domains that end with a country tld,
 		// but we allow the developer to override site_domain for that.
