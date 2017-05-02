@@ -16,6 +16,8 @@
         "plugins/md5.js",
         "plugins/compression.js",
         "plugins/errors.js",
-        "plugins/third-party-analytics.js"
+        "plugins/third-party-analytics.js",
+        "node_modules/usertiming-compression/src/usertiming-compression.js",
+        "plugins/usertiming.js"
     ]
 }
