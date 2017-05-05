@@ -1470,6 +1470,19 @@ BOOMR_check_doc_domain();
 		},
 
 		/**
+		 * Gets the specified variable.
+		 *
+		 * @param {string} name Variable name
+		 *
+		 * @returns {object|undefined} Variable, or undefined if it isn't set
+		 *
+		 * @memberof BOOMR
+		 */
+		getVar: function(name) {
+			return impl.vars[name];
+		},
+
+		/**
 		 * Sets a variable's priority in the beacon URL.
 		 * -1 = beginning of the URL
 		 * 0  = middle of the URL (default)

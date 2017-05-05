@@ -87,10 +87,11 @@ module.exports = function() {
 	// Build numbers
 	//
 	var pkg = grunt.file.readJSON("package.json");
-	var buildNumber = grunt.option("buildNumber") || 0;
+	var buildNumber = grunt.option("build-number") || 0;
 	var releaseVersion = pkg.releaseVersion + "." + buildNumber;
-	var buildDate = Math.round(Date.now() / 1000);
-	var boomerangVersion = releaseVersion + "." + buildDate;
+	var buildRevision = grunt.option("build-revision") || 0;
+	var boomerangVersion = releaseVersion + "." + buildRevision;
+	var buildSuffix = grunt.option("build-suffix") ? (grunt.option("build-suffix") + ".") : "";
 
 	//
 	// Output files
@@ -103,9 +104,14 @@ module.exports = function() {
 	var testBuildFilePrefix = pkg.name;
 	var testBuildPathPrefix = path.join(TEST_BUILD_PATH, testBuildFilePrefix);
 
-	var buildDebug = buildPathPrefix + "-debug.js";
-	var buildRelease = buildPathPrefix + ".js";
-	var buildReleaseMin = buildPathPrefix + ".min.js";
+	var buildDebug = buildPathPrefix + "-debug." + buildSuffix + "js";
+	var buildDebugGz = buildPathPrefix + "-debug." + buildSuffix + "js.gz";
+	var buildDebugMin = buildPathPrefix + "-debug." + buildSuffix + "min.js";
+	var buildDebugMinGz = buildPathPrefix + "-debug." + buildSuffix + "min.js.gz";
+	var buildRelease = buildPathPrefix + "." + buildSuffix + "js";
+	var buildReleaseGz = buildPathPrefix + "." + buildSuffix + "js.gz";
+	var buildReleaseMin = buildPathPrefix + "." + buildSuffix + "min.js";
+	var buildReleaseMinGz = buildPathPrefix + "." + buildSuffix + "min.js.gz";
 	var buildTest = testBuildPathPrefix + "-latest-debug.js";
 	var buildTestMin = testBuildPathPrefix + "-latest-debug.min.js";
 
@@ -135,10 +141,16 @@ module.exports = function() {
 		buildFilePrefix: buildFilePrefix,
 		buildPathPrefix: buildPathPrefix,
 		testBuildPathPrefix: testBuildPathPrefix,
+		buildSuffix: buildSuffix,
 
 		//
 		// Tasks
 		//
+		githash: {
+			main: {
+				options: {}
+			}
+		},
 		concat: {
 			options: {
 				stripBanners: false,
@@ -315,15 +327,15 @@ module.exports = function() {
 		},
 		uglify: {
 			options: {
-				banner: bannerString + "/* Boomerang Version: <%= boomerangVersion %> */\n"
+				banner: bannerString + "/* Boomerang Version: <%= boomerangVersion %> <%= githash.main.hash %> */\n"
 			},
 			default: {
 				options: DEFAULT_UGLIFY_BOOMERANGJS_OPTIONS,
 				files: [{
 					expand: true,
 					cwd: "build/",
-					src: ["<%= buildFilePrefix %>-debug.js",
-					      "<%= buildFilePrefix %>.js"],
+					src: ["<%= buildFilePrefix %>-debug.<%= buildSuffix %>js",
+					      "<%= buildFilePrefix %>.<%= buildSuffix %>js"],
 					dest: "build/",
 					ext: ".min.js",
 					extDot: "last"
@@ -383,19 +395,19 @@ module.exports = function() {
 				files: [
 					{
 						src: buildRelease,
-						dest: "<%= buildPathPrefix %>.js.gz"
+						dest: buildReleaseGz
 					},
 					{
 						src: buildDebug,
-						dest: "<%= buildPathPrefix %>-debug.js.gz"
+						dest: buildDebugGz
 					},
 					{
-						src: "<%= buildPathPrefix %>.min.js",
-						dest: "<%= buildPathPrefix %>.min.js.gz"
+						src: buildReleaseMin,
+						dest: buildReleaseMinGz
 					},
 					{
-						src: "<%= buildPathPrefix %>-debug.min.js",
-						dest: "<%= buildPathPrefix %>-debug.min.js.gz"
+						src: buildDebugMin,
+						dest: buildDebugMinGz
 					}
 				]
 			},
@@ -699,6 +711,7 @@ module.exports = function() {
 	grunt.loadNpmTasks("grunt-strip-code");
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-jsdoc");
+	grunt.loadNpmTasks("grunt-githash");
 
 	// tasks/*.js
 	if (grunt.file.exists("tasks")) {
@@ -714,7 +727,7 @@ module.exports = function() {
 		//
 		// Build
 		//
-		"build": ["concat", "build:apply-templates", "uglify", "string-replace:remove-sourcemappingurl", "compress", "metrics"],
+		"build": ["concat", "build:apply-templates", "githash", "uglify", "string-replace:remove-sourcemappingurl", "compress", "metrics"],
 		"build:test": ["concat:debug", "concat:debug-tests", "!build:apply-templates", "uglify:debug-test-min"],
 
 		// Build steps
