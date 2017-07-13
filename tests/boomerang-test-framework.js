@@ -192,9 +192,11 @@
 			});
 		}
 
-		// initialize boomerang
-		BOOMR.addVar("h.cr", "test");
-		BOOMR.init(config);
+		if (window.BOOMR_LOGN_always !== true) {
+			// initialize boomerang if LOGN is disabled
+			BOOMR.addVar("h.cr", "test");
+			BOOMR.init(config);
+		}
 
 		if (config.onBoomerangLoaded) {
 			config.onBoomerangLoaded();
@@ -267,7 +269,9 @@
 	};
 
 	t.isResourceTimingSupported = function() {
-		return (window.performance && typeof window.performance.getEntriesByType === "function");
+		return (window.performance &&
+		    typeof window.performance.getEntriesByType === "function" &&
+		    typeof window.PerformanceResourceTiming !== "undefined");
 	};
 
 	t.isServerTimingSupported = function() {
@@ -283,6 +287,7 @@
 	};
 
 	t.isUserTimingSupported = function() {
+		// don't check for PerformanceMark or PerformanceMeasure, they aren't polyfilled in usertiming.js
 		return (window.performance &&
 		        typeof window.performance.getEntriesByType === "function" &&
 		        typeof window.performance.mark === "function" &&
@@ -735,5 +740,9 @@
 	};
 
 	window.BOOMR_test = t;
+
+	// force LOGN plugin not to run. Individual tests will override this if needed.
+	// This only works if the test framework is loaded before boomerang
+	window.BOOMR_LOGN_always = false;
 
 }(window));
