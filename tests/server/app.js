@@ -121,3 +121,5 @@ app.get("/*", function(req, res, next) {
 // all static content follows afterwards
 /*eslint dot-notation:0*/
 app.use(express.static(wwwRoot));
+
+require("express-middleware-server-timing")(app);
