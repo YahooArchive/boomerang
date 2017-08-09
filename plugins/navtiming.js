@@ -18,6 +18,29 @@ see: http://www.w3.org/TR/navigation-timing/
 		return;
 	}
 
+	/**
+	 * Calculates a NavigationTiming timestamp for the beacon, in milliseconds
+	 * since the Unix Epoch.
+	 *
+	 * The offset should be 0 if using a timestamp from performance.timing (which
+	 * are already in milliseconds since Unix Epoch), or the value of navigationStart
+	 * if using getEntriesByType("navigation") (which are DOMHighResTimestamps).
+	 *
+	 * The number is stripped of any decimals.
+	 *
+	 * @param {number} offset navigationStart offset (0 if using NavTiming1)
+	 * @param {number} val DOMHighResTimestamp
+	 *
+	 * @returns {number} Timestamp for beacon
+	 */
+	function calcNavTimingTimestamp(offset, val) {
+		if (typeof val !== "number") {
+			return undefined;
+		}
+
+		return Math.floor((offset || 0) + val);
+	}
+
 	// A private object to encapsulate all your implementation details
 	var impl = {
 		complete: false,
@@ -118,7 +141,7 @@ see: http://www.w3.org/TR/navigation-timing/
 		},
 
 		done: function() {
-			var w = BOOMR.window, p, pn, pt, data, cinf;
+			var w = BOOMR.window, p, pn, chromeTimes, pt, data, cinf, offset = 0;
 
 			if (this.complete) {
 				return this;
@@ -146,13 +169,47 @@ see: http://www.w3.org/TR/navigation-timing/
 			}
 
 			p = BOOMR.getPerformance();
+
+			// This is Chrome only, so will not conflict with nt_first_paint below
+			if (w.chrome && w.chrome.loadTimes) {
+				chromeTimes = w.chrome.loadTimes();
+				if (chromeTimes) {
+					cinf = chromeTimes.connectionInfo;
+
+					data = {
+						nt_spdy: (chromeTimes.wasFetchedViaSpdy ? 1 : 0),
+						nt_cinf: cinf
+					};
+
+					// Chrome firstPaintTime is in seconds.microseconds, so
+					// we need to multiply it by 1000 to be consistent with
+					// msFirstPaint and other NavigationTiming timestamps that
+					// are in milliseconds.microseconds.
+					if (typeof chromeTimes.firstPaintTime === "number" && chromeTimes.firstPaintTime !== 0) {
+						data.nt_first_paint = Math.round(chromeTimes.firstPaintTime * 1000);
+					}
+
+					BOOMR.addVar(data);
+
+					try {
+						impl.addedVars.push.apply(impl.addedVars, Object.keys(data));
+					}
+					catch (ignore) {
+						// NOP
+					}
+				}
+			}
+
 			if (p) {
 				if (typeof p.getEntriesByType === "function") {
 					pt = p.getEntriesByType("navigation");
 					if (pt && pt.length) {
-						BOOMR.info("This user agent supports NavigationTiming.", "nt");
+						BOOMR.info("This user agent supports NavigationTiming2", "nt");
 
 						pt = pt[0];
+
+						// ensure DOMHighResTimestamps are added to navigationStart
+						offset = p.timing ? p.timing.navigationStart : 0;
 					}
 					else {
 						pt = undefined;
