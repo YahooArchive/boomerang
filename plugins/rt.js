@@ -7,15 +7,13 @@
 // This is the Round Trip Time plugin.  Abbreviated to RT
 // the parameter is the window
 (function(w) {
-
-/*eslint no-underscore-dangle:0*/
-
 	var d, impl,
 	    COOKIE_EXP = 60 * 60 * 24 * 7;
 
 
-	BOOMR = BOOMR || {};
+	BOOMR = window.BOOMR || {};
 	BOOMR.plugins = BOOMR.plugins || {};
+
 	if (BOOMR.plugins.RT) {
 		return;
 	}
