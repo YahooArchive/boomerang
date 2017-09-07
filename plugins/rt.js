@@ -50,7 +50,7 @@
 
 		// These timers are added directly as beacon variables
 		basic_timers: { t_done: 1, t_resp: 1, t_page: 1},
-
+		crossdomain_sending: false,
 		// Vars that were added to the beacon that we can remove after beaconing
 		addedVars: [],
 
@@ -728,6 +728,10 @@
 			BOOMR.debug("init RT", "rt");
 			if (w !== BOOMR.window) {
 				w = BOOMR.window;
+			}
+
+			if (config && config.CrossDomain && config.CrossDomain.sending) {
+				impl.crossdomain_sending = true;
 			}
 
 			// protect against undefined window/document
