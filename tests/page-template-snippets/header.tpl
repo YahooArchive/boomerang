@@ -39,3 +39,4 @@
 	<script>
 	mocha.setup("bdd");
 	</script>
+	<script src="../../test-templates/common.js" type="text/javascript"></script>
