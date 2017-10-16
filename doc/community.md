@@ -4,7 +4,8 @@ It depends on its community to keep it alive.
 ## Source code
 
 The source code is on github at [github.com/lognormal/boomerang](https://github.com/lognormal/boomerang).  Feel
-free to fork it and contribute to it.  You can also get a [tarball or zip archive of the code](http://github.com/lognormal/boomerang/archives/master).
+free to fork it and contribute to it.  You can also get a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz)
+or [zip](http://github.com/lognormal/boomerang/archives/master.zip) of the code].
 
 ## Bugs & Discussions
 
