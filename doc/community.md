@@ -3,13 +3,13 @@ It depends on its community to keep it alive.
 
 ## Source code
 
-The source code is on github at [github.com/lognormal/boomerang](https://github.com/lognormal/boomerang).  Feel
+The source code is on github at [github.com/SOASTA/boomerang](https://github.com/SOASTA/boomerang).  Feel
 free to fork it and contribute to it.  You can also get a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz)
-or [zip](http://github.com/lognormal/boomerang/archives/master.zip) of the code].
+or [zip](http://github.com/SOASTA/boomerang/archives/master.zip) of the code.
 
 ## Bugs & Discussions
 
-Use github's [issue tracking system](https://github.com/lognormal/boomerang/issues) to report or follow bugs or to
+Use github's [issue tracking system](https://github.com/SOASTA/boomerang/issues) to report or follow bugs or to
 discuss features and get support.
 
 ## Other projects

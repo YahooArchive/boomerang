@@ -27,8 +27,8 @@ team at [Yahoo!](http://www.yahoo.com/), aided by the [Yahoo! Developer Network]
 
 ## Where?
 
- - Get a zip or tarball from [github.com/lognormal/boomerang/archives/master](https://github.com/lognormal/boomerang/archives/master)
- - Get the working source code from [github.com/lognormal/boomerang](https://github.com/lognormal/boomerang)
+ - Get a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz) or [zip](http://github.com/SOASTA/boomerang/archives/master.zip) of the code
+ - Get the working source code from [github.com/SOASTA/boomerang](https://github.com/SOASTA/boomerang)
 
 <!--
  Copyright (c) 2011, Yahoo! Inc.  All rights reserved.
