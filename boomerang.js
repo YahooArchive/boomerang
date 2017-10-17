@@ -539,7 +539,9 @@ BOOMR_check_doc_domain();
 
 				if (!name || !impl.site_domain) {
 					BOOMR.debug("No cookie name or site domain: " + name + "/" + impl.site_domain);
-					return false;
+
+					BOOMR.addVar("nocookie", 1);
+					return null;
 				}
 
 				value = this.objectToString(subcookies, "&");
@@ -566,6 +568,7 @@ BOOMR_check_doc_domain();
 					BOOMR.warn("Cookie too long: " + nameval.length + " " + nameval);
 				}
 
+				BOOMR.addVar("nocookie", 1);
 				return false;
 			},
 
