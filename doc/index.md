@@ -18,8 +18,8 @@ and we have a whole bunch of documentation about it.
  - [How it works](methodology.md) -- A short description of how boomerang works internally
  - [Bugs, hugs and code](community.md) -- This is where the community comes in
  - [TODO](TODO.md) -- There's a lot that we still need to do.  Wanna help?
- - [Howto API Documentation](howtos.md) -- Short recipes on how to do a bunch of things with boomerang
- - [API Documentation](api.md) -- For all you hackers out there
+ - [Howto API Documentation](howtos/) -- Short recipes on how to do a bunch of things with boomerang
+ - [API Documentation](api/) -- For all you hackers out there
  - [Press coverage](press.md) -- A list of articles about boomerang
 
 boomerang is brought to you by:
