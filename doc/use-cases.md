@@ -27,7 +27,7 @@ Breaking this into four separate use cases:
    the user is using a browser that supports the [WebTiming](http://dev.w3.org/2006/webapi/WebTiming/)
    API (IE9+, Chrome, Firefox 7+).<br>
 
-   See [HOWTO #1a](how-to/howto-1a-page_1.html)
+   See [HOWTO #1a](howtos/howto-1a-page%231.html)
    
  - User clicks a link on a page we control and page is usable at some developer determined point<br>
    OR<br>
@@ -35,7 +35,7 @@ Breaking this into four separate use cases:
    the user is using a browser that supports the [WebTiming](http://dev.w3.org/2006/webapi/WebTiming/)
    API (IE9+, Chrome, Firefox 7+), but not in other browsers.
    
-   See [HOWTO #1b](how-to/howto-1b-page_1.html)
+   See [HOWTO #1b](howtos/howto-1b-page%231.html)
    
 
 ### 2. Measure perceived performance of content loaded dynamically
@@ -48,7 +48,7 @@ selected message using javascript, etc.
 In all these cases the browser may not fire an event for when the download was initiated or completed
 and the library will need to expose methods/events that the web developer can invoke when needed.
 
-See [HOWTO #2](how-to/howto-2.html).
+See [HOWTO #2](howtos/howto-2.html).
 
 ### 3. Measure a user's bandwidth along with page load time
 
@@ -58,7 +58,7 @@ statistically representative for all users.  Knowing the user's bandwidth, howev
 to aggregate data from similar users and use these numbers as representative for users with that
 type of network connection.
 
-See [HOWTO #3](how-to/howto-3.html).
+See [HOWTO #3](howtos/howto-3.html).
 
 
 ### 4. Measure more than just page load time
@@ -74,7 +74,7 @@ analysis of each component in the context of its containing page.
 To do this, the library needs to expose additional timers that the page developer can set.  These
 timers should be beaconed back along with the overall page load time.
 
-See [HOWTO #4](how-to/howto-4.html).
+See [HOWTO #4](howtos/howto-4.html).
 
 
 ### 5. Measure HTTP latency
@@ -87,7 +87,7 @@ headers that don't contribute to actual page content.
 Measuring a user's HTTP latency provides a good indication of the impact that parallelising
 component downloads can have on overall page load time.
 
-See [HOWTO #3](how-to/howto-3.html).
+See [HOWTO #3](howtos/howto-3.html).
 
 
 ### 6. Request/page tagging
@@ -99,7 +99,7 @@ a series of tests.
 
 The library should provide a method for the page developer to tag each page with additional information.
 
-See [HOWTO #5](how-to/howto-5.html).
+See [HOWTO #5](howtos/howto-5.html).
 
 
 ### 7. Measure DNS latency
@@ -111,7 +111,7 @@ can safely lookup on a single page.  There's a trade-off between the number of D
 can make and the parallelisability that multiple domains bring us.  HTTP latency and DNS latency
 together can tell us where this point lies for our users.
 
-See [HOWTO #8](how-to/howto-8.html).
+See [HOWTO #8](howtos/howto-8.html).
 
 
 ### 8. Measure a random sample of users instead of all users
@@ -145,7 +145,7 @@ nothing else, to try and DoS you.
 
 boomerang should be able to protect against these problems.
 
-See [HOWTO #7](how-to/howto-7.html).
+See [HOWTO #7](howtos/howto-7.html).
 
 
 ### 10. Collect browser WebTiming information
@@ -154,6 +154,6 @@ Modern browsers include support for the <a href="http://www.w3.org/TR/navigation
 that contains a lot of performance timing information related to page loading.  The NavigationTiming plugin for
 boomerang collects this information and adds it to the beacon.
 
-See [HOWTO #9](how-to/howto-9.html).
+See [HOWTO #9](howtos/howto-9.html).
 
-The latest code and docs is available on [github.com/lognormal/boomerang](http://github.com/lognormal/boomerang/)
+The latest code and docs is available on [github.com/SOASTA/boomerang](http://github.com/SOASTA/boomerang/)
