@@ -5,7 +5,7 @@ It depends on its community to keep it alive.
 
 The source code is on github at [github.com/SOASTA/boomerang](https://github.com/SOASTA/boomerang).  Feel
 free to fork it and contribute to it.  You can also get a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz)
-or [zip](http://github.com/SOASTA/boomerang/archives/master.zip) of the code.
+or [zip](http://github.com/SOASTA/boomerang/archive/master.zip) of the code.
 
 ## Bugs & Discussions
 

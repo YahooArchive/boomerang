@@ -31,7 +31,7 @@ boomerang is brought to you by:
 
 ## Where?
 
- - Get a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz) or [zip](http://github.com/SOASTA/boomerang/archives/master.zip) of the code
+ - Get a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz) or [zip](http://github.com/SOASTA/boomerang/archive/master.zip) of the code
  - Get the working source code from [github.com/SOASTA/boomerang](https://github.com/SOASTA/boomerang)
 
 <!--
