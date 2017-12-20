@@ -307,6 +307,11 @@
 			navigator.msConnection);
 	};
 
+	t.isErrorObjInOnErrorSupported = function() {
+		var ua = navigator.userAgent.toLowerCase();
+		return (ua.indexOf("phantomjs") === -1);  // this should be extended to include older IE and Safari
+	};
+
 	t.validateBeaconWasImg = function(done) {
 		if (!t.isResourceTimingSupported()) {
 			// need RT to validate
