@@ -280,26 +280,29 @@
 
 				if (pt) {
 					data = {
-						nt_nav_st: pt.navigationStart,
-						nt_red_st: pt.redirectStart,
-						nt_red_end: pt.redirectEnd,
-						nt_fet_st: pt.fetchStart,
-						nt_dns_st: pt.domainLookupStart,
-						nt_dns_end: pt.domainLookupEnd,
-						nt_con_st: pt.connectStart,
-						nt_con_end: pt.connectEnd,
-						nt_req_st: pt.requestStart,
-						nt_res_st: pt.responseStart,
-						nt_res_end: pt.responseEnd,
-						nt_domloading: pt.domLoading,
-						nt_domint: pt.domInteractive,
-						nt_domcontloaded_st: pt.domContentLoadedEventStart,
-						nt_domcontloaded_end: pt.domContentLoadedEventEnd,
-						nt_domcomp: pt.domComplete,
-						nt_load_st: pt.loadEventStart,
-						nt_load_end: pt.loadEventEnd,
-						nt_unload_st: pt.unloadEventStart,
-						nt_unload_end: pt.unloadEventEnd
+						// start is `navigationStart` on .timing, `startTime` is always 0 on timeline entry
+						nt_nav_st: p.timing ? p.timing.navigationStart : 0,
+
+						// all other entries have the same name on .timing vs timeline entry
+						nt_red_st: calcNavTimingTimestamp(offset, pt.redirectStart),
+						nt_red_end: calcNavTimingTimestamp(offset, pt.redirectEnd),
+						nt_fet_st: calcNavTimingTimestamp(offset, pt.fetchStart),
+						nt_dns_st: calcNavTimingTimestamp(offset, pt.domainLookupStart),
+						nt_dns_end: calcNavTimingTimestamp(offset, pt.domainLookupEnd),
+						nt_con_st: calcNavTimingTimestamp(offset, pt.connectStart),
+						nt_con_end: calcNavTimingTimestamp(offset, pt.connectEnd),
+						nt_req_st: calcNavTimingTimestamp(offset, pt.requestStart),
+						nt_res_st: calcNavTimingTimestamp(offset, pt.responseStart),
+						nt_res_end: calcNavTimingTimestamp(offset, pt.responseEnd),
+						nt_domloading: calcNavTimingTimestamp(offset, pt.domLoading),
+						nt_domint: calcNavTimingTimestamp(offset, pt.domInteractive),
+						nt_domcontloaded_st: calcNavTimingTimestamp(offset, pt.domContentLoadedEventStart),
+						nt_domcontloaded_end: calcNavTimingTimestamp(offset, pt.domContentLoadedEventEnd),
+						nt_domcomp: calcNavTimingTimestamp(offset, pt.domComplete),
+						nt_load_st: calcNavTimingTimestamp(offset, pt.loadEventStart),
+						nt_load_end: calcNavTimingTimestamp(offset, pt.loadEventEnd),
+						nt_unload_st: calcNavTimingTimestamp(offset, pt.unloadEventStart),
+						nt_unload_end: calcNavTimingTimestamp(offset, pt.unloadEventEnd)
 					};
 
 					if (pt.secureConnectionStart) {
@@ -343,6 +346,11 @@
 					data.nt_nav_type = pn.type;
 				}
 
+				for (k in data) {
+					if (data.hasOwnProperty(k) && !data[k]) {
+						delete data[k];
+					}
+				}
 
 				BOOMR.addVar(data);
 
