@@ -310,12 +310,10 @@
 						data.nt_ssl_st = pt.secureConnectionStart;
 					}
 
-					// XXX Inconsistency warning.  msFirstPaint is in milliseconds while Chrome's firstPaintTime is in seconds.microseconds.
-					// The server needs to deal with this.
-
-					if (pt.msFirstPaint) {
+					if (p.timing && p.timing.msFirstPaint) {
 						// msFirstPaint is IE9+ http://msdn.microsoft.com/en-us/library/ff974719
-						data.nt_first_paint = pt.msFirstPaint;
+						// and is in Unix Epoch format
+						data.nt_first_paint = p.timing.msFirstPaint;
 					}
 
 					if (pt.workerStart) {
@@ -347,7 +345,7 @@
 				}
 
 				for (k in data) {
-					if (data.hasOwnProperty(k) && !data[k]) {
+					if (data.hasOwnProperty(k) && data[k] === undefined) {
 						delete data[k];
 					}
 				}
