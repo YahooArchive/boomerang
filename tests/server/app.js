@@ -124,5 +124,5 @@ require("express-middleware-server-timing")(app);
 // listen
 var port = process.env.PORT || env.port;
 app.listen(port, function() {
-	console.log(`Server starting on port ${port} for ${wwwRoot}`);
+	console.log("Server starting on port ${port} for ${wwwRoot}");
 });
