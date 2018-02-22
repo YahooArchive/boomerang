@@ -858,7 +858,7 @@
 		 * @param {object} target Target element (window, element, etc)
 		 * @param {string} type Event type (name)
 		 * @param {function} listener Original listener
-		 * @param {boolean} useCapture Use capture
+		 * @param {boolean|object} useCapture|options Use capture flag or options object
 		 * @param {function} wrapped Wrapped function
 		 */
 		trackFn: function(target, type, listener, useCapture, wrapped) {
@@ -875,7 +875,12 @@
 				target._bmrEvents = [];
 			}
 
-			target._bmrEvents.push([type, listener, !!useCapture, wrapped]);
+			// 3rd argment can be useCapture flag or options object that may contain a `capture` key.
+			// Default is false in both cases
+			useCapture = (useCapture && useCapture.capture || useCapture) === true;
+
+			target._bmrEvents.push([type, listener, useCapture, wrapped]);
+			return true;
 		},
 
 		/**
@@ -884,7 +889,7 @@
 		 * @param {object} target Target element (window, element, etc)
 		 * @param {string} type Event type (name)
 		 * @param {function} listener Original listener
-		 * @param {boolean} useCapture Use capture
+		 * @param {boolean|object} useCapture|options Use capture flag or options object
 		 *
 		 * @returns {number} Index of already tracked function, or -1 if it doesn't exist
 		 */
@@ -899,11 +904,15 @@
 				target._bmrEvents = [];
 			}
 
+			// 3rd argment can be useCapture flag or options object that may contain a `capture` key.
+			// Default is false in both cases
+			useCapture = (useCapture && useCapture.capture || useCapture) === true;
+
 			for (i = 0; i < target._bmrEvents.length; i++) {
 				f = target._bmrEvents[i];
 				if (f[0] === type &&
 				    f[1] === listener &&
-				    f[2] === !!useCapture) {
+				    f[2] === useCapture) {
 					return i;
 				}
 			}
