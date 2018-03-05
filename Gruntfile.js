@@ -53,6 +53,15 @@ var DEFAULT_UGLIFY_BOOMERANGJS_OPTIONS = {
 	}
 };
 
+var SAUCELABS_CONFIG = {
+	username: process.env.CI_SAUCELABS_USERNAME,
+	key: function(){
+		return process.env.CI_SAUCELABS_KEY;
+	},
+	build: process.env.CI_BUILD_NUMBER,
+	tunneled: false
+};
+
 //
 // Grunt config
 //
@@ -89,7 +98,7 @@ module.exports = function() {
 	//
 	var e2eTests = [];
 	if (grunt.file.exists("tests/e2e/e2e.json")) {
-		e2eTests = JSON.parse(stripJsonComments(grunt.file.read("tests/e2e/e2e.json")));
+		e2eTests = JSON.parse(stripJsonComments(grunt.file.read("tests/e2e/e2e.json"))).tests;
 	}
 	var e2eUrls = [];
 
@@ -639,23 +648,15 @@ module.exports = function() {
 			}
 		},
 		"saucelabs-mocha": {
-			all: {
-				options: {
-					// username: "", // SAUCE_USERNAME
-					// key: "",      // SAUCE_ACCESS_KEY
-					build: process.env.CI_BUILD_NUMBER,
-					tunneled: false
-				}
-			},
 			unit: {
-				options: {
+				options: Object.assign({
 					urls: [TEST_URL_BASE + "unit/"],
 					testname: "Boomerang Unit Tests",
-					browsers: JSON.parse(stripJsonComments(grunt.file.read("tests/browsers-unit.json")))
-				}
+					browsers: JSON.parse(stripJsonComments(grunt.file.read("./tests/browsers-unit.json")))
+				}, SAUCELABS_CONFIG)
 			},
 			"unit-debug": {
-				options: {
+				options: Object.assign({
 					urls: [TEST_URL_BASE + "unit/"],
 					testname: "Boomerang Unit Tests",
 					browsers: [{
@@ -663,17 +664,17 @@ module.exports = function() {
 						"version": "11",
 						"platform": "Windows 8.1"
 					}]
-				}
+				}, SAUCELABS_CONFIG)
 			},
 			e2e: {
-				options: {
+				options: Object.assign({
 					urls: e2eUrls,
 					testname: "Boomerang E2E Tests",
 					browsers: JSON.parse(stripJsonComments(grunt.file.read("tests/browsers-unit.json")))
-				}
+				}, SAUCELABS_CONFIG)
 			},
 			"e2e-debug": {
-				options: {
+				options: Object.assign({
 					urls: e2eUrls,
 					testname: "Boomerang E2E Tests",
 					browsers: [{
@@ -681,7 +682,7 @@ module.exports = function() {
 						"version":     "11",
 						"platform":    "Windows 8.1"
 					}]
-				}
+				}, SAUCELABS_CONFIG)
 			}
 		},
 		jsdoc: {
