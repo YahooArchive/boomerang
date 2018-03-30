@@ -259,7 +259,7 @@
 
 	t.configureTestEnvironment = function() {
 		// setup Mocha
-		window.mocha.globals(["BOOMR", "PageGroupVariable", "mochaResults", "BOOMR_configt"]);
+		window.mocha.globals(["BOOMR", "PageGroupVariable", "mochaResults", "BOOMR_configt", "_bmrEvents"]);
 		window.mocha.checkLeaks();
 
 		// set globals
