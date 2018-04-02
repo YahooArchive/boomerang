@@ -28,8 +28,13 @@ isn't one of the default plugins. To do this, run <code>make</code> in the
 boomerang directory with the following option:</p>
 
 <pre>
-make PLUGINS=navtiming.js
+make PLUGINS=plugins/navtiming.js
+
+OR with the rt &amp; bw plugins:
+
+make PLUGINS="plugins/rt.js plugins/bw.js plugins/navtiming.js"
 </pre>
+
 
 <p>Then you can include the new boomerang file (don't forget to run it through
 your favorite Javascript minifier first) as you normally would.</p>
@@ -68,13 +73,16 @@ in the <a href="http://www.w3.org/TR/navigation-timing/">W3C Navigation Timing s
 </table>
 
 <p class="perma-link">
-The latest code and docs is available on <a href="http://github.com/lognormal/boomerang/">github.com/lognormal/boomerang</a>
+The latest code and docs is available on <a href="http://github.com/SOASTA/boomerang/">github.com/SOASTA/boomerang</a>
 </p>
 
 <p id="results">
 </p>
 
 <script src="../../boomerang.js" type="text/javascript"></script>
+<script src="../../plugins/bw.js" type="text/javascript"></script>
+<script src="../../plugins/navtiming.js" type="text/javascript"></script>
+<script src="../../plugins/rt.js" type="text/javascript"></script>
 <script src="howtos.js" type="text/javascript"></script>
 <script type="text/javascript">
 BOOMR.init({

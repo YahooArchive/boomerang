@@ -73,6 +73,30 @@ query string.  This URL should not already have a query string component.
 There is no default value for this parameter.  If not set, no beacon will be sent.
 </dd>
 
+<dt>beacon_type</dt>
+<dd>
+<strong>[optional]</strong>
+Specify the HTTP method for beacon requests, may be <code>'GET'</code>, <code>'POST'</code> or <code>'AUTO'</code> (the default).
+The AUTO setting will make a GET request unless the combined beacon URL plus query string
+exceeds 2000 characters, in which case it will issue a POST. The data will be
+<code>application/x-www-form-urlencoded</code>.
+</dd>
+
+<dt>beacon_auth_key</dt>
+<dd>
+<strong>[optional]</strong>
+Specify the HTTP authentication key for beacon requests.  This key will default to <code>'Authorization'</code>, but may be explicitly set using this
+setting.  Some services use specialized authentication keys such as <code>'X-API-KEY'</code>.
+</dd>
+
+<dt>beacon_auth_token</dt>
+<dd>
+<strong>[optional]</strong>
+Specify the HTTP authentication token for beacon requests.  This token is generally supplied by the service accepting the beacon request and will take
+a form similar to<code>'SPLUNK 4F00X7AF-B3D3-4E07-8C6C-12345678901'</code>.  The value supplied here will be contatenated with the beacon_auth_key to
+form a complete HTTP request header field such as <code>'Authorization':'SPLUNK 4F00X7AF-B3D3-4E07-8C6C-12345678901'</code>.
+</dd>
+
 <dt>site_domain</dt>
 <dd>
 <strong>[recommended]</strong>
@@ -81,7 +105,8 @@ but unless your site is of the <code>foo.com</code> format, it will probably get
 wrong.  It's a good idea to set this to whatever part of your domain you'd like to
 share bandwidth and performance measurements across.<br>
 If you have multiple domains, then you're out of luck.  You'll just have to get
-separate measurements across them.
+separate measurements across them.<br>
+Set this to a falsy value to disable all cookies.
 </dd>
 
 <dt>user_ip</dt>
@@ -398,7 +423,7 @@ Each plugin may add its own parameters, and these are specified in each plugin's
 </p>
 
 <p class="perma-link">
-The latest code and docs is available on <a href="http://github.com/lognormal/boomerang/">github.com/lognormal/boomerang</a>
+The latest code and docs is available on <a href="http://github.com/SOASTA/boomerang/">github.com/SOASTA/boomerang</a>
 </p>
 
 </body>

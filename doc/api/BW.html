@@ -21,12 +21,11 @@ The full configuration object is described in <a href="../howtos/howto-6.html">H
 <dl>
 <dt>base_url</dt>
 <dd>
-<strong>[recommended]</strong>
-By default, the bandwidth plugin looks for its bandwidth measurement images in the <code>images/</code> subdirectory
-of the current directory.  This may not be true for all pages on your site.  You can set the <code>base_url</code>
-parameter to the HTTP path of the directory that contains the bandwidth images.  This can be an absolute or a relative
-URL.  If it's relative, remember that it's relative to the page that boomerang is included in and not to the javascript
-file.
+<strong>[required]</strong>
+By default, this is set to the empty string, which has the effect of disabling the bandwidth plugin.  Set the <code>base_url</code>
+parameter to the HTTP path of the directory that contains the bandwidth images to enable this test.  This can be an absolute or
+a relative URL.  If it's relative, remember that it's relative to the page that boomerang is included in and not to the javascript
+file.  The trailing / is required.
 </dd>
 
 <dt>cookie</dt>
@@ -65,6 +64,23 @@ The number of times the bandwidth test should run.  The default is set to 5.  Th
 out the best way to proceed with the remaining tests.  Increasing this number will increase the tests accuracy, but at
 the same time increases the risk that the test will timeout.  It should take about 2-4 seconds per run, so consider this
 value along with the <code>timeout</code> value above.
+</dd>
+
+<dt>test_https</dt>
+<dd>
+<strong>[optional]</strong>
+By default, boomerang will skip the bandwidth test over an HTTPS connection. Establishing
+an SSL connection takes time, which could skew the bandwidth results. If all your traffic
+is sent over SSL, then running the test over SSL probably gets you what you want. If you
+set <code>test_https</code> to <code>true</code>, boomerang will run the test instead of skipping.
+</dd>
+
+<dt>block_beacon</dt>
+<dd>
+<strong>[optional]</strong>
+By default, the bandwidth plugin will not block boomerang from sending a beacon, so the results
+will not be included in the broadcast with default settings. If you set <code>block_beacon</code> to
+<code>true</code>, boomerang will wait for the results of the test before sending the beacon.
 </dd>
 
 </dl>
@@ -147,7 +163,7 @@ This plugin adds the following parameters to the beacon:
 
 
 <p class="perma-link">
-The latest code and docs is available on <a href="http://github.com/lognormal/boomerang/">github.com/lognormal/boomerang</a>
+The latest code and docs is available on <a href="http://github.com/SOASTA/boomerang/">github.com/SOASTA/boomerang</a>
 </p>
 
 </body>

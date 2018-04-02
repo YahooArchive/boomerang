@@ -1,0 +1,22 @@
+<%= header %>
+<%= boomerangSnippet %>
+<script src="07a-adobe-invalid-amcv.js" type="text/javascript"></script>
+<script>
+
+// polyfill for adobe marketing cloud id
+window.Visitor = function Visitor() {};
+window.Visitor.getInstance = function() {
+	throw new Error("invalid");
+};
+
+BOOMR_test.clearCookies();
+
+BOOMR_test.init({
+	testAfterOnBeacon: true,
+	TPAnalytics: {
+		enabled: true,
+		clientids: true
+	}
+});
+</script>
+<%= footer %>
