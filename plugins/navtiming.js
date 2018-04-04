@@ -220,25 +220,6 @@
 
 			impl.addedVars = [];
 
-			// This is Chrome only, so will not conflict with nt_first_paint below
-			if (w.chrome && w.chrome.loadTimes) {
-				pt = w.chrome.loadTimes();
-				if (pt) {
-					cinf = pt.connectionInfo;
-					data = {
-						nt_spdy: (pt.wasFetchedViaSpdy ? 1 : 0),
-						nt_cinf: cinf,
-						nt_first_paint: pt.firstPaintTime
-					};
-
-					BOOMR.addVar(data);
-
-					try { impl.addedVars.push.apply(impl.addedVars, Object.keys(data)); }
-					catch (ignore) { /* empty */ }
-				}
-				pt = undefined;
-			}
-
 			p = BOOMR.getPerformance();
 
 			if (p) {
@@ -256,7 +237,9 @@
 						pt = undefined;
 					}
 				}
+
 				if (!pt && p.timing) {
+					BOOMR.info("This user agent supports NavigationTiming", "nt");
 					pt = p.timing;
 				}
 
@@ -287,9 +270,16 @@
 						nt_unload_end: calcNavTimingTimestamp(offset, pt.unloadEventEnd)
 					};
 
+					// domLoading doesn't exist on NavigationTiming2, so fetch it
+					// from performance.timing if available.
+					if (!data.nt_domloading && p && p.timing && p.timing.domLoading) {
+						// value on performance.timing will be in Unix Epoch milliseconds
+						data.nt_domloading = p.timing.domLoading;
+					}
+
 					if (pt.secureConnectionStart) {
 						// secureConnectionStart is OPTIONAL in the spec
-						data.nt_ssl_st = pt.secureConnectionStart;
+						data.nt_ssl_st = calcNavTimingTimestamp(offset, pt.secureConnectionStart);
 					}
 
 					if (p.timing && p.timing.msFirstPaint) {
@@ -299,8 +289,10 @@
 					}
 
 					if (pt.workerStart) {
-						data.nt_worker_start = pt.workerStart;
+						// ServiceWorker time
+						data.nt_worker_start = calcNavTimingTimestamp(offset, pt.workerStart);
 					}
+
 					// Need to check both decodedSize and transferSize as
 					// transferSize is 0 for cached responses and
 					// decodedSize is 0 for empty responses (eg: beacons, 204s, etc.)
@@ -309,6 +301,7 @@
 						data.nt_dec_size = pt.decodedBodySize;
 						data.nt_trn_size = pt.transferSize;
 					}
+
 					if (pt.nextHopProtocol) {
 						data.nt_protocol = pt.nextHopProtocol;
 					}

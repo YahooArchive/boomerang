@@ -1212,6 +1212,7 @@
 					}, "");
 			}
 
+
 			if (e.hasOwnProperty("linkAttrs")) {
 				data += SPECIAL_DATA_PREFIX + SPECIAL_DATA_LINK_ATTR_TYPE + e.linkAttrs;
 			}

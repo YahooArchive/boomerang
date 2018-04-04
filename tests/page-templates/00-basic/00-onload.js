@@ -84,7 +84,7 @@ describe("e2e/00-basic/00-onload", function() {
 		assert.isString(tf.lastBeacon().pid, "pid");
 	});
 
-	it("Should have set nocookie=1", function() {
-		assert.equal(tf.lastBeacon().nocookie, "1");
+	it("Should not have set nocookie=1", function() {
+		assert.isUndefined(tf.lastBeacon().nocookie);
 	});
 });
