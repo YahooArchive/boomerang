@@ -5,12 +5,26 @@ describe("common", function() {
 	var t = BOOMR_test;
 	var tf = BOOMR.plugins.TestFramework;
 
+	function testPageLoadBeacon(b, prefix) {
+		// TODO
+		assert.isUndefined(b.pgu, prefix + "does not have the pgu param");
+		assert.isUndefined(b["xhr.pg"], prefix + "does not have the xhr.pg param");
+	}
+
 	function testSpaHardBeacon(b, prefix) {
 		assert.isUndefined(b.api, prefix + "does not have the api param");
+		assert.isUndefined(b["xhr.pg"], prefix + "does not have the xhr.pg param");
 	}
 
 	function testSpaSoftBeacon(b, prefix) {
 		assert.isUndefined(b.api, prefix + "does not have the api param");
+		assert.isUndefined(b["xhr.pg"], prefix + "does not have the xhr.pg param");
+	}
+
+	function testXhrBeacon(b, prefix) {
+		assert.isUndefined(b.api, prefix + "does not have the api param");
+		assert.isDefined(b.pgu, prefix + "has the pgu param");
+		assert.isUndefined(b["h.pg"], prefix + "does not have the h.pg param");
 	}
 
 	it("Should have sent beacons that pass basic validation", function() {
@@ -27,20 +41,6 @@ describe("common", function() {
 
 			assert.equal(b.v, BOOMR.version, prefix + "has the boomerang version");
 
-			assert.isDefined(b["h.d"], prefix + "has the domain (h.d) param");
-
-			assert.isDefined(b["h.t"], prefix + "has the time (h.t) param");
-			tm = parseInt(b["h.t"], 10);
-			assert.operator(tm, ">", now - (60 * 1000), prefix + "time is greater than a minute ago");
-			assert.operator(tm, "<", now, prefix + "time is less than now");
-
-			if (window.BOOMR_LOGN_always !== true) {
-				assert.equal(b["h.cr"], "abc", prefix + "has the correct crumb (h.cr)");
-			}
-			else {
-				assert.isDefined(b["h.cr"], prefix + "has the crumb (h.cr)");
-			}
-
 			assert.lengthOf(b.pid, 8, prefix + "has a page ID (pid) with a length equal to 8");
 
 			if (!t.doNotTestErrorsParam) {
@@ -49,7 +49,7 @@ describe("common", function() {
 
 			if (b["rt.start"] === "navigation") {
 				// page load beacon
-				// TODO
+				testPageLoadBeacon(b, prefix);
 			}
 			else if (b["rt.start"] === "manual") {
 				if (b["http.initiator"] === "spa_hard") {
@@ -62,8 +62,7 @@ describe("common", function() {
 				}
 				else if (b["http.initiator"] === "xhr") {
 					// xhr beacon
-					assert.isUndefined(b.api, prefix + "does not have the api param");
-					assert.isDefined(b.pgu, prefix + "has the pgu param");
+					testXhrBeacon(b, prefix);
 				}
 				else if (b["http.initiator"] === "click") {
 					// click (AutoXHR) beacon

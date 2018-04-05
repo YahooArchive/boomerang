@@ -299,7 +299,7 @@ The boomerang source code is primarily on GitHub at [github.com/SOASTA/boomerang
 Feel free to fork it and [contribute](https://docs.soasta.com/boomerang-api/tutorial-contributing.html) to it.
 
 You can also get a [check out the releases](https://github.com/SOASTA/boomerang/releases)
-or download a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz) or
+or download a [tarball](https://github.com/SOASTA/boomerang/archive/master.tar.gz) or 
 [zip](http://github.com/SOASTA/boomerang/archive/master.zip) of the code.
 
 # Support

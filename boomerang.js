@@ -2697,6 +2697,8 @@ BOOMR_check_doc_domain();
 		 *
 		 * @param {string} name Variable name
 		 * @param {string|object} val Value
+		 * @param {boolean} singleBeacon Whether or not to add to a single beacon
+		 * or all beacons
 		 *
 		 * @returns {BOOMR} Boomerang object
 		 *
@@ -2722,6 +2724,29 @@ BOOMR_check_doc_domain();
 			if (singleBeacon) {
 				impl.singleBeaconVars[name] = 1;
 			}
+
+			return this;
+		},
+
+		/**
+		 * Appends data to a beacon.
+		 *
+		 * If the value already exists, a comma is added and the new data is applied.
+		 *
+		 * @param {string} name Variable name
+		 * @param {string} val Value
+		 *
+		 * @returns {BOOMR} Boomerang object
+		 *
+		 * @memberof BOOMR
+		 */
+		appendVar: function(name, value) {
+			var existing = BOOMR.getVar(name) || "";
+			if (existing) {
+				existing += ",";
+			}
+
+			BOOMR.addVar(name, existing + value);
 
 			return this;
 		},
@@ -2775,10 +2800,6 @@ BOOMR_check_doc_domain();
 		 */
 		hasVar: function(name) {
 			return impl.vars.hasOwnProperty(name);
-		},
-
-		getVar: function(name) {
-			return impl.vars[name];
 		},
 
 		/**
