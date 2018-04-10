@@ -17,9 +17,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "type" in connection) {
+			if (connection && "type" in connection && connection.type) {
 				assert.isTrue("mob.ct" in b);
-				assert.isTrue(b["mob.ct"] === connection.type);
+				assert.equal(b["mob.ct"], connection.type);
 			}
 		}
 	});
@@ -32,9 +32,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "bandwidth" in connection) {
+			if (connection && "bandwidth" in connection && connection.bandwidth) {
 				assert.isTrue("mob.bw" in b);
-				assert.isTrue(b["mob.bw"] === connection.bandwidth);
+				assert.equal(b["mob.bw"], connection.bandwidth);
 			}
 		}
 	});
@@ -47,9 +47,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "metered" in connection) {
+			if (connection && "metered" in connection && connection.metered) {
 				assert.isTrue("mob.mt" in b);
-				assert.isTrue(b["mob.mt"] === connection.metered);
+				assert.equal(b["mob.mt"], connection.metered);
 			}
 		}
 	});
@@ -62,9 +62,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "effectiveType" in connection) {
+			if (connection && "effectiveType" in connection && connection.effectiveType) {
 				assert.isTrue("mob.etype" in b);
-				assert.isTrue(b["mob.etype"] === connection.effectiveType);
+				assert.equal(b["mob.etype"], connection.effectiveType);
 			}
 		}
 	});
@@ -77,9 +77,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "downlinkMax" in connection) {
+			if (connection && "downlinkMax" in connection && connection.downlinkMax) {
 				assert.isTrue("mob.lm" in b);
-				assert.isTrue(b["mob.lm"] === connection.downlinkMax);
+				assert.equal(b["mob.lm"], connection.downlinkMax);
 			}
 		}
 	});
@@ -92,9 +92,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "downlink" in connection) {
+			if (connection && "downlink" in connection && connection.downlink) {
 				assert.isTrue("mob.dl" in b);
-				assert.isTrue(b["mob.dl"] === connection.downlink);
+				assert.equal(b["mob.dl"], connection.downlink);
 			}
 		}
 	});
@@ -107,9 +107,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "rtt" in connection) {
+			if (connection && "rtt" in connection && connection.rtt) {
 				assert.isTrue("mob.rtt" in b);
-				assert.isTrue(b["mob.rtt"] === connection.rtt);
+				assert.equal(b["mob.rtt"], connection.rtt);
 			}
 		}
 	});
@@ -122,9 +122,9 @@ describe("e2e/23-mobile/01-mobile-variable-mapping", function() {
 				connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
 			}
 
-			if (connection && "saveData" in connection) {
+			if (connection && "saveData" in connection && connection.saveData) {
 				assert.isTrue("mob.sd" in b);
-				assert.isTrue(b["mob.sd"] === connection.saveData);
+				assert.equal(b["mob.sd"], connection.saveData);
 			}
 		}
 	});
