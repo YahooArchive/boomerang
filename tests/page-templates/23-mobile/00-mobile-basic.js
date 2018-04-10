@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
 /*global BOOMR_test,assert*/
 
-describe("e2e/19-mobile/00-mobile-basic", function() {
+describe("e2e/23-mobile/00-mobile-basic", function() {
 	var t = BOOMR_test;
 	var tf = BOOMR.plugins.TestFramework;
 
