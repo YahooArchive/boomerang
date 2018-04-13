@@ -1,6 +1,6 @@
 {
   "name": "boomerang",
-  "version": "1.0.0",
+  "version": "1.568.0",
   "releaseVersion": "1",
   "description": "boomerang always comes back, except when it hits something",
   "main": "boomerang.js",
@@ -74,7 +74,6 @@
     "react-dom": "^0.14.0",
     "react-router": "^1.0.0-rc3",
     "sanitize-html": "^1.15.0",
-    "soasta-repository": "0.0.2",
     "strip-json-comments": "^1.0.2"
   },
   "scripts": {
