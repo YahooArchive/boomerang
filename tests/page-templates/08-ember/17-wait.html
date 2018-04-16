@@ -68,8 +68,9 @@ window.ember_route_wait = function() {
 <script>
 BOOMR_test.init({
 	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
-	Ember: {
-		enabled: true
+	History: {
+		enabled: true,
+		monitorHistory: false
 	},
 	instrument_xhr: true,
 	autorun: false

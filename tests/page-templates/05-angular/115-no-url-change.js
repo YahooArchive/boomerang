@@ -25,8 +25,16 @@ describe("e2e/05-angular/115-no-url-change", function() {
 		}
 	});
 
-	it("Should have handled five spa_init events", function() {
-		assert.equal(window.total_spa_inits, 5);
+	it("Should have handled one spa_navigation events", function() {
+		assert.equal(window.total_spa_navigations, 1);
+	});
+
+	it("Should have handled four spa_init events", function() {
+		assert.equal(window.total_spa_inits, 4);
+	});
+
+	it("Should have handled one spa_cancel events", function() {
+		assert.equal(window.total_spa_cancels, 1);
 	});
 
 	//

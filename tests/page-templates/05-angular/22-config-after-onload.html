@@ -40,12 +40,15 @@ BOOMR.plugins.hold = {
 		this.complete = true;
 	}
 };
-BOOMR_test.init({
-	testAfterOnBeacon: (BOOMR.plugins.AutoXHR && window.MutationObserver) ? 2 : 1,
-	Angular: {
-		enabled: true
-	},
-	autorun: false
-});
+// give the framework some time to start up
+setTimeout(function() {
+	BOOMR_test.init({
+		testAfterOnBeacon: (BOOMR.plugins.AutoXHR && window.MutationObserver) ? 2 : 1,
+		Angular: {
+			enabled: true
+		},
+		autorun: false
+	});
+}, 2000);
 </script>
 <%= footer %>

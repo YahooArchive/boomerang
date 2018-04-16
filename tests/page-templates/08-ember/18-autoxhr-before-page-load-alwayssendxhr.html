@@ -21,8 +21,9 @@ window.imgs = [1000];
 /*eslint-disable no-unused-vars*/
 BOOMR_test.init({
 	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
-	Ember: {
-		enabled: true
+	History: {
+		enabled: true,
+		monitorHistory: false
 	},
 	AutoXHR: {
 		alwaysSendXhr: true

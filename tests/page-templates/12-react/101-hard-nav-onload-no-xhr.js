@@ -19,7 +19,7 @@ describe("e2e/12-react/101-hard-nav-onload-no-xhr", function() {
 			var p = BOOMR.getPerformance();
 			var pt = p.timing;
 			var pageLoad = (pt.loadEventStart - pt.navigationStart);
-			assert.closeTo(tf.beacons[0].t_done, pageLoad, 1);
+			assert.closeTo(tf.beacons[0].t_done, pageLoad, 2);
 		}
 		else {
 			// page load should be around the time of the img download - the difference between navStart and t_start

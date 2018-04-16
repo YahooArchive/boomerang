@@ -4,7 +4,9 @@
 <iframe id="boomer_test_frame" src="/delay?delay=3000&amp;redir=1&amp;file=/pages/05-angular/00-simple.html"></iframe>
 <script>
 function onBeaconHandler(b) {
-	window.beacon = b;
+	// give the frame's beacon to the base page's test framework
+	BOOMR.plugins.TestFramework.onbeacon(b);
+
 	BOOMR_test.runTests();
 }
 

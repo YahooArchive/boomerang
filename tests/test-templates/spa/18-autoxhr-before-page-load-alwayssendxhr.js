@@ -92,7 +92,7 @@ BOOMR_test.templates.SPA["18-autoxhr-before-page-load-alwayssendxhr"] = function
 						assert.equal(
 							b[beaconProp],
 							resTime,
-							"Beacon #" + i + ": " + beaconProp + "=" + b[beaconProp] + " vs " + BEACON_VAR_RT_MAP[beaconProp] + "=" + resTime);
+							"Beacon #" + (i + 1) + ": " + beaconProp + "=" + b[beaconProp] + " vs " + BEACON_VAR_RT_MAP[beaconProp] + "=" + resTime);
 					}
 				}
 			}

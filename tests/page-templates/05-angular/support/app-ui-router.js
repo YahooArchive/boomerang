@@ -142,19 +142,15 @@ angular.module("app", ["ngResource", "ui.router"])
 					}, 100);
 				}
 
-				// reset our timeout if needed
-				if (window.angular_nav_route_timeout && window.angular_timerid) {
-					clearTimeout(window.angular_timerid);
+				// set a timeout that calls the handler if beacon hasn't fired
+				if (window.angular_nav_route_timeout) {
+					if (window.angular_timerid) {
+						clearTimeout(window.angular_timerid);
+					}
 					window.angular_timerid = setTimeout(handler, window.angular_nav_route_timeout);
 				}
 			};
 
 			BOOMR.subscribe("beacon", handler);
-
-			// set a timeout that calls the handler if beacon hasn't fired
-			if (window.angular_nav_route_timeout) {
-				window.angular_timerid = setTimeout(handler, window.angular_nav_route_timeout);
-			}
-
 		}
 	}]);

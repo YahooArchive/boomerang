@@ -157,7 +157,7 @@
 			waitingOnHardMissedComplete = false;
 
 			// note that we missed the route change on the beacon for debugging
-			BOOMR.addVar("spa.missed", "1");
+			BOOMR.addVar("spa.missed", "1", true);
 
 			// ensure t_done is the time we've specified
 			if (BOOMR.plugins.RT) {
@@ -178,11 +178,11 @@
 		},
 
 		/**
-		 * Fired on each beacon.
+		 * Fired on a non-spa page load
 		 */
-		onBeacon: function() {
-			// remove all of the potential parameters we added to the beacon
-			BOOMR.removeVar("spa.missed", "spa.forced", "spa.waiting");
+		pageReady: function() {
+			// a non-spa page load fired, disableHardNav might be enabled
+			initialRouteChangeCompleted = true;
 		}
 	};
 
@@ -224,8 +224,7 @@
 			}
 
 			initialized = true;
-
-			BOOMR.subscribe("beacon", impl.onBeacon, null, impl);
+			BOOMR.subscribe("page_ready", impl.pageReady, null, impl);
 		},
 
 		/**
@@ -276,8 +275,6 @@
 			waitingOnHardMissedComplete = true;
 
 			if (!disableHardNav) {
-				// `this` is unbound, use BOOMR.plugins.SPA
-				BOOMR.fireEvent("spa_init", [BOOMR.plugins.SPA.current_spa_nav(), BOOMR.window.document.URL]);
 				// Trigger a route change
 				BOOMR.plugins.SPA.route_change(impl.spaHardMissedOnComplete);
 			}
@@ -410,6 +407,9 @@
 			// it in AutoXHR sendEvent
 			var url = BOOMR.window.document.URL;
 
+			// `this` is unbound, use BOOMR.plugins.SPA
+			BOOMR.fireEvent("spa_init", [BOOMR.plugins.SPA.current_spa_nav(), url]);
+
 			// construct the resource we'll be waiting for
 			var resource = {
 				timing: {
@@ -499,6 +499,7 @@
 		 * @memberof BOOMR.plugins.SPA
 		 */
 		wait_complete: function() {
+			debugLog("Route change wait filter completed");
 			if (latestResource) {
 				latestResource.wait = false;
 
@@ -539,10 +540,10 @@
 						debugLog("SPA Navigation being marked complete; nodes waiting for: " + waiting);
 
 						// note that the navigation was forced complete
-						BOOMR.addVar("spa.forced", "1");
+						BOOMR.addVar("spa.forced", "1", true);
 
 						// add the count of nodes we were waiting for
-						BOOMR.addVar("spa.waiting", waiting);
+						BOOMR.addVar("spa.waiting", mh.nodesWaitingFor(), true);
 
 						// finalize this navigation
 						mh.completeEvent(i);

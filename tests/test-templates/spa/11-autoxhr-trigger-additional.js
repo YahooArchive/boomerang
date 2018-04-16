@@ -78,7 +78,13 @@ BOOMR_test.templates.SPA["11-autoxhr-trigger-additional"] = function() {
 			t.ifAutoXHR(
 				done,
 				function() {
-					assert.closeTo(tf.beacons[1].t_done, 4000, 500);
+					var duration, delta = 500;
+					if (t.isResourceTimingSupported()) {
+						duration = t.findFirstResource("support/widgets.json&id=1").duration + t.findFirstResource("support/img.jpg").duration;
+						delta = 200;
+					}
+					duration = duration && duration >= 4000 ? duration : 4000;
+					assert.closeTo(tf.beacons[1].t_done, duration, delta);
 					done();
 				},
 				this.skip.bind(this));

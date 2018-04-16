@@ -47,13 +47,17 @@ BOOMR.plugins.hold = {
 		this.complete = true;
 	}
 };
-BOOMR_test.init({
-	testAfterOnBeacon: (BOOMR.plugins.AutoXHR && window.MutationObserver) ? 2 : 1,
-	Ember: {
-		enabled: true
-	},
-	autorun: false
-});
+// give the framework some time to start up
+setTimeout(function() {
+	BOOMR_test.init({
+		testAfterOnBeacon: (BOOMR.plugins.AutoXHR && window.MutationObserver) ? 2 : 1,
+		History: {
+			enabled: true,
+			monitorHistory: false
+		},
+		autorun: false
+	});
+}, 2000);
 </script>
 
 <%= footer %>

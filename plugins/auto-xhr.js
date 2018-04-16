@@ -739,10 +739,22 @@
 				// save the last SPA location
 				self.lastSpaLocation = ev.resource.url;
 
-				// if this was a SPA nav that triggered no additional resources, substract the
-				// SPA_TIMEOUT from now to determine the end time
-				if (!ev.forced && ev.total_nodes === 0) {
-					ev.resource.timing.loadEventEnd = now - impl.spaIdleTimeout;
+				if (!ev.forced) {
+					// if this was a SPA nav that triggered no additional resources, substract the
+					// SPA_TIMEOUT from now to determine the end time
+					if (ev.total_nodes === 0) {
+						ev.resource.timing.loadEventEnd = now - impl.spaIdleTimeout;
+					}
+
+					// if the event wasn't forced then the SPA hard nav should have the page's
+					// onload end as its minimum load end time
+					if (ev.type === "spa_hard") {
+						var p = BOOMR.getPerformance();
+						if (p && p.timing && p.timing.loadEventEnd && ev.resource.timing.loadEventEnd &&
+						    ev.resource.timing.loadEventEnd < p.timing.loadEventEnd) {
+							ev.resource.timing.loadEventEnd = p.timing.loadEventEnd;
+						}
+					}
 				}
 			}
 
@@ -982,6 +994,15 @@
 		ev = this.pending_events[index];
 
 		if (ev) {
+			// SPA page loads
+
+			if (BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS) && !BOOMR.hasBrowserOnloadFired()) {
+				// browser onload hasn't fired yet, lets wait because there might be more interesting
+				// things on the way
+				this.setTimeout(SPA_TIMEOUT, index);
+				return;
+			}
+
 			if (ev.nodes_to_wait === 0) {
 				// TODO, if xhr event did not trigger additional resources then do not
 				// send a beacon unless it matches alwaysSendXhr. See !868

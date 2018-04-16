@@ -29,6 +29,14 @@ App.ApplicationRoute = Ember.Route.extend({
 				});
 			}
 		});
+	},
+	actions: {
+		willTransition: function(transition) {
+			// Ember 1.x issues History API calls after the transition is complete (after XHRs and mutations).
+			// To work around this, we set auto:false and manually issue route changes
+			// for spa soft routes
+			BOOMR.plugins.SPA.route_change();
+		}
 	}
 });
 

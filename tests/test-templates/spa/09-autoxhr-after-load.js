@@ -28,91 +28,130 @@ BOOMR_test.templates.SPA["09-autoxhr-after-load"] = function() {
 	//
 	// Beacon 1 (page load)
 	//
-	it("Should send the first beacon (page load) with the time it took to load widgets.json (if NavigationTiming is supported)", function(done) {
-		if (typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
+	describe("Beacon 1 (spa_hard)", function() {
+		var i = 0;
+
+		it("Should have sent the first beacon as http.initiator = spa_hard", function() {
+			assert.equal(tf.beacons[i]["http.initiator"], "spa_hard");
+		});
+
+		it("Should send the first beacon (page load) with the time it took to load img.jpg?id=home (if NavigationTiming and MutationObserver is supported)", function(done) {
+			if (typeof BOOMR.plugins.RT.navigationStart() !== "undefined" && t.isMutationObserverSupported()) {
+				t.ifAutoXHR(
+					done,
+					function() {
+						t.validateBeaconWasSentAfter(i, "support/img.jpg?id=home", 500, 0, 30000, 0);
+						done();
+					},
+					this.skip.bind(this));
+			}
+			else {
+				this.skip();
+			}
+		});
+
+		it("Should send the first beacon (page load) with the time it took to load widgets.json (if NavigationTiming is supported and MutationObserver is not)", function(done) {
+			if (typeof BOOMR.plugins.RT.navigationStart() !== "undefined" && !t.isMutationObserverSupported()) {
+				t.ifAutoXHR(
+					done,
+					function() {
+						t.validateBeaconWasSentAfter(i, "support/widgets.json", 500, 0, 30000, 0);
+						done();
+					},
+					this.skip.bind(this));
+			}
+			else {
+				this.skip();
+			}
+		});
+
+		it("Should send the first beacon (page load) without any load time (if NavigationTiming is not supported)", function(done) {
+			if (typeof BOOMR.plugins.RT.navigationStart() === "undefined") {
+				t.ifAutoXHR(
+					done,
+					function() {
+						var b = tf.beacons[i];
+						assert.equal(b.t_done, undefined);
+						assert.equal(b["rt.start"], "none");
+						done();
+					},
+					this.skip.bind(this));
+			}
+			else {
+				this.skip();
+			}
+		});
+
+		it("Should send the first beacon (page load) with the page URL as the 'u' parameter", function(done) {
 			t.ifAutoXHR(
 				done,
 				function() {
-					t.validateBeaconWasSentAfter(0, "support/widgets.json", 500, 0, 30000, 0);
+					assert.include(tf.beacons[i].u, "09-autoxhr-after-load.html");
 					done();
 				},
 				this.skip.bind(this));
-		}
-		else {
-			this.skip();
-		}
-	});
-
-	it("Should send the first beacon (page load) without any load time (if NavigationTiming is not supported)", function(done) {
-		if (typeof BOOMR.plugins.RT.navigationStart() === "undefined") {
-			t.ifAutoXHR(
-				done,
-				function() {
-					var b = tf.beacons[0];
-					assert.equal(b.t_done, undefined);
-					assert.equal(b["rt.start"], "none");
-					done();
-				},
-				this.skip.bind(this));
-		}
-		else {
-			this.skip();
-		}
-	});
-
-	it("Should send the first beacon (page load) with the page URL as the 'u' parameter", function(done) {
-		t.ifAutoXHR(
-			done,
-			function() {
-				assert.include(tf.beacons[0].u, "09-autoxhr-after-load.html");
-				done();
-			},
-			this.skip.bind(this));
+		});
 	});
 
 	//
 	// Beacon 2 (XHR)
 	//
-	it("Should send the second beacon (XHR) with the 3s it took to load the widgets.json XHR", function(done) {
-		t.ifAutoXHR(
-			done,
-			function() {
-				assert.closeTo(tf.beacons[1].t_done, 3000, 500);
-				done();
-			},
-			this.skip.bind(this));
-	});
+	describe("Beacon 2 (xhr)", function() {
+		var i = 1;
 
-	it("Should send the second beacon (XHR) with widgets.json as the 'u' parameter", function(done) {
-		t.ifAutoXHR(
-			done,
-			function() {
-				assert.include(tf.beacons[1].u, "widgets.json");
-				done();
-			},
-			this.skip.bind(this));
+		it("Should have sent the first beacon as http.initiator = xhr", function() {
+			assert.equal(tf.beacons[i]["http.initiator"], "xhr");
+		});
+
+		it("Should send the second beacon (XHR) with the 3s it took to load the widgets.json XHR", function(done) {
+			t.ifAutoXHR(
+				done,
+				function() {
+					assert.closeTo(tf.beacons[i].t_done, 3000, 500);
+					done();
+				},
+				this.skip.bind(this));
+		});
+
+		it("Should send the second beacon (XHR) with widgets.json as the 'u' parameter", function(done) {
+			t.ifAutoXHR(
+				done,
+				function() {
+					assert.include(tf.beacons[i].u, "widgets.json");
+					done();
+				},
+				this.skip.bind(this));
+		});
 	});
 
 	//
 	// Beacon 3 (XHR)
 	//
-	it("Should send the third beacon (XHR) with the 1s it took to load the widgets.json XHR", function(done) {
-		t.ifAutoXHR(
-			done,
-			function() {
-				assert.closeTo(tf.beacons[2].t_done, 1000, 250);
-				done();
-			},
-			this.skip.bind(this));
-	});
+	describe("Beacon 3 (xhr)", function() {
+		var i = 2;
 
-	it("Should send the third beacon (XHR) with widgets.json as the 'u' parameter", function(done) {
-		t.ifAutoXHR(
-			done,
-			function() {
-				assert.include(tf.beacons[2].u, "widgets.json");
-				done();
-			},
-			this.skip.bind(this));
+		it("Should have sent the first beacon as http.initiator = xhr", function() {
+			assert.equal(tf.beacons[i]["http.initiator"], "xhr");
+		});
+
+		it("Should send the third beacon (XHR) with the 1s it took to load the widgets.json XHR", function(done) {
+			t.ifAutoXHR(
+				done,
+				function() {
+					assert.closeTo(tf.beacons[i].t_done, 1000, 250);
+					done();
+				},
+				this.skip.bind(this));
+		});
+
+		it("Should send the third beacon (XHR) with widgets.json as the 'u' parameter", function(done) {
+			t.ifAutoXHR(
+				done,
+				function() {
+					assert.include(tf.beacons[i].u, "widgets.json");
+					done();
+				},
+				this.skip.bind(this));
+		});
 	});
 };

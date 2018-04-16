@@ -20,8 +20,9 @@
 window.imgs = [-1];
 BOOMR_test.init({
 	testAfterOnBeacon: true,
-	Ember: {
-		enabled: true
+	History: {
+		enabled: true,
+		monitorHistory: false
 	},
 	instrument_xhr: true,
 	autorun: false

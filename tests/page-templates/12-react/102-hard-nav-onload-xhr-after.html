@@ -11,7 +11,7 @@
 			xhr = new w.XMLHttpRequest();
 			xhr.addEventListener("load", function() {
 				img = d.createElement("img");
-				img.src = "/delay?delay=1000&file=pages/12-react/support/img.jpg&id=xhr";
+				img.src = "/delay?delay=2000&file=pages/12-react/support/img.jpg&id=xhr&rnd=" + Math.random();
 				img.style = "max-height: 100px;";
 				d.body.appendChild(img);
 			});
@@ -37,6 +37,7 @@
 <script>
 BOOMR_test.init({
 	autorun: false,
+	instrument_xhr: true,
 	History: {
 		enabled: true,
 		auto: true
