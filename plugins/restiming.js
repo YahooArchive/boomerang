@@ -147,7 +147,29 @@
 		/** An IFRAME */
 		"iframe": "a",
 		/** IE11 and Edge (some versions) send "subdocument" instead of "iframe" */
-		"subdocument": "a"
+		"subdocument": "a",
+		/** BODY element */
+		"body": "b",
+		/** INPUT element */
+		"input": "c",
+		/** FRAME element */
+		"frame": "a",
+		/** OBJECT element */
+		"object": "d",
+		/** VIDEO element */
+		"video": "e",
+		/** AUDIO element */
+		"audio": "f",
+		/** SOURCE element */
+		"source": "g",
+		/** TRACK element */
+		"track": "h",
+		/** EMBED element */
+		"embed": "i",
+		/** EventSource */
+		"eventsource": "j",
+		/** The root HTML page itself */
+		"navigation": 6
 	};
 
 	/**
