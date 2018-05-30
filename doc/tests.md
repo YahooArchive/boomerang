@@ -54,18 +54,18 @@ All Unit Test files are manually included via `tests/unit/index.html`.
 In addition, you can run any of the following combinations to automatically run
 all `tests/unit/*.js` files via Grunt and [Karma](https://karma-runner.github.io/):
 
-* `test:unit`
-* `test:unit:all`
-* `test:unit:allHeadless`
-* `test:unit:Chrome`
-* `test:unit:ChromeHeadless`
-* `test:unit:Firefox`
-* `test:unit:FirefoxHeadless`
-* `test:unit:Edge`
-* `test:unit:IE`
-* `test:unit:Opera`
-* `test:unit:Safari`
-* `test:unit:PhantomJS`
+* `grunt test:unit`
+* `grunt test:unit:all`
+* `grunt test:unit:allHeadless`
+* `grunt test:unit:Chrome`
+* `grunt test:unit:ChromeHeadless`
+* `grunt test:unit:Firefox`
+* `grunt test:unit:FirefoxHeadless`
+* `grunt test:unit:Edge`
+* `grunt test:unit:IE`
+* `grunt test:unit:Opera`
+* `grunt test:unit:Safari`
+* `grunt test:unit:PhantomJS`
 
 The Unit Tests utilize [Chai Assert](http://www.chaijs.com/api/assert/) for validations.
 
@@ -94,20 +94,20 @@ a local webserver to host the `tests/pages/*` files.  You can do this by running
 the following:
 
 ```
-test:debug
+grunt test:debug
 ```
 
 In addition, you can run any of the following combinations to automatically run
 all E2E tests files via Grunt and [Protractor](https://www.protractortest.org/):
 
-* `test:e2e`
-* `test:e2e:browser`
-* `test:e2e:debug` - will only run tests in `tests/e2e/e2e-debug.json`
-* `test:e2e:PhantomJS`
-* `test:e2e:Chrome`
-* `test:e2e:ChromeHeadless`
-* `test:e2e:Firefox`
-* `test:e2e:FirefoxHeadless`
-* `test:e2e:Edge`
-* `test:e2e:IE`
-* `test:e2e:Safari`
+* `grunt test:e2e`
+* `grunt test:e2e:browser`
+* `grunt test:e2e:debug` - will only run tests in `tests/e2e/e2e-debug.json`
+* `grunt test:e2e:PhantomJS`
+* `grunt test:e2e:Chrome`
+* `grunt test:e2e:ChromeHeadless`
+* `grunt test:e2e:Firefox`
+* `grunt test:e2e:FirefoxHeadless`
+* `grunt test:e2e:Edge`
+* `grunt test:e2e:IE`
+* `grunt test:e2e:Safari`
