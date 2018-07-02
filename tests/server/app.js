@@ -80,6 +80,10 @@ app.post("/redirect", respond301);
 app.get("/chunked", require("./route-chunked"));
 app.post("/chunked", require("./route-chunked"));
 
+// /json - JSON output
+app.get("/json", require("./route-json"));
+app.post("/json", require("./route-json"));
+
 // for every GET, look for a file with the same name appended with ".headers"
 // if found, parse the headers and write them on the response
 // whether found or not, let the req/res pass through with next()
