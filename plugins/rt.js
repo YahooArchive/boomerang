@@ -62,6 +62,7 @@
  * * `http.method`: For XHR beacons, the HTTP method if not `GET`.
  * * `http.errno`: For XHR beacons, the HTTP result code if not 200.
  * * `http.hdr`: For XHR beacons, headers if available.
+ * * `http.type`: For XHR beacons, value of `f` for fetch requests. Not set for XHRs.
  * * `xhr.sync`: For XHR beacons, `1` if it was sent synchronously.
  * * `http.initiator`: The initiator of the beacon:
  *   - (empty/missing) for the page load beacon
@@ -1162,7 +1163,7 @@
 			BOOMR.removeVar(
 				"t_done", "t_page", "t_resp", "t_postrender", "t_prerender", "t_load", "t_other",
 				"rt.tstart", "rt.nstart", "rt.cstart", "rt.bstart", "rt.end", "rt.subres",
-				"http.errno", "http.method", "xhr.sync"
+				"http.errno", "http.method", "http.type", "xhr.sync"
 			);
 
 			impl.setSupportingTimestamps(t_start);
@@ -1191,6 +1192,10 @@
 
 				if (edata.method && edata.method !== "GET") {
 					BOOMR.addVar("http.method", edata.method);
+				}
+
+				if (edata.type && edata.type !== "xhr") {
+					BOOMR.addVar("http.type", edata.type[0]);  // just send first char
 				}
 
 				if (edata.headers) {
