@@ -3274,21 +3274,31 @@ BOOMR_check_doc_domain();
 			// Try to send an IMG beacon if possible (which is the most compatible),
 			// otherwise send an XHR beacon if the  URL length is longer than 2,000 bytes.
 			//
-			if (impl.beacon_type === "POST" || url.length > BOOMR.constants.MAX_GET_LENGTH) {
+			if (impl.beacon_type === "GET") {
+				useImg = true;
+
+				if (url.length > BOOMR.constants.MAX_GET_LENGTH) {
+					((window.console && (console.warn || console.log)) || function() {})("Boomerang: Warning: Beacon may not be sent via GET due to payload size > 2000 bytes");
+				}
+			}
+			else if (impl.beacon_type === "POST" || url.length > BOOMR.constants.MAX_GET_LENGTH) {
 				// switch to a XHR beacon if the the user has specified a POST OR GET length is too long
 				useImg = false;
 			}
 
 			//
-			// Try the sendBeacon API first
+			// Try the sendBeacon API first.
+			// But if beacon_type is set to "GET", dont attempt
+			// sendBeacon API call
 			//
 			if (w && w.navigator &&
 			    typeof w.navigator.sendBeacon === "function" &&
-			    typeof w.Blob === "function" && 
+			    typeof w.Blob === "function" &&
 			    // As per W3C, The sendBeacon method does not provide ability to pass any
-			    // header other than 'Content-Type'. So if we need to send data with 
+			    // header other than 'Content-Type'. So if we need to send data with
 			    // 'Authorization' header, we need to fallback to good old xhr.
-			    typeof impl.beacon_auth_token === "undefined") {
+			    typeof impl.beacon_auth_token === "undefined" &&
+			    impl.beacon_type !== "GET") {
 				// note we're using sendBeacon with &sb=1
 				var blobData = new w.Blob([paramsJoined + "&sb=1"], {
 					type: "application/x-www-form-urlencoded"
