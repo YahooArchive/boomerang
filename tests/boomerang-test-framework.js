@@ -219,16 +219,6 @@
 		t.doNotTestErrorsParam = config.doNotTestErrorsParam;
 		t.doNotTestSpaAbort = config.doNotTestSpaAbort;
 
-		if (window.BOOMR_LOGN_always !== true) {
-			// initialize boomerang if LOGN is disabled
-			BOOMR.addVar("h.cr", "test");
-			BOOMR.init(config);
-		}
-
-		if (config.onBoomerangLoaded) {
-			config.onBoomerangLoaded();
-		}
-
 		if (config.afterFirstBeacon) {
 			var xhrSent = false;
 			BOOMR.subscribe(
@@ -243,6 +233,8 @@
 				});
 		}
 
+		t.configureTestEnvironment();
+
 		// fake session details so beacons send
 		BOOMR.addVar({
 			"h.key": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
@@ -251,7 +243,24 @@
 			"h.cr": "abc"
 		});
 
-		t.configureTestEnvironment();
+		/* SOASTA_PRIVATE_START - changes from OS version */
+		if (window.BOOMR_LOGN_always !== true) {
+			// initialize boomerang if LOGN is disabled
+			// fake session details so beacons send if LOGN is disabled
+			BOOMR.addVar({
+				"h.key": window.BOOMR_API_key ? window.BOOMR_API_key : "aaaaa-bbbbb-ccccc-ddddd-eeeee",
+				"h.d": window.location.hostname,
+				"h.t": new Date().getTime(),
+				"h.cr": "abc"
+			});
+
+			BOOMR.init(config);
+		}
+		/* SOASTA_PRIVATE_END */
+
+		if (config.onBoomerangLoaded) {
+			config.onBoomerangLoaded();
+		}
 
 		if (!config.testAfterOnBeacon) {
 			BOOMR.setImmediate(t.runTests);
