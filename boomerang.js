@@ -2130,9 +2130,11 @@ BOOMR_check_doc_domain();
 				if (BOOMR.utils.Compression && BOOMR.utils.Compression.jsUrl) {
 					return BOOMR.utils.Compression.jsUrl(value);
 				}
+
 				if (window.JSON) {
 					return JSON.stringify(value);
 				}
+
 				// not supported
 				BOOMR.debug("JSON is not supported");
 				return "";
