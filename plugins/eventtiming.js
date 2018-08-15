@@ -91,7 +91,8 @@
 						d: Math.round(impl.entries[i].duration).toString(36),
 						p: Math.round(impl.entries[i].processingEnd -
 						   impl.entries[i].processingStart).toString(36),
-						c: impl.entries[i].cancelable ? 1 : 0
+						c: impl.entries[i].cancelable ? 1 : 0,
+						fi: impl.entries[i].entryType === "firstInput" ? 1 : undefined
 					});
 				}
 
@@ -136,7 +137,10 @@
 
 				try {
 					impl.observer = new PerformanceObserver(impl.onEventTiming);
-					impl.observer.observe({entryTypes: ["event"], buffered: true });
+					impl.observer.observe({
+						entryTypes: ["event", "firstInput"],
+						buffered: true
+					});
 				}
 				catch (e) {
 					impl.supported = false;
