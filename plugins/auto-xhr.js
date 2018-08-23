@@ -739,6 +739,25 @@
 				return;
 			}
 
+			// if this was a XHR that did not trigger additional resources then we will not send a beacon,
+			// note that XHRs start out with total_nodes=1 to account for itself
+			if (impl.xhrRequireChanges &&
+			    ev.type === "xhr" &&
+			    ev.total_nodes === 1 &&
+			    !matchesAlwaysSendXhr(ev.resource.url, impl.alwaysSendXhr)) {
+				debugLog("XHR beacon cancelled, no resources triggered");
+				this.pending_events[index] = undefined;
+				return;
+			}
+
+			// if click event did not trigger additional resources or doesn't have
+			// a url then do not send a beacon
+			if (ev.type === "click" && (ev.total_nodes === 0 || !ev.resource.url)) {
+				debugLog("Click beacon cancelled, no resources triggered or no resource URL");
+				this.pending_events[index] = undefined;
+				return;
+			}
+
 			if (BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
 				// save the last SPA location
 				self.lastSpaLocation = ev.resource.url;
@@ -1006,18 +1025,6 @@
 			}
 
 			if (ev.nodes_to_wait === 0) {
-				// TODO, if xhr event did not trigger additional resources then do not
-				// send a beacon unless it matches alwaysSendXhr. See !868
-
-				// if click event did not trigger additional resources or doesn't have
-				// a url then do not send a beacon
-				if (ev.type === "click" && (ev.total_nodes === 0 || !ev.resource.url)) {
-					this.watch--;
-					this.pending_events[index] = undefined;
-
-					return;
-				}
-
 				// send event if there are no outstanding downloads
 				this.sendEvent(index);
 			}
@@ -2302,6 +2309,7 @@
 		fetchBodyUsedWait: FETCH_BODY_USED_WAIT_DEFAULT,
 		spaIdleTimeout: SPA_TIMEOUT,
 		xhrIdleTimeout: CLICK_XHR_TIMEOUT,
+		xhrRequireChanges: true,
 
 		/**
 		 * Filter function iterating over all available {@link FilterObject}s if
@@ -2479,6 +2487,12 @@
 		 * beacons for every XHR.
 		 * @param {boolean} [config.captureXhrRequestResponse] Whether or not to capture an XHR's
 		 * request and response bodies on for the {@link event:BOOMR#xhr_load xhr_load} event.
+		 * @param {number} [config.AuthXHR.spaIdleTimeout=1000] Timeout for Single Page Applications after the final
+		 * resource fetch has completed before calling the SPA navigation complete. Default is 1000ms.
+		 * @param {number} [config.AuthXHR.xhrIdleTimeout=50] Timeout for XHRs after final resource fetch has completed
+		 * before calling the XHR complete.  Default is 50ms.
+		 * @param {boolean} [config.AuthXHR.xhrRequireChanges=true] Whether or not a XHR beacon will only be triggered
+		 * if there were DOM changes.
 		 *
 		 * @returns {@link BOOMR.plugins.AutoXHR} The AutoXHR plugin for chaining
 		 * @memberof BOOMR.plugins.AutoXHR
@@ -2498,7 +2512,7 @@
 			// gather config and config overrides
 			BOOMR.utils.pluginConfig(impl, config, "AutoXHR",
 			    ["spaBackEndResources", "alwaysSendXhr", "monitorFetch", "fetchBodyUsedWait",
-			    "spaIdleTimeout", "xhrIdleTimeout"]);
+			    "spaIdleTimeout", "xhrIdleTimeout", "xhrRequireChanges"]);
 
 			BOOMR.instrumentXHR = instrumentXHR;
 			BOOMR.uninstrumentXHR = uninstrumentXHR;
