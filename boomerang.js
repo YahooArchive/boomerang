@@ -1907,6 +1907,20 @@ BOOMR_check_doc_domain();
 			 */
 			windowWidth: function() {
 				return w.innerWidth || w.document.documentElement.clientWidth || w.document.body.clientWidth;
+			},
+
+			/**
+			 * Determines if the function is native or not
+			 *
+			 * @param {function} fn Function
+			 *
+			 * @returns {boolean} True when the function is native
+			 */
+			isNative: function(fn) {
+				return !!fn &&
+				    fn.toString &&
+				    !fn.hasOwnProperty("toString") &&
+				    /\[native code\]/.test(String(fn));
 			}
 
 			/* BEGIN_DEBUG */
@@ -3347,6 +3361,7 @@ BOOMR_check_doc_domain();
 			//
 			if (w && w.navigator &&
 			    typeof w.navigator.sendBeacon === "function" &&
+			    BOOMR.utils.isNative(w.navigator.sendBeacon) &&
 			    typeof w.Blob === "function" &&
 			    // As per W3C, The sendBeacon method does not provide ability to pass any
 			    // header other than 'Content-Type'. So if we need to send data with
