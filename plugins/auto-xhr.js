@@ -388,9 +388,8 @@
 				return true;
 			}
 
-			// don't track our own beacons
-			if (typeof BOOMR.getBeaconURL === "function") {
-				// don't track our own beacons (allow for protocol-relative URLs)
+			// don't track our own beacons (allow for protocol-relative URLs)
+			if (typeof BOOMR.getBeaconURL === "function" && BOOMR.getBeaconURL()) {
 				urlIdx = anchor.href.indexOf(BOOMR.getBeaconURL());
 				if (urlIdx === 0 || urlIdx === 5 || urlIdx === 6) {
 					return true;
