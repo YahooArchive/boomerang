@@ -2730,11 +2730,12 @@ BOOMR_check_doc_domain();
 		 * @memberof BOOMR
 		 */
 		isCrossOriginError: function(err) {
-			// These are expected for cross-origin iframe access, although the Internet Explorer check will only
-			// work for browsers using English.
+			// These are expected for cross-origin iframe access.
+			// For IE and Edge, we'll also check the error number for non-English browsers
 			return err.name === "SecurityError" ||
 				(err.name === "TypeError" && err.message === "Permission denied") ||
-				(err.name === "Error" && err.message && err.message.match(/^(Permission|Access is) denied/));
+				(err.name === "Error" && err.message && err.message.match(/^(Permission|Access is) denied/)) ||
+				err.number === -2146828218;  // IE/Edge error number for "Permission Denied"
 		},
 
 		/**
@@ -3357,11 +3358,11 @@ BOOMR_check_doc_domain();
 			    typeof w.navigator.sendBeacon === "function" &&
 			    BOOMR.utils.isNative(w.navigator.sendBeacon) &&
 			    typeof w.Blob === "function" &&
+			    impl.beacon_type !== "GET" &&
 			    // As per W3C, The sendBeacon method does not provide ability to pass any
 			    // header other than 'Content-Type'. So if we need to send data with
 			    // 'Authorization' header, we need to fallback to good old xhr.
-			    typeof impl.beacon_auth_token === "undefined" &&
-			    impl.beacon_type !== "GET") {
+			    typeof impl.beacon_auth_token === "undefined") {
 				// note we're using sendBeacon with &sb=1
 				var blobData = new w.Blob([paramsJoined + "&sb=1"], {
 					type: "application/x-www-form-urlencoded"

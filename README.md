@@ -151,14 +151,14 @@ Include the following code at the *top* of your HTML document:
 ```
 
 Best practices will suggest including all scripts at the bottom of your page.
-However, that only applies to scripts that block downloading of other resources.  
+However, that only applies to scripts that block downloading of other resources.
 
 Including a script this way will not block other resources, however it _will_
 block `onload`.
 
 Including the script at the top of your page gives it a good chance of loading
 before the rest of your page does, thereby reducing the probability of it
-blocking the `onload` event.  
+blocking the `onload` event.
 
 If you don't want to block `onload` either, use the following IFRAME method:
 
@@ -285,7 +285,7 @@ Open-source Boomerang Documentation is currently published at
 The team at Akamai works on mPulse Boomerang, which contains a few mPulse-specific plugins and may have additional
 changes being tested before being backported to the open-source Boomerang.  mPulse Boomerang usage documentation is
 available at [docs.soasta.com/boomerang/](https://docs.soasta.com/boomerang/) and mPulse Boomerang API documentation
-is at [docs.soasta.com/boomerang-api/](https://docs.soasta.com/boomerang-api/).
+is at [developer.akamai.com/tools/boomerang/docs/](https://developer.akamai.com/tools/boomerang/docs/).
 
 Additional documentation:
 

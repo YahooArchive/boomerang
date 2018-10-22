@@ -14,7 +14,7 @@
 	<link rel="stylesheet" href="../../vendor/mocha/mocha.css" />
 	<script type="text/javascript">
 	// approx number of lines in the header
-	window.HEADER_LINES = 44;
+	window.HEADER_LINES = 40;
 	</script>
 	<script src="../../vendor/mocha/mocha.js"></script>
 	<script src="../../vendor/assertive-chai/dist/assertive-chai.js"></script>

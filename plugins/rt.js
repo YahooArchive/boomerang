@@ -116,11 +116,6 @@
 (function(w) {
 	var d, impl,
 	    COOKIE_EXP = 60 * 60 * 24 * 7;
-
-	/* SOASTA PRIVATE START */
-	var SESSION_EXP = 60 * 30;
-	/* SOASTA PRIVATE END */
-
 	/**
 	 * Whether or not the cookie has compressed timestamps
 	 */
@@ -249,7 +244,7 @@
 
 			// sub-timer
 			if (timer) {
-				subcookies[timer] = (t_start - BOOMR.session.start).toString(36);
+				subcookies[timer] = (t_start).toString(36);
 				impl.lastActionTime = t_start;
 			}
 
@@ -1337,6 +1332,72 @@
 		 */
 		updateCookie: function() {
 			impl.updateCookie();
+		},
+
+		/**
+		 * Gets RT cookie data from the cookie and returns it as an object.
+		 *
+		 * Also decompresses the cookie if it has been compressed.
+		 *
+		 * @returns {(RTCookie|false)} an object containing RT Cookie data or false if no cookie is available
+		 *
+		 * @memberof BOOMR.plugins.RT
+		 */
+		getCookie: function() {
+			var subcookies, base, epoch;
+
+			// Disable use of RT cookie by setting its name to a falsy value
+			if (!impl.cookie) {
+				return false;
+			}
+
+			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(impl.cookie)) || {};
+
+			// decompress or parse cookie
+			if (subcookies) {
+				if (subcookies.z & COOKIE_COMPRESSED_TIMESTAMPS) {
+					// Timestamps and durations are compressed
+					base = 36;
+					epoch = parseInt(subcookies.ss || 0, 36);
+				}
+				else {
+					// Not compressed
+					base = 10;
+					epoch = 0;
+				}
+
+				// ss (Session Start)
+				subcookies.ss = parseInt(subcookies.ss || 0, base);
+
+				// tt (Total Time), sl (Session Length) and obo (Off By One)
+				subcookies.tt = parseInt(subcookies.tt || 0, base);
+				subcookies.obo = parseInt(subcookies.obo || 0, base);
+				subcookies.sl = parseInt(subcookies.sl || 0, base);
+
+				// session expiry
+				if (subcookies.se) {
+					subcookies.se = parseInt(subcookies.se, base) || SESSION_EXP;
+				}
+
+				// ld, ul, cl, hd (timestamps)
+				if (subcookies.ld) {
+					subcookies.ld = epoch + parseInt(subcookies.ld, base);
+				}
+
+				if (subcookies.ul) {
+					subcookies.ul = epoch + parseInt(subcookies.ul, base);
+				}
+
+				if (subcookies.cl) {
+					subcookies.cl = epoch + parseInt(subcookies.cl, base);
+				}
+
+				if (subcookies.hd) {
+					subcookies.hd = epoch + parseInt(subcookies.hd, base);
+				}
+			}
+
+			return subcookies;
 		},
 
 		/**

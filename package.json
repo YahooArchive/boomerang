@@ -1,6 +1,6 @@
 {
   "name": "boomerangjs",
-  "version": "1.568.0",
+  "version": "1.621.0",
   "releaseVersion": "1",
   "description": "boomerang always comes back, except when it hits something",
   "main": "boomerang.js",
@@ -201,6 +201,10 @@
     {
       "name": "Charles Vazac",
       "email": "cvazac@gmail.com"
+    },
+    {
+      "name": "Avinash Shenoy",
+      "email": "ashenoy@gmail.com"
     }
   ],
   "license": "BSD-3-Clause",
