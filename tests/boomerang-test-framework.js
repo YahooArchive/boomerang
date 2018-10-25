@@ -240,15 +240,17 @@
 
 		t.configureTestEnvironment();
 
-		// fake session details so beacons send
-		BOOMR.addVar({
-			"h.key": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
-			"h.d": window.location.hostname,
-			"h.t": new Date().getTime(),
-			"h.cr": "abc"
-		});
+		if (window.BOOMR_LOGN_always !== true) {
+			// fake session details so beacons send
+			BOOMR.addVar({
+				"h.key": window.BOOMR_API_key ? window.BOOMR_API_key : "aaaaa-bbbbb-ccccc-ddddd-eeeee",
+				"h.d": window.location.hostname,
+				"h.t": new Date().getTime(),
+				"h.cr": "abc"
+			});
 
-		BOOMR.init(config);
+			BOOMR.init(config);
+		}
 
 		if (config.onBoomerangLoaded) {
 			config.onBoomerangLoaded();

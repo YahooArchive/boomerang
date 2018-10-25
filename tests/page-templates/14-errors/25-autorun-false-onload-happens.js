@@ -52,6 +52,11 @@ describe("e2e/14-errors/25-autorun-false-onload-happens", function() {
 		}
 	});
 
+	it("Should have rt.sl = 1", function() {
+		var b = tf.lastBeacon();
+		assert.equal(b["rt.sl"], 1);
+	});
+
 	it("Should have rt.end", function() {
 		var b = tf.lastBeacon();
 		assert.isDefined(b["rt.end"]);

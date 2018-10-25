@@ -51,7 +51,20 @@ describe("common", function() {
 
 			assert.equal(b.v, BOOMR.version, prefix + "has the boomerang version");
 
-			assert.lengthOf(b.pid, 8, prefix + "has a page ID (pid) with a length equal to 8");
+			assert.equal(b["h.key"], window.BOOMR_API_key, prefix + "has the correct API key (h.key)");
+			assert.isDefined(b["h.d"], prefix + "has the domain (h.d) param");
+
+			assert.isDefined(b["h.t"], prefix + "has the time (h.t) param");
+			tm = parseInt(b["h.t"], 10);
+			assert.operator(tm, ">", now - (60 * 1000), prefix + "time is greater than a minute ago");
+			assert.operator(tm, "<", now, prefix + "time is less than now");
+
+			if (window.BOOMR_LOGN_always !== true) {
+				assert.equal(b["h.cr"], "abc", prefix + "has the correct crumb (h.cr)");
+			}
+			else {
+				assert.isDefined(b["h.cr"], prefix + "has the crumb (h.cr)");
+			}
 
 			if (!t.doNotTestErrorsParam) {
 				assert.isUndefined(b.errors, prefix + "does not have the errors param");

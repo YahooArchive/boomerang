@@ -13,8 +13,11 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="../../vendor/mocha/mocha.css" />
 	<script type="text/javascript">
+	// BOOMR API Key is required for some multi-app versions of Boomerang
+	window.BOOMR_API_key="API_KEY";
+
 	// approx number of lines in the header
-	window.HEADER_LINES = 40;
+	window.HEADER_LINES = 42;
 	</script>
 	<script src="../../vendor/mocha/mocha.js"></script>
 	<script src="../../vendor/assertive-chai/dist/assertive-chai.js"></script>

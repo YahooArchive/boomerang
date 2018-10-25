@@ -339,6 +339,9 @@ BOOMR_check_doc_domain();
 		// Beacon URL
 		beacon_url: "",
 
+		// Forces protocol-relative URLs to HTTPS
+		beacon_url_force_https: true,
+
 		// List of string regular expressions that must match the beacon_url.  If
 		// not set, or the list is empty, all beacon URLs are allowed.
 		beacon_urls_allowed: [],
@@ -932,6 +935,15 @@ BOOMR_check_doc_domain();
 		url: "",
 
 		/**
+		 * (Optional) URL of configuration file
+		 *
+		 * @type {string}
+		 *
+		 * @memberof BOOMR
+		 */
+		config_url: null,
+
+		/**
 		 * Whether or not Boomerang was loaded after the `onload` event.
 		 *
 		 * @type {boolean}
@@ -974,6 +986,60 @@ BOOMR_check_doc_domain();
 			 * @memberof BOOMR.constants
 			 */
 			MAX_GET_LENGTH: 2000
+		},
+
+		/**
+		 * Session data
+		 * @class BOOMR.session
+		 */
+		session: {
+			/**
+			 * Session Domain.
+			 *
+			 * You can disable all cookies by setting site_domain to a falsy value.
+			 *
+			 * @type {string}
+			 *
+			 * @memberof BOOMR.session
+			 */
+			domain: impl.site_domain,
+
+			/**
+			 * Session ID.  This will be randomly generated in the client but may
+			 * be overwritten by the server if not set.
+			 *
+			 * @type {string}
+			 *
+			 * @memberof BOOMR.session
+			 */
+			ID: Math.random().toString(36).replace(/^0\./, ""),
+
+			/**
+			 * Session start time.
+			 *
+			 * @type {TimeStamp}
+			 *
+			 * @memberof BOOMR.session
+			 */
+			start: undefined,
+
+			/**
+			 * Session length (number of pages)
+			 *
+			 * @type {number}
+			 *
+			 * @memberof BOOMR.session
+			 */
+			length: 0,
+
+			/**
+			 * Session enabled (Are session cookies enabled?)
+			 *
+			 * @type {boolean}
+			 *
+			 * @memberof BOOMR.session
+			 */
+			enabled: true
 		},
 
 		/**
@@ -1110,8 +1176,8 @@ BOOMR_check_doc_domain();
 			setCookie: function(name, subcookies, max_age) {
 				var value, nameval, savedval, c, exp;
 
-				if (!name || !impl.site_domain || typeof subcookies === "undefined") {
-					BOOMR.debug("Invalid parameters or site domain: " + name + "/" + subcookies + "/" + impl.site_domain);
+				if (!name || !BOOMR.session.domain || typeof subcookies === "undefined") {
+					BOOMR.debug("Invalid parameters or site domain: " + name + "/" + subcookies + "/" + BOOMR.session.domain);
 
 					BOOMR.addVar("nocookie", 1);
 					return false;
@@ -1121,7 +1187,7 @@ BOOMR_check_doc_domain();
 				nameval = name + "=\"" + value + "\"";
 
 				if (nameval.length < 500) {
-					c = [nameval, "path=/", "domain=" + impl.site_domain];
+					c = [nameval, "path=/", "domain=" + BOOMR.session.domain];
 					if (typeof max_age === "number") {
 						exp = new Date();
 						exp.setTime(exp.getTime() + max_age * 1000);
@@ -1999,6 +2065,7 @@ BOOMR_check_doc_domain();
 		 * @param {string} config.beacon_auth_token Beacon authorization token.
 		 * @param {string} config.beacon_url The URL to beacon results back to.
 		 * If not set, no beacon will be sent.
+		 * @param {boolean} config.beacon_url_force_https Forces protocol-relative Beacon URLs to HTTPS
 		 * @param {string} config.beacon_type `GET`, `POST` or `AUTO`
 		 * @param {string} [config.site_domain] The domain that all cookies should be set on
 		 * Boomerang will try to auto-detect this, but unless your site is of the
@@ -2027,6 +2094,7 @@ BOOMR_check_doc_domain();
 				    "beacon_auth_key",
 				    "beacon_auth_token",
 				    "beacon_url",
+				    "beacon_url_force_https",
 				    "beacon_type",
 				    "site_domain",
 				    "strip_query_string",
@@ -2056,6 +2124,10 @@ BOOMR_check_doc_domain();
 
 			if (config.primary && impl.handlers_attached) {
 				return this;
+			}
+
+			if (config.site_domain !== undefined) {
+				this.session.domain = config.site_domain;
 			}
 
 			// Set autorun if in config right now, as plugins that listen for page_ready
@@ -3201,6 +3273,12 @@ BOOMR_check_doc_domain();
 
 			impl.vars.v = BOOMR.version;
 
+			if (BOOMR.session.enabled) {
+				impl.vars["rt.si"] = BOOMR.session.ID + "-" + Math.round(BOOMR.session.start / 1000).toString(36);
+				impl.vars["rt.ss"] = BOOMR.session.start;
+				impl.vars["rt.sl"] = BOOMR.session.length;
+			}
+
 			if (BOOMR.visibilityState()) {
 				impl.vars["vis.st"] = BOOMR.visibilityState();
 				if (BOOMR.lastVisibilityEvent.visible) {
@@ -3272,6 +3350,12 @@ BOOMR_check_doc_domain();
 				});
 			}
 
+			// Stop at this point if we are rate limited
+			if (BOOMR.session.rate_limited) {
+				BOOMR.debug("Skipping because we're rate limited");
+				return false;
+			}
+
 			// send the beacon data
 			BOOMR.sendBeaconData(varsSent);
 
@@ -3328,6 +3412,11 @@ BOOMR_check_doc_domain();
 			// merge the 3 lists
 			params = urlFirst.concat(this.getVarsOfPriority(data, 0), urlLast);
 			paramsJoined = params.join("&");
+
+			// If beacon_url is protocol relative, make it https only
+			if (impl.beacon_url_force_https && impl.beacon_url.match(/^\/\//)) {
+				impl.beacon_url = "https:" + impl.beacon_url;
+			}
 
 			// if there are already url parameters in the beacon url,
 			// change the first parameter prefix for the boomerang url parameters to &

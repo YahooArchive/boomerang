@@ -116,6 +116,9 @@
 (function(w) {
 	var d, impl,
 	    COOKIE_EXP = 60 * 60 * 24 * 7;
+
+	var SESSION_EXP = 60 * 30;
+
 	/**
 	 * Whether or not the cookie has compressed timestamps
 	 */
@@ -162,6 +165,9 @@
 		// Cookie expiry in seconds (7 days)
 		cookie_exp: COOKIE_EXP,
 
+		// Session expiry in seconds (30 minutes)
+		session_exp: SESSION_EXP,
+
 		// By default, don't beacon if referrers don't match.
 		// If set to false, beacon both referrer values and let the back-end decide.
 		strict_referrer: true,
@@ -175,6 +181,12 @@
 
 		// Response Start time.
 		responseStart: undefined,
+
+		// Total load time for the user session.
+		loadTime: 0,
+
+		// Number of pages in the session that had no load time.
+		oboError: 0,
 
 		// t_start that came off the cookie.
 		t_start: undefined,
@@ -190,6 +202,13 @@
 
 		// Referrer (hash) from the cookie.
 		r: undefined,
+
+		// Beacon server for the current session.
+		// This could get reset at the end of the session.
+		beacon_url: undefined,
+
+		// beacon_url to use when session expires.
+		next_beacon_url: undefined,
 
 		// These timers are added directly as beacon variables.
 		basic_timers: {
@@ -225,6 +244,15 @@
 			// Get the cookie (don't decompress the values)
 			subcookies = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie(this.cookie)) || {};
 
+			// Numeric indices were a bug, we need to clean it up
+			for (k in subcookies) {
+				if (subcookies.hasOwnProperty(k)) {
+					if (!isNaN(parseInt(k, 10))) {
+						delete subcookies[k];
+					}
+				}
+			}
+
 			if (typeof params === "object") {
 				for (k in params) {
 					if (params.hasOwnProperty(k)) {
@@ -240,12 +268,53 @@
 				}
 			}
 
+			// compresion level
+			subcookies.z = COOKIE_COMPRESSED_TIMESTAMPS;
+
+			// domain
+			subcookies.dm = BOOMR.session.domain;
+
+			// session ID
+			subcookies.si = BOOMR.session.ID;
+
+			// session start
+			subcookies.ss = BOOMR.session.start.toString(36);
+
+			// session length
+			subcookies.sl = BOOMR.session.length.toString(36);
+
+			// session expiry
+			if (impl.session_exp !== SESSION_EXP) {
+				subcookies.se = impl.session_exp.toString(36);
+			}
+
+			// rate limited
+			if (BOOMR.session.rate_limited) {
+				subcookies.rl = 1;
+			}
+
+			// total time
+			subcookies.tt = this.loadTime.toString(36);
+
+			// off-by-one
+			if (this.oboError > 0) {
+				subcookies.obo = this.oboError.toString(36);
+			}
+			else {
+				delete subcookies.obo;
+			}
+
 			t_start = BOOMR.now();
 
 			// sub-timer
 			if (timer) {
-				subcookies[timer] = (t_start).toString(36);
+				subcookies[timer] = (t_start - BOOMR.session.start).toString(36);
 				impl.lastActionTime = t_start;
+			}
+
+			// If we got a beacon_url from config, set it into the cookie
+			if (this.beacon_url) {
+				subcookies.bcn = this.beacon_url;
 			}
 
 			BOOMR.debug("Setting cookie (timer=" + timer + ")\n" + BOOMR.utils.objectToString(subcookies), "rt");
@@ -271,6 +340,136 @@
 		},
 
 		/**
+		 * Update in memory session with values from the cookie.
+		 *
+		 * For server-driven Boomerang, many of these values might come through
+		 * a configuration file (config.json), but we need them before config.json comes through,
+		 * or in cases where we're rate limited, or the server is down, config.json may never
+		 * come through, so we hold them in a cookie.
+		 *
+		 * @param subcookies  [optional] object containing cookie keys & values. If not set, will use current cookie value.
+		 * Recognised keys:
+		 * - ss: sesion start
+		 * - si: session ID
+		 * - sl: session length
+		 * - tt: sum of load times across session
+		 * - obo: pages in session that did not have a load time
+		 * - dm: domain to use when setting cookies
+		 * - se: session expiry time
+		 * - bcn: URL that beacons should be sent to
+		 * - rl: rate limited flag. 1 if rate limited
+		 */
+		refreshSession: function(subcookies) {
+			if (!subcookies) {
+				subcookies = BOOMR.plugins.RT.getCookie();
+			}
+
+			if (!subcookies) {
+				return;
+			}
+
+			if (subcookies.ss) {
+				BOOMR.session.start = subcookies.ss;
+			}
+			else {
+				// If the cookie didn't have a good session start time, we'll use the earliest
+				// time that we know about... either when the boomerang loader showed up on page
+				// or when the first bytes of boomerang loaded up.
+				BOOMR.session.start = BOOMR.t_lstart || BOOMR.t_start;
+			}
+
+			if (subcookies.si && subcookies.si.match(/-/)) {
+				BOOMR.session.ID = subcookies.si;
+			}
+
+			if (subcookies.sl) {
+				BOOMR.session.length = subcookies.sl;
+			}
+
+			if (subcookies.tt) {
+				this.loadTime = subcookies.tt;
+			}
+
+			if (subcookies.obo) {
+				this.oboError = subcookies.obo;
+			}
+
+			if (subcookies.dm && !BOOMR.session.domain) {
+				BOOMR.session.domain = subcookies.dm;
+			}
+
+			if (subcookies.se) {
+				impl.session_exp = subcookies.se;
+			}
+
+			if (subcookies.bcn) {
+				this.beacon_url = subcookies.bcn;
+			}
+
+			if (subcookies.rl && subcookies.rl === "1") {
+				BOOMR.session.rate_limited = true;
+			}
+		},
+
+		/**
+		 * Determine if session has expired or not, and if so, reset session values to a new session.
+		 *
+		 * @param t_done  The timestamp right now.  Used to determine if the session is too old
+		 * @param t_start The timestamp when this page was requested (or undefined if unknown).  Used to reset session start time
+		 *
+		 */
+		maybeResetSession: function(t_done, t_start) {
+			BOOMR.debug("Current session meta:\n" + BOOMR.utils.objectToString(BOOMR.session), "rt");
+			BOOMR.debug("Timers: t_start=" + t_start + ", sessionLoad=" + impl.loadTime + ", sessionError=" + impl.oboError + ", lastAction=" + impl.lastActionTime, "rt");
+
+			// determine the average page session length, which is the session length over # of pages
+			var avgSessionLength = 0;
+			if (BOOMR.session.start && BOOMR.session.length) {
+				avgSessionLength = (BOOMR.now() - BOOMR.session.start) / BOOMR.session.length;
+			}
+
+			var sessionExp = impl.session_exp * 1000;
+
+			// if session hasn't started yet, or if it's been more than thirty minutes since the last beacon,
+			// reset the session (note 30 minutes is an industry standard limit on idle time for session expiry)
+
+			// no start time
+			if (!BOOMR.session.start ||
+			    // or we have a better start time
+			    (t_start && BOOMR.session.start > t_start) ||
+			    // or it's been more than session_exp since the last action
+			    t_done - (impl.lastActionTime || BOOMR.t_start) > sessionExp ||
+			    // or the average page session length is longer than the session exp
+			    (avgSessionLength > sessionExp)
+			) {
+				// Now we reset the session
+				BOOMR.session.start = t_start || BOOMR.t_lstart || BOOMR.t_start;
+				BOOMR.session.length = 0;
+				BOOMR.session.rate_limited = false;
+				impl.loadTime = 0;
+				impl.oboError = 0;
+				impl.beacon_url = impl.next_beacon_url;
+				impl.lastActionTime = t_done;
+
+				// Update the cookie with these new values
+				// we also reset the rate limited flag since
+				// new sessions do not inherit the rate limited
+				// state of old sessions
+				impl.updateCookie({
+					"rl": undefined,
+					"sl": BOOMR.session.length,
+					"ss": BOOMR.session.start,
+					"tt": impl.loadTime,
+					"obo": undefined, // since it's 0
+					"bcn": impl.beacon_url
+				});
+			}
+
+			BOOMR.debug("New session meta:\n" + BOOMR.utils.objectToString(BOOMR.session), "rt");
+			BOOMR.debug("Timers: t_start=" + t_start + ", sessionLoad=" + impl.loadTime + ", sessionError=" + impl.oboError, "rt");
+		},
+
+		/**
 		 * Read initial values from cookie and clear out cookie values it cares about after reading.
 		 * This makes sure that other pages (eg: loaded in new tabs) do not get an invalid cookie time.
 		 * This method should only be called from init, and may be called more than once.
@@ -286,6 +485,9 @@
 			var urlHash, docReferrerHash, subcookies;
 			subcookies = BOOMR.plugins.RT.getCookie();
 
+			if (!this.cookie) {
+				BOOMR.session.enabled = false;
+			}
 			if (!subcookies) {
 				return;
 			}
@@ -332,6 +534,14 @@
 				}
 			}
 
+			// regardless of whether the start time was usable or not, it's the last action that
+			// we measured, so use that for the session
+			if (subcookies.s) {
+				this.lastActionTime = subcookies.s;
+			}
+
+			this.refreshSession(subcookies);
+
 			// Now that we've pulled out the timers, we'll clear them so they don't pollute future calls
 			this.updateCookie({
 				// timers
@@ -351,6 +561,23 @@
 				// deprecated
 				sh: undefined  // session history
 			});
+
+			this.maybeResetSession(BOOMR.now());
+		},
+
+		/**
+		 * Increment session length, and either session.obo or session.loadTime whichever is appropriate for this page
+		 */
+		incrementSessionDetails: function() {
+			BOOMR.debug("Incrementing Session Details... ", "RT");
+			BOOMR.session.length++;
+
+			if (isNaN(impl.timers.t_done.delta)) {
+				impl.oboError++;
+			}
+			else {
+				impl.loadTime += impl.timers.t_done.delta;
+			}
 		},
 
 		/**
@@ -394,6 +621,9 @@
 				    typeof window.performance.getEntriesByName === "function") {
 					urls = { "rt.bmr": BOOMR.url };
 
+					if (BOOMR.config_url) {
+						urls["rt.cnf"] = BOOMR.config_url;
+					}
 
 					for (url in urls) {
 						if (urls.hasOwnProperty(url) && urls[url]) {
@@ -827,6 +1057,11 @@
 			if (etarget && etarget.nodeName && etarget.nodeName.toUpperCase() === element) {
 				BOOMR.debug("passing through", "rt");
 
+				// we might need to reset the session first, as updateCookie()
+				// below sets the lastActionTime
+				this.refreshSession();
+				this.maybeResetSession(BOOMR.now());
+
 				// user event, they may be going to another page
 				// if this page is being opened in a different tab, then
 				// our unload handler won't fire, so we need to set our
@@ -963,6 +1198,19 @@
 
 			if (config && typeof config.autorun !== "undefined") {
 				impl.autorun = config.autorun;
+			}
+
+			// If we received a beacon URL from the server, we'll use it, unless of course
+			// we already had a beacon URL, in which case we'll hold on to it until our session
+			// expires, and then use it.
+			// It's possible that a beacon collector dies while a session is active, and in that
+			// case we might end up sending beacons to a blackhole until the next config.js
+			// request tells us to force the new beacon url
+			if (config && config.beacon_url) {
+				if (!impl.beacon_url || config.force_beacon_url) {
+					impl.beacon_url = config.beacon_url;
+				}
+				impl.next_beacon_url = config.beacon_url;
 			}
 
 			// A beacon may be fired automatically on page load or if the page dev fires
@@ -1215,6 +1463,10 @@
 
 			t_start = impl.determineTStart(ename, edata);
 
+			impl.refreshSession();
+
+			impl.maybeResetSession(t_done, t_start);
+
 			// If the dev has already called endTimer, then this call will do nothing
 			// else, it will stop the page load timer
 			this.endTimer("t_done", t_done);
@@ -1232,7 +1484,8 @@
 			BOOMR.removeVar(
 				"t_done", "t_page", "t_resp", "t_postrender", "t_prerender", "t_load", "t_other",
 				"rt.tstart", "rt.nstart", "rt.cstart", "rt.bstart", "rt.end", "rt.subres",
-				"http.errno", "http.method", "http.type", "xhr.sync", "fetch.bnu"
+				"http.errno", "http.method", "http.type", "xhr.sync", "fetch.bnu",
+				"rt.ss", "rt.sl", "rt.tt", "rt.lt"
 			);
 
 			impl.setSupportingTimestamps(t_start);
@@ -1291,6 +1544,25 @@
 				BOOMR.addVar("rt.subres", 1);
 				impl.addedVars.push("rt.subres");
 			}
+
+			// we're in onload
+			if (ename === "load" || ename === "visible" ||
+			    // xhr beacon and this is not a subresource
+			    (ename === "xhr" && !subresource) ||
+			    // unload fired before onload
+			    (ename === "unload" && !impl.onloadfired && impl.autorun) && !impl.crossdomain_sending) {
+				impl.incrementSessionDetails();
+
+				// save a last-loaded timestamp in the cookie
+				impl.updateCookie(null, "ld");
+			}
+
+			BOOMR.addVar({
+				"rt.tt": impl.loadTime,
+				"rt.obo": impl.oboError
+			});
+
+			impl.addedVars.push("rt.tt", "rt.obo");
 
 			impl.updateCookie();
 
@@ -1398,6 +1670,10 @@
 			}
 
 			return subcookies;
+		},
+
+		incrementSessionDetails: function() {
+			impl.incrementSessionDetails();
 		},
 
 		/**

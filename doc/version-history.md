@@ -3,6 +3,7 @@
 ## 1.621.0
 ### New Features:
 
+* Session tracking via cookies
 * Issue 890: Errors: Support Reporting API warnings
 * Issue 840: Errors: Monitor Unhandled PromiseRejectionEvents
 
