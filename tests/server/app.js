@@ -101,6 +101,11 @@ app.post("/json", require("./route-json"));
 app.get("/drop", dropRequest);
 app.post("/drop", dropRequest);
 
+// load in any additional routes
+if (fs.existsSync("./routes.js")) {
+	require("./routes")(app);
+}
+
 // for every GET, look for a file with the same name appended with ".headers"
 // if found, parse the headers and write them on the response
 // whether found or not, let the req/res pass through with next()

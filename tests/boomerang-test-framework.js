@@ -240,7 +240,8 @@
 
 		t.configureTestEnvironment();
 
-		if (window.BOOMR_LOGN_always !== true) {
+		// Initialize if waiting for LOGN plugin or if the plugin doesn't exist
+		if (window.BOOMR_LOGN_always !== true || !BOOMR.plugins.LOGN) {
 			// fake session details so beacons send
 			BOOMR.addVar({
 				"h.key": window.BOOMR_API_key ? window.BOOMR_API_key : "aaaaa-bbbbb-ccccc-ddddd-eeeee",
