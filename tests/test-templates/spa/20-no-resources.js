@@ -40,20 +40,10 @@ BOOMR_test.templates.SPA["20-no-resources"] = function() {
 		assert.isTrue(b.u.indexOf("/empty") !== -1);
 	});
 
-	it("Should have sent the second beacon with a timestamp of less than 100 milliseconds (if MutationObserver is supported)", function() {
+	it("Should have sent the second beacon with a timestamp of 1ms (if MutationObserver is supported)", function() {
 		if (t.isMutationObserverSupported()) {
 			var b = tf.beacons[1];
-			assert.operator(b.t_done, "<=", 100);
-		}
-		else {
-			return this.skip();
-		}
-	});
-
-	it("Should have sent the second beacon with a timestamp of at least 1 millisecond (if MutationObserver is not supported)", function() {
-		if (!t.isMutationObserverSupported()) {
-			var b = tf.beacons[1];
-			assert.operator(b.t_done, ">=", 0);
+			assert.equal(b.t_done, 1);
 		}
 		else {
 			return this.skip();

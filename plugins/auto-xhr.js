@@ -740,10 +740,10 @@
 				self.lastSpaLocation = ev.resource.url;
 
 				if (!ev.forced) {
-					// if this was a SPA nav that triggered no additional resources, substract the
-					// SPA_TIMEOUT from now to determine the end time
-					if (ev.total_nodes === 0) {
-						ev.resource.timing.loadEventEnd = now - impl.spaIdleTimeout;
+					// if this was a SPA soft nav that triggered no additional resources, call it
+					// a 1ms duration
+					if (ev.type === "spa" && ev.total_nodes === 0) {
+						ev.resource.timing.loadEventEnd = ev.resource.timing.requestStart + 1;
 					}
 
 					// if the event wasn't forced then the SPA hard nav should have the page's
@@ -1010,7 +1010,10 @@
 				if (ev.type === "click" && (ev.total_nodes === 0 || !ev.resource.url)) {
 					this.watch--;
 					this.pending_events[index] = undefined;
+
+					return;
 				}
+
 				// send event if there are no outstanding downloads
 				this.sendEvent(index);
 			}
