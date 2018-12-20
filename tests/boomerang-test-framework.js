@@ -98,6 +98,8 @@
 	var doNotTestErrorsParam = false;
 	var doNotTestSpaAbort = false;
 
+	var actions = [];
+
 	// test framework
 	var assert;
 
@@ -1494,6 +1496,132 @@
 	t.siteDomain = function() {
 		return window.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, "$1").toLowerCase();
 	};
+
+	/**
+	 * Sets the list of actions (callback functions). Actions are triggered by `queueAction()`
+	 *
+	 * @param {function[]} _actions - List of callback action functions
+	 */
+	t.setActions = function(_actions) {
+		actions = _actions;
+	};
+
+	/**
+	 * Queues the next action in the list.
+	 * If `node` is given then wait for the node's onload else call the action immediately
+	 *
+	 * @param {HTMLElement} [node]
+	 */
+	t.queueAction = function(node) {
+		var action = actions.shift();
+		if (!action) {
+			return;
+		}
+
+		if (node) {
+			// if we have a node, wait for it's onload event
+			var listener = function() {
+				node.removeEventListener("load", listener);
+				action();
+			};
+			node.addEventListener("load", listener);
+		}
+		else {
+			action();
+		}
+	};
+
+	/**
+	 * Helper function to fetch resources to test AutoXHR/SPA functionality.
+	 * Request waterfall:
+	 *     xxxxx (tracked xhr)
+	 *          x (sub-img1)
+	 *     xxxxxxxxxx (un-tracked xhr)
+	 *               x (sub-img2)
+	 *     x (main-img)
+	 *
+	 * @param {boolean} useFetch - Use Fetch API else use XHR
+	 */
+	t.resources = (function() {
+		var imgs = ["resources-main-img", "resources-sub-img1", "resources-sub-img"],
+		    resourcesCallCount = 0;
+
+		function getURI(id, delay) {
+			return "/delay?id=" + id + "-" + resourcesCallCount + "&delay=" + delay + "&file=/assets/img.jpg&rnd=" + Math.random();
+		}
+
+		return function(useFetch) {
+			if (resourcesCallCount === 0) {
+				// setup imgs used for MO events
+				for (var i = 0; i < imgs.length; i++) {
+					var img = document.getElementById(imgs[i]);
+					if (!img) {
+						img = new Image();
+						img.id = imgs[i];
+						img.src = "";
+						img.style = "width:100px;height:100px;";
+						document.body.appendChild(img);
+					}
+				}
+			}
+			resourcesCallCount++;
+
+			if (useFetch) {
+				// at least 1s longer than main-image so that if fetch instrumentation is off or bugs out then the MO is later than the spa timeout
+				var f = fetch(getURI("fetch-track", 1500));
+				f.then(function(response) {
+					response.text();
+					var img1 = document.getElementById(imgs[1]);
+					img1.src = "";
+					img1.src = getURI(imgs[1], 200);
+				});
+
+				// slow fetch request that isn't tracked (ignore rule)
+				var f2 = fetch(getURI("fetch-ignore", 3000));
+				f2.then(function(response) {
+					response.text();
+					var img2 = document.getElementById(imgs[2]);
+					img2.src = "";
+					img2.src = getURI(imgs[2], 200);
+
+					// img2 will be the last resource loaded. Queue the next action
+					t.queueAction(img2);
+				});
+			}
+			else {
+				var xhr = new XMLHttpRequest();
+				// at least 1s longer than main-image so that if xhr instrumentation is off or bugs out then the MO is later than the spa timeout
+				xhr.open("GET", getURI("xhr-track", 1500));
+				xhr.send(null);
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState === 4 && xhr.status === 200) {
+						var img1 = document.getElementById(imgs[1]);
+						img1.src = "";
+						img1.src = getURI(imgs[1], 200);
+					}
+				};
+
+				// slow xhr request that isn't tracked (ignore rule)
+				var xhr2 = new XMLHttpRequest();
+				xhr2.open("GET", getURI("xhr-ignore", 3000));
+				xhr2.send(null);
+				xhr2.onreadystatechange = function() {
+					if (xhr2.readyState === 4 && xhr2.status === 200) {
+						var img2 = document.getElementById(imgs[2]);
+						img2.src = "";
+						img2.src = getURI(imgs[2], 200);
+
+						// img2 will be the last resource loaded. Queue the next action
+						t.queueAction(img2);
+					}
+				};
+			}
+
+			var img = document.getElementById(imgs[0]);
+			img.src = "";  // visual feedback when running tests manually
+			img.src = getURI(imgs[0], 200);
+		};
+	})();
 
 	window.BOOMR_test = t;
 
