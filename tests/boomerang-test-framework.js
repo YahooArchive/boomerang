@@ -1392,6 +1392,44 @@
 		};
 	};
 
+	/*
+	 * Finds Marks from Boomerang with the specified name
+	 *
+	 * @param {string} name Mark name
+	 */
+	t.findBoomerangMarks = function(name) {
+		if (!t.isUserTimingSupported()) {
+			return [];
+		}
+
+		return BOOMR.utils.arrayFilter(performance.getEntriesByType("mark"), function(m) {
+			return m.name === "boomr:" + name;
+		});
+	};
+
+	/**
+	 * Finds Marks from Boomerang between the specified time frame
+	 *
+	 * @param {string} name Mark name
+	 * @param {number} start Start time
+	 * @param {number} end End tiem
+	 */
+	t.findBoomerangMarksBetween = function(name, start, end) {
+		if (!t.isUserTimingSupported()) {
+			return [];
+		}
+
+		// cast a marks to times if needed
+		start = (start && start.startTime) || start;
+		end = (end && end.startTime) || end;
+
+		return BOOMR.utils.arrayFilter(performance.getEntriesByType("mark"), function(m) {
+			return m.name === "boomr:" + name &&
+				m.startTime >= start &&
+				m.startTime <= end;
+		});
+	};
+
 	window.BOOMR_test = t;
 
 	// force LOGN plugin not to run. Individual tests will override this if needed.

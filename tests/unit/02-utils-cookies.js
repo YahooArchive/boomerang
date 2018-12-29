@@ -62,7 +62,7 @@ describe("BOOMR.utils cookies", function() {
 			assert.isNull(BOOMR.utils.getCookie(null));
 		});
 
-		it("Should return undefined when calling with non existing cookie", function() {
+		it("Should return false when calling with non existing cookie", function() {
 			assert.isUndefined(BOOMR.utils.getCookie("some-non-existing-cooke"));
 		});
 	});

@@ -1078,6 +1078,16 @@ BOOMR_check_doc_domain();
 		 */
 		beaconInQueue: false,
 
+		/*
+		 * Cache of cookies set
+		 */
+		cookies: {},
+
+		/**
+		 * Whether or not we've tested cookie setting
+		 */
+		testedCookies: false,
+
 		/**
 		 * Constants visible to the world
 		 * @class BOOMR.constants
@@ -1248,15 +1258,17 @@ BOOMR_check_doc_domain();
 			},
 
 			/**
-			 * Gets the value of the cookie identified by `name`.
+			 * Gets the cached value of the cookie identified by `name`.
 			 *
 			 * @param {string} name Cookie name
 			 *
-			 * @returns {string|null} Cookie value, if set.
+			 * @returns {string|undefined} Cookie value, if set.
 			 *
 			 * @memberof BOOMR.utils
 			 */
 			getCookie: function(name) {
+				var cookieVal;
+
 				if (!name) {
 					return null;
 				}
@@ -1265,14 +1277,52 @@ BOOMR_check_doc_domain();
 				BOOMR.utils.mark("get_cookie");
 				/* END_DEBUG */
 
+				if (typeof BOOMR.cookies[name] !== "undefined") {
+					// a cached value of false indicates that the value doesn't exist, if so,
+					// return undefined per the API
+					return BOOMR.cookies[name] === false ? undefined : BOOMR.cookies[name];
+				}
+
+				// unknown value
+				cookieVal = this.getRawCookie(name);
+				if (typeof cookieVal === "undefined") {
+					// set to false to indicate we've attempted to get this cookie
+					BOOMR.cookies[name] = false;
+
+					// but return undefined per the API
+					return undefined;
+				}
+
+				BOOMR.cookies[name] = cookieVal;
+
+				return BOOMR.cookies[name];
+			},
+
+			/**
+			 * Gets the value of the cookie identified by `name`.
+			 *
+			 * @param {string} name Cookie name
+			 *
+			 * @returns {string|null} Cookie value, if set.
+			 *
+			 * @memberof BOOMR.utils
+			 */
+			getRawCookie: function(name) {
+				if (!name) {
+					return null;
+				}
+
+				/* BEGIN_DEBUG */
+				BOOMR.utils.mark("get_raw_cookie");
+				/* END_DEBUG */
+
 				name = " " + name + "=";
 
 				var i, cookies;
 				cookies = " " + d.cookie + ";";
 				if ((i = cookies.indexOf(name)) >= 0) {
 					i += name.length;
-					cookies = cookies.substring(i, cookies.indexOf(";", i)).replace(/^"/, "").replace(/"$/, "");
-					return cookies;
+					return cookies.substring(i, cookies.indexOf(";", i)).replace(/^"/, "").replace(/"$/, "");
 				}
 			},
 
@@ -1308,6 +1358,12 @@ BOOMR_check_doc_domain();
 				/* END_DEBUG */
 
 				value = this.objectToString(subcookies, "&");
+
+				if (value === BOOMR.cookies[name]) {
+					// no change
+					return true;
+				}
+
 				nameval = name + "=\"" + value + "\"";
 
 				if (nameval.length < 500) {
@@ -1319,12 +1375,42 @@ BOOMR_check_doc_domain();
 						c.push("expires=" + exp);
 					}
 
+					/* BEGIN_DEBUG */
+					BOOMR.utils.mark("set_cookie_real");
+					/* END_DEBUG */
+
+					// set the cookie
 					d.cookie = c.join("; ");
+
+					// we only need to test setting the cookie once
+					if (BOOMR.testedCookies) {
+						// only cache this cookie value if the expiry is in the future
+						if (typeof max_age !== "number" || max_age > 0) {
+							BOOMR.cookies[name] = value;
+						}
+						else {
+							// the cookie is going to expire right away, don't cache it
+							BOOMR.cookies[name] = undefined;
+						}
+
+						return true;
+					}
+
+					// unset the cached cookie value, in case the set doesn't work
+					BOOMR.cookies[name] = undefined;
+
 					// confirm cookie was set (could be blocked by user's settings, etc.)
-					savedval = this.getCookie(name);
+					savedval = this.getRawCookie(name);
+
 					// the saved cookie should be the same or undefined in the case of removeCookie
 					if (value === savedval ||
 					    (typeof savedval === "undefined" && typeof max_age === "number" && max_age <= 0)) {
+						// re-set the cached value
+						BOOMR.cookies[name] = value;
+
+						// note we've saved successfully
+						BOOMR.testedCookies = true;
+
 						return true;
 					}
 					BOOMR.warn("Saved cookie value doesn't match what we tried to set:\n" + value + "\n" + savedval);
@@ -2384,7 +2470,7 @@ BOOMR_check_doc_domain();
 			    ];
 
 			/* BEGIN_DEBUG */
-			BOOMR.utils.mark("init");
+			BOOMR.utils.mark("init:start");
 			/* END_DEBUG */
 
 			BOOMR_check_doc_domain();
@@ -2518,6 +2604,14 @@ BOOMR_check_doc_domain();
 
 			// only attach handlers once
 			if (impl.handlers_attached) {
+				/* BEGIN_DEBUG */
+				BOOMR.utils.mark("init:end");
+				BOOMR.utils.measure(
+					"init",
+					"init:start",
+					"init:end");
+				/* END_DEBUG */
+
 				return this;
 			}
 
@@ -2599,6 +2693,15 @@ BOOMR_check_doc_domain();
 			}());
 
 			impl.handlers_attached = true;
+
+			/* BEGIN_DEBUG */
+			BOOMR.utils.mark("init:end");
+			BOOMR.utils.measure(
+				"init",
+				"init:start",
+				"init:end");
+			/* END_DEBUG */
+
 			return this;
 		},
 

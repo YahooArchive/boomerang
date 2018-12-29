@@ -224,6 +224,9 @@
 		// Vars that were added to the beacon that we can remove after beaconing
 		addedVars: [],
 
+		// navigationStart source: navigation, csi, gtb
+		navigationStartSource: "",
+
 		/**
 		 * Merge new cookie `params` onto current cookie, and set `timer` param on cookie to current timestamp
 		 *
@@ -375,7 +378,7 @@
 				// If the cookie didn't have a good session start time, we'll use the earliest
 				// time that we know about... either when the boomerang loader showed up on page
 				// or when the first bytes of boomerang loaded up.
-				BOOMR.session.start = BOOMR.t_lstart || BOOMR.t_start;
+				BOOMR.session.start = BOOMR.plugins.RT.navigationStart() || BOOMR.t_lstart || BOOMR.t_start;
 			}
 
 			if (subcookies.si && subcookies.si.match(/-/)) {
@@ -443,7 +446,7 @@
 			    (avgSessionLength > sessionExp)
 			) {
 				// Now we reset the session
-				BOOMR.session.start = t_start || BOOMR.t_lstart || BOOMR.t_start;
+				BOOMR.session.start = t_start || BOOMR.plugins.RT.navigationStart() || BOOMR.t_lstart || BOOMR.t_start;
 				BOOMR.session.length = 0;
 				BOOMR.session.rate_limited = false;
 				impl.loadTime = 0;
@@ -684,9 +687,9 @@
 			// http://code.google.com/chrome/whitepapers/prerender.html
 
 			BOOMR.plugins.RT.startTimer("t_load", this.navigationStart);
-			BOOMR.plugins.RT.endTimer("t_load");					// this will measure actual onload time for a prerendered page
+			BOOMR.plugins.RT.endTimer("t_load"); // this will measure actual onload time for a prerendered page
 			BOOMR.plugins.RT.startTimer("t_prerender", this.navigationStart);
-			BOOMR.plugins.RT.startTimer("t_postrender");				// time from prerender to visible or hidden
+			BOOMR.plugins.RT.startTimer("t_postrender"); // time from prerender to visible or hidden
 
 			return true;
 		},
@@ -697,7 +700,7 @@
 		 * It sets the beacon parameter `rt.start` to the source of the timer
 		 */
 		initFromNavTiming: function() {
-			var ti, p, source;
+			var ti, p;
 
 			if (this.navigationStart) {
 				return;
@@ -715,6 +718,8 @@
 
 			if (p && p.timing) {
 				ti = p.timing;
+
+				this.navigationStartSource = "navigation";
 			}
 			else if (w.chrome && w.chrome.csi && w.chrome.csi().startE) {
 				// Older versions of chrome also have a timing API that's sort of documented here:
@@ -724,7 +729,8 @@
 				ti = {
 					navigationStart: w.chrome.csi().startE
 				};
-				source = "csi";
+
+				this.navigationStartSource = "csi";
 			}
 			else if (w.gtbExternal && w.gtbExternal.startE()) {
 				// The Google Toolbar exposes navigation start time similar to old versions of chrome
@@ -732,7 +738,8 @@
 				ti = {
 					navigationStart: w.gtbExternal.startE()
 				};
-				source = "gtb";
+
+				this.navigationStartSource = "gtb";
 			}
 
 			if (ti) {
@@ -741,7 +748,6 @@
 				// on it don't get sent back.  Never use requestStart since if
 				// the first request fails and the browser retries, it will contain
 				// the value for the new request.
-				BOOMR.addVar("rt.start", source || "navigation");
 				this.navigationStart = ti.navigationStart || ti.fetchStart || undefined;
 				this.fetchStart = ti.fetchStart || undefined;
 				this.responseStart = ti.responseStart || undefined;
@@ -817,6 +823,9 @@
 			if (ename !== "xhr") {
 				impl.initFromCookie();
 				impl.initFromNavTiming();
+
+				// add rt.start for the source
+				BOOMR.addVar("rt.start", this.navigationStartSource);
 
 				if (impl.checkPreRender()) {
 					return false;
@@ -1714,8 +1723,21 @@
 			if (!impl.navigationStart) {
 				impl.initFromNavTiming();
 			}
+
 			return impl.navigationStart;
 		}
+
+		/* BEGIN_DEBUG */,
+		/**
+		 * Resets cached timings (for testing)
+		 */
+		resetTimings: function() {
+			impl.navigationStart = undefined;
+			impl.responseStart = undefined;
+			impl.loadTime = 0;
+			impl.cached_t_start = undefined;
+		}
+		/* END_DEBUG */
 	};
 
 }(window));

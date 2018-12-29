@@ -21,6 +21,9 @@ BOOMR.getPerformance = function() {
 	return data;
 };
 
+// reset timings so the above ones take effect
+BOOMR.plugins.RT.resetTimings();
+
 BOOMR_test.init({
 	testAfterOnBeacon: true
 });
