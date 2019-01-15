@@ -162,11 +162,11 @@ describe("e2e/07-autoxhr/04-xhr-use-rt", function() {
 			}
 		});
 
-		it("Should have the beacon contain t_page of at least 1000 ms (if ResourceTiming is enabled)", function() {
+		it("Should have the beacon contain t_page of at least 1000 ms (if MutationObserver is supported)", function() {
 			if (!t.isFetchApiSupported()) {
 				return this.skip();
 			}
-			if (t.isResourceTimingSupported()) {
+			if (t.isMutationObserverSupported()) {
 				// 3s in Chrome 67, 1s in other browsers
 				assert.operator(tf.beacons[i].t_page, ">=", 1000, "t_page is at least 1s");
 			}

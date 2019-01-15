@@ -13,7 +13,7 @@ BOOMR_test.init({
 
 			// first, start an XHR to trigger AutoXHR
 			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
+			xhr.open("GET", "/delay?delay=500&file=/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
 			xhr.onreadystatechange = function() {
 				if (xhr.readyState !== 4) {
 					return;

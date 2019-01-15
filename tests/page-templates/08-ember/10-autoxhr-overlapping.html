@@ -21,14 +21,14 @@ window.imgs = [-1];
 <script>
 /*eslint-disable no-unused-vars*/
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
+	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
 	afterFirstBeacon: function() {
 		if (!BOOMR.plugins.AutoXHR) {
 			return;
 		}
 
 		//
-		// Overlap the two XHRs, which should create three beacons
+		// Overlap the two XHRs, which should create a single xhr beacon
 		//
 		setTimeout(function(){
 			var xhr = new XMLHttpRequest();

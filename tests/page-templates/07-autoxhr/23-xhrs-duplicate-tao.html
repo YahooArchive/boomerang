@@ -1,11 +1,14 @@
 <%= header %>
+<script>
+window.xhrTimes = [3000, 0, 1000, 2000];
+</script>
 <script src="/test-templates/autoxhr/00-xhrs-duplicate.js" type="text/javascript"></script>
 <script src="23-xhrs-duplicate-tao.js" type="text/javascript"></script>
 <%= boomerangScript %>
 <script>
 BOOMR_test.init({
 	"instrument_xhr": true,
-	testAfterOnBeacon: (BOOMR.plugins.AutoXHR && BOOMR_test.isMutationObserverSupported()) ? 5 : 1,
+	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 5 : 1,
 	AutoXHR: {
 		alwaysSendXhr: true
 	},
@@ -16,10 +19,18 @@ BOOMR_test.init({
 			}
 
 			// request waterfall, requests overlap (last 3 are same url/query):
-			// ************* (~0 ms)
-			//   ********* (~2s)
-			//     ***** (~1s)
-			//       * (~0s)
+			// ************* (xhr0 ~3s)
+			//                 ********* (xhr1 ~2s)
+			//                   ***** (xhr2 ~1s)
+			//                    * (xhr3 ~0s)
+
+			// xhr0 starts, completes and sends a beacon.
+			// xhr1 starts and adds a xhr pending event.
+			// xhr2 starts.
+			// xhr3 starts.
+			// xhr3 completes and sends a beacon (only sent because alwaysSendXhr:true).
+			// xhr2 completes and sends a beacon (only sent because alwaysSendXhr:true).
+			// xhr1 completes and sends a beacon.
 
 			// use secondary hostname to simulate 3rd party resource
 			var urlPrefix = "//<%= secondaryServer %>:" + window.location.port;
@@ -29,7 +40,7 @@ BOOMR_test.init({
 			xhr.open("GET", urlPrefix + "/delay?delay=3000&file=build/boomerang-latest-debug.js&TAO=1");
 			xhr.send(null);
 
-			setTimeout(function() {
+			BOOMR.subscribe("beacon", function() {
 				// send 3 XHRs with the same URL, increasing response time for each request
 				var timeout = 0;
 				for (var i = 0; i < 3; i++) {
@@ -43,7 +54,7 @@ BOOMR_test.init({
 
 					timeout += 500;
 				}
-			}, 100);
+			}, null, null, true);
 		}
 });
 </script>

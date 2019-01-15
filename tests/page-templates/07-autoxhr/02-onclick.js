@@ -40,19 +40,20 @@ describe("e2e/07-autoxhr/02-onclick", function() {
 		});
 	});
 
-	describe("Beacon 2", function() {
-		it("Should have the second beacon URL of the image as 'u'", function() {
+	describe("Beacon 2 (click)", function() {
+		var i = 1;
+		it("Should have the second beacon URL of the image as 'u' (if MutationObserver is supported)", function() {
 			if (BOOMR.plugins.AutoXHR && t.isMutationObserverSupported()) {
-				assert.include(tf.beacons[1].u, "img.jpg");
+				assert.include(tf.beacons[i].u, "img.jpg");
 			}
 			else {
 				this.skip();
 			}
 		});
 
-		it("Should have the second beacon http.initiator = 'click'", function() {
+		it("Should have the second beacon http.initiator = 'click' (if MutationObserver is supported)", function() {
 			if (BOOMR.plugins.AutoXHR && t.isMutationObserverSupported()) {
-				assert.include(tf.beacons[1]["http.initiator"], "click");
+				assert.include(tf.beacons[i]["http.initiator"], "click");
 			}
 			else {
 				this.skip();

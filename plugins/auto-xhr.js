@@ -16,7 +16,7 @@
  * - `XMLHttpRequest` requests
  * - `Fetch` API requests
  * - Clicks
- * - `window.History` changes
+ * - `window.History` changes indirectly through SPA plugins (History, Angular, etc.)
  *
  * When any of these events occur, `AutoXHR` will start monitoring the page for
  * other events, DOM manipulations and other networking activity.
@@ -113,8 +113,7 @@
  *
  * ## Beacon Parameters
  *
- * This plugin doesn't add any specific parameters to the beacon.  However, XHR
- * beacons have different parameters in general than Page Load beacons.
+ * XHR beacons have different parameters in general than Page Load beacons.
  *
  * - Many of the timestamps will differ, see {@link BOOMR.plugins.RT}
  * - All of the `nt_*` parameters are ResourceTiming, see {@link BOOMR.plugins.NavigationTiming}
@@ -122,104 +121,142 @@
  * - `pgu`: The URL of the page the resource was fetched on
  * - `http.initiator`: `xhr` for both XHR and Fetch requests
  *
+ * ## Interesting Nodes
+ *
+ * MutationObserver is used to detect "interesting" nodes. Interesting nodes are
+ * new IMG/IMAGE/IFRAME/LINK (rel=stylesheet) nodes or existing nodes that are
+ * changing their source URL.
+ * We consider the following "uninteresting" nodes:
+ *   - Nodes that have either a width or height <= 1px.
+ *   - Nodes that have display:none.
+ *   - Nodes that have visibility:hidden.
+ *   - Nodes that update their source URL to the same value.
+ *   - Nodes that have a blank source URL.
+ *   - Nodes that have a source URL starting with `about:`, `javascript:` or `data:`.
+ *   - SCRIPT nodes because there is no consistent way to detect when they have loaded.
+ *   - Existing IFRAME nodes that are changing their source URL because is no consistent
+ *     way to detect when they have loaded.
+ *   - Nodes that have a source URL that matches a AutoXHR exclude filter rule.
+ *
  * ## Algorithm
  *
  * Here's how the general AutoXHR algorithm works:
  *
- * - `0.0` History changed
+ * - `0.0` SPA hard route change (page navigation)
  *
- *   - Pass new URL and timestamp of change on to most recent event (which might
- *     not have happened yet)
+ *   - Monitor for XHR resource requests and interesting Mutation resource requests
+ *     for 1s or at least until page onload. We extend our 1s timeout after all
+ *     interesting resource requests have completed.
  *
- * - `0.1` History changes as a result of a pushState or replaceState
+ * - `0.1` SPA soft route change from a synchronous call (eg. History changes as a
+ *         result of a pushState or replaceState call)
  *
  *   - In this case we get the new URL when the developer calls pushState or
- *     replaceState
- *   - we do not know if they plan to make an XHR call or use a dynamic script
- *     node, or do nothing interesting (eg: just make a div visible/invisible)
- *   - we also do not know if they will do this before or after they've called
- *     pushState/replaceState
- *   - so our best bet is to check if either an XHR event or an interesting
- *     Mutation event happened in the last 50ms, and if not, then hold on to
- *     this state for 50ms to see if an interesting event will happen.
+ *     replaceState.
+ *   - We create a pending event with the start time and the new URL.
+ *   - We do not know if they plan to make an XHR call or use a dynamic script
+ *     node, or do nothing interesting (eg: just make a div visible/invisible).
+ *   - We also do not know if they will do this before or after they've called
+ *     pushState/replaceState.
+ *   - Our best bet is to monitor if either a XHR resource requests or interesting
+ *     Mutation resource requests will happen in the next 1s.
+ *   - When interesting resources are detected, we wait until they complete.
+ *   - We restart our 1s timeout after all interesting resources have completed.
+  *  - If something uninteresting happens, we set the timeout for 1 second if
+ *     it wasn't already started.
+ *       - We'll only do this once per event since we don't want to continuously
+ *         extend the timeout with each uninteresting event.
+ *   - If nothing happens during the additional timeout, we stop watching and fire the
+ *     event. The event end time will be end time of the last tracked resource.
+ *   - If nothing interesting was detected during the first timeout and the URL has not
+ *     changed then we drop the event.
  *
- * - `0.2` History changes as a result of the user hitting Back/Forward and we
- *   get a window.popstate event
+ * - `0.2` SPA soft route change from an asynchronous call (eg. History changes as a
+ *         result of the user hitting Back/Forward and we get a window.popstate event)
+ *
  *   - In this case we get the new URL from location.href when our event listener
- *     runs
- *   - we do not know if this event change will result in some interesting network
- *     activity or not
- *   - we do not know if the developer's event listener has already run before
- *     ours or if it will run in the future
- *     or even if they do have an event listener
- *   - so our best bet is the same as 0.1 above
+ *     runs.
+ *   - We do not know if this event change will result in some interesting network
+ *     activity or not.
+ *   - We do not know if the developer's event listener has already run before
+ *     ours or if it will run in the future or even if they do have an event listener.
+ *   - Our best bet is the same as 0.1 above.
  *
- * - `1` Click initiated
+ * - `1` Click initiated (Only available when no SPA plugins are enabled)
  *
- *   - User clicks on something
- *   - We create a resource with the start time and no URL
- *   - We turn on DOM observer, and wait up to 50 milliseconds for something
- *     - If nothing happens after the timeout, we stop watching and clear the
- *       resource without firing the event
- *     - If a history event happened recently/will happen shortly, use the URL
- *       as the resource.url
- *     - Else if something uninteresting happens, we set the timeout for 1
- *       second if it wasn't already started
- *       - We don't want to continuously extend the timeout with each uninteresting
- *         event
+ *   - User clicks on something.
+ *   - We create a pending event with the start time and no URL.
+ *   - We turn on DOM observer, and wait up to 50 milliseconds for activity.
+ *     - If nothing happens during the first timeout, we stop watching and clear the
+ *       event without firing it.
+ *     - Else if something uninteresting happens, we set the timeout for 1s
+ *       if it wasn't already started.
+ *       - We'll only do this once per event since we don't want to continuously
+ *         extend the timeout with each uninteresting event.
  *     - Else if an interesting node is added, we add load and error listeners
- *       and turn off the timeout but keep watching
- *       - If we do not have a resource.url, and if this is a script, then we
- *         use the script's URL
- *       - Once all listeners have fired, we stop watching, fire the event and
- *         clear the resource
+ *       and turn off the timeout but keep watching.
+ *       - Once all listeners have fired, we start waiting again up to 50ms for activity.
+ *     - If nothing happens during the additional timeout, we stop watching and fire the event.
  *
  * - `2` XHR/Fetch initiated
- *   - XHR or Fetch request is sent
- *   - We create a resource with the start time and the request URL
- *   - If a history event happened recently/will happen shortly, use the URL as
- *     the resource.url
- *   - We watch for all changes in state (for async requests) and for load (for
- *     all requests)
- *   - On load, we turn on DOM observer, and wait up to 50 milliseconds for something
+ *
+ *   - XHR or Fetch request is sent.
+ *   - We create a pending event with the start time and the request URL.
+ *   - We watch for all changes in XHR state (for async requests) and for load (for
+ *     all requests).
+ *   - We turn on DOM observer at XHR Onload or when the Fetch Promise resolves.
+ *     We then wait up to 50 milliseconds for activity.
+ *     - If nothing happens during the first timeout, we stop watching and clear the
+ *       event without firing it.
  *     - If something uninteresting happens, we set the timeout for 1 second if
- *       it wasn't already started
- *       - We don't want to continuously extend the timeout with each uninteresting
- *         event
+ *       it wasn't already started.
+ *       - We'll only do this once per event since we don't want to continuously
+ *         extend the timeout with each uninteresting event.
  *     - Else if an interesting node is added, we add load and error listeners
- *       and turn off the timeout
- *       - Once all listeners have fired, we stop watching, fire the event and
- *         clear the resource
- *     - If nothing happens after the timeout, we stop watching fire the event
- *       and clear the resource
+ *       and turn off the timeout.
+ *       - Once all listeners have fired, we start waiting again up to 50ms for activity.
+ *     - If nothing happens during the additional timeout, we stop watching and fire the event.
  *
  * What about overlap?
  *
- * - `3.1` XHR/Fetch initiated while click watcher is on
+ * - `3.1` XHR/Fetch initiated while a click event is pending
  *
  *   - If first click watcher has not detected anything interesting or does not
  *     have a URL, abort it
  *   - If the click watcher has detected something interesting and has a URL, then
  *     - Proceed with 2 above.
- *     - concurrently, click stops watching for new resources
- *       - once all resources click is waiting for have completed, fire the event
- *         and clear click resource
+ *     - Concurrently, click stops watching for new resources
+ *       - Once all resources click is waiting for have completed then fire the event.
  *
- * - `3.2` click initiated while XHR/Fetch watcher is on
+ * - `3.2` Click initiated while XHR/Fetch event is pending
  *
  *   - Ignore click
  *
- * - `3.3` click initiated while click watcher is on
+ * - `3.3` Click initiated while a click event is pending
  *
  *   - If first click watcher has not detected anything interesting or does not
- *     have a URL, abort it
- *   - Else proceed with parallel resource steps from 3.1 above
+ *     have a URL, abort it.
+ *   - Else proceed with parallel event steps from 3.1 above.
  *
- * - `3.4` XHR/Fetch initiated while XHR/Fetch watcher is on
+ * - `3.4` XHR/Fetch initiated while an XHR/Fetch event is pending
  *
- *   - Allow anything interesting detected by first XHR/Fetch watcher to complete and
- *     fire event
- *   - Start watching for second XHR/Fetch and proceed with 2 above.
+ *   - Add the second XHR/Fetch as an interesting resource to be tracked by the
+ *     XHR pending event in progress.
+ *
+ * - `3.5` XHR/Fetch initiated while SPA event is pending
+ *
+ *   - Add the second XHR/Fetch as an interesting resource to be tracked by the
+ *     XHR pending event in progress.
+ *
+ * - `3.6` SPA event initiated while an XHR event is pending
+ *     - Proceed with 0 above.
+ *     - Concurrently, XHR event stops watching for new resources. Once all resources
+ *       the XHR event is waiting for have completed, fire the event.
+ *
+ * - `3.7` SPA event initiated while a SPA event is pending
+ *     - If the pending SPA event had detected something interesting then send an aborted
+ *       SPA beacon. If not, drop the pending event.
+ *     - Proceed with 0 above.
  *
  * @class BOOMR.plugins.AutoXHR
  */
@@ -542,7 +579,8 @@
 			if (last_ev.type === "click") {
 				// 3.1 & 3.3
 				if (last_ev.nodes_to_wait === 0 || !last_ev.resource.url) {
-					this.pending_events[i] = undefined;
+					this.pending_events[last_ev_index] = undefined;
+					this.watch--;
 					// continue with new event
 				}
 				// last_ev will no longer receive watches as ev will receive them
@@ -555,17 +593,21 @@
 				}
 
 				// 3.4
-				// nothing to do
-			}
-			else if (BOOMR.utils.inArray(last_ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
-				// This could occur if this event started prior to the SPA taking
-				// over, and is now completing while the SPA event is occuring.  Let
-				// the SPA event take control.
-				if (ev.type === "xhr") {
+				// add this resource to the current event
+				else if (ev.type === "xhr") {
+					handler.add_event_resource(resource);
 					return null;
 				}
 
-				// If we have a pending SPA event, send an aborted load beacon before
+			}
+			else if (BOOMR.utils.inArray(last_ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
+				// add this resource to the current event
+				if (ev.type === "xhr") {
+					handler.add_event_resource(resource);
+					return null;
+				}
+
+				// if we have a pending SPA event, send an aborted load beacon before
 				// adding the new SPA event
 				if (BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
 					debugLog("Aborting previous SPA navigation");
@@ -580,43 +622,41 @@
 			}
 		}
 
+		if (ev.type === "click") {
+			// if we don't have a MutationObserver then we just abort.
+			// If an XHR starts later then it will be tracked as its own new event
+			if (!MutationHandler.observer) {
+				return null;
+			}
+
+			// give Click events 50ms to see if they resulted
+			// in DOM mutations (and thus it is an 'interesting event').
+			this.setTimeout(CLICK_XHR_TIMEOUT, index);
+		}
+		else if (ev.type === "xhr") {
+			// XHR events will not set a timeout yet.
+			// The XHR's load finished callback will start the timer.
+			// Increase node count since we are waiting for the XHR that started this event
+			ev.nodes_to_wait++;
+			ev.total_nodes++;
+			// we won't track mutations yet, we'll monitor only when at least one of the
+			// tracked xhr nodes has had a response
+			ev.ignoreMO = true;
+		}
+		else if (BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
+			// try to start the MO, in case we haven't had the chance to yet
+			MutationHandler.start();
+
+			// give SPAs a bit more time to do something since we know this was
+			// an interesting event.
+			this.setTimeout(SPA_TIMEOUT, index);
+		}
+
 		this.watch++;
 		this.pending_events.push(ev);
+		resource.index = index;
 
-		// If we don't have a MutationObserver, then we just abort
-		if (!MutationHandler.observer) {
-			if (BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
-				// try to start it, in case we haven't had the chance to yet
-				MutationHandler.start();
-
-				// Give SPAs a bit more time to do something since we know this was
-				// an interesting event (e.g. XHRs)
-				this.setTimeout(SPA_TIMEOUT, index);
-
-				return index;
-			}
-
-			// If we already have detailed resource we can forward the event
-			if (resource.url && resource.timing.loadEventEnd) {
-				this.sendEvent(index);
-			}
-
-			return null;
-		}
-		else {
-			if (!BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
-				// Give Click and XHR events 50ms to see if they resulted
-				// in DOM mutations (and thus it is an 'interesting event').
-				this.setTimeout(CLICK_XHR_TIMEOUT, index);
-			}
-			else {
-				// Give SPAs a bit more time to do something since we know this was
-				// an interesting event.
-				this.setTimeout(SPA_TIMEOUT, index);
-			}
-
-			return index;
-		}
+		return index;
 	};
 
 	/**
@@ -640,7 +680,7 @@
 			return;
 		}
 
-		this.clearTimeout();
+		this.clearTimeout(index);
 		if (BOOMR.readyToSend()) {
 			ev.complete = true;
 
@@ -891,11 +931,13 @@
 	 */
 	MutationHandler.prototype.setTimeout = function(timeout, index) {
 		var self = this;
+		// we don't need to check if this is the latest pending event, the check is
+		// already done by all callers of this function
 		if (!timeout) {
 			return;
 		}
 
-		this.clearTimeout();
+		this.clearTimeout(index);
 
 		this.timer = setTimeout(function() { self.timedout(index); }, timeout);
 	};
@@ -912,37 +954,44 @@
 	 */
 	MutationHandler.prototype.timedout = function(index) {
 		var ev;
-		this.clearTimeout();
+		this.clearTimeout(index);
 
 		ev = this.pending_events[index];
 
-		if (ev && BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS.concat("xhr"))) {
-			// XHRs or SPA page loads
+		if (ev) {
 			if (ev.nodes_to_wait === 0) {
-				// send page loads (SPAs) if there are no outstanding downloads
+				// TODO, if xhr event did not trigger additional resources then do not
+				// send a beacon unless it matches alwaysSendXhr. See !868
+
+				// if click event did not trigger additional resources or doesn't have
+				// a url then do not send a beacon
+				if (ev.type === "click" && (ev.total_nodes === 0 || !ev.resource.url)) {
+					this.watch--;
+					this.pending_events[index] = undefined;
+				}
+				// send event if there are no outstanding downloads
 				this.sendEvent(index);
 			}
 
 			// if there are outstanding downloads left, they will trigger a
-			// sendEvent for the SPA once complete
-		}
-		else {
-			if (this.watch > 0) {
-				this.watch--;
-			}
-
-			this.pending_events[index] = undefined;
+			// sendEvent for the SPA/XHR pending event once complete
 		}
 	};
 
 	/**
 	 * If this instance of the {@link MutationHandler} has a `timer` set, clear it
 	 *
+	 * @param {number} index - Index of the event in pending_events array
+	 *
 	 * @memberof MutationHandler
 	 * @method
 	 */
-	MutationHandler.prototype.clearTimeout = function() {
-		if (this.timer) {
+	MutationHandler.prototype.clearTimeout = function(index) {
+		// only clear timeout if this is the latest pending event.
+		// If it is not the latest, then allow the timer to timeout. This can
+		// happen in cases of concurrency, eg. an xhr event is waiting in timeout and
+		// a spa event is triggered.
+		if (this.timer && index === (this.pending_events.length - 1)) {
 			clearTimeout(this.timer);
 			this.timer = null;
 		}
@@ -978,6 +1027,25 @@
 		target._bmr.end[resourceNum] = now;
 
 		this.load_finished(index, now);
+	};
+
+	/**
+	 * Clear the flag preventing DOM mutation monitoring
+	 *
+	 * @param {number} index - Index of the event in pending_events array
+	 *
+	 * @memberof MutationHandler
+	 * @method
+	 */
+	MutationHandler.prototype.monitorMO = function(index) {
+		var current_event = this.pending_events[index];
+
+		// event aborted
+		if (!current_event) {
+			return;
+		}
+
+		delete current_event.ignoreMO;
 	};
 
 	/**
@@ -1021,10 +1089,21 @@
 			// something else is added, we'll continue to wait for that content to
 			// complete.  If nothing else is added, the end event will be the
 			// timestamp for when this load_finished(), not 1 second from now.
-			if (BOOMR.utils.inArray(current_event.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
-				this.setTimeout(SPA_TIMEOUT, index);
+
+			// We use the same behavior for XHR and click events but with a smaller timeout
+
+			if (index === (this.pending_events.length - 1)) {
+				// if we're the latest pending event then extend the timeout
+				if (BOOMR.utils.inArray(current_event.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
+					this.setTimeout(SPA_TIMEOUT, index);
+				}
+				else {
+					this.setTimeout(CLICK_XHR_TIMEOUT, index);
+				}
 			}
 			else {
+				// this should never happen for SPA events, they should always be the latest
+				// pending event.
 				this.sendEvent(index);
 			}
 		}
@@ -1035,7 +1114,7 @@
 	 * specified node.
 	 *
 	 * @param {Element} node DOM node
-	 * @param {number} i Event index
+	 * @param {number} index Event index
 	 *
 	 * @method
 	 * @memberof MutationHandler
@@ -1190,6 +1269,7 @@
 				node.removeEventListener("load", listener);
 				node.removeEventListener("error", listener);
 			};
+			debugLog("Monitoring mutation URL: " + url + " for event id: " + index);
 			node.addEventListener("load", listener);
 			node.addEventListener("error", listener);
 
@@ -1197,7 +1277,7 @@
 			current_event.nodes_to_wait++;
 
 			// ensure the timeout is cleared
-			this.clearTimeout();
+			this.clearTimeout(index);
 
 			// increase the number of total resources by one
 			current_event.total_nodes++;
@@ -1254,12 +1334,15 @@
 			return -1;
 		}
 
+		debugLog("Monitoring " + resource.type +  " URL: " + resource.url + " for event id: " + index);
+
 		// increase the number of outstanding resources by one
 		current_event.nodes_to_wait++;
 		// increase the number of total resources by one
 		current_event.total_nodes++;
 
 		resource.index = index;
+		resource.node = true;  // this resource is a node being tracked by an existing pending event
 
 		return index;
 	};
@@ -1290,6 +1373,13 @@
 		}
 
 		evt = this.pending_events[index];
+
+		// for xhr events, only track mutations if at least one of the tracked xhr nodes has
+		// had a response
+		if (evt.ignoreMO) {
+			return true;
+		}
+
 		if (typeof evt.interesting === "undefined") {
 			evt.interesting = false;
 		}
@@ -1374,40 +1464,6 @@
 		}
 
 		return ev.nodes_to_wait;
-	};
-
-	/**
-	 * Determines if there's an active event happening.
-	 *
-	 * 'Active' means any event that will result in a beacon, such as an XHR
-	 * or SPA. 'Active' specifically excludes 'click' events.
-	 *
-	 * @return {boolean} True if there's an active event happening
-	 *
-	 * @method
-	 * @memberof MutationHandler
-	 */
-	MutationHandler.prototype.hasActiveEvent = function() {
-		var index, ev;
-
-		if (this.pending_events.length === 0) {
-			return false;
-		}
-
-		index = this.pending_events.length - 1;
-
-		ev = this.pending_events[index];
-
-		if (!ev) {
-			return false;
-		}
-
-		// 'click' events are not considered active
-		if (ev.type === "click") {
-			return false;
-		}
-
-		return true;
 	};
 
 	/**
@@ -1606,19 +1662,14 @@
 
 			resource.url = a.href;
 			resource.method = method;
-			resource.type = "fetch";
+			resource.type = "fetch";  // pending event type will still be "xhr"
 			if (payload) {
 				resource.requestPayload = payload;
 			}
 
 			BOOMR.fireEvent("xhr_send", {resource: resource});
 
-			if (impl.singlePageApp && handler.watch) {
-				// If this is a SPA and we're already watching for resources due
-				// to a route change or other interesting event, add this to the
-				// current event.
-				handler.add_event_resource(resource);
-			}
+			handler.addEvent(resource);
 
 			try {
 				resource.timing.requestStart = BOOMR.now();
@@ -1755,6 +1806,12 @@
 					}
 
 					resource.fetchResponse = response;
+
+					if (resource.index >= 0) {
+						// response is starting to come in, we'll start monitoring for
+						// DOM mutations
+						handler.monitorMO(resource.index);
+					}
 
 					if (impl.captureXhrRequestResponse) {
 						// clone not supported in Safari yet
@@ -2075,12 +2132,7 @@
 
 				BOOMR.fireEvent("xhr_send", req);
 
-				if (impl.singlePageApp && handler.watch) {
-					// If this is a SPA and we're already watching for resources due
-					// to a route change or other interesting event, add this to the
-					// current event.
-					handler.add_event_resource(resource);
-				}
+				handler.addEvent(resource);
 
 				resource.timing.requestStart = BOOMR.now();
 				// call the original send method unless there was an error
@@ -2297,20 +2349,15 @@
 
 			// if there's an active XHR event happening, and alwaysSendXhr is true, make sure this
 			// XHR goes out on its own beacon too
-			if (handler.hasActiveEvent() && matchesAlwaysSendXhr(resource.url, impl.alwaysSendXhr)) {
+			if (resource.node && matchesAlwaysSendXhr(resource.url, impl.alwaysSendXhr)) {
 				handler.sendResource(resource);
 			}
 
-			if (resource.index > -1) {
-				// If this XHR was added to an existing event, fire the
-				// load_finished handler for that event.
+			if (resource.index >= 0) {
+				handler.monitorMO(resource.index);
+
+				// fire the load_finished handler for the corresponding event.
 				handler.load_finished(resource.index, resource.timing.responseEnd);
-			}
-			else if (!handler.hasActiveEvent() && (!impl.singlePageApp || impl.autoXhrEnabled)) {
-				// Otherwise, if this is a SPA+AutoXHR or just plain
-				// AutoXHR, use addEvent() to see if this will trigger
-				// a new interesting event.
-				handler.addEvent(resource);
 			}
 		}
 	};

@@ -10,22 +10,21 @@ function createXHREvent() {
 	// start a XHR
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", "/assets/blank.html?rnd" + Math.random());
-	xhr.send();
-
-	// create a non-interesting MO event right afterwards.
-	// this should extend the timeout to 1s.
-	setTimeout(function() {
+	xhr.addEventListener("load", function() {
+		// create a non-interesting MO event right afterwards.
+		// this should extend the timeout to 1s.
 		var div = window.document.createElement("div");
 		window.document.body.appendChild(div);
-	}, 10);
 
-	// create an interesting MO event at 500ms.
-	// this should trigger the beacon.
-	setTimeout(function() {
-		var img = window.document.createElement("img");
-		img.src = "/delay?delay=1000&file=/assets/img.jpg?rnd" + Math.random();
-		window.document.body.appendChild(img);
-	}, 500);
+		// create an interesting MO event at 500ms.
+		// this should trigger the beacon.
+		setTimeout(function() {
+			var img = window.document.createElement("img");
+			img.src = "/delay?delay=1000&file=/assets/img.jpg?rnd" + Math.random();
+			window.document.body.appendChild(img);
+		}, 500);
+	});
+	xhr.send();
 }
 
 BOOMR_test.init({

@@ -50,7 +50,7 @@ function afterFirstBeacon() {
 								start: function(controller) {
 									function push() {
 										var p = reader.read();
-										console.log("read");
+										// console.log("read");
 										p.then(function(arg) {
 											// arg is {done, value}, `done` is a Boolean and `value` a `Uint8Array`
 											// Is there no more data to read?

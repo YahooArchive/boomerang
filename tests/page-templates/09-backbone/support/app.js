@@ -104,7 +104,7 @@ app.HomeView = Backbone.View.extend({
 		else {
 			// have renderTemplate run in a callback so 'route' fires first, so it
 			// ensures the widgets XHR is tracked
-			setTimeout(that.renderTemplate.call(that), 0);
+			setTimeout(that.renderTemplate.bind(that), 0);
 		}
 	}
 });
@@ -116,39 +116,53 @@ app.WidgetView = Backbone.View.extend({
 	el: $("#content"),
 	initialize: function() {
 	},
+	renderTemplate: function() {
+		var that = this;
+
+		app.widgets.fetch({
+			data: {
+				rnd: Math.random()
+			},
+			success: function() {
+				// these overwrite what was in the HTML
+				window.custom_metric_1 = that.model.id;
+				window.custom_metric_2 = function() {
+					return 10 * that.model.id;
+				};
+
+				window.custom_timer_1 = that.model.id;
+				window.custom_timer_2 = function() {
+					return 10 * that.model.id;
+				};
+
+				var widget = app.widgets.get(that.model.id).toJSON();
+
+				var template = Handlebars.compile(app.TEMPLATES.widgets);
+
+				that.$el.html(template({
+					widget: widget,
+					rnd: Math.random(),
+					carttotal: 11.11 * that.model.id
+				}));
+			}
+		});
+	},
 	render: function() {
 		var that = this;
 
-		$.get("support/widget.html", function(widgetTemplate) {
-			// startup after we fetch widgets
-			app.widgets.fetch({
-				data: {
-					rnd: Math.random()
-				},
-				success: function() {
-					// these overwrite what was in the HTML
-					window.custom_metric_1 = that.model.id;
-					window.custom_metric_2 = function() {
-						return 10 * that.model.id;
-					};
-
-					window.custom_timer_1 = that.model.id;
-					window.custom_timer_2 = function() {
-						return 10 * that.model.id;
-					};
-
-					var widget = app.widgets.get(that.model.id).toJSON();
-
-					var template = Handlebars.compile(widgetTemplate);
-
-					that.$el.html(template({
-						widget: widget,
-						rnd: Math.random(),
-						carttotal: 11.11 * that.model.id
-					}));
-				}
-			});
-		}, "html");
+		// have renderTemplate run in a callback so 'route' fires first, so it
+		// ensures the widgets XHR is tracked
+		setTimeout(function() {
+			if (!app.TEMPLATES.widgets) {
+				$.get("support/widget.html", function(template) {
+					app.TEMPLATES.widgets = template;
+					that.renderTemplate();
+				}, "html");
+			}
+			else {
+				that.renderTemplate();
+			}
+		}, 0);
 	}
 });
 

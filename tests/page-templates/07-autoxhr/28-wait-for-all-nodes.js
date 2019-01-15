@@ -31,13 +31,13 @@ describe("e2e/07-autoxhr/28-wait-for-all-nodes", function() {
 
 	describe("Beacon 2", function() {
 		var i = 1;
-		it("Should have a t_done of at least 1400ms based on the duration of the XHR and image being fetched (if MutationObserver is supported)", function(done) {
-			// 400ms (XHR) + 1000ms (IMG)
+		it("Should have a t_done of at least 1600ms based on the duration of the XHR and images being fetched (if MutationObserver is supported)", function(done) {
+			// 400ms (XHR) + 1000ms (IMG2) + 200 (IMG3)
 			if (t.isMutationObserverSupported()) {
 				t.ifAutoXHR(
 					done,
 					function() {
-						assert.closeTo(tf.beacons[i].t_done, 1400, 300, "t_done was not close to 1400ms");
+						assert.closeTo(tf.beacons[i].t_done, 1600, 300, "t_done was not close to 1600ms");
 						done();
 					},
 					this.skip.bind(this)

@@ -25,7 +25,7 @@ describe("e2e/07-autoxhr/47-pixels", function() {
 			});
 	});
 
-	describe("Beacon 2", function() {
+	describe("Beacon 2 (xhr)", function() {
 		var i = 1;
 		it("Should have the second beacon be an XHR", function(done) {
 			t.ifAutoXHR(
@@ -37,12 +37,28 @@ describe("e2e/07-autoxhr/47-pixels", function() {
 				this.skip.bind(this));
 		});
 
-		it("Should have t_done only include the visible frame and not pixels (be greater than 2s but less than 10s)", function(done) {
+		it("Should have t_done only include the visible frame and not pixels (be greater than 2s but less than 10s) (if MutationObserver is supported)", function(done) {
+			if (!t.isMutationObserverSupported()) {
+				return this.skip();
+			}
 			t.ifAutoXHR(
 				done,
 				function() {
 					assert.operator(tf.beacons[i].t_done, ">=", 2000);
 					assert.operator(tf.beacons[i].t_done, "<", 5000);
+					done();
+				},
+				this.skip.bind(this));
+		});
+
+		it("Should have t_done close to 500ms (if MutationObserver is not supported)", function(done) {
+			if (t.isMutationObserverSupported()) {
+				return this.skip();
+			}
+			t.ifAutoXHR(
+				done,
+				function() {
+					assert.closeTo(tf.beacons[i].t_done, 500, 200);
 					done();
 				},
 				this.skip.bind(this));

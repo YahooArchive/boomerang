@@ -37,12 +37,28 @@ describe("e2e/07-autoxhr/46-iframes-reused", function() {
 				this.skip.bind(this));
 		});
 
-		it("Should have t_done not include the re-used iframe time (be greater than 1s but less than 60s)", function(done) {
+		it("Should have t_done not include the re-used iframe time (be greater than 1s but less than 60s) (if MutationObserver is supported)", function(done) {
+			if (!t.isMutationObserverSupported()) {
+				return this.skip();
+			}
 			t.ifAutoXHR(
 				done,
 				function() {
 					assert.operator(tf.beacons[i].t_done, ">=", 1000);
 					assert.operator(tf.beacons[i].t_done, "<", 60000);
+					done();
+				},
+				this.skip.bind(this));
+		});
+
+		it("Should have t_done close to 500ms (if MutationObserver is not supported)", function(done) {
+			if (t.isMutationObserverSupported()) {
+				return this.skip();
+			}
+			t.ifAutoXHR(
+				done,
+				function() {
+					assert.closeTo(tf.beacons[i].t_done, 500, 200);
 					done();
 				},
 				this.skip.bind(this));

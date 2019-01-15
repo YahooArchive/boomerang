@@ -3,10 +3,11 @@
 IE doesn't return a leading slash (/) on anchor.pathname, XHR exclude list was not being honored
 -->
 <script src="92560.js" type="text/javascript"></script>
-<%= boomerangSnippet %>
+<%= boomerangScript %>
 <script>
 BOOMR_test.init({
 	"instrument_xhr": true,
+	testAfterOnBeacon: 1,
 	afterFirstBeacon:
 		function() {
 			if (!BOOMR.plugins.AutoXHR) {
