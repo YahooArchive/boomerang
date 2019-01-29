@@ -14,7 +14,7 @@ app.Widget = Backbone.Model.extend({
 //
 var Widgets = Backbone.Collection.extend({
 	model: app.Widget,
-	url: "/pages/09-backbone/support/widgets.json"
+	url: "/delay?delay=250&file=/pages/09-backbone/support/widgets.json"
 });
 
 app.widgets = new Widgets();

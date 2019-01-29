@@ -12,7 +12,7 @@ var app = angular.module("app", modules)
 			query: function() {
 				var rnd = Math.random();
 
-				return $resource("/pages/05-angular/support/widgets.json", {}, {
+				return $resource("/delay?delay=250&file=/pages/05-angular/support/widgets.json", {}, {
 					query: { method: "GET", params: {rnd: rnd}, isArray: true }
 				}).query();
 			}

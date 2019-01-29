@@ -64,7 +64,6 @@ window.route_wait = function() {
 
 <div id="root"></div>
 <div id="output"></div>
-<script src="support/app.js"></script>
 
 <script src="/test-templates/spa/17-wait.js" type="text/javascript"></script>
 <script src="17-wait.js" type="text/javascript"></script>
@@ -81,4 +80,6 @@ BOOMR_test.init({
 	autorun: false
 });
 </script>
+<!-- start the app after config so that boomerang catches all requests and makes the test results the same as the other apps -->
+<script src="support/app.js"></script>
 <%= footer %>

@@ -213,7 +213,7 @@ BOOMR_test.templates.SPA["04-route-change"] = function() {
 		it("Should have sent the third beacon with a t_resp value (if MutationObserver and ResourceTiming are supported)", function() {
 			if (t.isMutationObserverSupported() && t.isResourceTimingSupported()) {
 				var b = tf.beacons[2];
-				assert.operator(b.t_resp, ">=", 0);
+				assert.operator(b.t_resp, ">=", 250);  // widgets.json has a 250ms delay
 			}
 			else {
 				return this.skip();

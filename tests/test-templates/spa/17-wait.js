@@ -34,13 +34,13 @@ BOOMR_test.templates.SPA["17-wait"] = function() {
 			assert.isTrue(b.u.indexOf("-wait.html") !== -1);
 		});
 
-		it("Should have sent the first beacon without an additional wait (if NavigationTiming is supported)", function() {
-			if (t.isNavigationTimingSupported()) {
+		it("Should have sent the first beacon without an additional wait (if ResourceTiming is supported)", function() {
+			if (t.isResourceTimingSupported()) {
 				var b = tf.beacons[i];
-				var load = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
+				// t_done should be close to the end time of the first request for widgets.json
+				var r = t.findFirstResource("widgets.json");
 				assert.isDefined(b.t_done);
-				// no other spa resources loaded on home page, t_done should be close to load time
-				assert.closeTo(load, b.t_done, 100);
+				assert.closeTo(r.responseEnd /* HR timestamp */, b.t_done, 100);
 			}
 			else {
 				this.skip();

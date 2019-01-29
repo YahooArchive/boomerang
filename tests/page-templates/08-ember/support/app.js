@@ -83,7 +83,7 @@ App.HomeRoute = Ember.Route.extend({
 		}
 	},
 	model: function() {
-		return Ember.$.getJSON("support/widgets.json?rnd=" + Math.random()).then(function(data) {
+		return Ember.$.getJSON("/delay?delay=250&file=/pages/08-ember/support/widgets.json?rnd=" + Math.random()).then(function(data) {
 			var model = {};
 			model.widgets = data;
 			model.imgs = typeof window.imgs !== "undefined" ? window.imgs : [0];

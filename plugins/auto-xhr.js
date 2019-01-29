@@ -344,7 +344,7 @@
 	var XHR_STATUS_OPEN_EXCEPTION = -997;
 
 	// Default resources to count as Back-End during a SPA nav
-	var SPA_RESOURCES_BACK_END = ["xmlhttprequest", "script"];
+	var SPA_RESOURCES_BACK_END = ["xmlhttprequest", "script", "fetch"];
 
 	BOOMR = window.BOOMR || {};
 	BOOMR.plugins = BOOMR.plugins || {};

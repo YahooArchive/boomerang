@@ -146,7 +146,7 @@ const Home = React.createClass({
 					});
 				}
 			}.bind(this));
-			widgetsXHR.open("GET", "support/widgets.json?rnd=" + (Math.round(Math.random() * 1000)));
+			widgetsXHR.open("GET", "/delay?delay=250&file=/pages/12-react/support/widgets.json?rnd=" + (Math.round(Math.random() * 1000)));
 			widgetsXHR.send(null);
 		}
 		else {
@@ -161,7 +161,7 @@ const Home = React.createClass({
 					}
 				});
 
-			fetch("support/widgets.json?rnd=" + (Math.round(Math.random() * 1000)))
+			fetch("/delay?delay=250&file=/pages/12-react/support/widgets.json?rnd=" + (Math.round(Math.random() * 1000)))
 				.then((response) => response.json())
 				.then(function(data) {
 					if (that.isMounted()) {
