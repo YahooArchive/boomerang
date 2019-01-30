@@ -266,9 +266,10 @@
 
 	/**
 	 * Single Page Applications get an additional timeout for all XHR Requests to settle in.
-	 * This is used after collecting resources for a SPA routechange
-	 * @constant
+	 * This is used after collecting resources for a SPA routechange.
+	 * Default is 1000ms, overridable with spaIdleTimeout
 	 * @type {number}
+	 * @constant
 	 * @default
 	 */
 	var SPA_TIMEOUT = 1000;
@@ -276,6 +277,7 @@
 	/**
 	 * Clicks and XHR events get 50ms for an interesting thing to happen before
 	 * being cancelled.
+	 * Default is 50ms, overridable with xhrIdleTimeout
 	 * @type {number}
 	 * @constant
 	 * @default
@@ -631,7 +633,7 @@
 
 			// give Click events 50ms to see if they resulted
 			// in DOM mutations (and thus it is an 'interesting event').
-			this.setTimeout(CLICK_XHR_TIMEOUT, index);
+			this.setTimeout(impl.xhrIdleTimeout, index);
 		}
 		else if (ev.type === "xhr") {
 			// XHR events will not set a timeout yet.
@@ -649,7 +651,7 @@
 
 			// give SPAs a bit more time to do something since we know this was
 			// an interesting event.
-			this.setTimeout(SPA_TIMEOUT, index);
+			this.setTimeout(impl.spaIdleTimeout, index);
 		}
 
 		this.watch++;
@@ -710,7 +712,7 @@
 				// if this was a SPA nav that triggered no additional resources, substract the
 				// SPA_TIMEOUT from now to determine the end time
 				if (!ev.forced && ev.total_nodes === 0) {
-					ev.resource.timing.loadEventEnd = now - SPA_TIMEOUT;
+					ev.resource.timing.loadEventEnd = now - impl.spaIdleTimeout;
 				}
 			}
 
@@ -1095,10 +1097,10 @@
 			if (index === (this.pending_events.length - 1)) {
 				// if we're the latest pending event then extend the timeout
 				if (BOOMR.utils.inArray(current_event.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
-					this.setTimeout(SPA_TIMEOUT, index);
+					this.setTimeout(impl.spaIdleTimeout, index);
 				}
 				else {
-					this.setTimeout(CLICK_XHR_TIMEOUT, index);
+					this.setTimeout(impl.xhrIdleTimeout, index);
 				}
 			}
 			else {
@@ -2200,6 +2202,8 @@
 		autoXhrEnabled: false,
 		monitorFetch: false,  // new feature, off by default
 		fetchBodyUsedWait: FETCH_BODY_USED_WAIT_DEFAULT,
+		spaIdleTimeout: SPA_TIMEOUT,
+		xhrIdleTimeout: CLICK_XHR_TIMEOUT,
 
 		/**
 		 * Filter function iterating over all available {@link FilterObject}s if
@@ -2405,7 +2409,8 @@
 
 			// gather config and config overrides
 			BOOMR.utils.pluginConfig(impl, config, "AutoXHR",
-			    ["spaBackEndResources", "alwaysSendXhr", "monitorFetch", "fetchBodyUsedWait"]);
+			    ["spaBackEndResources", "alwaysSendXhr", "monitorFetch", "fetchBodyUsedWait",
+			    "spaIdleTimeout", "xhrIdleTimeout"]);
 
 			BOOMR.instrumentXHR = instrumentXHR;
 			BOOMR.uninstrumentXHR = uninstrumentXHR;
