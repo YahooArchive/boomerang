@@ -114,6 +114,7 @@
 	// A private object to encapsulate all your implementation details
 	var impl = {
 		complete: false,
+		fullySent: false,
 		sendBeacon: function() {
 			this.complete = true;
 			BOOMR.sendBeacon();
@@ -392,6 +393,10 @@
 				catch (ignore) {
 					/* empty */
 				}
+
+				if (data.nt_load_end > 0) {
+					this.fullySent = true;
+				}
 			}
 
 			impl.sendBeacon();
@@ -402,7 +407,8 @@
 				BOOMR.removeVar(impl.addedVars);
 				impl.addedVars = [];
 			}
-			this.complete = false;
+			// if we ever sent the full data, we're complete for all times
+			this.complete = this.fullySent;
 		},
 
 		prerenderToVisible: function() {
