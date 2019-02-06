@@ -2179,6 +2179,7 @@
 	 */
 	function sendResource(resource) {
 		resource.initiator = "xhr";
+
 		BOOMR.responseEnd(resource);
 	}
 

@@ -130,7 +130,7 @@ describe("e2e/05-angular/108-location-change-only", function() {
 
 	it("Should have set the same Page ID (pid) on all beacons", function() {
 		var pid = tf.beacons[0].pid;
-		for (var i = 0; i <= 2; i++) {
+		for (var i = 0; i < tf.beacons.length; i++) {
 			var b = tf.beacons[i];
 			assert.equal(b.pid, pid);
 		}

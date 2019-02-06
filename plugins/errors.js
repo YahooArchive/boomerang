@@ -1169,21 +1169,25 @@
 						return;
 					}
 
-					// change this to an 'error' beacon
-					BOOMR.addVar("http.initiator", "error");
+					// Queue a beacon whenever there isn't another one ongoing
+					BOOMR.sendBeaconWhenReady(
+						{
+							// change this to an 'error' beacon
+							"rt.start": "manual",
+							"http.initiator": "error",
 
-					// set it as an API beacon, which means it won't have any timing data
-					BOOMR.addVar("api", 1);
+							// set it as an API beacon, which means it won't have any timing data
+							"api": 1,
 
-					// add our errors to the beacon
-					impl.addErrorsToBeacon();
-
-					BOOMR.addVar("rt.tstart", now);
-					BOOMR.addVar("rt.end", now);
-					BOOMR.addVar("rt.start", "manual");
-
-					// send it!
-					BOOMR.sendBeacon();
+							// when
+							"rt.tstart": now,
+							"rt.end": now
+						},
+						function() {
+							// add our errors to the beacon when ready
+							impl.addErrorsToBeacon();
+						},
+						this);
 				}, impl.isDuringLoad ? impl.sendIntervalDuringLoad : impl.sendInterval);
 			}
 		},

@@ -3124,18 +3124,24 @@
 		function sendInteractionBeacon() {
 			debug("Sending interaction beacon");
 
-			clearBeaconTimers();
+			// Queue a beacon whenever there isn't another one ongoing
+			BOOMR.sendBeaconWhenReady(
+				{
+					// change this to an 'interaction' beacon
+					"rt.start": "manual",
+					"http.initiator": "interaction",
 
-			// notify anyone listening for an interaction event
-			BOOMR.fireEvent("interaction");
+					// when
+					"rt.tstart": beaconStartTime,
+					"rt.end": beaconEndTime
+				},
+				function() {
+					clearBeaconTimers();
 
-			// add data to the beacon
-			impl.addToBeacon("rt.tstart", beaconStartTime);
-			impl.addToBeacon("rt.end", beaconEndTime);
-			impl.addToBeacon("rt.start", "manual");
-			impl.addToBeacon("http.initiator", "interaction");
-
-			BOOMR.sendBeacon();
+					// notify anyone listening for an interaction event
+					BOOMR.fireEvent("interaction");
+				},
+				impl);
 		}
 
 		/**

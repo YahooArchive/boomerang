@@ -1052,6 +1052,16 @@ BOOMR_check_doc_domain();
 		isUnloaded: false,
 
 		/**
+		 * Whether or not we're in the middle of building a beacon.
+		 *
+		 * If so, the code desiring to send a beacon should wait until the beacon
+		 * event and try again.  At that point, it should set this flag to true.
+		 *
+		 * @type {boolean}
+		 */
+		beaconInQueue: false,
+
+		/**
 		 * Constants visible to the world
 		 * @class BOOMR.constants
 		 */
@@ -3374,6 +3384,19 @@ BOOMR_check_doc_domain();
 				return;
 			}
 
+			// Ensure we don't have two beacons trying to send data at the same time
+			if (impl.beaconInQueue) {
+				// wait until the beacon is sent, then try again
+				BOOMR.subscribe("beacon", function() {
+					BOOMR.responseEnd(name, t_start, data, t_end);
+				}, null, BOOMR, true);
+
+				return;
+			}
+
+			// Lock the beacon queue
+			impl.beaconInQueue = true;
+
 			if (typeof name === "object") {
 				if (!name.url) {
 					BOOMR.debug("BOOMR.responseEnd: First argument must have a url property if it's an object");
@@ -3488,6 +3511,44 @@ BOOMR_check_doc_domain();
 			}
 
 			return true;
+		},
+
+		/**
+		 * Sends a beacon when the beacon queue is empty.
+		 *
+		 * @param {object} params Beacon parameters to set
+		 * @param {function} callback Callback to run when the queue is ready
+		 * @param {object} that Function to apply callback to
+		 */
+		sendBeaconWhenReady: function(params, callback, that) {
+			// If we're already sending a beacon, wait until the queue is empty
+			if (impl.beaconInQueue) {
+				// wait until the beacon is sent, then try again
+				BOOMR.subscribe("beacon", function() {
+					BOOMR.sendBeaconWhenReady(params, callback, that);
+				}, null, BOOMR, true);
+
+				return;
+			}
+
+			// Lock the beacon queue
+			impl.beaconInQueue = true;
+
+			// add all parameters
+			for (var paramName in params) {
+				if (params.hasOwnProperty(paramName)) {
+					// add this data to a single beacon
+					BOOMR.addVar(paramName, params[paramName], true);
+				}
+			}
+
+			// run the callback
+			if (typeof callback === "function" && typeof that !== "undefined") {
+				callback.apply(that);
+			}
+
+			// send the beacon
+			BOOMR.sendBeacon();
 		},
 
 		/**
@@ -3649,6 +3710,10 @@ BOOMR_check_doc_domain();
 				BOOMR.debug("Skipping because we're rate limited");
 				return false;
 			}
+
+			// mark that we're no longer sending a beacon now, as those
+			// paying attention to this will trigger at the beacon event
+			impl.beaconInQueue = false;
 
 			// send the beacon data
 			BOOMR.sendBeaconData(varsSent);
