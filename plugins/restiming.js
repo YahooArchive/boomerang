@@ -223,8 +223,10 @@
 	var SPECIAL_DATA_NAMESPACED_TYPE = "5";
 
 	/**
-	 * Converts entries to a Trie:
-	 * http://en.wikipedia.org/wiki/Trie
+	 * Converts entries to a Trie (`splitAtPath=true`) or Radix
+	 * Trie (`splitAtPath=false`):
+	 * https://en.wikipedia.org/wiki/Trie
+	 * https://en.wikipedia.org/wiki/Radix_tree
 	 *
 	 * Assumptions:
 	 * 1) All entries have unique keys
@@ -233,13 +235,58 @@
 	 *
 	 * Leaf nodes in the tree are the key's values.
 	 *
-	 * If key A is a prefix to key B, key A will be suffixed with "|"
+	 * If key A is a prefix to key B, key A will be suffixed with "|".
+	 *
+	 * By default, the Trie is constructed "perfectly" (a Radix Trie) by looking
+	 * at every letter of each URL.  If `splitAtPath` is specified, the URL is
+	 * split up into groups based on the path separator. This will create a
+	 * non-optimal Trie but will speed up the Trie construction significantly
+	 * (taking less than a half or third of the time on large data sets).
 	 *
 	 * @param {object} entries Performance entries
+	 * @param {boolean} [splitAtPath] Whether to split at path separator vs every character
+	 *
 	 * @returns {object} A trie
 	 */
-	function convertToTrie(entries) {
+	function convertToTrie(entries, splitAtPath) {
 		var trie = {}, url, urlFixed, i, value, letters, letter, cur, node;
+
+		/**
+		 * Builds an array of path components.
+		 *
+		 * @param {number} addSlashUntil Length of path components
+		 */
+		function splitUrlPaths(addSlashUntil) {
+			return function(accumulator, currentValue, currentIndex) {
+				var parts, j;
+
+				// if this component has the XSS_BREAK_DELIM character in it, we need
+				// to break it up
+				if (currentValue.indexOf(XSS_BREAK_DELIM) !== -1) {
+					// break at that character
+					parts = currentValue.split(XSS_BREAK_DELIM);
+
+					// add everything but the last one with special XSS_BREAK_DELIM nodes
+					for (j = 0; j < parts.length - 1; j++) {
+						// add this component
+						accumulator.push(parts[j]);
+
+						// add back in the XSS_BREAK_DELIM
+						accumulator.push(XSS_BREAK_DELIM);
+					}
+
+					// add the last part
+					currentValue = parts.slice(-1);
+				}
+
+				// add a '/' for everything but the last one
+				if (typeof addSlashUntil === "number" && currentIndex < addSlashUntil) {
+					currentValue += "/";
+				}
+
+				return accumulator.concat(currentValue);
+			};
+		}
 
 		for (url in entries) {
 			urlFixed = url;
@@ -256,7 +303,31 @@
 			}
 
 			value = entries[url];
-			letters = urlFixed.split("");
+
+			if (splitAtPath) {
+				//
+				// Split the Trie based on the path (less CPU, less optimial result)
+				//
+				letters = urlFixed.split("/");
+
+				letters = [
+					// protocol
+					letters[0] + "//",
+
+					// hostname and optional slash
+					letters[2] + (letters.length > 3 ? "/" : "")
+
+				// all of the path parts
+				].concat(letters.slice(3).reduce(splitUrlPaths(letters.length - 4), []));
+			}
+			else {
+				//
+				// Split at every letter (more CPU, perfect result)
+				//
+				letters = urlFixed.split("");
+			}
+
+			// start at the top of the Trie
 			cur = trie;
 
 			for (i = 0; i < letters.length; i++) {
@@ -798,9 +869,8 @@
 			e = entries[i];
 
 			// skip non-resource URLs
-			if (e.name.indexOf("about:") === 0 ||
-			    e.name.indexOf("javascript:") === 0 ||
-			    e.name.indexOf("res:") === 0) {
+			if (e.name.indexOf("http:") !== 0 &&
+			    e.name.indexOf("https:") !== 0) {
 				continue;
 			}
 
@@ -1190,6 +1260,7 @@
 	function getCompressedResourceTiming(from, to) {
 		/*eslint no-script-url:0*/
 		var i, e, results = {}, initiatorType, url, data, timePoints = {};
+
 		var ret = getFilteredResourceTiming(from, to, impl.trackedResourceTypes);
 		var entries = ret.entries, serverTiming = ret.serverTiming;
 
@@ -1318,7 +1389,7 @@
 		}
 
 		return {
-			restiming: optimizeTrie(convertToTrie(results), true),
+			restiming: optimizeTrie(convertToTrie(results, impl.splitAtPath), true),
 			servertiming: serverTiming.lookup
 		};
 	}
@@ -1449,7 +1520,21 @@
 
 		BOOMR.removeVar("restiming");
 		BOOMR.removeVar("servertiming");
+
+		/* BEGIN_DEBUG */
+		BOOMR.utils.mark("restiming:build:start");
+		/* END_DEBUG */
+
 		r = getCompressedResourceTiming(from, to);
+
+		/* BEGIN_DEBUG */
+		BOOMR.utils.mark("restiming:build:end");
+		BOOMR.utils.measure(
+			"restiming:build",
+			"restiming:build:start",
+			"restiming:build:end");
+		/* END_DEBUG */
+
 		if (r) {
 			BOOMR.info("Client supports Resource Timing API", "restiming");
 			addToBeacon(r);
@@ -1692,6 +1777,7 @@
 		trimUrls: [],
 		serverTiming: true,
 		monitorClearResourceTimings: false,
+		splitAtPath: false,
 		// overridable
 
 		/**
@@ -1759,7 +1845,9 @@
 		 * @param {string[]|RegExp[]} [config.ResourceTiming.trimUrls] List of strings of RegExps
 		 * to trim from URLs.
 		 * @param {boolean} [config.ResourceTiming.monitorClearResourceTimings] Whether or not to instrument
-		 * `performance.clearResourceTimings`
+		 * `performance.clearResourceTimings`.
+		 * @param {boolean} [config.ResourceTiming.splitAtPath] Whether or not to split the ResourceTiming
+		 * compressed Trie at the path separator (faster processing, but larger result).
 		 *
 		 * @returns {@link BOOMR.plugins.ResourceTiming} The ResourceTiming plugin for chaining
 		 * @memberof BOOMR.plugins.ResourceTiming
@@ -1767,7 +1855,7 @@
 		init: function(config) {
 			BOOMR.utils.pluginConfig(impl, config, "ResourceTiming",
 				["xssBreakWords", "clearOnBeacon", "urlLimit", "trimUrls", "trackedResourceTypes", "serverTiming",
-					"monitorClearResourceTimings"]);
+					"monitorClearResourceTimings", "splitAtPath"]);
 
 			if (impl.initialized) {
 				return this;

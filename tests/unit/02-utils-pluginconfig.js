@@ -37,14 +37,14 @@ describe("BOOMR.utils.pluginConfig()", function() {
 		assert.isTrue(BOOMR.utils.pluginConfig({}, config, pluginName, ["key"]));
 	});
 
-	it("Should should update the impl object with the config option, even if it didn't exist before", function() {
+	it("Should update the impl object with the config option, even if it didn't exist before", function() {
 		var impl = {};
 		var config = { myPlugin: { key: "value2" } };
 		assert.isTrue(BOOMR.utils.pluginConfig(impl, config, pluginName, ["key"]));
 		assert.strictEqual(impl.key, "value2");
 	});
 
-	it("Should should update the impl object with the config option, overwriting the existing value", function() {
+	it("Should update the impl object with the config option, overwriting the existing value", function() {
 		var impl = { key: "value1" };
 		var config = { myPlugin: { key: "value2" } };
 		assert.isTrue(BOOMR.utils.pluginConfig(impl, config, pluginName, ["key"]));

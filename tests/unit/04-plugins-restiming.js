@@ -86,129 +86,310 @@ describe("BOOMR.plugins.ResourceTiming", function() {
 	// .convertToTrie
 	//
 	describe("convertToTrie()", function() {
-		it("Should convert a single node", function() {
-			var data = {"abc": "abc"};
-			var expected = {
-				"a": {
-					"b": {
-						"c": "abc"
-					}
-				}
-			};
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
-		});
-
-		it("Should convert a two-node tree whose nodes don't intersect", function() {
-			var data = {"abc": "abc", "xyz": "xyz"};
-			var expected = {
-				"a": {
-					"b": {
-						"c": "abc"
-					}
-				},
-				"x": {
-					"y": {
-						"z": "xyz"
-					}
-				}
-			};
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
-		});
-
-		it("Should convert a complex tree", function() {
-			var data = {"abc": "abc", "abcd": "abcd", "ab": "ab"};
-			var expected = {
-				"a": {
-					"b": {
-						"|": "ab",
-						"c": {
-							"|": "abc",
-							"d": "abcd"
-						}
-					}
-				}
-			};
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
-		});
-
-		it("Should should break 'href' for NoScript", function() {
-			var data = {"href": "abc"};
-			var expected = {
-				"h": {
-					"\n": {
-						"r": {
-							"e": {
-								"f": "abc"
-							}
-						}
-					}
-				}
-			};
-
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
-		});
-
-		it("Should should break 'src' for NoScript", function() {
-			var data = {"src": "abc"};
-			var expected = {
-				"s": {
-					"\n": {
-						"r": {
+		describe("splitAt = every letter", function() {
+			it("Should convert a single node", function() {
+				var data = {"abc": "abc"};
+				var expected = {
+					"a": {
+						"b": {
 							"c": "abc"
 						}
 					}
-				}
-			};
+				};
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+			});
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
-		});
+			it("Should convert a two-node tree whose nodes don't intersect", function() {
+				var data = {"abc": "abc", "xyz": "xyz"};
+				var expected = {
+					"a": {
+						"b": {
+							"c": "abc"
+						}
+					},
+					"x": {
+						"y": {
+							"z": "xyz"
+						}
+					}
+				};
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+			});
 
-		it("Should should break 'action' for NoScript", function() {
-			var data = {"action": "abc"};
-			var expected = {
-				"a": {
-					"\n": {
-						"c": {
-							"t": {
-								"i": {
-									"o": {
-										"n": "abc"
+			it("Should convert a complex tree", function() {
+				var data = {"abc": "abc", "abcd": "abcd", "ab": "ab"};
+				var expected = {
+					"a": {
+						"b": {
+							"|": "ab",
+							"c": {
+								"|": "abc",
+								"d": "abcd"
+							}
+						}
+					}
+				};
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+			});
+
+			it("Should break 'href' for NoScript", function() {
+				var data = {"href": "abc"};
+				var expected = {
+					"h": {
+						"\n": {
+							"r": {
+								"e": {
+									"f": "abc"
+								}
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+			});
+
+			it("Should break 'src' for NoScript", function() {
+				var data = {"src": "abc"};
+				var expected = {
+					"s": {
+						"\n": {
+							"r": {
+								"c": "abc"
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+			});
+
+			it("Should break 'action' for NoScript", function() {
+				var data = {"action": "abc"};
+				var expected = {
+					"a": {
+						"\n": {
+							"c": {
+								"t": {
+									"i": {
+										"o": {
+											"n": "abc"
+										}
 									}
 								}
 							}
 						}
 					}
-				}
-			};
+				};
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
-		});
-
-		it("Should update XSS words from config", function() {
-			BOOMR.init({
-				ResourceTiming: {
-					enabled: true,
-					xssBreakWords:  [
-						/(h)(ref)/gi,
-						/(s)(rc)/gi,
-						/(a)(ction)/gi,
-						/(m)(oo)/gi
-					]
-				}
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
 			});
 
-			var data = {"moo": "abc"};
-			var expected = {
-				"m": {
-					"\n": {
-						"o": {
-							"o": "abc"
+			it("Should update XSS words from config", function() {
+				BOOMR.init({
+					ResourceTiming: {
+						enabled: true,
+						xssBreakWords:  [
+							/(h)(ref)/gi,
+							/(s)(rc)/gi,
+							/(a)(ction)/gi,
+							/(m)(oo)/gi
+						]
+					}
+				});
+
+				var data = {"moo": "abc"};
+				var expected = {
+					"m": {
+						"\n": {
+							"o": {
+								"o": "abc"
+							}
 						}
 					}
-				}
-			};
+				};
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data), expected);
+			});
+		});
+
+		describe("splitAt = path", function() {
+			it("Should convert a single node", function() {
+				var data = {"http://abc.com/def/g": "abc"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"def/": {
+								"g": "abc"
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should convert a single node with no path", function() {
+				var data = {"http://abc.com": "abc"};
+				var expected = {
+					"http://": {
+						"abc.com": "abc"
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should convert a two-node tree whose nodes don't intersect", function() {
+				var data = {"http://abc.com/abc": "abc", "http://abc.com/xyz": "xyz"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"abc": "abc",
+							"xyz": "xyz"
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should convert a complex tree", function() {
+				var data = {"http://abc.com/abc": "abc", "http://abc.com/abcd": "abcd", "http://abc.com/ab": "ab"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"ab": "ab",
+							"abc": "abc",
+							"abcd": "abcd"
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should convert a large tree", function() {
+				var data = {
+					"http://abc.com/def/g": "g",
+					"http://abc.com/def/g/": "g/",
+					"http://abc.com/def/g/hij": "hij",
+					"http://abc.com/def/g/klm": "klm",
+					"http://abc.com/def/g/klm/": "klm/",
+					"http://abc.com/def/g/klm/nop.html": "nop.html"
+				};
+
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"def/": {
+								"g": "g",
+								"g/": {
+									"": "g/",
+									"hij": "hij",
+									"klm": "klm",
+									"klm/": {
+										"": "klm/",
+										"nop.html": "nop.html"
+									}
+								}
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should break 'href' for NoScript", function() {
+				var data = {"http://abc.com/hrefhref/href": "abc"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"h": {
+								"\n": {
+									"refh": {
+										"\n": {
+											"ref/": {
+												"h": {
+													"\n": {
+														"ref": "abc"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should break 'src' for NoScript", function() {
+				var data = {"http://abc.com/src": "abc"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"s": {
+								"\n": {
+									"rc": "abc"
+								}
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should break 'action' for NoScript", function() {
+				var data = {"http://abc.com/action": "abc"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"a": {
+								"\n": {
+									"ction": "abc"
+								}
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
+
+			it("Should update XSS words from config", function() {
+				BOOMR.init({
+					ResourceTiming: {
+						enabled: true,
+						xssBreakWords:  [
+							/(h)(ref)/gi,
+							/(s)(rc)/gi,
+							/(a)(ction)/gi,
+							/(m)(oo)/gi
+						]
+					}
+				});
+
+				var data = {"http://abc.com/moo": "abc"};
+				var expected = {
+					"http://": {
+						"abc.com/": {
+							"m": {
+								"\n": {
+									"oo": "abc"
+								}
+							}
+						}
+					}
+				};
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.convertToTrie(data, true), expected);
+			});
 		});
 	});
 
@@ -216,100 +397,267 @@ describe("BOOMR.plugins.ResourceTiming", function() {
 	// .optimizeTrie
 	//
 	describe("optimizeTrie()", function() {
-		it("Should optimize a single-node tree", function() {
-			var data = {"abc": "abc"};
-			var expected = {
-				"abc": "abc"
-			};
+		describe("splitAt = every letter", function() {
+			it("Should optimize a single-node tree", function() {
+				var data = {"abc": "abc"};
+				var expected = {
+					"abc": "abc"
+				};
 
-			var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
-		});
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
 
-		it("Should optimize a simple tree", function() {
-			var data = {"abc": "abc", "xyz": "xyz"};
-			var expected = {
-				"abc": "abc",
-				"xyz": "xyz"
-			};
+			it("Should optimize a simple tree", function() {
+				var data = {"abc": "abc", "xyz": "xyz"};
+				var expected = {
+					"abc": "abc",
+					"xyz": "xyz"
+				};
 
-			var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
-		});
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
 
-		it("Should optimize a complex tree", function() {
-			var data = {"abc": "abc", "abcd": "abcd", "ab": "ab"};
-			var expected = {
-				"ab":
-				{
-					"|": "ab",
-					"c": {
-						"|": "abc",
-						"d": "abcd"
+			it("Should optimize a complex tree", function() {
+				var data = {"abc": "abc", "abcd": "abcd", "ab": "ab"};
+				var expected = {
+					"ab":
+					{
+						"|": "ab",
+						"c": {
+							"|": "abc",
+							"d": "abcd"
+						}
 					}
-				}
-			};
+				};
 
-			var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
-		});
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
 
-		it("Should optimize a single-node tree with more characters", function() {
-			var data = {"abcde": "abcde"};
-			var expected = {
-				"abcde": "abcde"
-			};
+			it("Should optimize a single-node tree with more characters", function() {
+				var data = {"abcde": "abcde"};
+				var expected = {
+					"abcde": "abcde"
+				};
 
-			var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
 
-			assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
-		});
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
 
-		it("Should should break 'href' for NoScript", function() {
-			var data = {"href": "abc" };
-			var expected = {
-				"h": {
-					"ref": "abc"
-				}
-			};
+			it("Should break 'href' for NoScript", function() {
+				var data = {"href": "abc" };
+				var expected = {
+					"h": {
+						"ref": "abc"
+					}
+				};
 
-			var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
 
-			var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
-			var optTrieJson = JSON.stringify(optTrie);
+				var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
+				var optTrieJson = JSON.stringify(optTrie);
 
-			assert.deepEqual(optTrie, expected);
+				assert.deepEqual(optTrie, expected);
 
-			assert.equal(optTrieJson.indexOf("href"), -1);
-		});
+				assert.equal(optTrieJson.indexOf("href"), -1);
+			});
 
-		it("Should should break 'href', 'action' and 'src' for NoScript", function() {
-			var data = {"href": "abc", "123action123": "abc", "_src_abc_action123": "abc" };
-			var expected = {
-				"_s": {
-					"rc_abc_a": {
+			it("Should break 'href', 'action' and 'src' for NoScript", function() {
+				var data = {"href": "abc", "123action123": "abc", "_src_abc_action123": "abc" };
+				var expected = {
+					"_s": {
+						"rc_abc_a": {
+							"ction123": "abc"
+						}
+					},
+					"123a": {
 						"ction123": "abc"
+					},
+					"h": {
+						"ref": "abc"
 					}
-				},
-				"123a": {
-					"ction123": "abc"
-				},
-				"h": {
-					"ref": "abc"
-				}
-			};
+				};
 
-			var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data);
 
-			var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
-			var optTrieJson = JSON.stringify(optTrie);
+				var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
+				var optTrieJson = JSON.stringify(optTrie);
 
-			assert.deepEqual(optTrie, expected);
+				assert.deepEqual(optTrie, expected);
 
-			assert.equal(optTrieJson.indexOf("href"), -1);
+				assert.equal(optTrieJson.indexOf("href"), -1);
+			});
+		});
+
+		describe("splitAt = path", function() {
+			it("Should optimize a single-node tree", function() {
+				var data = {"http://abc.com/def/g": "abc"};
+				var expected = {
+					"http://abc.com/def/g": "abc"
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
+
+			it("Should convert a two-node tree whose nodes don't intersect", function() {
+				var data = {"http://abc.com/abc": "abc", "http://abc.com/xyz": "xyz"};
+				var expected = {
+					"http://abc.com/": {
+						"abc": "abc",
+						"xyz": "xyz"
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
+
+			it("Should convert a complex tree", function() {
+				var data = {"http://abc.com/abc": "abc", "http://abc.com/abcd": "abcd", "http://abc.com/ab": "ab"};
+				var expected = {
+					"http://abc.com/": {
+						"ab": "ab",
+						"abc": "abc",
+						"abcd": "abcd"
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
+
+			it("Should convert a large tree", function() {
+				var data = {
+					"http://abc.com/def/g": "g",
+					"http://abc.com/def/g/": "g/",
+					"http://abc.com/def/g/hij": "hij",
+					"http://abc.com/def/g/klm": "klm",
+					"http://abc.com/def/g/klm/": "klm/",
+					"http://abc.com/def/g/klm/nop.html": "nop.html"
+				};
+
+				var expected = {
+					"http://abc.com/def/": {
+						"g": "g",
+						"g/": {
+							"": "g/",
+							"hij": "hij",
+							"klm": "klm",
+							"klm/": {
+								"": "klm/",
+								"nop.html": "nop.html"
+							}
+						}
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				assert.deepEqual(BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true), expected);
+			});
+
+			it("Should break 'href' for NoScript", function() {
+				var data = {"http://abc.com/hrefhref/href": "abc"};
+				var expected = {
+					"http://abc.com/h": {
+						"refh": {
+							"ref/h": {
+								"ref": "abc"
+							}
+						}
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
+				var optTrieJson = JSON.stringify(optTrie);
+
+				assert.deepEqual(optTrie, expected);
+
+				assert.equal(optTrieJson.indexOf("href"), -1);
+			});
+
+			it("Should break 'src' for NoScript", function() {
+				var data = {"http://abc.com/src": "abc"};
+				var expected = {
+					"http://abc.com/s": {
+						"rc": "abc"
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
+				var optTrieJson = JSON.stringify(optTrie);
+
+				assert.deepEqual(optTrie, expected);
+
+				assert.equal(optTrieJson.indexOf("src"), -1);
+			});
+
+			it("Should break 'action' for NoScript", function() {
+				var data = {"http://abc.com/action": "abc"};
+				var expected = {
+					"http://abc.com/a": {
+						"ction": "abc"
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
+				var optTrieJson = JSON.stringify(optTrie);
+
+				assert.deepEqual(optTrie, expected);
+
+				assert.equal(optTrieJson.indexOf("action"), -1);
+			});
+
+			it("Should break 'href', 'action' and 'src' for NoScript", function() {
+				var data = {
+					"http://abc.com/href": "abc",
+					"http://abc.com/123action123": "abc",
+					"http://abc.com/_src_abc_action123": "abc"
+				};
+
+				var expected = {
+					"http://abc.com/": {
+						"_s": {
+							"rc_abc_a": {
+								"ction123": "abc"
+							}
+						},
+						"123a": {
+							"ction123": "abc"
+						},
+						"h": {
+							"ref": "abc"
+						}
+					}
+				};
+
+				var trie = BOOMR.plugins.ResourceTiming.convertToTrie(data, true);
+
+				var optTrie = BOOMR.plugins.ResourceTiming.optimizeTrie(trie, true);
+				var optTrieJson = JSON.stringify(optTrie);
+
+				assert.deepEqual(optTrie, expected);
+
+				assert.equal(optTrieJson.indexOf("href"), -1);
+				assert.equal(optTrieJson.indexOf("action"), -1);
+				assert.equal(optTrieJson.indexOf("src"), -1);
+			});
 		});
 	});
 

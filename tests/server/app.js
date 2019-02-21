@@ -76,6 +76,8 @@ app.get("/beacon/no-op", respond204);
 app.post("/beacon/no-op", respond204);
 app.get("/blackhole", respond204);
 app.post("/blackhole", respond204);
+app.get("/blackhole/*", respond204);
+app.post("/blackhole/*", respond204);
 
 // /delay - delays a response
 app.get("/delay", require("./route-delay"));
