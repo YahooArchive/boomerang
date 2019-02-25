@@ -123,7 +123,9 @@ describe("e2e/21-continuity/05-longtasks", function() {
 		var b = tf.lastBeacon();
 
 		var ltData = findMyLongTasks(b, 3);
-		assert.equal(ltData.a[0].a, "1");
+
+		// "script" or "unknown" (depending on the Chrome version)
+		assert.isTrue(ltData.a[0].a === 1 || ltData.a[0].a === 0);
 	});
 
 	it("Should have set the LongTask data (c.lt) attribution culprit name for the 'same-origin-descendant' task (if LongTasks are supported)", function() {
