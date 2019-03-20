@@ -115,9 +115,10 @@
 		routeHooked: false,
 		hadMissedRouteChange: false,
 		routeChangeInProgress: false,  // will store the setTimeout id when set
-		disableHardNav: false,
+		disableHardNav: false,  // whether or not to disable SPA hard beacons
 		routeFilter: undefined,  // route change filter callback function
 		routeChangeWaitFilter: undefined,  // route change wait filter callback function
+		monitorReplaceState: true,  // whether or not to hook history.replaceState
 		a: undefined,  // helper anchor object used to cleanup urls
 
 		/**
@@ -263,7 +264,7 @@
 			})(history.pushState);
 		}
 
-		if (typeof history.replaceState === "function") {
+		if (impl.monitorReplaceState && typeof history.replaceState === "function") {
 			history.replaceState = (function(_replaceState) {
 				return function(state, title, url) {
 					var fromUrl = BOOMR.window.document.URL, toUrl = fromUrl;
@@ -405,10 +406,13 @@
 		 * Initializes the plugin.
 		 *
 		 * @param {object} config Configuration
-		 * @param {boolean} config.History.auto Whether or not to automatically
+		 * @param {boolean} [config.History.auto] Whether or not to automatically
 		 * instrument the `window.history` object.
-		 *
 		 * If set to `false`, the React snippet should be used.
+		 * @param {boolean} [config.History.disableHardNav] Whether or not to disable SPA hard beacons
+		 * @param {function} [config.History.routeFilter] Route change filter callback function
+		 * @param {function} [config.History.routeChangeWaitFilter] Route change wait filter callback function
+		 * @param {boolean} [config.History.monitorReplaceState] Whether or not to hook History.replaceState
 		 *
 		 * @returns {@link BOOMR.plugins.History} The History plugin for chaining
 		 * @example
@@ -421,7 +425,9 @@
 		 */
 		init: function(config) {
 			BOOMR.utils.pluginConfig(impl, config, "History",
-				["auto", "enabled", "disableHardNav", "routeFilter", "routeChangeWaitFilter"]);
+				["auto", "enabled", "disableHardNav",
+				 "routeFilter", "routeChangeWaitFilter",
+				 "monitorReplaceState"]);
 
 			if (impl.auto && impl.enabled) {
 				this.hook(undefined, true, {});
