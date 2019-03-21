@@ -913,8 +913,17 @@ module.exports = function() {
 		);
 	});
 
-	grunt.registerTask("perf-tests", "Tests Performance", require("./tests/perf/perf-tests"));
-	grunt.registerTask("perf-compare", "Compares current Performance to Baseline", require("./tests/perf/perf-compare"));
+	// The perf tests use NodeJS 8+ features such as async/await and util.promisify
+	var nodeVersionMajor = Number(process.version.match(/^v(\d+)\.\d+/)[1]);
+
+	if (nodeVersionMajor >= 8) {
+	   grunt.registerTask("perf-tests", "Tests Performance", require("./tests/perf/perf-tests"));
+	   grunt.registerTask("perf-compare", "Compares current Performance to Baseline", require("./tests/perf/perf-compare"));
+	}
+	else {
+	   grunt.log.writeln("Warning: Node version " + process.version + " does not support async or util.promisify, used by perf tests.");
+	   grunt.log.writeln("Use NodeJS 8+ to run perf tests.");
+	}
 
 	// Custom aliases for configured grunt tasks
 	var aliases = {
