@@ -411,6 +411,15 @@
  * Time to First Interaction (TTFI) is the first time a user interacted with the
  * page.  This may happen during or after the page's `load` event.
  *
+ * The events that are tracked are:
+ * * Mouse Clicks
+ * * Keyboard Presses
+ * * Scrolls
+ * * Page Visibility changes
+ * * Orientation changes
+ *
+ * Time to First Interaction is not affected by Mouse Movement.
+ *
  * Time to First Interaction will add `c.ttfi` to the beacon.
  *
  * If the user does not interact with the page by the beacon, there will be no
