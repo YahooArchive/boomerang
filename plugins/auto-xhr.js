@@ -558,8 +558,8 @@
 		var ev = {
 			type: resource.initiator,
 			resource: resource,
-			nodes_to_wait: 0,  // MO resources + xhrs currently outstanding
-			total_nodes: 0,  // total MO resources + xhrs
+			nodes_to_wait: 0,  // MO resources + xhrs currently outstanding + wait filter (max: 1)
+			total_nodes: 0,  // total MO resources + xhrs + wait filter (max: 1)
 			resources: [],  // resources reported to MO handler (no xhrs)
 			aborted: false,  // this event was aborted
 			complete: false
@@ -567,7 +567,8 @@
 		    i,
 		    last_ev,
 		    last_ev_index,
-		    index = this.pending_events.length;
+		    index = this.pending_events.length,
+		    self = this;
 
 		for (i = index - 1; i >= 0; i--) {
 			if (this.pending_events[i] && !this.pending_events[i].complete) {
@@ -649,9 +650,23 @@
 			// try to start the MO, in case we haven't had the chance to yet
 			MutationHandler.start();
 
-			// give SPAs a bit more time to do something since we know this was
-			// an interesting event.
-			this.setTimeout(impl.spaIdleTimeout, index);
+			if (!resource.wait) {
+				// give SPAs a bit more time to do something since we know this was
+				// an interesting event.
+				this.setTimeout(impl.spaIdleTimeout, index);
+			}
+			else {
+				// a wait filter isn't a node, but we'll use the same logic.
+				// Increase node count since we are waiting for the waitComplete call.
+				ev.nodes_to_wait++;
+				ev.total_nodes++;
+				// waitComplete() should be called once the held beacon is complete.
+				// The caller is responsible for clearing the .wait flag
+				resource.waitComplete = function() {
+					self.load_finished(index);
+					resource.waitComplete = undefined;
+				};
+			}
 		}
 
 		this.watch++;
@@ -793,33 +808,24 @@
 			}
 		};
 
-		// send the beacon if we were not told to hold it
-		if (!resource.wait) {
-			// if this is a SPA Hard navigation, make sure it doesn't fire until onload
-			if (resource.initiator === "spa_hard") {
-				// don't wait for onload if this was an aborted SPA navigation
-				if ((!ev || !ev.aborted) && !BOOMR.hasBrowserOnloadFired()) {
-					BOOMR.utils.addListener(w, "load", function() {
-						var loadTimestamp = BOOMR.now();
+		// if this is a SPA Hard navigation, make sure it doesn't fire until onload
+		if (resource.initiator === "spa_hard") {
+			// don't wait for onload if this was an aborted SPA navigation
+			if ((!ev || !ev.aborted) && !BOOMR.hasBrowserOnloadFired()) {
+				BOOMR.utils.addListener(w, "load", function() {
+					var loadTimestamp = BOOMR.now();
 
-						// run after the 'load' event handlers so loadEventEnd is captured
-						BOOMR.setImmediate(function() {
-							sendResponseEnd(true, loadTimestamp);
-						});
+					// run after the 'load' event handlers so loadEventEnd is captured
+					BOOMR.setImmediate(function() {
+						sendResponseEnd(true, loadTimestamp);
 					});
+				});
 
-					return;
-				}
+				return;
 			}
+		}
 
-			sendResponseEnd(false);
-		}
-		else {
-			// waitComplete() should be called once the held beacon is complete
-			resource.waitComplete = function() {
-				sendResponseEnd(true);
-			};
-		}
+		sendResponseEnd(false);
 	};
 
 	/**

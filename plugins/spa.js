@@ -446,9 +446,13 @@
 				debugLog("Running route change wait filter");
 				try {
 					if (routeChangeWaitFilter.apply(null, arguments)) {
+						debugLog("Route filter returned true; waiting for complete call");
 						resource.wait = true;
 
 						latestResource = resource;
+					}
+					else {
+						debugLog("Route wait filter returned false; not waiting for complete call");
 					}
 				}
 				catch (e) {
@@ -489,7 +493,8 @@
 
 		/**
 		 * Called by the SPA consumer if we have a `routeChangeWaitFilter` and are manually
-		 * triggering navigation complete events.
+		 * waiting for a custom event. The spa soft navigation will continue waiting for
+		 * other nodes in progress
 		 *
 		 * @memberof BOOMR.plugins.SPA
 		 */
@@ -498,6 +503,7 @@
 				latestResource.wait = false;
 
 				if (latestResource.waitComplete) {
+					debugLog("Route wait filter complete");
 					latestResource.waitComplete();
 				}
 
@@ -507,11 +513,18 @@
 
 		/**
 		 * Marks the current navigation as complete and sends a beacon.
+		 * The spa soft navigation will not wait for other nodes in progress
 		 *
 		 * @memberof BOOMR.plugins.SPA
 		 */
 		markNavigationComplete: function() {
 			var i, ev, waiting, mh = BOOMR.plugins.AutoXHR.getMutationHandler();
+
+			// if we're waiting due to a `routeChangeWaitFilter` then mark it complete
+			if (latestResource && latestResource.wait) {
+				BOOMR.plugins.SPA.wait_complete();
+			}
+
 			if (mh && mh.pending_events.length > 0) {
 				for (i = mh.pending_events.length - 1; i >= 0; i--) {
 					ev = mh.pending_events[i];
@@ -559,5 +572,6 @@
 		}
 
 	};
+	BOOMR.plugins.SPA.waitComplete = BOOMR.plugins.SPA.wait_complete;
 
 }());

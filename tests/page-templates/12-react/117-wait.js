@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
-/*global BOOMR_test,assert*/
-BOOMR_test.templates.SPA = BOOMR_test.templates.SPA || {};
-BOOMR_test.templates.SPA["17-wait"] = function() {
+/*global BOOMR_test*/
+
+describe("e2e/12-react/117-wait", function() {
 	var tf = BOOMR.plugins.TestFramework;
 	var t = BOOMR_test;
 
@@ -63,7 +63,6 @@ BOOMR_test.templates.SPA["17-wait"] = function() {
 				done,
 				function() {
 					assert.operator(tf.beacons[i].t_done, ">=", 5000);
-					assert.operator(tf.beacons[i].t_done, "<", 5300);
 					done();
 				},
 				this.skip.bind(this));
@@ -90,24 +89,8 @@ BOOMR_test.templates.SPA["17-wait"] = function() {
 			assert.isTrue(b.u.indexOf("/widgets/2") !== -1);
 		});
 
-		it("Should have sent the third with a timestamp of at least 2s (if MutationObserver is supported)", function(done) {
+		it("Should have sent the third with a timestamp of at least 1ms", function(done) {
 			if (t.isMutationObserverSupported()) {
-				t.ifAutoXHR(
-					done,
-					function() {
-						assert.operator(tf.beacons[i].t_done, ">=", 2000);
-						assert.operator(tf.beacons[i].t_done, "<", 2550);  // depending on app, could be up to 250ms xhr and 2s img
-						done();
-					},
-					this.skip.bind(this));
-			}
-			else {
-				return this.skip();
-			}
-		});
-
-		it("Should have sent the third with a timestamp of at least 1ms (if MutationObserver is not supported)", function(done) {
-			if (!t.isMutationObserverSupported()) {
 				t.ifAutoXHR(
 					done,
 					function() {
@@ -140,4 +123,5 @@ BOOMR_test.templates.SPA["17-wait"] = function() {
 			assert.operator(b.t_done, "<=", 1000);
 		});
 	});
-};
+
+});
