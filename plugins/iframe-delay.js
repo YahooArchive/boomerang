@@ -122,12 +122,12 @@
 
 				if (data.msg === impl.messages.start) {
 					debugLog("Received start message from child IFrame");
-					event.source.postMessage(JSON.stringify({"msg": impl.messages.startACK}), "*");
+					event.source.postMessage(JSON.stringify({"msg": impl.messages.startACK}), event.origin);
 					impl.runningCount += 1;
 				}
 				else if (data.msg === impl.messages.done) {
 					debugLog("Received done message from child IFrame");
-					event.source.postMessage(JSON.stringify({"msg": impl.messages.doneACK}), "*");
+					event.source.postMessage(JSON.stringify({"msg": impl.messages.doneACK}), event.origin);
 					impl.runningCount -= 1;
 					impl.finishedCount += 1;
 					if (data.loadEnd > impl.loadEnd) {
@@ -249,7 +249,8 @@
 			if (this.is_supported()) {
 				if (impl.registerParent) {
 					debugLog("Running as Child. Found registerParent=true");
-					BOOMR.utils.addListener(w, "message", impl.onIFrameMessageAsChild);
+					// listen on this window since it will be the source of postMessage calls
+					BOOMR.utils.addListener(window, "message", impl.onIFrameMessageAsChild);
 					function postStart() {
 						debugLog("Trying to notify parent window of load start");
 						w.parent.postMessage(JSON.stringify({"msg": impl.messages.start, "pid": BOOMR.pageId}), "*");

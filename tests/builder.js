@@ -76,6 +76,7 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 
 	var boomerangE2ETestDomain = grunt.option("main-domain") || DEFAULT_TEST_MAIN_DOMAIN;
 	var boomerangE2ESecondDomain = grunt.option("secondary-domain") || DEFAULT_TEST_SECONDARY_DOMAIN;
+	var boomerangE2ETestPort = 4002;
 
 	//make grunt know this task is async.
 	var done = gruntTask.async();
@@ -97,7 +98,8 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 		function(opts, cb) {
 			opts.vars = {
 				mainServer: boomerangE2ETestDomain,
-				secondaryServer: boomerangE2ESecondDomain
+				secondaryServer: boomerangE2ESecondDomain,
+				testPort: boomerangE2ETestPort
 			};
 
 			// Set all template vars to their file name
@@ -156,7 +158,23 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 							var supportFileName = supportFileBasePath.replace(templateDir + path.sep, "").replace("support" + path.sep, "");
 
 							grunt.log.ok(supportFileBasePath);
-							grunt.file.copy(file, path.join(supportDirDest, supportFileName));
+
+							if (supportFileName.endsWith("html")) {
+								// read contents
+								var contents = fs.readFileSync(file, "utf-8");
+
+								opts.vars.fileName = supportFileName;
+
+								var rendered = grunt.template.process(contents, {
+									data: opts.vars
+								});
+
+								// write
+								grunt.file.write(path.join(supportDirDest, supportFileName), rendered);
+							}
+							else {
+								grunt.file.copy(file, path.join(supportDirDest, supportFileName));
+							}
 						});
 					});
 				}

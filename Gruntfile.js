@@ -28,10 +28,10 @@ var BUILD_PATH = "build";
 var TEST_BUILD_PATH = path.join("tests", "build");
 var TEST_RESULTS_PATH = path.join("tests", "results");
 var TEST_DEBUG_PORT = 4002;
-var TEST_URL_BASE = grunt.option("test-url") || "http://" + boomerangE2ETestDomain + ":4002";
+var TEST_URL_BASE = grunt.option("test-url") || "http://" + boomerangE2ETestDomain + ":" + TEST_DEBUG_PORT;
 
 var SELENIUM_ADDRESS = grunt.option("selenium-address") || "http://" + boomerangE2ETestDomain + ":4444/wd/hub";
-var E2E_BASE_URL = "http://" + boomerangE2ETestDomain + ":4002/";
+var E2E_BASE_URL = "http://" + boomerangE2ETestDomain + ":" + TEST_DEBUG_PORT + "/";
 
 var DEFAULT_BROWSER = grunt.option("test-browser") || "ChromeHeadless";
 

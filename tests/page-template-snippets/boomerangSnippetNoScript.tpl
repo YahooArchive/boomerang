@@ -48,6 +48,9 @@
 			prefix = "../../build/";
 			suffix = "";
 		}
+		if (/\/support\//.test(window.location.pathname)) {
+			prefix = prefix.replace("build/", "../build/");
+		}
 		js.src = prefix + (window.BOOMR_script_minified ? "boomerang-latest-debug.min.js" : "boomerang-latest-debug.js") + suffix;
 		BOOMR_lstart = new Date().getTime();
 		this.body.appendChild(js);
