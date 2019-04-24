@@ -1,4 +1,11 @@
 <%= header %>
+<script>
+// Force IFRAME for the delayed snippet, as otherwise the delay will be doubled
+// when the initial load timesout at 3000ms
+if (BOOMR_test.supportsLoaderIframe()) {
+	BOOMR_test.forceSnippetIframe();
+}
+</script>
 <%= continuitySnippet %>
 <script src="01-fps-delayed.js" type="text/javascript"></script>
 <img src="/delay?delay=3000&amp;file=assets/img.jpg"/>

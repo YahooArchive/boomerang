@@ -71,6 +71,14 @@ describe("common", function() {
 
 			assert.equal(b.v, BOOMR.version, prefix + "has the boomerang version");
 
+			if (BOOMR.snippetVersion) {
+				assert.equal(b.sv, BOOMR.snippetVersion, prefix + "has the boomerang snippet version");
+			}
+
+			if (BOOMR.snippetMethod) {
+				assert.equal(b.sm, BOOMR.snippetMethod, prefix + "has the boomerang snippet method");
+			}
+
 			assert.equal(b["h.key"], window.BOOMR_API_key, prefix + "has the correct API key (h.key)");
 			assert.isDefined(b["h.d"], prefix + "has the domain (h.d) param");
 

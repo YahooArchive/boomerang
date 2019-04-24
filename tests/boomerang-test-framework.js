@@ -467,6 +467,14 @@
 
 		assert.equal(tf.lastBeacon().v, BOOMR.version, "ensure the beacon has the boomerang version");
 
+		if (BOOMR.snippetVersion) {
+			assert.equal(tf.lastBeacon().sv, BOOMR.snippetVersion, "ensure the beacon has the boomerang snippet version");
+		}
+
+		if (BOOMR.snippetMethod) {
+			assert.equal(tf.lastBeacon().sm, BOOMR.snippetMethod, "ensure the beacon has the boomerang snippet method");
+		}
+
 		done();
 	};
 
@@ -989,6 +997,227 @@
 	t.isChrome = function() {
 		return window.navigator &&
 			(window.navigator.userAgent.indexOf("Chrome") !== -1);
+	};
+
+	/**
+	 * Whether or not the browser supports IFRAME loading method.
+	 *
+	 * i.e. not IE 6 / 7
+	 *
+	 * @returns {boolean} True if the browser supports IFRAME loading method
+	 */
+	t.supportsLoaderIframe = function() {
+		// Not IE 6 / 7
+		if (t.isIE() && navigator.userAgent.match(/MSIE [67]\./)) {
+			return false;
+		}
+
+		return true;
+	};
+
+	/**
+	 * Whether or not the browser supports link rel="preload"
+	 *
+	 * @returns {boolean} True if the browser supports Preload
+	 */
+	t.supportsPreload = function() {
+		// See if Preload is supported or not
+		var link = document.createElement("link");
+
+		return (link.relList &&
+			typeof link.relList.supports === "function" &&
+			link.relList.supports("preload") &&
+			("as" in link));
+	};
+
+	/**
+	 * Whether or not the snippet was loaded in Preload mode
+	 *
+	 * @returns {boolean} True if the snippet loaded in Preload mode
+	 */
+	t.snippetWasLoadedPreload = function() {
+		return BOOMR.utils.arrayFilter(
+			document.getElementsByTagName("link"),
+			function(l) {
+				return l.rel === "preload" &&
+					l.as === "script" &&
+					l.href.indexOf("boomerang-latest") !== -1;
+			}
+		).length === 1;
+	};
+
+	/**
+	 * Whether or not the snippet was loaded in IFRAME mode
+	 *
+	 * @returns {boolean} True if the snippet loaded in IFRAME mode
+	 */
+	t.snippetWasLoadedIframe = function() {
+		return BOOMR.utils.arrayFilter(
+			document.getElementsByTagName("iframe"),
+			function(l) {
+				return l.src === "about:blank";
+			}
+		).length === 1;
+	};
+
+	/**
+	 * Finds the Boomerang Loader Frame
+	 *
+	 * @returns {Element} Boomerang Loader Frame
+	 */
+	t.findBoomerangLoaderFrame = function() {
+		return BOOMR.utils.arrayFilter(
+			document.getElementsByTagName("iframe"),
+			function(l) {
+				return l.src === "about:blank";
+			}
+		)[0];
+	};
+
+	/**
+	 * Finds the Boomerang Loader LINK rel='preload'
+	 *
+	 * @returns {Element} Boomerang Loader LINK
+	 */
+	t.findBoomerangLoaderLinkPreload = function() {
+		return BOOMR.utils.arrayFilter(
+			document.getElementsByTagName("link"),
+			function(l) {
+				return l.rel === "preload";
+			}
+		)[0];
+	};
+
+	/**
+	 * Finds the Boomerang Loader SCRIPT (for SCRIPT or IFRAME mode)
+	 *
+	 * @returns {Element} Boomerang Loader SCRIPT
+	 */
+	t.findBoomerangLoaderScript = function() {
+		return document.getElementById("boomr-async") || document.getElementById("boomr-if-as");
+	};
+
+	/**
+	 * Finds the Boomerang Loader SCRIPT (for Preload mode)
+	 *
+	 * @returns {Element} Boomerang Loader SCRIPT
+	 */
+	t.findBoomerangLoaderScriptPreload = function() {
+		return document.getElementById("boomr-scr-as");
+	};
+
+	/**
+	 * Whether or not the snippet was loaded in SCRIPT mode
+	 *
+	 * @returns {boolean} True if the snippet loaded in SCRIPT mode
+	 */
+	t.snippetWasLoadedScript = function() {
+		return BOOMR.utils.arrayFilter(
+			document.getElementsByTagName("script"),
+			function(l) {
+				return l.id === "boomr-async";
+			}
+		).length === 1;
+	};
+
+	/**
+	 * Forces the Boomerang Loader Snippet to use the SCRIPT fallback
+	 * (by trying to overwrite navigator.userAgent and overwriting aEL/attachEvent)
+	 *
+	 * @returns {boolean} True if we were able to force SCRIPT mode
+	 */
+	t.forceSnippetScript = function() {
+		// If we're already IE6/7, leave as-is
+		if (t.isIE() && navigator.userAgent.match(/MSIE [67]\./)) {
+			return true;
+		}
+
+		//
+		// force IFRAME first
+		//
+		t.forceSnippetIframe();
+
+		//
+		// then force SCRIPT
+		//
+
+		// remove aEL
+		var oldAEL = window.addEventListener;
+		if (window.addEventListener) {
+			window.addEventListener = undefined;
+		}
+
+		// fake attachEvent
+		if (!window.attachEvent) {
+			window.attachEvent = function() {
+				// remove "on" and forward to aEL
+				arguments[0] = arguments[0].substr(2);
+
+				oldAEL.apply(window, arguments);
+			};
+		}
+
+		// change the UA
+		var USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)";
+
+		// Works on Firefox, Chrome, Opera and IE9+
+		if (navigator.__defineGetter__) {
+			navigator.__defineGetter__("userAgent", function() {
+				return USER_AGENT;
+			});
+		}
+		else if (Object.defineProperty) {
+			try {
+				Object.defineProperty(navigator, "userAgent", {
+					get: function() {
+						return USER_AGENT;
+					}
+				});
+			}
+			catch (e) {
+				// IE8 is not able to overwrite native properties
+				return false;
+			}
+		}
+		// Works on Safari
+		else if (window.navigator.userAgent !== USER_AGENT) {
+			var userAgentProp = {
+				get: function() {
+					return USER_AGENT;
+				}
+			};
+
+			try {
+				Object.defineProperty(window.navigator, "userAgent", userAgentProp);
+			}
+			catch (e) {
+				window.navigator = Object.create(navigator, {
+					userAgent: userAgentProp
+				});
+			}
+		}
+
+		return true;
+	};
+
+	/**
+	 * Forces the Boomerang Loader Snippet to use the IFRAME fallback
+	 */
+	t.forceSnippetIframe = function() {
+		if (!t.supportsPreload()) {
+			return;
+		}
+
+		// destroy link relList for preload
+		t.createElementOrig = document.createElement;
+
+		document.createElement = function() {
+			var ret = t.createElementOrig.apply(document, arguments);
+			if (ret.relList) {
+				ret.relList.supports = undefined;
+			}
+			return ret;
+		};
 	};
 
 	window.BOOMR_test = t;

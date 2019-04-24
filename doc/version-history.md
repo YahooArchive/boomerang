@@ -1,5 +1,82 @@
 # Boomerang Release Notes
 
+## 1.650.0
+### Bug Fixes:
+
+* Issue 782: Boomerang Loader Snippet v12
+* Issue 966: History: Add config option to disable monitoring of `replaceState`
+* Issue 969: AutoXHR: Make `routeChangeWaitFilter` `wait_complete` calls wait for other pending nodes
+* Issue 972: IFrameDelay: Listen for `postMessage` calls on the correct window
+
+### Docs:
+
+* Issue 968: Continuity: Document events for TTFI
+
+### Tests:
+
+* Issue 975: IFrameDelay: Force tests to load Boomerang in an IFRAME when using the snippet
+* Issue 974: Grunt: Allow specifying multiple webdriver-version
+
+## 1.643.0
+### Performance Improvements:
+
+* Issue 933: Performance: Boomerang Performance Tests
+* Issue 936: Performance: Strips out `BOOMR.debug` and related messages for production builds
+* Issue 937: Performance: Grunt: Use UglifyJS-3
+* Issue 953: Performance: ResourceTiming: Allow for non-optimal Trie to improve performance
+
+### Bug Fixes:
+
+* Issue 941: AutoXHR: Track uninteresting timeout per event instead of per page
+* Issue 931: AutoXHR: Cleanup listeners on observed nodes
+* Issue 947: AutoXHR: Track Fetch the same way as XHR during SPA navigations
+* Issue 946: AutoXHR: Track `LINK` stylesheets as interesting nodes
+* Issue 943: AutoXHR: Add XHRs to pending events at send instead of load finished
+* Issue 947: AutoXHR: Include Fetch requests in SPA backend time
+* Issue 949: AutoXHR: Allow config overrides for SPA and XHR idle wait timeouts
+* Issue 952: Boomerang: Ensure only a single beacon is being sent at once
+* Issue 959: IFrameDelay: Gracefully handle different load orders
+
+## 1.630.0
+### Bug Fixes:
+
+* Issue 928: SPA: Ignore route changes if a `routeChangeWaitFilter` has not yet completed
+* Issue 929: History: Ignore `replaceState()` if a SPA nav is in progress and no URL change
+* Issue 930: SPA: Only apply `routeFilter` and `routeChangeWaitFilter` on SPA Soft Navigations
+
+## 1.629.0
+### Bug Fixes:
+
+* Issue 904: LOGN: Include `ak.ai` param in config request from AK plugin, if available
+* Issue 906: Cleanup leaked global vars
+* Issue 907: Added `.npmignore` for OS NPM package
+* Issue 908: README: Notes on download / npm / bower
+* Issue 910: TPAnalytics: Add data to `spa_hard` beacons
+* Issue 913: UserTiming: Update to vanilla `UserTimingCompression`
+* Issue 923: Boomerang: Keep track of all unload handlers to know when to send unload
+* Issue 925: AutoXHR: Don't track `<SCRIPT>` tags for XHR beacons
+* OS Issue 196: Optionally depend on `usertiming-compression`
+* OS Issue 218: Boomerang: Optionally send XHR with credentials
+* OS Issue 219: Clicks: Fix plugin config
+* OS Issue 220: SPA: Clarify `route_change` comment
+* OS Issue 221: Tests: Move `webdriver-manager` from `package.json` install script to tests
+* OS Issue 223: JSDoc: Clarify SPA plugin load-order requirements
+* OS Issue 224: Fix issue related to screen orientation in iPhone and iPad
+* OS Issue 231: Add missing bracket after "Observer effect" link
+* OS Issue 236: Continuity: Update documentation of beacon parameters
+
+## 1.626.0
+### Bug Fixes:
+
+* Issue 905: Errors / AutoXHR: Un-register wrapped functions at unload
+* Issue 903: SPA: Make markNavigationComplete only apply to SPA events
+
+## 1.624.0
+### Bug Fixes:
+
+* Issue 892: Errors: Timing issue causing page load beacon to get tagged with the error type initiator marker
+* Issue 899: AutoXHR: Try to use native MutationObserver when running on a page with Zone.js
+
 ## 1.621.0
 ### New Features:
 

@@ -30,6 +30,8 @@
  * parameters as well.
  *
  * * `v`: Boomerang version
+ * * `sv`: Boomerang Loader Snippet version
+ * * `sm`: Boomerang Loader Snippet method
  * * `u`: The page's URL (for most beacons), or the `XMLHttpRequest` URL
  * * `pgu`: The page's URL (for `XMLHttpRequest` beacons)
  * * `pid`: Page ID (8 characters)
@@ -3628,6 +3630,14 @@ BOOMR_check_doc_domain();
 
 			impl.vars.v = BOOMR.version;
 
+			// Snippet version, if available
+			if (BOOMR.snippetVersion) {
+				impl.vars.sv = BOOMR.snippetVersion;
+			}
+
+			// Snippet method is IFRAME if not specified (pre-v12 snippets)
+			impl.vars.sm = BOOMR.snippetMethod || "i";
+
 			if (BOOMR.session.enabled) {
 				impl.vars["rt.si"] = BOOMR.session.ID + "-" + Math.round(BOOMR.session.start / 1000).toString(36);
 				impl.vars["rt.ss"] = BOOMR.session.start;
@@ -4022,9 +4032,16 @@ BOOMR_check_doc_domain();
 		/* END_DEBUG */
 	};
 
-	boomr.url = boomr.utils.getMyURL();
-
-
+	// if not already set already on BOOMR, determine the URL
+	if (!BOOMR.url) {
+		boomr.url = boomr.utils.getMyURL();
+	}
+	else {
+		// canonicalize the URL
+		var a = BOOMR.window.document.createElement("a");
+		a.href = BOOMR.url;
+		boomr.url = a.href;
+	}
 
 	delete BOOMR_start;
 
