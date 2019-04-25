@@ -67,6 +67,12 @@ var SAUCELABS_CONFIG = {
 	tunneled: false
 };
 
+// Get WebDriver versions, allowing for a single argument or an array
+var webDriverVersions = grunt.option("webdriver-versions");
+if (Array.isArray(webDriverVersions)) {
+	webDriverVersions = webDriverVersions.join(" ");
+}
+
 //
 // Grunt config
 //
@@ -738,7 +744,7 @@ module.exports = function() {
 		protractor_webdriver: {
 			options: {
 				keepAlive: true,
-				command: "webdriver-manager start " + grunt.option("webdriver-versions")
+				command: "webdriver-manager start " + webDriverVersions
 			},
 			e2e: {
 			}
