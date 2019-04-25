@@ -42,7 +42,7 @@ describe("e2e/26-iframedelay/06-iframedelay-snippet-co", function() {
 					window.dettachEvent("onmessage", handler);
 				}
 				if (!data.data) {
-					assert("ensureBeaconCount failed");
+					assert.fail("ensureBeaconCount failed");
 				}
 				callback();
 			}

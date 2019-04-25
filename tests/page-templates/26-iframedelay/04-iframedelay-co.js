@@ -42,7 +42,7 @@ describe("e2e/26-iframedelay/04-iframedelay-co", function() {
 					window.dettachEvent("onmessage", handler);
 				}
 				if (!data.data) {
-					assert("ensureBeaconCount failed");
+					assert.fail("ensureBeaconCount failed");
 				}
 				callback();
 			}

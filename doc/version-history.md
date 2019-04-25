@@ -47,7 +47,6 @@
 ## 1.629.0
 ### Bug Fixes:
 
-* Issue 904: LOGN: Include `ak.ai` param in config request from AK plugin, if available
 * Issue 906: Cleanup leaked global vars
 * Issue 907: Added `.npmignore` for OS NPM package
 * Issue 908: README: Notes on download / npm / bower
