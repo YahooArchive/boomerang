@@ -41,16 +41,15 @@ describe("e2e/11-restiming/06-svg-image", function() {
 
 
 			if (t.isFirefox()) {
-				// Firefox initiator type may change depending on cache?
+				// Firefox initiator type may change depending on cache or response content-type?
 				// Looks to be `other` (soft reload), `img` (first hit) or `image` (hard reload)
 				assert.isTrue(BOOMR.utils.inArray(img.initiatorType, ["image", "img", "other"]));
 			}
-			else if (t.isIE() || t.isEdge()) {
-				assert.equal(img.initiatorType, "img");
-			}
 			else {
-				// Chrome, Safari
-				assert.equal(img.initiatorType, "image");
+				// `img` for IE & Edge
+				// `image` or `img` for Chrome
+				// `image` for Safari
+				assert.isTrue(BOOMR.utils.inArray(img.initiatorType, ["image", "img"]));
 			}
 		}
 		else {

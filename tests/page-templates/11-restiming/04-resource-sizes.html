@@ -25,9 +25,13 @@ xhr2.open("GET", "/assets/img.jpg?3");
 xhr2.send(null);
 
 if (t.isFetchApiSupported()) {
-	var f1 = fetch("/assets/img.jpg?4");
+	function consume(res) {
+		res.blob();
+	}
 
-	var f2 = fetch("/assets/img.jpg?5");
+	// if we don't consume them then they don't get added to RT in Chrome
+	var f1 = fetch("/assets/img.jpg?4").then(consume);
+	var f2 = fetch("/assets/img.jpg?5").then(consume);
 }
 </script>
 

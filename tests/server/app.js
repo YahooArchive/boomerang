@@ -144,6 +144,18 @@ app.get("/*", function(req, res, next) {
 
 // all static content follows afterwards
 /*eslint dot-notation:0*/
+
+// do not cache certain static resources
+app.use("/assets", express.static(path.join(wwwRoot, "/assets"), {
+	etag: false,
+	lastModified: false,
+	index: false,
+	cacheControl: false,
+	setHeaders: function(res, _path) {
+		res.setHeader("Cache-Control", "no-cache, no-store");
+	}
+}));
+
 app.use(express.static(wwwRoot));
 
 // this needs to be before `app.listen(...)`

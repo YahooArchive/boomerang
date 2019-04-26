@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
 /*global BOOMR_test,assert*/
 
-describe("e2e/00-basic/13-onload-minified", function() {
+describe("e2e/00-basic/14-undefined-var", function() {
 	var tf = BOOMR.plugins.TestFramework;
 	var t = BOOMR_test;
 
@@ -20,6 +20,6 @@ describe("e2e/00-basic/13-onload-minified", function() {
 		// ensure the data was sent to 'beacon'
 		var rt = t.findResourceTimingBeacon();
 		assert.isDefined(rt);
-		assert.isTrue(rt.name.indexOf("&undef=&") !== -1);
+		assert.isTrue(/[\?&]undef=&/.test(rt.name));
 	});
 });
