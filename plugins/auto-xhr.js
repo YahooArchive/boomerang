@@ -1982,7 +1982,7 @@
 				excluded = false;
 
 				// Default value of async is true
-				if (async === undefined) {
+				if (typeof async === "undefined") {
 					async = true;
 				}
 
@@ -2060,14 +2060,14 @@
 							else {
 								// load, timeout, error, abort
 								if (ename === "load") {
-									if (req.status < 200 || req.status >= 400) {
+									if (req.status !== 0 && (req.status < 200 || req.status >= 400)) {
 										// put the HTTP error code on the resource if it's not a success
 										resource.status = req.status;
 									}
 								}
 								else {
 									// this is a timeout/error/abort, so add the status code
-									resource.status = (stat === undefined ? req.status : stat);
+									resource.status = (typeof stat === "undefined" ? req.status : stat);
 								}
 
 								impl.loadFinished(resource);
