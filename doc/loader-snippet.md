@@ -19,22 +19,23 @@ The snippet does the following:
     loads after the `load` event.
 3. For browsers that [support Preload](https://caniuse.com/#feat=link-rel-preload) `<link rel="preload" as="script">`,
     Boomerang will add a `<link>` node to tell the browser to fetch Boomerang.js.
-    3.1. Once the Preload has finished, Boomerang adds a regular `<script>` node to the page with the same Boomerang URL,
-         which tells the browser to execute Boomerang.
+    * Once the Preload has finished, Boomerang adds a regular `<script>` node to the page with the same Boomerang URL,
+      which tells the browser to execute Boomerang.
 4. For browsers that do not support Preload, or if Preload fails or doesn't trigger within the defined timeframe (default 3 seconds),
     the non-blocking IFRAME loader method is used.
-    4.1. A hidden `<iframe>` is injected into the page.
-    4.2. The snippet attempts to read the IFRAME's `contentWindow.document`.  If it can't,
-        it updates the IFRAME's `src` to add JavaScript that sets the IFRAME's `document.domain`
-        to the current page's `document.domain`.  This ensures the anonymous IFRAME
-        can communicate with the host page.
-    4.3. It writes a function `_l()` to the IFRAME's `document` which will add a
-        `<script>` tag that loads boomerang.js.
-    4.4. It sets the IFRAME's `<body onload="document._l()">` to run the function
-        above, so the `<script>` tag is loaded after the IFRAME's `onload` event has fired.
+    * A hidden `<iframe>` is injected into the page.
+    * The snippet attempts to read the IFRAME's `contentWindow.document`.  If it can't,
+      it updates the IFRAME's `src` to add JavaScript that sets the IFRAME's `document.domain`
+      to the current page's `document.domain`.  This ensures the anonymous IFRAME
+      can communicate with the host page.
+    * It writes a function `_l()` to the IFRAME's `document` which will add a
+      `<script>` tag that loads boomerang.js.
+    * It sets the IFRAME's `<body onload="document._l()">` to run the function
+      above, so the `<script>` tag is loaded after the IFRAME's `onload` event has fired.
 5. For IE 6 and IE 7, which don't support the non-blocking IFRAME loader method (due to problems they have with `about:blank`
-        URLs in secure contexts), a dynamic `<script>` node is added to the page.  Note this means that in IE 6 and 7,
-        Boomerang could be a SPOF (Single Point of Failure) if the script is delayed, potentially delaying the Page Load.
+    URLs in secure contexts), a dynamic `<script>` node is added to the page.
+    * Note this means that in IE 6 and 7, Boomerang could be a SPOF (Single Point of Failure) if the script is delayed,
+      potentially delaying the Page Load.
 
 Note: We split the `<body` tag insertion into `<bo` and `dy` to avoid server-side output filters that may replace `<body` tags with their own code.
 
