@@ -29,7 +29,6 @@
  * * Hardware
  *   * `scr.mtp`: [`navigator.maxTouchPoints`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/maxTouchPoints)
  *   * `cpu.cnc`: [`navigator.hardwareConcurrency`](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorConcurrentHardware/hardwareConcurrency)
- *   * `bat.lvl`: [Battery API](https://developer.mozilla.org/en-US/docs/Web/API/Battery_Status_API) level
  * * DOM
  *   * `dom.ln`: Number of DOM nodes in the main frame
  *   * `dom.sz`: Number of HTML bytes of of the main frame
@@ -242,15 +241,6 @@
 					}
 				},
 				"navigator"
-			);
-
-			errorWrap(b,
-				function() {
-					if (b && typeof b.level === "number") {
-						BOOMR.addVar("bat.lvl", b.level);
-					}
-				},
-				"battery"
 			);
 
 			errorWrap(true,
