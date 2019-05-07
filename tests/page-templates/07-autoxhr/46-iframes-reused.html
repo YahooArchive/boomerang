@@ -28,12 +28,14 @@ BOOMR_test.init({
 				var iframe2 = document.createElement("IFRAME");
 				iframe2.src = "/delay?delay=1000&file=/assets/blank.html?rnd=" + Math.random();
 				document.body.appendChild(iframe2);
-				iframe2.addEventListener("load", function() {
+				function changeSrc() {
 					setTimeout(function() {
-						// change the src to another 60-second URL that shouldn't be tracked
-						iframe2.src = "/delay?delay=60000&file=/assets/blank.html?rnd=" + Math.random();
+						// change the src to another 10-second URL that shouldn't be tracked
+						iframe2.src = "/delay?delay=10000&file=/assets/blank.html?rnd=" + Math.random();
 					}, 0);
-				});
+					iframe2.removeEventListener("load", changeSrc);
+				};
+				iframe2.addEventListener("load", changeSrc);
 			};
 			xhr.send(null);
 		}
