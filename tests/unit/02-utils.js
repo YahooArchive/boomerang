@@ -19,4 +19,18 @@ describe("BOOMR.utils exports", function() {
 	it("Should have an existing Function BOOMR.utils.pluginConfig()", function() {
 		assert.isFunction(BOOMR.utils.pluginConfig);
 	});
+
+	describe("isObjectEmpty()", function() {
+		it("Should return false for non-empty objects", function() {
+			assert.isFalse(BOOMR.utils.isObjectEmpty({ a: 1 }));
+
+			assert.isFalse(BOOMR.utils.isObjectEmpty({ a: 1, b: 2 }));
+		});
+
+		it("Should return true for empty objects", function() {
+			assert.isTrue(BOOMR.utils.isObjectEmpty({}));
+
+			assert.isTrue(BOOMR.utils.isObjectEmpty());
+		});
+	});
 });

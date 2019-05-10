@@ -2214,6 +2214,23 @@ BOOMR_check_doc_domain();
 				};
 
 				return isInt(data);
+			},
+
+			/**
+			 * Determines whether or not an Object is empty
+			 *
+			 * @param {object} data Data object
+			 *
+			 * @returns {boolean} True if the object has no properties
+			 */
+			isObjectEmpty: function(data) {
+				for (var propName in data) {
+					if (data.hasOwnProperty(propName)) {
+						return false;
+					}
+				}
+
+				return true;
 			}
 
 			/* BEGIN_DEBUG */
@@ -3797,7 +3814,7 @@ BOOMR_check_doc_domain();
 			}
 
 			// Check that we have data to send
-			if (data.length === 0) {
+			if (BOOMR.utils.isObjectEmpty(data)) {
 				return false;
 			}
 
