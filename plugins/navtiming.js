@@ -213,7 +213,7 @@
 
 		done: function() {
 			var w = BOOMR.window, p, pn, chromeTimes, pt, data = {}, offset = 0, i,
-			    paintTiming, k;
+			    paintTiming, paintTimingSupported = false, k;
 
 			if (this.complete) {
 				return this;
@@ -313,6 +313,8 @@
 				// https://www.w3.org/TR/paint-timing/
 				//
 				if (!data.nt_first_paint && BOOMR.plugins.PaintTiming) {
+					paintTimingSupported = BOOMR.plugins.PaintTiming.is_supported();
+
 					paintTiming = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
 
 					if (paintTiming) {
@@ -335,6 +337,7 @@
 				//
 				if ((!data.nt_protocol || !data.nt_first_paint) &&
 				    (!pt || pt.nextHopProtocol !== "") &&
+				    !paintTimingSupported &&
 				    w.chrome &&
 				    typeof w.chrome.loadTimes === "function") {
 					chromeTimes = w.chrome.loadTimes();
