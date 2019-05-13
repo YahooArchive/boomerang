@@ -18,7 +18,7 @@ describe("e2e/06-bug/issue-606", function() {
 			assert.equal(resources.length, 2);
 
 			// find our iframe
-			assert.equal(resources[0].initiatorType, "other");
+			assert.equal(resources[0].initiatorType, "frame");
 			assert.include(resources[0].name, "support/92542-iframe.html");
 
 			// find our css
