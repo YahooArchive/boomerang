@@ -1,10 +1,13 @@
 # Boomerang Release Notes
 
 ## 1.650.0
-### Bug Fixes:
+### New Features:
 
 * Issue 782: Boomerang Loader Snippet v12
 * Issue 966: History: Add config option to disable monitoring of `replaceState`
+
+### Bug Fixes:
+
 * Issue 969: AutoXHR: Make `routeChangeWaitFilter` `wait_complete` calls wait for other pending nodes
 * Issue 972: IFrameDelay: Listen for `postMessage` calls on the correct window
 
@@ -33,7 +36,6 @@
 * Issue 946: AutoXHR: Track `LINK` stylesheets as interesting nodes
 * Issue 943: AutoXHR: Add XHRs to pending events at send instead of load finished
 * Issue 947: AutoXHR: Include Fetch requests in SPA backend time
-* Issue 949: AutoXHR: Allow config overrides for SPA and XHR idle wait timeouts
 * Issue 952: Boomerang: Ensure only a single beacon is being sent at once
 * Issue 959: IFrameDelay: Gracefully handle different load orders
 
