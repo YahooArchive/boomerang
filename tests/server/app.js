@@ -104,7 +104,7 @@ app.get("/drop", dropRequest);
 app.post("/drop", dropRequest);
 
 // load in any additional routes
-if (fs.existsSync("./routes.js")) {
+if (fs.existsSync(path.resolve(path.join(__dirname, "routes.js")))) {
 	require("./routes")(app);
 }
 
