@@ -2380,7 +2380,7 @@ BOOMR_check_doc_domain();
 				return this;
 			}
 
-			if (config.site_domain !== undefined) {
+			if (typeof config.site_domain === "string") {
 				this.session.domain = config.site_domain;
 			}
 
