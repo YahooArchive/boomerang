@@ -944,36 +944,30 @@ function getConfig() {
 				noColor: false,
 				keepAlive: false
 			},
+
 			PhantomJS: {
 				options: {
-					configFile: "tests/protractor.config.phantom.js",
+					configFile: "tests/protractor-config/phantom.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
-						baseUrl: E2E_BASE_URL,
-						capabilities: {
-							browserName: "phantomjs",
-							"phantomjs.binary.path": require("phantomjs").path
-						}
+						baseUrl: E2E_BASE_URL
 					}
 				}
 			},
 			Chrome: {
 				options: {
-					configFile: "tests/protractor.config.chrome.js",
+					configFile: "tests/protractor-config/chrome.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
-						baseUrl: E2E_BASE_URL,
-						capabilities: {
-							browserName: "chrome"
-						}
+						baseUrl: E2E_BASE_URL
 					}
 				}
 			},
 			ChromeHeadless: {
 				options: {
-					configFile: "tests/protractor.config.chromeheadless.js",
+					configFile: "tests/protractor-config/chromeheadless.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
@@ -983,7 +977,7 @@ function getConfig() {
 			},
 			Firefox: {
 				options: {
-					configFile: "tests/protractor.config.firefox.js",
+					configFile: "tests/protractor-config/firefox.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
@@ -993,7 +987,7 @@ function getConfig() {
 			},
 			FirefoxHeadless: {
 				options: {
-					configFile: "tests/protractor.config.firefoxheadless.js",
+					configFile: "tests/protractor-config/firefoxheadless.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
@@ -1003,7 +997,7 @@ function getConfig() {
 			},
 			Edge: {
 				options: {
-					configFile: "tests/protractor.config.edge.js",
+					configFile: "tests/protractor-config/edge.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
@@ -1013,7 +1007,7 @@ function getConfig() {
 			},
 			IE: {
 				options: {
-					configFile: "tests/protractor.config.ie.js",
+					configFile: "tests/protractor-config/ie.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
@@ -1023,7 +1017,7 @@ function getConfig() {
 			},
 			Safari: {
 				options: {
-					configFile: "tests/protractor.config.safari.js",
+					configFile: "tests/protractor-config/safari.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e.js"],
@@ -1033,7 +1027,7 @@ function getConfig() {
 			},
 			debug: {
 				options: {
-					configFile: "tests/protractor.config.debug.js",
+					configFile: "tests/protractor-config/debug.js",
 					args: {
 						seleniumAddress: SELENIUM_ADDRESS,
 						specs: ["tests/e2e/e2e-debug.js"],

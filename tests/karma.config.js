@@ -14,6 +14,10 @@ module.exports = function(config) {
 			hostname: u.hostname,
 			port: u.port
 		};
+		if (u.auth) {
+			webdriverConfig.user = u.auth.split(":")[0];
+			webdriverConfig.pwd = u.auth.split(":")[1];
+		}
 	}
 
 	config.set({
@@ -76,7 +80,9 @@ module.exports = function(config) {
 					base: "WebDriver",
 					config: webdriverConfig,
 					browserName: "firefox",
-					flags: ["--headless"],
+					"moz:firefoxOptions": {
+						args: [ "--headless" ]
+					},
 					platform: "ANY",
 					version: "ANY"
 				},

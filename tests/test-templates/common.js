@@ -84,8 +84,8 @@ describe("common", function() {
 
 			assert.isDefined(b["h.t"], prefix + "has the time (h.t) param");
 			tm = parseInt(b["h.t"], 10);
-			assert.operator(tm, ">", now - (60 * 1000), prefix + "time is greater than a minute ago");
-			assert.operator(tm, "<", now, prefix + "time is less than now");
+			// now +- an hour. Cloud based Simulators/Emulators might have clock skew
+			assert.closeTo(tm, now, (60 * 60 * 1000), prefix + "has time (h.t) as a valid timestamp");
 
 			if (!b.early && typeof b["rt.sl"] !== "undefined") {
 				assert.operator(parseInt(b["rt.sl"], 10), ">", 0);

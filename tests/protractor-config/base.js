@@ -1,7 +1,7 @@
 /*eslint-env node*/
 /*global jasmine*/
 
-exports.config = {
+var config = {
 	onPrepare: function() {
 		var reporters = require("jasmine-reporters");
 
@@ -17,13 +17,14 @@ exports.config = {
 			useDotNotation: true,
 			filePrefix: "e2e" + (process.env.BUILD_FLAVOR ? ("-" + process.env.BUILD_FLAVOR) : "")
 		}));
-	},
-	// needs to be specified here (instead of in Gruntfile.js) - grunt-protractor-runner seems
-	// to have an issue passing in args
-	capabilities: {
-		browserName: "firefox",
-		"moz:firefoxOptions": {
-			args: [ ]
-		}
 	}
 };
+
+console.log(JSON.stringify(process.env));
+// webdriver capabilities https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities
+var capabilities = process.env.CAPABILITIES;
+if (capabilities) {
+	config.capabilities = JSON.parse(capabilities);
+}
+
+exports.config = config;

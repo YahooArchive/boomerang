@@ -20,10 +20,14 @@ exports.config = {
 	},
 	// needs to be specified here (instead of in Gruntfile.js) - grunt-protractor-runner seems
 	// to have an issue passing in args
-	capabilities: {
-		browserName: "chrome",
-		chromeOptions: {
-			args: [ "--headless", "--disable-gpu", "--window-size=1024,768" ]
-		}
+	multiCapabilities: [{
+		browserName: "firefox",
+		"moz:firefoxOptions": {
+			args: [ ]
+		},
+	},
+	{
+		browserName: "chrome"
 	}
+	]
 };
