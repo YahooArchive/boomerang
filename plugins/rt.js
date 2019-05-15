@@ -1611,7 +1611,7 @@
 			BOOMR.addVar({
 				"rt.tt": impl.loadTime,
 				"rt.obo": impl.oboError
-			}, undefined, true);
+			}, true);
 
 			impl.updateCookie();
 

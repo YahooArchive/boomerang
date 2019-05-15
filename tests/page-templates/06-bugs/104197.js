@@ -33,9 +33,12 @@ describe("e2e/06-bugs/104197", function() {
 		}
 	});
 
-	it("Should have the third beacon have ResourceTiming data (if available)", function() {
+	it("Should not have the third beacon have ResourceTiming data (if available)", function() {
+		// NOTE: In a non-faked preload scenario, ResourceTiming should be on the beacon
+		// But this test case is faking preload (after a regular load beacon has already fired,
+		// so restiming won't be on the beacon)
 		if (t.isResourceTimingSupported()) {
-			assert.isDefined(tf.beacons[2].restiming);
+			assert.isUndefined(tf.beacons[2].restiming);
 		}
 	});
 

@@ -3543,9 +3543,10 @@ BOOMR_check_doc_domain();
 		 * Parameters will be on all subsequent beacons unless `singleBeacon` is
 		 * set. Early beacons will not clear vars that were set with `singleBeacon`.
 		 *
-		 * @param {string} name Variable name
-		 * @param {string|object} val Value
-		 * @param {boolean} singleBeacon Whether or not to add to a single beacon
+		 * @param {string|object} name Variable name
+		 * @param {string|object} [val] Value.  If the first parameter is an object, this
+		 * becomes the singleBeacon parameter.
+		 * @param {boolean} [singleBeacon=false] Whether or not to add to a single beacon
 		 * or all beacons.
 		 *
 		 * @returns {BOOMR} Boomerang object
@@ -3574,8 +3575,10 @@ BOOMR_check_doc_domain();
 					if (o.hasOwnProperty(k)) {
 						impl.vars[k] = o[k];
 
-						// remove after the first beacon
-						if (singleBeacon) {
+						// For object-set, the second parameter (or third) can be
+						// true to force singleBeacon.  If so, remove this
+						// after the first beacon
+						if (value || singleBeacon) {
 							impl.singleBeaconVars[k] = 1;
 						}
 					}
@@ -4458,6 +4461,22 @@ BOOMR_check_doc_domain();
 			catch (e) {
 				BOOMR.warn("getResourceTiming:" + e);
 			}
+		},
+
+		/**
+		 * Determines whether beacon data is for a Page Load beacon, or not.
+		 *
+		 * Page Load beacons include regular Page Loads, SPA Hard or SPA Soft beacons.
+		 *
+		 * We also consider an Aborted Load beacon a Page Load.
+		 *
+		 * @param {object} data Beacon Data
+		 * @returns {boolean} True if beacon data is for a Page Load beacon
+		 */
+		isPageLoadBeacon: function(data) {
+			return (typeof data["rt.quit"] === "undefined" || typeof data["rt.abld"] !== "undefined") &&
+				(typeof data["http.initiator"] === "undefined" ||
+					BOOMR.utils.inArray(data["http.initiator"], BOOMR.constants.BEACON_TYPE_SPAS));
 		}
 
 		/* BEGIN_DEBUG */,

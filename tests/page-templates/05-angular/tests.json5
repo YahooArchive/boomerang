@@ -19,5 +19,14 @@
     },
     "125-continuity-no-tti-first-beacon": {
         requires: ["continuity"]
+    },
+    "126-unload-params": {
+        requires: ["restiming", "memory"]
+    },
+    "127-abld-metriconunload": {
+        requires: ["restiming", "memory"]
+    },
+    "128-abld-no-metriconunload": {
+        requires: ["restiming", "memory"]
     }
 }

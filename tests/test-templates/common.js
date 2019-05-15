@@ -121,7 +121,6 @@ describe("common", function() {
 		// "scr.orn",
 		// "scr.dpx",
 		// "cpu.cnc",
-		// "bat.lvl",
 		// "dom.ln",
 		// "dom.sz",
 		// "dom.img",

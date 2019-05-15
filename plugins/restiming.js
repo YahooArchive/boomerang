@@ -1851,7 +1851,7 @@
 		done: function() {
 			// Stop if we've already sent a nav beacon (both xhr and spa* beacons
 			// add restiming manually).
-			if (this.sentNavBeacon) {
+			if (this.sentNavBeacon || BOOMR.hasSentPageLoadBeacon()) {
 				return;
 			}
 

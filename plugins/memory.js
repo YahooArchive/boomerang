@@ -169,14 +169,19 @@
 
 	// A private object to encapsulate all your implementation details
 	impl = {
-		done: function() {
+		onNonPageLoad: false,
+
+		done: function(data) {
 			if (!w) {
 				// this can happen for an unload beacon
 				return;
 			}
 
+			if (!impl.onNonPageLoad && !BOOMR.isPageLoadBeacon(data)) {
+				return;
+			}
+
 			// If we have resource timing, get number of resources
-			BOOMR.removeVar("dom.res");
 			errorWrap(true,
 				function() {
 					var res, doms = {}, a;
@@ -190,7 +195,7 @@
 						return;
 					}
 
-					BOOMR.addVar("dom.res", res.length);
+					BOOMR.addVar("dom.res", res.length, true);
 
 					a = BOOMR.window.document.createElement("a");
 
@@ -199,7 +204,7 @@
 						doms[a.hostname] = true;
 					});
 
-					BOOMR.addVar("dom.doms", Object.keys(doms).length);
+					BOOMR.addVar("dom.doms", Object.keys(doms).length, true);
 				},
 				"resources"
 			);
@@ -209,7 +214,7 @@
 					"mem.total": m.totalJSHeapSize,
 					"mem.limit": m.jsHeapSizeLimit,
 					"mem.used": m.usedJSHeapSize
-				});
+				}, true);
 			}
 
 			errorWrap(ls && ss,
@@ -217,13 +222,13 @@
 					BOOMR.addVar({
 						"mem.lsln": ls.length,
 						"mem.ssln": ss.length
-					});
+					}, true);
 
 					if (window.JSON && typeof JSON.stringify === "function") {
 						BOOMR.addVar({
 							"mem.lssz": JSON.stringify(ls).length,
 							"mem.sssz": JSON.stringify(ss).length
-						});
+						}, true);
 					}
 				},
 				"localStorage"
@@ -235,17 +240,19 @@
 					BOOMR.addVar({
 						"scr.xy": s.width + "x" + s.height,
 						"scr.bpp": s.colorDepth + "/" + (s.pixelDepth || "")
-					});
+					}, true);
+
 					if (s.orientation) {
-						BOOMR.addVar("scr.orn", s.orientation.angle + "/" + s.orientation.type);
+						BOOMR.addVar("scr.orn", s.orientation.angle + "/" + s.orientation.type, true);
 					}
+
 					if (w.devicePixelRatio > 1) {
-						BOOMR.addVar("scr.dpx", w.devicePixelRatio);
+						BOOMR.addVar("scr.dpx", w.devicePixelRatio, true);
 					}
 
 					var scroll = BOOMR.utils.scroll();
 					if (scroll.x || scroll.y) {
-						BOOMR.addVar("scr.sxy", scroll.x + "x" + scroll.y);
+						BOOMR.addVar("scr.sxy", scroll.x + "x" + scroll.y, true);
 					}
 				},
 				"screen"
@@ -254,17 +261,19 @@
 			errorWrap(n,
 				function() {
 					if (n.hardwareConcurrency) {
-						BOOMR.addVar("cpu.cnc", n.hardwareConcurrency);
+						BOOMR.addVar("cpu.cnc", n.hardwareConcurrency, true);
 					}
+
 					if (n.maxTouchPoints) {
-						BOOMR.addVar("scr.mtp", n.maxTouchPoints);
+						BOOMR.addVar("scr.mtp", n.maxTouchPoints, true);
 					}
+
 					if (n.connection && n.connection.hasOwnProperty("saveData")) {
-						BOOMR.addVar("net.sd", n.connection.saveData ? 1 : 0);
+						BOOMR.addVar("net.sd", n.connection.saveData ? 1 : 0, true);
 					}
 
 					if (typeof n.deviceMemory !== "undefined") {
-						BOOMR.addVar("dev.mem", n.deviceMemory);
+						BOOMR.addVar("dev.mem", n.deviceMemory, true);
 					}
 				},
 				"navigator"
@@ -278,7 +287,7 @@
 						"dom.ln": nodeCount("*"),
 						"dom.sz": d.documentElement.innerHTML.length,
 						"dom.ck": d.cookie.length
-					});
+					}, true);
 
 					uniqUrls = {};
 					BOOMR.addVar(nodeCount(
@@ -290,7 +299,7 @@
 						function(el) {
 							return !(uniqUrls[el.currentSrc || el.src] = uniqUrls.hasOwnProperty(el.currentSrc || el.src));
 						}
-					));
+					), true);
 
 					uniqUrls = {};
 					BOOMR.addVar(nodeCount(
@@ -302,7 +311,7 @@
 						function(el) {
 							return !(uniqUrls[el.src] = uniqUrls.hasOwnProperty(el.src));
 						}
-					));
+					), true);
 
 					uniqUrls = {};
 					BOOMR.addVar(nodeCount(
@@ -314,7 +323,7 @@
 						function(el) {
 							return !(uniqUrls[el.src] = uniqUrls.hasOwnProperty(el.src));
 						}
-					));
+					), true);
 
 					uniqUrls = {};
 					BOOMR.addVar(nodeCount(
@@ -327,12 +336,10 @@
 						function(link) {
 							return !(uniqUrls[link.href] = uniqUrls.hasOwnProperty(link.href));
 						}
-					));
+					), true);
 				},
 				"dom"
 			);
-
-			// no need to call BOOMR.sendBeacon because we're called when the beacon is being sent
 		}
 	};
 
@@ -345,7 +352,7 @@
 		 *
 		 * @memberof BOOMR.plugins.Memory
 		 */
-		init: function() {
+		init: function(config) {
 			var c;
 
 			try {
@@ -356,33 +363,16 @@
 				s = w.screen;
 				n = w.navigator;
 
+				// gather config and config overrides
+				BOOMR.utils.pluginConfig(impl, config, "Memory",
+				    ["onNonPageLoad"]);
+
 				try {
 					ls = w.localStorage;
 					ss = w.sessionStorage;
 				}
 				catch (e) {
 					// NOP - some browsers will throw on access to var
-				}
-
-				if (n && n.battery) {
-					b = n.battery;
-				}
-				// There are cases where getBattery exists but is not a function
-				// No need to check for existence because typeof will return undefined anyway
-				else if (n && typeof n.getBattery === "function") {
-					var batPromise = n.getBattery();
-
-					// some UAs implement getBattery without a promise
-					if (batPromise && typeof batPromise.then === "function") {
-						batPromise.then(function(battery) {
-							b = battery;
-						});
-					}
-					// If batPromise is an object and it has a `level` property, then it's probably the battery object
-					else if (typeof batPromise === "object" && batPromise.hasOwnProperty("level")) {
-						b = batPromise;
-					}
-					// else do nothing
 				}
 			}
 			catch (err) {
@@ -399,6 +389,7 @@
 
 			// we do this before sending a beacon to get the snapshot when the beacon is sent
 			BOOMR.subscribe("before_beacon", impl.done, null, impl);
+
 			return this;
 		},
 
