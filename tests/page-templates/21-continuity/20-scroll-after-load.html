@@ -26,7 +26,9 @@ BOOMR_test.init({
 					setTimeout(function() {
 						window.scrollTo(0, 0);
 
-						st.loaded();
+						setTimeout(function() {
+							st.loaded();
+						}, 100);
 					}, 250);
 				}, 3000);
 			}, 250);

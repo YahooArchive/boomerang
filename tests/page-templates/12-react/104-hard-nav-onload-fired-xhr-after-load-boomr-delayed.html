@@ -14,7 +14,10 @@
 			xhr = new w.XMLHttpRequest();
 			xhr.addEventListener("load", function() {
 				img = d.createElement("img");
-				img.src = "/delay?delay=1000&file=pages/12-react/support/img.jpg&id=xhr";
+				// in FF, this request needs to be slow enough so that the request hasn't completed by the time
+				// the mutation observer runs otherwise node.naturalWidth will already be defined and the request
+				// won't be tracked.
+				img.src = "/delay?delay=3000&file=pages/12-react/support/img.jpg&id=xhr" + Math.random();
 				d.body.appendChild(img);
 			});
 			xhr.open("GET", "/delay?delay=500&file=pages/12-react/support/widgets.json", true);

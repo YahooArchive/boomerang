@@ -29,24 +29,25 @@ describe("e2e/11-restiming/15-initiator-types", function() {
 		ResourceTimingDecompression.HOSTNAMES_REVERSED = false;
 		var entries = ResourceTimingDecompression.decompressResources(JSON.parse(b.restiming));
 
+		// there are initiatorType differences between browsers
 		var types = [
-			["boomerang-test-framework", "script"],
-			["id=audio-src", "audio"],
-			["id=video-src", "video"],
-			["id=video-track", "track"],
-			["id=video-track", "track"],
-			["15-initiator-types.html", "navigation"],
-			["15-initiator-types.js", "script"],
-			["id=img", "img"],
-			["id=input", "input"],
-			["id=video-poster", "video"],
-			["id=object", "object"],
-			["mocha.css", "link"],
-			["mocha.js", "script"],
-			["assertive-chai.js", "script"],
-			["lodash.js", "script"],
-			["resourcetiming-decompression.js", "script"],
-			["common.js", "script"]
+			["boomerang-test-framework", ["script"]],
+			["id=audio-src", ["audio"]],
+			["id=video-src", ["video"]],
+			["id=video-track", ["track"]],
+			["id=video-track", ["track"]],
+			["15-initiator-types.html", ["navigation", "html"]], // navigation in Chrome, sometimes html in FF
+			["15-initiator-types.js", ["script"]],
+			["id=img", ["img"]],
+			["id=input", ["input", "img"]],  // input in Chrome, img in FF
+			["id=video-poster", ["video", "img"]],  // video in Chrome, img in FF
+			["id=object", ["object"]],
+			["mocha.css", ["link"]],
+			["mocha.js", ["script"]],
+			["assertive-chai.js", ["script"]],
+			["lodash.js", ["script"]],
+			["resourcetiming-decompression.js", ["script"]],
+			["common.js", ["script"]]
 		];
 
 		BOOMR.utils.forEach(types, function(type) {
@@ -59,8 +60,8 @@ describe("e2e/11-restiming/15-initiator-types", function() {
 				return;
 			}
 
-			assert.isTrue(BOOMR.utils.inArray(entry.initiatorType, [type[1], "other"]),
-				type[0] + " is " + type[1] + ", was " + entry.initiatorType);
+			assert.isTrue(BOOMR.utils.inArray(entry.initiatorType, type[1].concat(["other"])),
+				type[0] + " in " + type[1].join() + ", was " + entry.initiatorType);
 		});
 	});
 });

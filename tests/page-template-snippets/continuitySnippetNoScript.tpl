@@ -4,7 +4,8 @@ if (window && window.requestAnimationFrame) {
     window.BOOMR.fpsLog = [];
 
     function frame(now) {
-        if (!window.BOOMR.version && window.BOOMR.fpsLog) {
+        // window.BOOMR.fpsLog will get deleted once boomr is initialized
+        if (window.BOOMR.fpsLog) {
             window.BOOMR.fpsLog.push(Math.round(now));
 
             // if we've added more than 30 seconds of data, stop
