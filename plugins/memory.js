@@ -45,6 +45,8 @@
  *   * `dom.link`: Number of `LINK` nodes in the main frame
  *   * `dom.link.css`: Number of `rel="stylesheet"` `LINK` nodes in the main frame
  *   * `dom.link.css.uniq`: Number of unique `rel="stylesheet"` `LINK` nodes in the main frame
+ * * Net
+ *   * `net.sd`: Boolean stating whether the user has data saver turned on or not
  *
  * @class BOOMR.plugins.Memory
  */
@@ -238,6 +240,9 @@
 					}
 					if (n.maxTouchPoints) {
 						BOOMR.addVar("scr.mtp", n.maxTouchPoints);
+					}
+					if (n.connection && n.connection.hasOwnProperty("saveData")) {
+						BOOMR.addVar("net.sd", n.connection.saveData ? 1 : 0);
 					}
 				},
 				"navigator"
