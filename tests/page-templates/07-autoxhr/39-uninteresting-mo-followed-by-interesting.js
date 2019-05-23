@@ -51,8 +51,7 @@ describe("e2e/07-autoxhr/39-uninteresting-mo-followed-by-interesting", function(
 					done,
 					function() {
 						var b = tf.beacons[i];
-						assert.operator(b.t_done, ">=", 1500);  // 500ms timer delay + 1000ms image delay
-						assert.closeTo(b.t_done, 1500, 200);
+						assert.closeTo(b.t_done, 1650, 150);  // 1500-1800 : 500ms timer delay + 1000ms image delay
 						done();
 					},
 					this.skip.bind(this));
@@ -91,8 +90,7 @@ describe("e2e/07-autoxhr/39-uninteresting-mo-followed-by-interesting", function(
 					done,
 					function() {
 						var b = tf.beacons[i];
-						assert.operator(b.t_done, ">=", 1500);  // 500ms timer delay + 1000ms image delay
-						assert.closeTo(b.t_done, 1500, 200);
+						assert.closeTo(b.t_done, 1650, 150);  // 1500-1800 : 500ms timer delay + 1000ms image delay
 						done();
 					},
 					this.skip.bind(this));

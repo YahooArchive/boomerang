@@ -161,6 +161,7 @@ describe("e2e/07-autoxhr/42-fetch-api", function() {
 	});
 
 	describe("Beacon 7 (xhr) for server dropped connection fetch (if Fetch API is supported)", function() {
+		var i = 6;
 		it("Should contain '/drop'", function(done) {
 			if (!t.isFetchApiSupported()) {
 				return this.skip();
@@ -168,7 +169,7 @@ describe("e2e/07-autoxhr/42-fetch-api", function() {
 			t.ifAutoXHR(
 				done,
 				function() {
-					assert.include(tf.beacons[6].u, "/drop");
+					assert.include(tf.beacons[i].u, "/drop");
 					done();
 				},
 				this.skip.bind(this)
@@ -176,13 +177,30 @@ describe("e2e/07-autoxhr/42-fetch-api", function() {
 		});
 
 		it("Should contain XHR_STATUS_ERROR status", function(done) {
-			if (!t.isFetchApiSupported()) {
-				return this.skip();
-			}
+			var that = this;
 			t.ifAutoXHR(
 				done,
 				function() {
-					assert.equal(tf.beacons[6]["http.errno"], "-998");
+					// proxied requests will return 502
+					if (tf.beacons[i]["http.errno"] === "502") {
+						that.skip();
+					}
+					assert.equal(tf.beacons[i]["http.errno"], "-998");
+					done();
+				},
+				this.skip.bind(this)
+			);
+		});
+
+		it("Should contain 502 status if requested through a proxy", function(done) {
+			var that = this;
+			t.ifAutoXHR(
+				done,
+				function() {
+					if (tf.beacons[i]["http.errno"] !== "502") {
+						that.skip();
+					}
+					assert.equal(tf.beacons[i]["http.errno"], "502");
 					done();
 				},
 				this.skip.bind(this)

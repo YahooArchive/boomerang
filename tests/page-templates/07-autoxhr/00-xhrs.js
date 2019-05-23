@@ -318,10 +318,30 @@ describe("e2e/07-autoxhr/00-xhrs", function() {
 		});
 
 		it("Should contain XHR_STATUS_ERROR status", function(done) {
+			var that = this;
 			t.ifAutoXHR(
 				done,
 				function() {
+					// proxied requests will return 502
+					if (tf.beacons[i]["http.errno"] === "502") {
+						that.skip();
+					}
 					assert.equal(tf.beacons[i]["http.errno"], "-998");
+					done();
+				},
+				this.skip.bind(this)
+			);
+		});
+
+		it("Should contain 502 status if requested through a proxy", function(done) {
+			var that = this;
+			t.ifAutoXHR(
+				done,
+				function() {
+					if (tf.beacons[i]["http.errno"] !== "502") {
+						that.skip();
+					}
+					assert.equal(tf.beacons[i]["http.errno"], "502");
 					done();
 				},
 				this.skip.bind(this)
