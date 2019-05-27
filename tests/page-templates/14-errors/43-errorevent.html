@@ -15,6 +15,7 @@ BOOMR_test.init({
 
 if (window.ErrorEvent) {
 	function errorFunction() {
+		// IE has ErrorEvent but doesn't implement the ErrorEvent constructor
 		var error = new ErrorEvent("error", {
 			error: new Error("errorMessage")
 		});

@@ -18,7 +18,7 @@ describe("e2e/11-restiming/12-clearResourceTiming", function() {
 		var entries = ResourceTimingDecompression.decompressResources(JSON.parse(b.restiming));
 
 		BOOMR.utils.forEach(["one.js", "two.js"], function(file) {
-			assert.isDefined(entries.find(function(e){
+			assert.isDefined(BOOMR.utils.arrayFind(entries, function(e){
 				return e.name.indexOf(file) > -1;
 			}), "can't find: " + file);
 		});

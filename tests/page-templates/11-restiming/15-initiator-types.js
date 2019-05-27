@@ -51,7 +51,7 @@ describe("e2e/11-restiming/15-initiator-types", function() {
 		];
 
 		BOOMR.utils.forEach(types, function(type) {
-			var entry = entries.find(function(e) {
+			var entry = BOOMR.utils.arrayFind(entries, function(e) {
 				return e.name.indexOf(type[0]) > -1;
 			});
 

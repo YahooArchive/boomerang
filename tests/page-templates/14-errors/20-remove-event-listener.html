@@ -110,8 +110,8 @@ if (window.addEventListener) {
 		img8.addEventListener("load", errorFunction5, {capture: true});
 		img8.removeEventListener("load", errorFunction5, true);
 
-		if (navigator.userAgent.indexOf("Phantom") === -1) {
-			// these doesn't work in phantom, the event isn't removed
+		if (navigator.userAgent.indexOf("Phantom") === -1 && !BOOMR_test.isIE() && !BOOMR_test.isEdge()) {
+			// these doesn't work in phantom, Edge or IE. The event isn't removed
 
 			img8.addEventListener("load", errorFunction5, {capture: false});
 			img8.removeEventListener("load", errorFunction5, false);  // useCapture defaults to false

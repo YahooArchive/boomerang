@@ -75,7 +75,13 @@ describe("e2e/14-errors/43-errorevent", function() {
 		}
 		var b = tf.lastBeacon();
 		var err = BOOMR.plugins.Errors.decompressErrors(C.jsUrlDecompress(b.err))[0];
-		assert.equal(err.message, "errorMessage");
+		if (!t.isIE()) {
+			assert.equal(err.message, "errorMessage");
+		}
+		else {
+			// IE has ErrorEvent but doesn't implement the ErrorEvent constructor
+			assert.equal(err.message, "Object doesn't support this action");
+		}
 	});
 
 	it("Should have source = APP (if ErrorEvent is supported)", function() {
@@ -103,7 +109,13 @@ describe("e2e/14-errors/43-errorevent", function() {
 		}
 		var b = tf.lastBeacon();
 		var err = BOOMR.plugins.Errors.decompressErrors(C.jsUrlDecompress(b.err))[0];
-		assert.equal(err.type, "Error");
+		if (!t.isIE()) {
+			assert.equal(err.type, "Error");
+		}
+		else {
+			// IE has ErrorEvent but doesn't implement the ErrorEvent constructor
+			assert.equal(err.type, "TypeError");
+		}
 	});
 
 	it("Should have via = GLOBAL_EXCEPTION_HANDLER (if ErrorEvent is supported)", function() {

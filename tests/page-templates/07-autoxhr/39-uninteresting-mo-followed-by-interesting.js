@@ -46,15 +46,20 @@ describe("e2e/07-autoxhr/39-uninteresting-mo-followed-by-interesting", function(
 		});
 
 		it("Should  have a t_done time that includes the image download", function(done) {
-			t.ifAutoXHR(
-				done,
-				function() {
-					var b = tf.beacons[i];
-					assert.operator(b.t_done, ">=", 1500);  // 500ms timer delay + 1000ms image delay
-					assert.closeTo(b.t_done, 1500, 200);
-					done();
-				},
-				this.skip.bind(this));
+			if (t.isMutationObserverSupported()) {
+				t.ifAutoXHR(
+					done,
+					function() {
+						var b = tf.beacons[i];
+						assert.operator(b.t_done, ">=", 1500);  // 500ms timer delay + 1000ms image delay
+						assert.closeTo(b.t_done, 1500, 200);
+						done();
+					},
+					this.skip.bind(this));
+			}
+			else {
+				this.skip();
+			}
 		});
 	});
 
@@ -81,15 +86,20 @@ describe("e2e/07-autoxhr/39-uninteresting-mo-followed-by-interesting", function(
 		});
 
 		it("Should  have a t_done time that includes the image download", function(done) {
-			t.ifAutoXHR(
-				done,
-				function() {
-					var b = tf.beacons[i];
-					assert.operator(b.t_done, ">=", 1500);  // 500ms timer delay + 1000ms image delay
-					assert.closeTo(b.t_done, 1500, 200);
-					done();
-				},
-				this.skip.bind(this));
+			if (t.isMutationObserverSupported()) {
+				t.ifAutoXHR(
+					done,
+					function() {
+						var b = tf.beacons[i];
+						assert.operator(b.t_done, ">=", 1500);  // 500ms timer delay + 1000ms image delay
+						assert.closeTo(b.t_done, 1500, 200);
+						done();
+					},
+					this.skip.bind(this));
+			}
+			else {
+				this.skip();
+			}
 		});
 	});
 });

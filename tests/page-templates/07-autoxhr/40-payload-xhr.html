@@ -25,14 +25,24 @@ BOOMR_test.init({
 
 				// fire another XHR
 				var xhr = new XMLHttpRequest();
-				xhr.responseType = "json";
+				try {
+					xhr.responseType = "json";
+				}
+				catch (e) {
+					// ignore. "json" is not a valid  responseType in IE/Edge
+				}
 				xhr.open("POST", "/json?2");
 				xhr.send("ABC");
 			}, null, null, true);
 
 			// start a XHR
 			var xhr = new XMLHttpRequest();
-			xhr.responseType = "json";
+			try {
+				xhr.responseType = "json";
+			}
+			catch (e) {
+				// ignore. "json" is not a valid  responseType in IE/Edge
+			}
 			xhr.open("POST", "/json?1");
 			xhr.send("ABC");
 		}

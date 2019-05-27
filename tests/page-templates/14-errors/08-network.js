@@ -142,6 +142,9 @@ describe("e2e/14-errors/08-network", function() {
 		});
 
 		it("Should have code = 404", function() {
+			if (!t.isFetchApiSupported()) {
+				return this.skip();
+			}
 			var b = tf.beacons[i];
 			var err = BOOMR.plugins.Errors.decompressErrors(C.jsUrlDecompress(b.err))[0];
 			assert.equal(err.code, "404");
