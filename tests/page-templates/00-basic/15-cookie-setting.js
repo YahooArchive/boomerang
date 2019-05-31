@@ -10,22 +10,7 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 		assert.isTrue(tf.fired_onbeacon);
 	});
 
-	it("Should have only read the cookie twice during init", function() {
-		// We use UserTiming to measure marks
-		if (!t.isUserTimingSupported()) {
-			return this.skip();
-		}
-
-		assert.equal(
-			2,
-			t.findBoomerangMarksBetween(
-				"get_raw_cookie",
-				t.findBoomerangMarks("init:start")[0],
-				t.findBoomerangMarks("init:end")[0]
-			).length);
-	});
-
-	it("Should have only set the cookie once during init", function() {
+	it("Should have only read the cookie once during init", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
 			return this.skip();
@@ -34,13 +19,13 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 		assert.equal(
 			1,
 			t.findBoomerangMarksBetween(
-				"set_cookie_real",
+				"get_raw_cookie",
 				t.findBoomerangMarks("init:start")[0],
 				t.findBoomerangMarks("init:end")[0]
 			).length);
 	});
 
-	it("Should not have read the cookie during config init", function() {
+	it("Should not have set the cookie during init", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
 			return this.skip();
@@ -48,6 +33,21 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 
 		assert.equal(
 			0,
+			t.findBoomerangMarksBetween(
+				"set_cookie_real",
+				t.findBoomerangMarks("init:start")[0],
+				t.findBoomerangMarks("init:end")[0]
+			).length);
+	});
+
+	it("Should have only read the cookie once during config init", function() {
+		// We use UserTiming to measure marks
+		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		assert.equal(
+			1,
 			t.findBoomerangMarksBetween(
 				"get_raw_cookie",
 				t.findBoomerangMarks("init:start")[1],
@@ -171,14 +171,14 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 			t.findBoomerangMarks("get_raw_cookie").length);
 	});
 
-	it("Should have only set the cookie 4 times total", function() {
+	it("Should have only set the cookie 3 times total", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
 			return this.skip();
 		}
 
 		assert.equal(
-			4,
+			3,
 			t.findBoomerangMarks("set_cookie_real").length);
 	});
 });

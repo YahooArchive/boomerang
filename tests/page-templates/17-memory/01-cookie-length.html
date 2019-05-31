@@ -7,7 +7,8 @@ document.cookie = "baz=abcdefghijklmnopqrstuvwxyz; path=/; domain=" + document.d
 document.cookie = "X=Y; path=/; domain=" + document.domain + "; expires=Fri, 10 Oct 3000 00:00:00 GMT; HttpOnly";
 document.cookie = "Y=Z; path=/; domain=" + document.domain + "; expires=Fri, 10 Oct 3000 00:00:00 GMT; Secure";
 BOOMR_test.init({
-	testAfterOnBeacon: true
+	testAfterOnBeacon: true,
+	site_domain: document.domain
 });
 </script>
 <%= footer %>

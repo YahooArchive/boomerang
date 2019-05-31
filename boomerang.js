@@ -1411,6 +1411,8 @@ BOOMR_check_doc_domain();
 						// note we've saved successfully
 						BOOMR.testedCookies = true;
 
+						BOOMR.removeVar("nocookie");
+
 						return true;
 					}
 					BOOMR.warn("Saved cookie value doesn't match what we tried to set:\n" + value + "\n" + savedval);
@@ -2498,7 +2500,12 @@ BOOMR_check_doc_domain();
 				return this;
 			}
 
-			if (typeof config.site_domain === "string") {
+			if (typeof config.site_domain !== "undefined") {
+				if (/:/.test(config.site_domain)) {
+					// domains with : are not valid, fall back to the current hostname
+					config.site_domain = w.location.hostname.toLowerCase();
+				}
+
 				this.session.domain = config.site_domain;
 			}
 

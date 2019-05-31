@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
 /*global BOOMR_test,assert*/
 
-describe("e2e/25-cookie/02-cookie-from-new-session", function() {
+describe("e2e/25-cookie/15-session-expiry", function() {
 	var tf = BOOMR.plugins.TestFramework;
 
 	it("Should have sent a beacon", function() {
