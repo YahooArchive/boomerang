@@ -11,6 +11,7 @@ BOOMR_test.init({
 });
 
 try {
+	// the event timestamp is set when the object is created
 	var ev = document.createEvent("Event");
 	ev.initEvent("keydown", true, true);
 	ev.keyCode = 27;
@@ -21,6 +22,9 @@ catch (e) {
 
 // click
 window.ttfi = BOOMR.now();
+
+// dispatch event is synchronous. Wait 20ms between the event creation and dispatch
+BOOMR_test.busy(20);
 document.dispatchEvent(ev);
 
 setTimeout(function() {

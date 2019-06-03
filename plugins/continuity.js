@@ -1886,7 +1886,7 @@
 				// compress the object a bit
 				obj = {
 					s: Math.round(task.startTime).toString(36),
-					d: Math.round(task.duration).toString(36),
+					d: Math.ceil(task.duration).toString(36),
 					n: ATTRIBUTION_TYPES[task.name] ? ATTRIBUTION_TYPES[task.name] : 0
 				};
 
@@ -2106,7 +2106,7 @@
 			overallTotal += total;
 			overallLate += late;
 
-			t.set("busy", Math.round(late / total * 100), reportTime);
+			t.set("busy", Math.ceil(late / total * 100), reportTime);
 
 			// reset stats
 			total = 0;
@@ -2158,7 +2158,7 @@
 				return 0;
 			}
 
-			return Math.round(overallLate / overallTotal * 100);
+			return Math.ceil(overallLate / overallTotal * 100);
 		};
 
 		//
@@ -3064,7 +3064,7 @@
 
 				// log first input delay
 				if (firstInputDelay === null) {
-					firstInputDelay = Math.round(delay);
+					firstInputDelay = Math.ceil(delay);
 				}
 
 				// log as a delayed interaction
@@ -3216,12 +3216,12 @@
 		};
 
 		externalMetrics.interactionDelayedTime = function() {
-			return Math.round(delayedInteractionTime);
+			return Math.ceil(delayedInteractionTime);
 		};
 
 		externalMetrics.interactionAvgDelay = function() {
 			if (interactions > 0) {
-				return Math.round(interactionsDelay / interactions);
+				return Math.ceil(interactionsDelay / interactions);
 			}
 		};
 
