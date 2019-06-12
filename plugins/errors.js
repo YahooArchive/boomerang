@@ -959,6 +959,7 @@
 
 		// fixup some old browser types
 		if (typeof error.message === "string" &&
+		    typeof error.message.indexOf === "function" &&
 		    error.message.indexOf("ReferenceError:") !== -1 &&
 		    error.name === "Error") {
 			error.name = "ReferenceError";
