@@ -464,6 +464,7 @@
 	function MutationHandler() {
 		this.watch = 0;
 		this.timer = null;
+		this.timerEarlyBeacon = null;
 
 		this.pending_events = [];
 		this.lastSpaLocation = null;
@@ -1117,14 +1118,22 @@
 			if (index === (this.pending_events.length - 1)) {
 				// if we're the latest pending event then extend the timeout
 				if (BOOMR.utils.inArray(current_event.type, BOOMR.constants.BEACON_TYPE_SPAS)) {
-					// if this is the first time reaching here then at least one resource was fetched.
+					// if we reached here then at least one resource was fetched.
 					// Send our SPA early beacon
 					if (!current_event.firedEarlyBeacon && BOOMR.plugins.Early && BOOMR.plugins.Early.is_supported()) {
-						current_event.firedEarlyBeacon = true;
-						setTimeout(function() {
-							// give the SPA framework a bit of time to load the resource
+						if (this.timerEarlyBeacon) {
+							clearTimeout(this.timerEarlyBeacon);
+							this.timerEarlyBeacon = null;
+						}
+						this.timerEarlyBeacon = setTimeout(function() {
+							handler.timerEarlyBeacon = null;
+							// don't send an early beacon now if we are waiting for a new resource that started during our timeout
+							if (current_event.firedEarlyBeacon || current_event.nodes_to_wait !== 0) {
+								return;
+							}
+							current_event.firedEarlyBeacon = true;
 							BOOMR.plugins.Early.sendEarlyBeacon(current_event.resource, current_event.type);
-						}, SPA_EARLY_TIMEOUT);
+						}, SPA_EARLY_TIMEOUT);  // give the SPA framework a bit of time to load the resource
 					}
 
 					this.setTimeout(impl.spaIdleTimeout, index);

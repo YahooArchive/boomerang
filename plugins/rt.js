@@ -820,7 +820,7 @@
 		setPageLoadTimers: function(ename, t_done, data) {
 			var t_resp_start, t_fetch_start, p, navSt;
 
-			if (ename !== "xhr") {
+			if (ename !== "xhr" && !(ename === "early" && data && BOOMR.utils.inArray(data.initiator, BOOMR.constants.BEACON_TYPE_SPAS))) {
 				impl.initFromCookie();
 				impl.initFromNavTiming();
 
