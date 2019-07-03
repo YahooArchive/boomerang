@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
 /*global BOOMR_test,assert*/
 
-describe("e2e/11-restiming/10-img-srcset", function() {
+describe("e2e/11-restiming/16-img-srcset-getdim", function() {
 	var t = BOOMR_test;
 	var tf = BOOMR.plugins.TestFramework;
 	var issupported = !!document.createElement("PICTURE").constructor.toString().match(/HTMLPictureElement/);
@@ -72,7 +72,7 @@ describe("e2e/11-restiming/10-img-srcset", function() {
 			ResourceTimingDecompression.HOSTNAMES_REVERSED = false;
 			var resources = ResourceTimingDecompression.decompressResources(JSON.parse(b.restiming));
 			var img = findSrcSetImage(resources);
-			assert.closeTo(img.naturalWidth, getExpectedImage()[2], 1);  // without getSrcsetDimensions, we'll have the clientWidth
+			assert.equal(img.naturalWidth, getExpectedImage()[1]);
 		}
 		else {
 			this.skip();
