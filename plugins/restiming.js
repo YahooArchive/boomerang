@@ -787,7 +787,7 @@
 
 		// look at each IMG and IFRAME
 		els.forEach(function(elname) {
-			var elements = doc.getElementsByTagName(elname), el, i, rect, src;
+			var elements = doc.getElementsByTagName(elname), el, i, rect, src, realImg, nH, nW;
 
 			for (i = 0; i < elements.length; i++) {
 				el = elements[i];
@@ -834,10 +834,10 @@
 
 					// If the image came from a srcset, then the naturalHeight/Width will be density corrected.
 					// We get the actual physical dimensions by assigning the image to an uncorrected Image object.
-					// This should load from in-memory cache, so there should be no extra load.
-					var realImg, nH, nW;
-
-					if (el.currentSrc && (el.srcset || (el.parentNode && el.parentNode.nodeName && el.parentNode.nodeName.toUpperCase() === "PICTURE"))) {
+					// In most cases, this should load from in-memory cache, so there should be no extra load.
+					// When the original image's caching is disabled, this will cause the image to be
+					// re-downloaded which can cause issues with capchas.
+					if (impl.getSrcsetDimensions && el.currentSrc && (el.srcset || (el.parentNode && el.parentNode.nodeName && el.parentNode.nodeName.toUpperCase() === "PICTURE"))) {
 						// We need to create this Image in the window that contains the element, and not
 						// the boomerang window.
 						realImg = el.isConnected ? el.ownerDocument.createElement("IMG") : new BOOMR.window.Image();
@@ -1800,6 +1800,7 @@
 		serverTiming: true,
 		monitorClearResourceTimings: false,
 		splitAtPath: false,
+		getSrcsetDimensions: false,
 		// overridable
 
 		/**
@@ -1870,6 +1871,8 @@
 		 * `performance.clearResourceTimings`.
 		 * @param {boolean} [config.ResourceTiming.splitAtPath] Whether or not to split the ResourceTiming
 		 * compressed Trie at the path separator (faster processing, but larger result).
+		 * @param {boolean} [config.ResourceTiming.getSrcsetDimensions] Whether or not to collect physical
+		 * dimensions of srcset images. Setting this will cause uncacheable images to be re-downloaded.
 		 *
 		 * @returns {@link BOOMR.plugins.ResourceTiming} The ResourceTiming plugin for chaining
 		 * @memberof BOOMR.plugins.ResourceTiming
@@ -1877,7 +1880,7 @@
 		init: function(config) {
 			BOOMR.utils.pluginConfig(impl, config, "ResourceTiming",
 				["xssBreakWords", "clearOnBeacon", "urlLimit", "trimUrls", "trackedResourceTypes", "serverTiming",
-					"monitorClearResourceTimings", "splitAtPath"]);
+					"monitorClearResourceTimings", "splitAtPath", "getSrcsetDimensions"]);
 
 			if (impl.initialized) {
 				return this;
