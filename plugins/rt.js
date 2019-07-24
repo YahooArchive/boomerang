@@ -221,9 +221,6 @@
 		// details.
 		crossdomain_sending: false,
 
-		// Vars that were added to the beacon that we can remove after beaconing
-		addedVars: [],
-
 		// navigationStart source: navigation, csi, gtb
 		navigationStartSource: "",
 
@@ -652,8 +649,7 @@
 								trimTiming(res.redirectStart, startTime)
 							].join(",").replace(/,+$/, "");
 
-							BOOMR.addVar(url, data);
-							impl.addedVars.push(url);
+							BOOMR.addVar(url, data, true);
 						}
 					}
 				}
@@ -894,7 +890,7 @@
 					// clients, where responseEnd happens after all other NavTiming events.
 					//
 					if (t_done < t_resp_start) {
-						BOOMR.addVar("t_page.inv", 1);
+						BOOMR.addVar("t_page.inv", 1, true);
 					}
 					else {
 						BOOMR.plugins.RT.setTimer("t_page", t_done - t_resp_start);
@@ -925,26 +921,31 @@
 		 */
 		setSupportingTimestamps: function(t_start, ename) {
 			if (t_start) {
-				BOOMR.addVar("rt.tstart", t_start);
+				BOOMR.addVar("rt.tstart", t_start, true);
 			}
+
 			if (typeof impl.navigationStart === "number" && impl.navigationStart !== t_start) {
-				BOOMR.addVar("rt.nstart", impl.navigationStart);
+				BOOMR.addVar("rt.nstart", impl.navigationStart, true);
 			}
+
 			if (typeof impl.t_start === "number" && impl.t_start !== t_start) {
-				BOOMR.addVar("rt.cstart", impl.t_start);
+				BOOMR.addVar("rt.cstart", impl.t_start, true);
 			}
-			BOOMR.addVar("rt.bstart", BOOMR.t_start);
+
+			BOOMR.addVar("rt.bstart", BOOMR.t_start, true);
+
 			if (BOOMR.t_lstart) {
-				BOOMR.addVar("rt.blstart", BOOMR.t_lstart);
+				BOOMR.addVar("rt.blstart", BOOMR.t_lstart, true);
 			}
 
 			// early beacons don't have t_done, send t_start (or now) as rt.end
 			if (ename === "early") {
-				BOOMR.addVar("rt.end", t_start ? t_start : BOOMR.now());
+				BOOMR.addVar("rt.end", t_start ? t_start : BOOMR.now(), true);
 			}
 			else {
 				if (impl.timers.t_done) {
-					BOOMR.addVar("rt.end", impl.timers.t_done.end);	// don't just use t_done because dev may have called endTimer before we did
+					// don't just use t_done because dev may have called endTimer before we did
+					BOOMR.addVar("rt.end", impl.timers.t_done.end, true);
 				}
 			}
 		},
@@ -993,15 +994,21 @@
 					t_start = impl.navigationStart;
 				}
 				else if (impl.t_start && impl.navigationType !== 2) {
-					t_start = impl.t_start;			// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
-					BOOMR.addVar("rt.start", "cookie");	// if the user hit the back button, referrer will match, and cookie will match
-				}						// but will have time of previous page start, so t_done will be wrong
+					// 2 is TYPE_BACK_FORWARD but the constant may not be defined across browsers
+					t_start = impl.t_start;
+
+					// if the user hit the back button, referrer will match, and cookie will match
+					BOOMR.addVar("rt.start", "cookie");
+				}
 				else if (impl.cached_t_start) {
+					// but will have time of previous page start, so t_done will be wrong
 					t_start = impl.cached_t_start;
 				}
 				else {
+					// force all timers to NaN state
 					BOOMR.addVar("rt.start", "none");
-					t_start = undefined;			// force all timers to NaN state
+
+					t_start = undefined;
 				}
 
 				impl.cached_t_start = t_start;
@@ -1031,7 +1038,7 @@
 				BOOMR.debug("Transitioned from prerender to " + BOOMR.visibilityState(), "rt");
 
 				// note that we transitioned from prerender on the beacon for debugging
-				BOOMR.addVar("vis.pre", "1");
+				BOOMR.addVar("vis.pre", "1", true);
 
 				// send a beacon
 				BOOMR.plugins.RT.done(null, "visible");
@@ -1094,9 +1101,7 @@
 					},
 					"cl");
 
-				BOOMR.addVar("nu", BOOMR.utils.cleanupURL(value));
-
-				impl.addedVars.push("nu");
+				BOOMR.addVar("nu", BOOMR.utils.cleanupURL(value), true);
 			}
 		},
 
@@ -1147,10 +1152,6 @@
 			// if it's an early beacon we want to keep rt.start for the next beacon
 			if (!edata || typeof edata.early === "undefined") {
 				BOOMR.removeVar("rt.start");
-			}
-			if (impl.addedVars && impl.addedVars.length > 0) {
-				BOOMR.removeVar(impl.addedVars);
-				impl.addedVars = [];
 			}
 		},
 
@@ -1429,8 +1430,7 @@
 					}
 
 					if (impl.basic_timers.hasOwnProperty(t_name)) {
-						BOOMR.addVar(t_name, timer.delta);
-						impl.addedVars.push(t_name);
+						BOOMR.addVar(t_name, timer.delta, true);
 					}
 					else {
 						t_other.push(t_name + "|" + timer.delta);
@@ -1439,8 +1439,7 @@
 			}
 
 			if (t_other.length) {
-				BOOMR.addVar("t_other", t_other.join(","));
-				impl.addedVars.push("t_other");
+				BOOMR.addVar("t_other", t_other.join(","), true);
 			}
 
 			if (source === "beacon" && (!vars || typeof vars.early === "undefined")) {
@@ -1510,14 +1509,6 @@
 				this.setTimer("t_done", edata.timing.requestStart, edata.timing.loadEventEnd);
 			}
 
-			// make sure old variables don't stick around
-			BOOMR.removeVar(
-				"t_done", "t_page", "t_resp", "t_postrender", "t_prerender", "t_load", "t_other",
-				"rt.tstart", "rt.nstart", "rt.cstart", "rt.bstart", "rt.end", "rt.subres",
-				"http.errno", "http.method", "http.type", "xhr.sync", "fetch.bnu",
-				"rt.ss", "rt.sl", "rt.tt", "rt.lt"
-			);
-
 			impl.setSupportingTimestamps(t_start, ename);
 
 			this.addTimersToBeacon(null, ename);
@@ -1534,45 +1525,42 @@
 				subresource = edata.subresource;
 
 				if (edata.url) {
-					BOOMR.addVar("u", BOOMR.utils.cleanupURL(edata.url.replace(/#.*/, "")));
-					impl.addedVars.push("u");
+					BOOMR.addVar("u", BOOMR.utils.cleanupURL(edata.url.replace(/#.*/, "")), true);
 				}
 
 				if (edata.status && (edata.status < -1 || edata.status >= 400)) {
-					BOOMR.addVar("http.errno", edata.status);
+					BOOMR.addVar("http.errno", edata.status, true);
 				}
 
 				if (edata.method && edata.method !== "GET") {
-					BOOMR.addVar("http.method", edata.method);
+					BOOMR.addVar("http.method", edata.method, true);
 				}
 
 				if (edata.type && edata.type !== "xhr") {
-					BOOMR.addVar("http.type", edata.type[0]);  // just send first char
+					// just send first char
+					BOOMR.addVar("http.type", edata.type[0], true);
 				}
 
 				if (edata.headers) {
-					BOOMR.addVar("http.hdr", edata.headers);
+					BOOMR.addVar("http.hdr", edata.headers, true);
 				}
 
 				if (edata.synchronous) {
-					BOOMR.addVar("xhr.sync", 1);
+					BOOMR.addVar("xhr.sync", 1, true);
 				}
 
 				if (edata.initiator) {
-					BOOMR.addVar("http.initiator", edata.initiator);
+					BOOMR.addVar("http.initiator", edata.initiator, true);
 				}
 
 				if (edata.responseBodyNotUsed) {
-					BOOMR.addVar("fetch.bnu", 1);
+					BOOMR.addVar("fetch.bnu", 1, true);
 				}
-
-				impl.addedVars.push("http.errno", "http.method", "http.hdr", "xhr.sync", "http.initiator", "fetch.bnu");
 			}
 
 			// This is an explicit subresource
 			if (subresource && subresource !== "passive") {
-				BOOMR.addVar("rt.subres", 1);
-				impl.addedVars.push("rt.subres");
+				BOOMR.addVar("rt.subres", 1, true);
 			}
 
 			// we're in onload
@@ -1590,22 +1578,19 @@
 			BOOMR.addVar({
 				"rt.tt": impl.loadTime,
 				"rt.obo": impl.oboError
-			});
-
-			impl.addedVars.push("rt.tt", "rt.obo");
+			}, undefined, true);
 
 			impl.updateCookie();
 
 			if (ename === "unload") {
-				BOOMR.addVar("rt.quit", "");
+				BOOMR.addVar("rt.quit", "", true);
 
 				if (!impl.onloadfired) {
-					BOOMR.addVar("rt.abld", "");
-					impl.addedVars.push("rt.abld");
+					BOOMR.addVar("rt.abld", "", true);
 				}
 
 				if (!impl.visiblefired) {
-					BOOMR.addVar("rt.ntvu", "");
+					BOOMR.addVar("rt.ntvu", "", true);
 				}
 			}
 
