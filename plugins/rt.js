@@ -68,6 +68,8 @@
  *   - `spa` for SPA Soft Navigations
  *   - `spa_hard` for SPA Hard Navigations
  * * `fetch.bnu`: For XHR beacons from fetch API requests, `1` if fetch response body was not used.
+ * * `rt.tt`: Sum of load times across session
+ * * `rt.obo`: Number of pages in session that did not have a load time
  *
  * ## Cookie
  *

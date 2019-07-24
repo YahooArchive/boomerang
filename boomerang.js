@@ -39,6 +39,9 @@
  * * `vis.pre`: `1` if the page transitioned from prerender to visible
  * * `xhr.pg`: The `XMLHttpRequest` page group
  * * `errors`: Error messages of errors detected in Boomerang code, separated by a newline
+ * * `rt.si`: Session ID
+ * * `rt.ss`: Session start timestamp
+ * * `rt.sl`: Session length (number of pages), can be increased by XHR beacons as well
  */
 
 /**
