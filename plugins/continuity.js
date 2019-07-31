@@ -2836,8 +2836,6 @@
 		 * @param {Event} e Event
 		 */
 		function onMouseMove(e) {
-			var now = BOOMR.now();
-
 			var newX = e.clientX;
 			var newY = e.clientY;
 
@@ -3037,6 +3035,8 @@
 		 * @param {Event} e Event
 		 */
 		function interact(type, now, e) {
+			var delay = 0;
+
 			now = now || BOOMR.now();
 
 			if (!enabled) {
@@ -3049,9 +3049,11 @@
 				timeToFirstInteraction = now;
 			}
 
-			// check for interaction delay
-			var delay = 0;
-			if (e && e.timeStamp) {
+			// check for interaction delay.
+			// Don't use the event timeStamp in Safari if we were not loaded in the same window as the base page.
+			// The timeStamp's time origin will not be that of the base page and our timings will be skewed.
+			// See https://bugs.webkit.org/show_bug.cgi?id=200355
+			if (e && e.timeStamp && !(impl.isSafari && w !== window)) {
 				if (e.timeStamp > 1400000000000) {
 					delay = now - e.timeStamp;
 				}
@@ -3793,6 +3795,11 @@
 		 * Whether or not we've added data to this beacon
 		 */
 		hasAddedDataToBeacon: false,
+
+		/*
+		 * Safari check, desktop and iOS
+		 */
+		 isSafari: (window && window.navigator && window.navigator.vendor && window.navigator.vendor.indexOf("Apple") !== -1),
 
 		//
 		// Callbacks

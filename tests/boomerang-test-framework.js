@@ -960,17 +960,6 @@
 	};
 
 	/**
-	 * Determines the user agent is Internet Explorer or not
-	 *
-	 * @returns {boolean} True if the user agent is Internet Explorer
-	 */
-	t.isIE = function() {
-		return window.navigator &&
-			(window.navigator.userAgent.indexOf("MSIE") !== -1 ||
-			window.navigator.appVersion.indexOf("Trident/") > 0);
-	};
-
-	/**
 	 * Validates an early beacon against the load beacon
 	 */
 	t.validateEarlyBeacon = function(early, normal) {
@@ -1142,6 +1131,17 @@
 	};
 
 	/**
+	 * Determines the user agent is Internet Explorer or not
+	 *
+	 * @returns {boolean} True if the user agent is Internet Explorer
+	 */
+	t.isIE = function() {
+		return window.navigator &&
+			(window.navigator.userAgent.indexOf("MSIE") !== -1 ||
+			window.navigator.appVersion.indexOf("Trident/") > 0);
+	};
+
+	/**
 	 * Determines the user agent is Edge or not
 	 *
 	 * @returns {boolean} True if the user agent is Edge
@@ -1169,6 +1169,16 @@
 	t.isChrome = function() {
 		return window.navigator &&
 			(window.navigator.userAgent.indexOf("Chrome") !== -1);
+	};
+
+	/**
+	 * Determines the user agent is Safari or not
+	 *
+	 * @returns {boolean} True if the user agent is Safari
+	 */
+	t.isSafari = function() {
+		return window.navigator && window.navigator.vendor &&
+			(window.navigator.vendor.indexOf("Apple") !== -1);
 	};
 
 	/**
