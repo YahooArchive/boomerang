@@ -236,6 +236,9 @@
  * on a desktop browser each poll, but this monitoring is probably the most
  * expensive of the Continuity plugin monitors.
  *
+ * This option is off by default, and can be turned on via the
+ * {@link BOOMR.plugins.Continuity.init `monitorStats`} config option.
+ *
  * ## New Timers
  *
  * There are 4 new timers from the Continuity plugin that center around user
@@ -3610,7 +3613,7 @@
 		/**
 		 * Whether or not to monitor page stats
 		 */
-		monitorStats: true,
+		monitorStats: false,
 
 		/**
 		 * Whether to monitor for interactions after onload
@@ -3992,7 +3995,7 @@
 		 * monitor Interactions.
 		 * @param {boolean} [config.Continuity.monitorStats=true] Whether or not to
 		 * monitor Page Statistics.
-		 * @param {boolean} [config.Continuity.afterOnload=true] Whether or not to
+		 * @param {boolean} [config.Continuity.afterOnload=false] Whether or not to
 		 * monitor Long Tasks, Page Busy, Frame Rate, interactions and Page Statistics
 		 * after `onload` (up to `afterOnloadMaxLength`).
 		 * @param {number} [config.Continuity.afterOnloadMaxLength=60000] Maximum time
