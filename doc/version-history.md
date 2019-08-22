@@ -20,6 +20,56 @@
 * Issue 975: IFrameDelay: Force tests to load Boomerang in an IFRAME when using the snippet
 * Issue 974: Grunt: Allow specifying multiple webdriver-version
 
+## 1.672.0
+### Bug Fixes:
+
+* Issue 1002: PageParams: Fix XHR ignore matching
+* Issue 999: RT: Cleanup beacon parameter cleanup
+* Issue 996: Config: Allow overriding `beacon_disable_sendbeacon`
+
+## 1.669.0
+### Bug Fixes:
+
+* Issue 992: Errors: Ensure `message.indexOf` is a function
+* Issue 993: Early Beacon: Fix for SPA events
+
+## 1.667.0
+### New Features:
+
+* Issue 637: Early Beacons
+
+### Bug Fixes:
+
+* Issue 976: AutoXHR: XHR abort status fix for FireFox
+* Issue 980: Memory: Remove reference to BatteryManager API as this API is obsolete
+* Issue 812: ResourceTiming: More initiatorTypes
+* Issue 983: NavigationTiming: Don't use `chrome.loadTimes()` when there are no paints
+* Issue 982: Boomerang: Fix empty-beacon check
+* Issue 939: Optimize cookie access
+* Issue 991: Continuity: ceil duration times
+* Issue 990: Boomerang: Don't set cookie if domain is null, fallback to current
+
+## 1.650.0
+### New Features:
+
+* Issue 782: Boomerang Loader Snippet v12
+* Issue 966: History: Add config option to disable monitoring of `replaceState`
+
+### Bug Fixes:
+
+* Issue 969: AutoXHR: Make `routeChangeWaitFilter` `wait_complete` calls wait for other pending nodes
+* Issue 972: IFrameDelay: Listen for `postMessage` calls on the correct window
+* Issue 973: LOGN: Use HTTP for XDomainRequest for IE8-10 if on HTTP site
+
+### Docs:
+
+* Issue 968: Continuity: Document events for TTFI
+
+### Tests:
+
+* Issue 975: IFrameDelay: Force tests to load Boomerang in an IFRAME when using the snippet
+* Issue 974: Grunt: Allow specifying multiple webdriver-version
+
 ## 1.643.0
 ### Performance Improvements:
 
