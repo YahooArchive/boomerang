@@ -1540,9 +1540,6 @@
 			return;
 		}
 
-		BOOMR.removeVar("restiming");
-		BOOMR.removeVar("servertiming");
-
 		/* BEGIN_DEBUG */
 		BOOMR.utils.mark("restiming:build:start");
 		/* END_DEBUG */
@@ -1722,9 +1719,10 @@
 	 *  lookup
 	 */
 	function addToBeacon(r) {
-		BOOMR.addVar("restiming", JSON.stringify(r.restiming));
+		BOOMR.addVar("restiming", JSON.stringify(r.restiming), true);
+
 		if (r.servertiming.length) {
-			BOOMR.addVar("servertiming", BOOMR.utils.serializeForUrl(r.servertiming));
+			BOOMR.addVar("servertiming", BOOMR.utils.serializeForUrl(r.servertiming), true);
 		}
 	}
 
@@ -1825,14 +1823,6 @@
 
 		onBeacon: function(vars) {
 			var p = BOOMR.getPerformance();
-
-			// clear metrics
-			if (vars.hasOwnProperty("restiming")) {
-				BOOMR.removeVar("restiming");
-			}
-			if (vars.hasOwnProperty("servertiming")) {
-				BOOMR.removeVar("servertiming");
-			}
 
 			if (impl.clearOnBeacon && p) {
 				var clearResourceTimings = p.clearResourceTimings || p.webkitClearResourceTimings;

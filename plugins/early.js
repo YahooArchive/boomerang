@@ -107,6 +107,7 @@
 
 			this.earlyBeaconSent = true;
 
+			// NOTE: Early beacons (and the early flag) don't support singleBeacon
 			BOOMR.addVar("early", "1");
 
 			if (edata && BOOMR.utils.inArray(edata.initiator, BOOMR.constants.BEACON_TYPE_SPAS)) {

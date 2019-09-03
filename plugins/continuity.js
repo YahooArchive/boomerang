@@ -3767,11 +3767,6 @@
 		statsMonitor: null,
 
 		/**
-		 * Vars we added to the beacon
-		 */
-		addedVars: [],
-
-		/**
 		 * All possible monitors
 		 */
 		monitors: [
@@ -3850,16 +3845,15 @@
 		onBeacon: function(edata) {
 			var i;
 
-			// if it's an early beacon we want to keep the vars for the next beacon
-			if (edata && typeof edata.early !== "undefined") {
+			// Three types of beacons can go out before the Page Load beacon: Early Beacon, Custom Metric and Custom Timer.
+			// For those beacon types, we want to keep the vars for the next beacon.
+			if (edata &&
+				(
+					(typeof edata.early !== "undefined") ||
+					(edata["http.initiator"] && edata["http.initiator"].indexOf("api_custom_") === 0)
+				)) {
+
 				return;
-			}
-
-			// remove added vars
-			if (impl.addedVars && impl.addedVars.length > 0) {
-				BOOMR.removeVar(impl.addedVars);
-
-				impl.addedVars = [];
 			}
 
 			// let any other monitors know that a beacon was sent
@@ -3971,9 +3965,7 @@
 				return;
 			}
 
-			BOOMR.addVar(name, val);
-
-			impl.addedVars.push(name);
+			BOOMR.addVar(name, val, true);
 		}
 	};
 

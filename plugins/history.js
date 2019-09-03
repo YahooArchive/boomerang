@@ -58,14 +58,24 @@
 		 * Clears routeChangeInProgress flag
 		 */
 		resetRouteChangeInProgress: function(edata) {
-			// if it's an early beacon we want to keep the state unchanged
-			if (!edata || typeof edata.early === "undefined") {
-				debugLog("resetting routeChangeInProgress");
-				if (impl.routeChangeInProgress) {
-					clearTimeout(impl.routeChangeInProgress);
-				}
-				impl.routeChangeInProgress = false;
+			// Three types of beacons can go out before the Page Load beacon: Early Beacon, Custom Metric and Custom Timer.
+			// For those beacon types, we want to keep the state unchanged.
+			if (edata &&
+				(
+					(typeof edata.early !== "undefined") ||
+					(edata["http.initiator"] && edata["http.initiator"].indexOf("api_custom_") === 0)
+				)) {
+
+				return;
 			}
+
+			debugLog("resetting routeChangeInProgress");
+
+			if (impl.routeChangeInProgress) {
+				clearTimeout(impl.routeChangeInProgress);
+			}
+
+			impl.routeChangeInProgress = false;
 		},
 
 		/**

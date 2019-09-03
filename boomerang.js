@@ -3278,7 +3278,7 @@ BOOMR_check_doc_domain();
 		 * @param {string} name Variable name
 		 * @param {string|object} val Value
 		 * @param {boolean} singleBeacon Whether or not to add to a single beacon
-		 * or all beacons
+		 * or all beacons.
 		 *
 		 * @returns {BOOMR} Boomerang object
 		 *
@@ -3566,8 +3566,10 @@ BOOMR_check_doc_domain();
 				// and timers
 				BOOMR.real_sendBeacon();
 
-				BOOMR.addVar("xhr.pg", name);
+				BOOMR.addVar("xhr.pg", name, true);
+
 				BOOMR.plugins.RT.startTimer("xhr_" + name, t_start);
+
 				impl.fireEvent("xhr_load", {
 					name: "xhr_" + name,
 					data: data,

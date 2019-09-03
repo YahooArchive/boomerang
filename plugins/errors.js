@@ -1244,16 +1244,6 @@
 		},
 
 		/**
-		 * Fired 'beacon'
-		 */
-		onBeacon: function() {
-			// remove our err vars
-			BOOMR.removeVar("err");
-			BOOMR.removeVar("api");
-			BOOMR.removeVar("http.initiator");
-		},
-
-		/**
 		 * Fired on 'page_ready'
 		 */
 		pageReady: function() {
@@ -1292,7 +1282,7 @@
 			if (impl.q.length) {
 				var err = this.getErrorsForUrl(impl.q);
 				if (err) {
-					BOOMR.addVar("err", err);
+					BOOMR.addVar("err", err, true);
 				}
 
 				impl.q = [];
@@ -1985,7 +1975,6 @@
 
 			// subscribe to events
 			BOOMR.subscribe("before_beacon", impl.beforeBeacon, null, impl);
-			BOOMR.subscribe("beacon", impl.onBeacon, null, impl);
 			BOOMR.subscribe("page_ready", impl.pageReady, null, impl);
 
 			// register an event

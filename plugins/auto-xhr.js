@@ -820,11 +820,9 @@
 				// If the SPA load was aborted, set the rt.quit and rt.abld flags
 				if (typeof eventIndex === "number" && self.pending_events[eventIndex].aborted) {
 					// Save the URL otherwise it might change before we have a chance to put it on the beacon
-					BOOMR.addVar("pgu", d.URL);
-					BOOMR.addVar("rt.quit", "");
-					BOOMR.addVar("rt.abld", "");
-
-					impl.addedVars.push("pgu", "rt.quit", "rt.abld");
+					BOOMR.addVar("pgu", d.URL, true);
+					BOOMR.addVar("rt.quit", "", true);
+					BOOMR.addVar("rt.abld", "", true);
 				}
 			}
 
@@ -2249,7 +2247,6 @@
 	 * @property {string[]} spaBackendResources Default resources to count as Back-End during a SPA nav
 	 * @property {FilterObject[]} filters Array of {@link FilterObject} that is used to apply filters on XHR Requests
 	 * @property {boolean} initialized Set to true after the first run of
-	 * @property {string[]} addedVars Vars added to the next beacon only
 	 * {@link BOOMR.plugins.AutoXHR#init}
 	 */
 	impl = {
@@ -2257,7 +2254,6 @@
 		alwaysSendXhr: false,
 		excludeFilters: [],
 		initialized: false,
-		addedVars: [],
 		captureXhrRequestResponse: false,
 		singlePageApp: false,
 		autoXhrEnabled: false,
@@ -2313,16 +2309,6 @@
 				}
 			}
 			return false;
-		},
-
-		/**
-		 * Remove any added variables from this plugin from the beacon and clear internal collection of addedVars
-		 */
-		clear: function() {
-			if (impl.addedVars && impl.addedVars.length > 0) {
-				BOOMR.removeVar(impl.addedVars);
-				impl.addedVars = [];
-			}
 		},
 
 		/**
@@ -2544,8 +2530,6 @@
 			}
 
 			BOOMR.registerEvent("xhr_error");
-
-			BOOMR.subscribe("beacon", impl.clear, null, impl);
 		},
 
 		/**

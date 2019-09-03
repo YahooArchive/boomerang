@@ -150,12 +150,9 @@
 				return;
 			}
 
-			BOOMR.removeVar("usertiming");
 			r = this.getUserTiming();
 			if (r) {
-				BOOMR.addVar({
-					"usertiming": r
-				});
+				BOOMR.addVar("usertiming", r, true);
 			}
 
 			this.options.from = now;
@@ -211,9 +208,6 @@
 		 * Clears the `usertiming` beacon param.
 		 */
 		clearMetrics: function(vars) {
-			if (vars.hasOwnProperty("usertiming")) {
-				BOOMR.removeVar("usertiming");
-			}
 			this.complete = false;
 		},
 
