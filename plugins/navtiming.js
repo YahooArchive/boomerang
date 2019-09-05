@@ -405,13 +405,15 @@
 			impl.sendBeacon();
 		},
 
-		clear: function() {
+		clear: function(edata) {
 			if (impl.addedVars && impl.addedVars.length > 0) {
 				BOOMR.removeVar(impl.addedVars);
 				impl.addedVars = [];
 			}
-			// if we ever sent the full data, we're complete for all times
-			this.complete = this.fullySent;
+
+			// Allow the data to go out on both an Early beacon and the regular Page Load beacon,
+			// but after that, if we ever sent the full data, we're complete for all times.
+			this.complete = !(edata && edata.early) && this.fullySent;
 		},
 
 		prerenderToVisible: function() {
