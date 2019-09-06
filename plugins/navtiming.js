@@ -391,7 +391,7 @@
 			impl.sendBeacon();
 		},
 
-		clear: function() {
+		clear: function(edata) {
 			// Allow the data to go out on both an Early beacon and the regular Page Load beacon,
 			// but after that, if we ever sent the full data, we're complete for all times.
 			this.complete = !(edata && edata.early) && this.fullySent;
