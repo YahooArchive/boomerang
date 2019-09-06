@@ -73,7 +73,7 @@ describe("e2e/21-continuity/33-interaction-iframe", function() {
 		var b = tf.lastBeacon();
 
 		assert.isDefined(b["c.fid"]);
-		assert.operator(parseInt(b["c.fid"], 10), ">=", 20);  // we had a 20ms busy wait
+		assert.operator(parseInt(b["c.fid"], 10), ">=", 19);  // we had a 20ms busy wait, allow for some fuzzing
 	});
 
 	it("Should not have First Input Delay (c.fid) in Safari", function() {
