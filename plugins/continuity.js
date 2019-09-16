@@ -451,6 +451,9 @@
  * evaluates click, mousedown, keydown, touchstart, pointerdown followed by pointerup
  * events as indicators for First Input Delay calculations.
  *
+ * Note if the {@link BOOMR.plugins.EventTiming `EventTiming`} plugin is included,
+ * this measurement is deferred to the First Input Delay calculated by that plugin.
+ *
  * ## Timelines
  *
  * If {@link BOOMR.plugins.Continuity.init `sendTimeline`} is enabled, many of
@@ -3299,7 +3302,11 @@
 			impl.addToBeacon("c.i.dt", externalMetrics.interactionDelayedTime());
 			impl.addToBeacon("c.i.a", externalMetrics.interactionAvgDelay());
 
-			if (firstInputDelay !== null) {
+			// defer to EventTiming's FID if available
+			if (BOOMR.plugins.EventTiming) {
+				impl.addToBeacon("c.fid", BOOMR.plugins.EventTiming.metrics.firstInputDelay(), true);
+			}
+			else if (firstInputDelay !== null) {
 				impl.addToBeacon("c.fid", externalMetrics.firstInputDelay(), true);
 			}
 		}

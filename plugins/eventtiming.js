@@ -10,7 +10,8 @@
  *
  * This plugin adds the following parameters to the beacon:
  *
- * * `et`: Compressed EventTiming events
+ * * `et.e`: Compressed EventTiming events
+ * * `et.fid`: Observed First Input Delay
  *
  * @see {@link https://github.com/WICG/event-timing/}
  * @class BOOMR.plugins.EventTiming
@@ -65,9 +66,14 @@
 		supported: null,
 
 		/**
-		 * The PerformanceObserver
+		 * The PerformanceObserver for 'event'
 		 */
-		observer: null,
+		observerEvent: null,
+
+		/**
+		 * The PerformanceObserver for 'firstInput'
+		 */
+		observerFirstInput: null,
 
 		/**
 		 * List of EventTiming entries
@@ -75,9 +81,14 @@
 		entries: [],
 
 		/**
+		 * First Input Delay (calculated)
+		 */
+		firstInputDelay: null,
+
+		/**
 		 * Executed on `before_beacon`
 		 */
-		done: function() {
+		onBeforeBeacon: function() {
 			var i;
 
 			if (impl.entries && impl.entries.length) {
@@ -96,11 +107,16 @@
 					});
 				}
 
-				BOOMR.addVar("et", BOOMR.utils.serializeForUrl(compressed), true);
+				BOOMR.addVar("et.e", BOOMR.utils.serializeForUrl(compressed), true);
 			}
 
 			// clear until the next beacon
 			impl.entries = [];
+
+			// First Input Delay
+			if (impl.firstInputDelay !== null) {
+				BOOMR.addVar("et.fid", Math.ceil(impl.firstInputDelay));
+			}
 		},
 
 		/**
@@ -110,6 +126,19 @@
 		 */
 		onEventTiming: function(list) {
 			impl.entries = impl.entries.concat(list.getEntries());
+		},
+
+		/**
+		 * Fired on each FirstInput event
+		 *
+		 * @param {object[]} list List of EventTimings
+		 */
+		onFirstInput: function(list) {
+			var i, newEntries = list.getEntries();
+
+			impl.entries = impl.entries.concat(newEntries);
+
+			impl.firstInputDelay = newEntries[0].duration;
 		}
 	};
 
@@ -132,13 +161,18 @@
 			}
 
 			if (!impl.initialized) {
-
-				BOOMR.subscribe("before_beacon", impl.done, null, impl);
+				BOOMR.subscribe("before_beacon", impl.onBeforeBeacon, null, impl);
 
 				try {
-					impl.observer = new PerformanceObserver(impl.onEventTiming);
-					impl.observer.observe({
-						entryTypes: ["event", "firstInput"],
+					impl.observerEvent = new PerformanceObserver(impl.onEventTiming);
+					impl.observerEvent.observe({
+						entryTypes: ["event"],
+						buffered: true
+					});
+
+					impl.firstInputDelay = new PerformanceObserver(impl.onFirstInput);
+					impl.firstInputDelay.observe({
+						entryTypes: ["firstInput"],
 						buffered: true
 					});
 				}
@@ -198,6 +232,23 @@
 		},
 
 		/**
+		 * Stops observing
+		 *
+		 * @memberof BOOMR.plugins.EventTiming
+		 */
+		stop: function() {
+			if (impl.observerEvent) {
+				impl.observerEvent.disconnect();
+				impl.observerEvent = null;
+			}
+
+			if (impl.firstInputDelay) {
+				impl.firstInputDelay.disconnect();
+				impl.firstInputDelay = null;
+			}
+		},
+
+		/**
 		 * Exported metrics
 		 *
 		 * @memberof BOOMR.plugins.EventTiming
@@ -225,6 +276,13 @@
 				}
 
 				return sum / impl.entries.length;
+			},
+
+			/**
+			 * Returns the observed First Input Delay
+			 */
+			firstInputDelay: function() {
+				return impl.firstInputDelay;
 			}
 		}
 	};
