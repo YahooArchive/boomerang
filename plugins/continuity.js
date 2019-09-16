@@ -3303,7 +3303,8 @@
 			impl.addToBeacon("c.i.a", externalMetrics.interactionAvgDelay());
 
 			// defer to EventTiming's FID if available
-			if (BOOMR.plugins.EventTiming) {
+			if (BOOMR.plugins.EventTiming &&
+			    BOOMR.plugins.EventTiming.is_enabled()) {
 				impl.addToBeacon("c.fid", BOOMR.plugins.EventTiming.metrics.firstInputDelay(), true);
 			}
 			else if (firstInputDelay !== null) {

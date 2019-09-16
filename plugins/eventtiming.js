@@ -115,7 +115,10 @@
 
 			// First Input Delay
 			if (impl.firstInputDelay !== null) {
-				BOOMR.addVar("et.fid", Math.ceil(impl.firstInputDelay));
+				BOOMR.addVar("et.fid", Math.ceil(impl.firstInputDelay), true);
+
+				// should only go out on one beacon
+				impl.firstInputDelay = null;
 			}
 		},
 
@@ -170,8 +173,8 @@
 						buffered: true
 					});
 
-					impl.firstInputDelay = new PerformanceObserver(impl.onFirstInput);
-					impl.firstInputDelay.observe({
+					impl.observerFirstInput = new PerformanceObserver(impl.onFirstInput);
+					impl.observerFirstInput.observe({
 						entryTypes: ["firstInput"],
 						buffered: true
 					});
@@ -222,7 +225,8 @@
 			// check for getEntriesByType and the entry type existing
 			var p = BOOMR.getPerformance();
 			impl.supported = p &&
-				typeof window.PerformanceEventTiming !== "undefined";
+				typeof window.PerformanceEventTiming !== "undefined" &&
+				typeof window.PerformanceObserver === "function";
 
 			if (impl.supported) {
 				BOOMR.info("This user agent supports EventTiming", "pt");
@@ -242,9 +246,9 @@
 				impl.observerEvent = null;
 			}
 
-			if (impl.firstInputDelay) {
-				impl.firstInputDelay.disconnect();
-				impl.firstInputDelay = null;
+			if (impl.observerFirstInput) {
+				impl.observerFirstInput.disconnect();
+				impl.observerFirstInput = null;
 			}
 		},
 

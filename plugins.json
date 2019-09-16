@@ -19,6 +19,7 @@
         "node_modules/usertiming-compression/dist/usertiming-compression.vanilla.js",
         "plugins/usertiming.js",
         "plugins/mq.js",
-        "plugins/early.js"
+        "plugins/early.js",
+        "plugins/eventtiming.js"
     ]
 }
