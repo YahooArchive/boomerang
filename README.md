@@ -1,7 +1,7 @@
 * _Copyright (c) 2011, Yahoo! Inc.  All rights reserved._
 * _Copyright (c) 2011-2012, Log-Normal Inc.  All rights reserved._
 * _Copyright (c) 2012-2017 SOASTA, Inc. All rights reserved._
-* _Copyright (c) 2017, Akamai Technologies, Inc. All rights reserved._
+* _Copyright (c) 2017-2019, Akamai Technologies, Inc. All rights reserved._
 * _Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms._
 
 **boomerang always comes back, except when it hits something.**

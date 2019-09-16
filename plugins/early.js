@@ -1,6 +1,4 @@
 /**
- * @module Early
- * @desc
  * Plugin to send early beacons
  * Non-SPA:
  *    Send when config is loaded (onconfig event) if:
@@ -22,6 +20,8 @@
  *    Current limitations:
  *    - Does not check if before DOMContentLoaded.
  *    - Does not retry sending at prerender_to_visible event.
+ *
+ * @class BOOMR.plugins.Early
  */
 
 (function() {
