@@ -20,6 +20,7 @@ describe("e2e/25-cookie/02-cookie-from-new-session", function() {
 		var cookie = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie("RT"));
 
 		assert.isDefined(cookie.si);
+		assert.match(cookie.si, /-/);
 	});
 
 	it("Should have a Session Length (sl) of 1", function() {

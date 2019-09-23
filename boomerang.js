@@ -1113,7 +1113,7 @@ BOOMR_check_doc_domain();
 			 *
 			 * @memberof BOOMR.session
 			 */
-			ID: Math.random().toString(36).replace(/^0\./, ""),
+			ID: undefined,
 
 			/**
 			 * Session start time.
@@ -2382,6 +2382,10 @@ BOOMR_check_doc_domain();
 
 			if (typeof config.site_domain === "string") {
 				this.session.domain = config.site_domain;
+			}
+
+			if (BOOMR.session.enabled && typeof BOOMR.session.ID === "undefined") {
+				BOOMR.session.ID = BOOMR.utils.generateUUID();
 			}
 
 			// Set autorun if in config right now, as plugins that listen for page_ready
