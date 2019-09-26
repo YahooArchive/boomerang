@@ -657,7 +657,13 @@
 				}
 			}
 			catch (e) {
-				BOOMR.addError(e, "rt.getBoomerangTimings");
+				/**
+				 * We wrap specific Firefox 31 and 32 when we get Error when inspecting window.performance
+				 * Details: https://bugzilla.mozilla.org/show_bug.cgi?id=1045096
+				 */
+				if (e && e.name && e.name.hasOwnProperty("length") && e.name.indexOf("NS_ERROR_FAILURE") === -1) {
+					BOOMR.addError(e, "rt.getBoomerangTimings");
+				}
 			}
 		},
 
