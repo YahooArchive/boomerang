@@ -61,28 +61,18 @@ describe("BOOMR.utils.hashQueryString()", function() {
 		assert.equal(BOOMR.utils.hashQueryString(url, true), expected);
 	});
 
-	it("Should hash the parameters in the URL but retain the hash when the second argument is false and 'MD5' was built into BOOMR.utils", function() {
+	it("Should hash the parameters in the URL but retain the hash when the second argument is false and 'FNV' was built into BOOMR.utils", function() {
 		var url = "http://www.example.org/app/page?key1=value&key2=value&key3=value&key4=value&key5=value#page",
-		expected = "http://www.example.org/app/page?458b9ebff2b935135a62cb9decd803dd#page";
+		expected = "http://www.example.org/app/page?27hrhl9c#page";
 
 		assert.equal(BOOMR.utils.hashQueryString(url, false), expected);
 	});
 
-	it("Should hash the parameters in the URL and remove the hash when the second argument is true and 'MD5' was built into BOOMR.utils", function() {
+	it("Should hash the parameters in the URL and remove the hash when the second argument is true and 'FNV' was built into BOOMR.utils", function() {
 		var url = "http://www.example.org/app/page?key1=value&key2=value&key3=value&key4=value&key5=value#page",
-		expected = "http://www.example.org/app/page?458b9ebff2b935135a62cb9decd803dd";
+		expected = "http://www.example.org/app/page?27hrhl9c";
 
 		assert.equal(BOOMR.utils.hashQueryString(url, true), expected);
 	});
 
-	it("Should return the URL when MD5 was not built into BOOMR.utils", function() {
-		var MD5 = BOOMR.utils.MD5;
-		BOOMR.utils.MD5 = false;
-
-		var url = "http://www.example.org/app/page?key1=value&key2=value&key3=value&key4=value&key5=value#page",
-		expected = "http://www.example.org/app/page?key1=value&key2=value&key3=value&key4=value&key5=value#page";
-		assert.equal(BOOMR.utils.hashQueryString(url, false), expected);
-
-		BOOMR.utils.MD5 = MD5;
-	});
 });

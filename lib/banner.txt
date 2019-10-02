@@ -5,4 +5,3 @@
  * Copyright (c) 2017, Akamai Technologies, Inc. All rights reserved.
  * Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms.
  */
-/* JavaScript MD5 1.0.1 Copyright 2011, Sebastian Tschan. Licensed under the MIT license. */

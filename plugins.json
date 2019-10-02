@@ -13,7 +13,6 @@
         "plugins/mobile.js",
         "plugins/memory.js",
         "plugins/cache-reload.js",
-        "plugins/md5.js",
         "plugins/compression.js",
         "plugins/errors.js",
         "plugins/third-party-analytics.js",

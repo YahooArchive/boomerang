@@ -20,6 +20,10 @@ describe("BOOMR.utils exports", function() {
 		assert.isFunction(BOOMR.utils.pluginConfig);
 	});
 
+	it("Should have an existing Function BOOMR.utils.hashString()", function() {
+		assert.isFunction(BOOMR.utils.hashString);
+	});
+
 	describe("isObjectEmpty()", function() {
 		it("Should return false for non-empty objects", function() {
 			assert.isFalse(BOOMR.utils.isObjectEmpty({ a: 1 }));

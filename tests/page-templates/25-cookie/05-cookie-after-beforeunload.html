@@ -9,7 +9,7 @@ BOOMR_test.setCookie({
 	bcn: "/beacon",
 	dm: document.domain,
 	ld: (1000).toString(36),
-	r: BOOMR_test.MD5(document.referrer),
+	r: BOOMR_test.hashString(document.referrer),
 	z: 1
 });
 </script>

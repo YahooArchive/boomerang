@@ -40,7 +40,6 @@ of each plugin:
 There are also a few utility plugins:
 
 * `plugins/compression.js` adds {@link BOOMR.utils.Compression} and is used by some plugins for compressing their data
-* `plugins/md5.js` adds {@link BOOMR.utils.MD5} support
 
 To monitor basic page load performance for a traditional website, we would recommend:
 * {@link BOOMR.plugins.RT}

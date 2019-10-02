@@ -12,6 +12,6 @@ describe("e2e/25-cookie/07-cookie-referrer-non-nt", function() {
 	it("Should have set Referrer (r)", function() {
 		var cookie = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie("RT"));
 
-		assert.equal(cookie.r, BOOMR.utils.MD5(document.URL));
+		assert.equal(cookie.r, BOOMR.utils.hashString(document.URL));
 	});
 });

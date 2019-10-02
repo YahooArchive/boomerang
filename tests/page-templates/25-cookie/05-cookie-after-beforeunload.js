@@ -124,7 +124,7 @@ describe("e2e/25-cookie/05-cookie-after-beforeunload", function() {
 
 		var cookie = BOOMR.utils.getSubCookies(BOOMR.utils.getCookie("RT"));
 
-		assert.equal(cookie.r, t.MD5(document.URL));
+		assert.equal(cookie.r, t.hashString(document.URL));
 	});
 
 	it("Should not have set Referrer (r) (if NavigationTiming is supported)", function() {

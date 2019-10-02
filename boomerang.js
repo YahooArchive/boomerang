@@ -1642,7 +1642,7 @@ BOOMR_check_doc_domain();
 			},
 
 			/**
-			 * Gets the URL with the query string replaced with a MD5 hash of its contents.
+			 * Gets the URL with the query string replaced with a hash of its contents.
 			 *
 			 * @param {string} url URL
 			 * @param {boolean} stripHash Whether or not to strip the hash
@@ -1669,11 +1669,8 @@ BOOMR_check_doc_domain();
 				if (stripHash) {
 					url = url.replace(/#.*/, "");
 				}
-				if (!BOOMR.utils.MD5) {
-					return url;
-				}
 				return url.replace(/\?([^#]*)/, function(m0, m1) {
-					return "?" + (m1.length > 10 ? BOOMR.utils.MD5(m1) : m1);
+					return "?" + (m1.length > 10 ? BOOMR.utils.hashString(m1) : m1);
 				});
 			},
 
@@ -2322,6 +2319,28 @@ BOOMR_check_doc_domain();
 				}
 
 				return true;
+			},
+
+			/**
+			 * Calculates the FNV hash of the specified string.
+			 *
+			 * @param {string} string Input string
+			 *
+			 * @returns {string} FNV hash of the input string
+			 *
+			 */
+			hashString: function(string) {
+				string = encodeURIComponent(string);
+				var hval = 0x811c9dc5;
+
+				for (var i = 0; i < string.length; i++) {
+					hval = hval ^ string.charCodeAt(i);
+					hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+				}
+
+				var hash = (hval >>> 0).toString() + string.length;
+
+				return parseInt(hash).toString(36);
 			}
 
 			/* BEGIN_DEBUG */
