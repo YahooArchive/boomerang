@@ -1204,17 +1204,28 @@
 				(typeof node.getAttribute === "function" && node.getAttribute("xlink:href")) ||
 				node.href;
 
-			// no URL or javascript: or about: or data: URL, so no network activity
-			if (!url || url.match(/^(about:|javascript:|data:)/i)) {
-				return false;
-			}
-
 			// we get called from src/href attribute changes but also from nodes being added
 			// which may or may not have been seen here before.
 			// Check that if we've seen this node before, that the src/href in this case is
 			// different which means we need to fetch a new Resource from the server
 			if (node._bmr && node._bmr.url !== url) {
 				exisitingNodeSrcUrlChanged = true;
+			}
+
+			if (exisitingNodeSrcUrlChanged) {
+				if (typeof node._bmr.listener === "function") {
+					self.load_cb({target: node, type: "changed"});
+					//remove listeners
+					node.removeEventListener("load", node._bmr.listener);
+					node.removeEventListener("error", node._bmr.listener);
+					delete node._bmr.listener;
+				}
+				debugLog("mutation URL changed from " + node._bmr.url + " to " + url + " for event idx: " + node._bmr.idx + " node:" + node._bmr.res);
+			}
+
+			// no URL or javascript: or about: or data: URL, so no network activity
+			if (!url || url.match(/^(about:|javascript:|data:)/i)) {
+				return false;
 			}
 
 			if (node.nodeName === "IMG") {
@@ -1286,13 +1297,6 @@
 			// determine the resource number for this request
 			resourceNum = current_event.resources.length;
 
-			// create a placeholder ._bmr attribute
-			if (!node._bmr) {
-				node._bmr = {
-					end: {}
-				};
-			}
-
 			// keep track of all resources (URLs) seen for the root resource
 			if (!current_event.urls) {
 				current_event.urls = {};
@@ -1317,6 +1321,13 @@
 				current_event.resource.url = a.href;
 			}
 
+			// create a bookkeeping ._bmr attribute
+			if (!node._bmr) {
+				node._bmr = {
+					end: {}
+				};
+			}
+
 			// update _bmr with details about this resource
 			node._bmr.res = resourceNum;
 			node._bmr.idx = index;
@@ -1328,8 +1339,11 @@
 				// if either event fires then cleanup both listeners
 				node.removeEventListener("load", listener);
 				node.removeEventListener("error", listener);
+				delete node._bmr.listener;
+				debugLog("mutation URL on" + ev.type + ", for event idx: " + index + " node: " + resourceNum);
 			};
-			debugLog("Monitoring mutation URL: " + url + " for event id: " + index);
+			debugLog("Monitoring mutation URL: " + url + " for event idx: " + index + " node: " + resourceNum);
+			node._bmr.listener = listener;
 			node.addEventListener("load", listener);
 			node.addEventListener("error", listener);
 
