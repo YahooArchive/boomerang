@@ -29,12 +29,16 @@ catch (e) {
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: window.cannotCreateMouseEvent ? 1 : 2,
+	testAfterOnBeacon: window.cannotCreateMouseEvent ? 1 : 3,
 	Continuity: {
 		enabled: true,
 		afterOnload: true
 	},
 	afterFirstBeacon: function() {
+		if (window.cannotCreateMouseEvent) {
+			return;
+		}
+
 		setTimeout(function() {
 			var st = BOOMR.requestStart("test");
 
@@ -55,6 +59,13 @@ BOOMR_test.init({
 			document.getElementById("img-1").dispatchEvent(ev1);
 
 			st.loaded();
+
+			// do a third beacon, which shouldn't have TTFI or FID on it
+			st = BOOMR.requestStart("test2");
+
+			setTimeout(function() {
+				st.loaded();
+			}, 100);
 		}, 100);
 	}
 });

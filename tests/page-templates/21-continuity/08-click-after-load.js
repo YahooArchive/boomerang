@@ -5,10 +5,10 @@ describe("e2e/21-continuity/08-click-after-load", function() {
 	var tf = BOOMR.plugins.TestFramework;
 	var t = BOOMR_test;
 
-	it("Should have sent two beacons (if creating Mouse Events is supported)", function(done) {
+	it("Should have sent three beacons (if creating Mouse Events is supported)", function(done) {
 		if (!window.cannotCreateMouseEvent) {
 			this.timeout(10000);
-			t.ensureBeaconCount(done, 2);
+			t.ensureBeaconCount(done, 3);
 		}
 		else {
 			this.timeout(10000);
@@ -16,44 +16,44 @@ describe("e2e/21-continuity/08-click-after-load", function() {
 		}
 	});
 
-	it("Should have sent the click count (c.c) (if creating Mouse Events is supported)", function() {
+	it("Should have sent the click count (c.c) on the second beacon  (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
 		assert.isDefined(b["c.c"]);
 		assert.equal(parseInt(b["c.c"], 10), 10);
 	});
 
-	it("Should have sent the rage click count (c.c.r) (if creating Mouse Events is supported)", function() {
+	it("Should have sent the rage click count (c.c.r) on the second beacon  (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
 		assert.isDefined(b["c.c.r"]);
 		assert.equal(parseInt(b["c.c.r"], 10), 2);
 	});
 
-	it("Should have sent the log (c.l) (if creating Mouse Events is supported)", function() {
+	it("Should have sent the log (c.l) on the second beacon  (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
 		assert.isDefined(b["c.l"]);
 	});
 
-	it("Should have logged the correct events (c.l) (if creating Mouse Events is supported)", function() {
+	it("Should have logged the correct events (c.l) on the second beacon  (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
 		var clickLogs = BOOMR.plugins.Continuity.decompressLog(b["c.l"]).filter(function(obj) {
 			// LOG_TYPE_CLICK === 1
@@ -71,37 +71,57 @@ describe("e2e/21-continuity/08-click-after-load", function() {
 		}
 	});
 
-	it("Should have the click timeline (c.t.click) (if creating Mouse Events is supported)", function() {
+	it("Should have the click timeline (c.t.click) on the second beacon  (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
 		assert.isDefined(b["c.t.click"]);
 		assert.operator(b["c.t.click"].length, ">=", 1);
 	});
 
-	it("Should have the interaction timeline (c.t.inter) (if creating Mouse Events is supported)", function() {
+	it("Should have the interaction timeline (c.t.inter) on the second beacon  (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
 		assert.isDefined(b["c.t.inter"]);
 		assert.operator(b["c.t.inter"].length, ">=", 1);
 	});
 
-	it("Should have the Time to First Interaction (c.ttfi) (if creating Mouse Events is supported)", function() {
+	it("Should have the Time to First Interaction (c.ttfi) on the first beacon (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[0];
 
 		assert.isDefined(b["c.ttfi"]);
 		assert.operator(parseInt(b["c.ttfi"], 10), ">=", 1);
+	});
+
+	it("Should not have the Time to First Interaction (c.ttfi) on the second beacon (if creating Mouse Events is supported)", function() {
+		if (window.cannotCreateMouseEvent) {
+			return this.skip();
+		}
+
+		var b = tf.beacons[1];
+
+		assert.isUndefined(b["c.ttfi"]);
+	});
+
+	it("Should not have Time to First Interaction (c.ttfi) on the third beacon (if creating Mouse Events is supported)", function() {
+		if (window.cannotCreateMouseEvent) {
+			return this.skip();
+		}
+
+		var b = tf.beacons[2];
+
+		assert.isUndefined(b["c.ttfi"]);
 	});
 
 	it("Should have last Continuity beacon time (c.lb) on the second beacon but not on the first", function() {
@@ -131,14 +151,23 @@ describe("e2e/21-continuity/08-click-after-load", function() {
 		assert.operator(parseInt(b["c.fid"], 10), ">=", 0);
 	});
 
-	it("Should have First Input Delay (c.fid) on the second beacon (if creating Mouse Events is supported)", function() {
+	it("Should not have First Input Delay (c.fid) on the second beacon (if creating Mouse Events is supported)", function() {
 		if (window.cannotCreateMouseEvent) {
 			return this.skip();
 		}
 
-		var b = tf.lastBeacon();
+		var b = tf.beacons[1];
 
-		assert.isDefined(b["c.fid"]);
-		assert.operator(parseInt(b["c.fid"], 10), ">=", 0);
+		assert.isUndefined(b["c.fid"]);
+	});
+
+	it("Should not have First Input Delay (c.fid) on the third beacon (if creating Mouse Events is supported)", function() {
+		if (window.cannotCreateMouseEvent) {
+			return this.skip();
+		}
+
+		var b = tf.beacons[2];
+
+		assert.isUndefined(b["c.fid"]);
 	});
 });

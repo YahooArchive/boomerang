@@ -3145,6 +3145,9 @@
 		// whether or not a SPA nav is happening
 		var isSpaNav = false;
 
+		// whether we've sent TTFI and FID already
+		var sentTimers = false;
+
 		/**
 		 * Logs an interaction
 		 *
@@ -3297,18 +3300,30 @@
 		 * Analyzes Interactions
 		 */
 		function analyze(startTime) {
-			impl.addToBeacon("c.ttfi", externalMetrics.timeToFirstInteraction());
+			var fid;
+
 			impl.addToBeacon("c.i.dc", externalMetrics.interactionDelayed());
 			impl.addToBeacon("c.i.dt", externalMetrics.interactionDelayedTime());
 			impl.addToBeacon("c.i.a", externalMetrics.interactionAvgDelay());
 
-			// defer to EventTiming's FID if available
-			if (BOOMR.plugins.EventTiming &&
-			    BOOMR.plugins.EventTiming.is_enabled()) {
-				impl.addToBeacon("c.fid", BOOMR.plugins.EventTiming.metrics.firstInputDelay(), true);
-			}
-			else if (firstInputDelay !== null) {
-				impl.addToBeacon("c.fid", externalMetrics.firstInputDelay(), true);
+			// Only send FID and TTFI Timers once
+			if (!sentTimers) {
+				// defer to EventTiming's FID if available
+				if (BOOMR.plugins.EventTiming &&
+				    BOOMR.plugins.EventTiming.is_enabled()) {
+					fid = BOOMR.plugins.EventTiming.metrics.firstInputDelay();
+				}
+				else if (firstInputDelay !== null) {
+					fid = externalMetrics.firstInputDelay();
+				}
+
+				if (fid) {
+					impl.addToBeacon("c.fid", Math.ceil(fid), true);
+
+					impl.addToBeacon("c.ttfi", externalMetrics.timeToFirstInteraction());
+
+					sentTimers = true;
+				}
 			}
 		}
 

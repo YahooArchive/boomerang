@@ -229,7 +229,7 @@
 				typeof window.PerformanceObserver === "function";
 
 			if (impl.supported) {
-				BOOMR.info("This user agent supports EventTiming", "pt");
+				BOOMR.info("This user agent supports EventTiming", "et");
 			}
 
 			return impl.supported;
