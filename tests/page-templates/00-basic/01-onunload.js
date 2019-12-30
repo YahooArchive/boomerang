@@ -17,6 +17,6 @@ describe("e2e/00-basic/01-onunload", function() {
 	});
 
 	it("Should have run all unload plugins for the unload beacon", function() {
-		assert.isDefined(beaconData.nt_nav_st);
+		assert.equal(beaconData.onunloadtest, 1);
 	});
 });

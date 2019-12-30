@@ -485,6 +485,7 @@
 		 */
 		initFromCookie: function() {
 			var urlHash, docReferrerHash, subcookies;
+
 			subcookies = BOOMR.plugins.RT.getCookie();
 
 			if (!this.cookie) {
@@ -1153,7 +1154,9 @@
 		},
 
 		domloaded: function() {
-			BOOMR.plugins.RT.endTimer("t_domloaded");
+			if (BOOMR.plugins.RT) {
+				BOOMR.plugins.RT.endTimer("t_domloaded");
+			}
 		},
 
 		clear: function(edata) {
@@ -1470,6 +1473,11 @@
 		 */
 		done: function(edata, ename) {
 			BOOMR.debug("Called done: " + ename, "rt");
+
+			if (!BOOMR.plugins.RT) {
+				// something removed us
+				return;
+			}
 
 			var t_start, t_done, t_now = BOOMR.now(),
 			    subresource = false;
