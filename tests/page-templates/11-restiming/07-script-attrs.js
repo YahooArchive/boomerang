@@ -53,13 +53,13 @@ describe("e2e/11-restiming/07-script-attrs", function() {
 			var trie = JSON.parse(b.restiming);
 			var interesting = trie[location.protocol + "//" + location.host + "/"]["pages/11-restiming/"];
 
-			var js_head_static = trie[location.protocol + "//" + location.host + "/"]["vendor/"]["mocha/mocha."].js;
-			var js_body_static = interesting["07-script-attrs."].js;
-			var js_body_async  = interesting["support/07-script-attrs."]["bodyasync.js"];
-			var js_body_defer  = interesting["support/07-script-attrs."]["defer.js"];
-			var js_head_async  = interesting["support/07-script-attrs."].as["ync.js"];
-			var js_head_asfer  = interesting["support/07-script-attrs."].as["fer.js"];
-			var js_link_async  = interesting["support/07-script-attrs."]["linkasync.js"];
+			var js_head_static = trie[location.protocol + "//" + location.host + "/"]["vendor/"]["mocha/"]["mocha.js"];
+			var js_body_static = interesting["07-script-attrs.js"];
+			var js_body_async  = interesting["support/"]["07-script-attrs.bodyasync.js"];
+			var js_body_defer  = interesting["support/"]["07-script-attrs.defer.js"];
+			var js_head_async  = interesting["support/"]["07-script-attrs.async.js"];
+			var js_head_asfer  = interesting["support/"]["07-script-attrs.asfer.js"];
+			var js_link_async  = interesting["support/"]["07-script-attrs.linkasync.js"];
 
 			assert.match(js_head_static, SCRIPT_ATTR_EXPR);
 			js_head_static = parseInt(js_head_static.replace(SCRIPT_ATTR_EXPR, ""), 10);

@@ -7,22 +7,24 @@
  * ## Usage
  * In the parent page the following configuration should be used:
  *
- *     BOOMR_config = {
+ *     BOOMR.init({
+ *       ...
  *       autorun: false,
  *       IFrameDelay: {
  *         enabled: true,
  *         monitoredCount: 1
  *       }
- *     };
+ *     });
  *
  * And in the child IFRAME:
  *
- *     BOOMR_config = {
+ *     BOOMR.init({
+ *       ...
  *       IFrameDelay: {
  *         enabled: true,
  *         registerParent: true
  *       }
- *     };
+ *     });
  *
  * See the {@link BOOMR.plugins.IFrameDelay.init init()} function for more
  * details on each parameter.
@@ -87,6 +89,11 @@
 		 */
 		runningCount: 0,
 
+		/**
+		 * Array of child frame Page IDs
+		 */
+		runningFrames: {},
+
 		loadingIntervalID: undefined,
 		loadedIntervalID: undefined,
 
@@ -122,17 +129,35 @@
 
 				if (data.msg === impl.messages.start) {
 					debugLog("Received start message from child IFrame");
+
+					if (impl.runningFrames[data.pid]) {
+						// already got a start message from this frame
+						return;
+					}
+
+					// respond to the frame
 					event.source.postMessage(JSON.stringify({"msg": impl.messages.startACK}), event.origin);
+
+					// track that we're monitoring this frame
 					impl.runningCount += 1;
+					impl.runningFrames[data.pid] = 1;
 				}
 				else if (data.msg === impl.messages.done) {
 					debugLog("Received done message from child IFrame");
+
+					// respond to the frame
 					event.source.postMessage(JSON.stringify({"msg": impl.messages.doneACK}), event.origin);
+
+					// book-keeping
 					impl.runningCount -= 1;
 					impl.finishedCount += 1;
+
+					// increment our loadEnd if this is larger
 					if (data.loadEnd > impl.loadEnd) {
 						impl.loadEnd = data.loadEnd;
 					}
+
+					// check if we're done!
 					impl.checkCompleteness();
 				}
 			}

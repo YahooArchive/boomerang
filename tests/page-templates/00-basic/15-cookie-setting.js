@@ -10,9 +10,51 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 		assert.isTrue(tf.fired_onbeacon);
 	});
 
-	it("Should have only read the cookie once during init", function() {
+	it("Should have only read the cookie twice during init (if there is one init)", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		if (t.findBoomerangMarks("init:start").length !== 1) {
+			return this.skip();
+		}
+
+		assert.equal(
+			2,
+			t.findBoomerangMarksBetween(
+				"get_raw_cookie",
+				t.findBoomerangMarks("init:start")[0],
+				t.findBoomerangMarks("init:end")[0]
+			).length);
+	});
+
+	it("Should have only set the cookie once during init (if there is one init)", function() {
+		// We use UserTiming to measure marks
+		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		if (t.findBoomerangMarks("init:start").length !== 1) {
+			return this.skip();
+		}
+
+		assert.equal(
+			1,
+			t.findBoomerangMarksBetween(
+				"set_cookie_real",
+				t.findBoomerangMarks("init:start")[0],
+				t.findBoomerangMarks("init:end")[0]
+			).length);
+	});
+
+	it("Should have only read the cookie once during first init (if there are two inits)", function() {
+		// We use UserTiming to measure marks
+		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		if (t.findBoomerangMarks("init:start").length !== 2) {
 			return this.skip();
 		}
 
@@ -25,9 +67,13 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 			).length);
 	});
 
-	it("Should not have set the cookie during init", function() {
+	it("Should not have set the cookie during first init (if there are two inits)", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		if (t.findBoomerangMarks("init:start").length !== 2) {
 			return this.skip();
 		}
 
@@ -40,9 +86,13 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 			).length);
 	});
 
-	it("Should have only read the cookie once during config init", function() {
+	it("Should have only read the cookie once during second init call (if there are two inits)", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		if (t.findBoomerangMarks("init:start").length !== 2) {
 			return this.skip();
 		}
 
@@ -55,9 +105,13 @@ describe("e2e/00-basic/15-cookie-setting", function() {
 			).length);
 	});
 
-	it("Should have only set the cookie once during config init", function() {
+	it("Should have only set the cookie once during second init call (if there are two inits)", function() {
 		// We use UserTiming to measure marks
 		if (!t.isUserTimingSupported()) {
+			return this.skip();
+		}
+
+		if (t.findBoomerangMarks("init:start").length !== 2) {
 			return this.skip();
 		}
 

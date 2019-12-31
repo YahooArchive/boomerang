@@ -40,8 +40,8 @@ BOOMR.plugins.hold = {
 		this.complete = true;
 	}
 };
-// give the framework some time to start up
-setTimeout(function() {
+
+function initBoomerang() {
 	BOOMR_test.init({
 		testAfterOnBeacon: (BOOMR.plugins.AutoXHR && window.MutationObserver) ? 2 : 1,
 		Angular: {
@@ -49,6 +49,14 @@ setTimeout(function() {
 		},
 		autorun: false
 	});
-}, 2000);
+}
+
+if (BOOMR.plugins.LOGN) {
+	// give the framework some time to start up
+	setTimeout(initBoomerang, 2000);
+}
+else {
+	initBoomerang();
+}
 </script>
 <%= footer %>

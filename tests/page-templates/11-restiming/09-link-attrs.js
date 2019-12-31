@@ -16,7 +16,7 @@ describe("e2e/11-restiming/09-link-attrs", function() {
 	function getInteresting() {
 		var b = tf.beacons[0];
 		var trie = JSON.parse(b.restiming);
-		return trie[location.protocol + "//" + location.host + "/"]["pages/11-restiming/"]["support/09."];
+		return trie[location.protocol + "//" + location.host + "/"]["pages/11-restiming/"]["support/"];
 	}
 
 
@@ -61,7 +61,7 @@ describe("e2e/11-restiming/09-link-attrs", function() {
 		}
 
 		var interesting = getInteresting();
-		assertLinkRel(interesting.css, BOOMR.plugins.ResourceTiming.REL_TYPES.stylesheet);
+		assertLinkRel(interesting["09.css"], BOOMR.plugins.ResourceTiming.REL_TYPES.stylesheet);
 	});
 
 	it("Should find script `rel` for link elements", function() {
@@ -76,7 +76,7 @@ describe("e2e/11-restiming/09-link-attrs", function() {
 		var resource = t.findFirstResource(a.href);
 		if (resource.initiatorType === "link") {
 			// Chrome sets initiatorType to link
-			assertLinkRel(interesting.j.s, BOOMR.plugins.ResourceTiming.REL_TYPES.preload);
+			assertLinkRel(interesting["09.js"], BOOMR.plugins.ResourceTiming.REL_TYPES.preload);
 		}
 		else {
 			// FF, Edge and Safari set initiatorType to script
@@ -97,7 +97,7 @@ describe("e2e/11-restiming/09-link-attrs", function() {
 		var resource = t.findFirstResource(a.href);
 		if (resource.initiatorType === "link") {
 			// Chrome sets initiatorType to link
-			assertLinkRel(interesting.j.pg, BOOMR.plugins.ResourceTiming.REL_TYPES.preload);
+			assertLinkRel(interesting["09.jpg"], BOOMR.plugins.ResourceTiming.REL_TYPES.preload);
 		}
 		else {
 			// FF, Edge and Safari set initiatorType to img

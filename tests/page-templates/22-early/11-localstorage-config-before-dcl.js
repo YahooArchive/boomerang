@@ -22,10 +22,13 @@ describe("e2e/22-early/11-localstorage-config-before-dcl", function() {
 			t.validateEarlyBeacon(tf.beacons[0], tf.beacons[1]);
 		});
 
-		it("Should have a h.pg of FROMSERVER", function() {
-			var b = tf.beacons[i];
-			assert.equal(b["h.pg"], "FROMSERVER");
-		});
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have a h.pg of FROMSERVER", function() {
+				var b = tf.beacons[i];
+				assert.equal(b["h.pg"], "FROMSERVER");
+			});
+		}
 	});
 
 	describe("Beacon 2 (page view)", function() {
@@ -36,9 +39,12 @@ describe("e2e/22-early/11-localstorage-config-before-dcl", function() {
 			assert.isUndefined(b.early);
 		});
 
-		it("Should have a h.pg of FROMSERVER", function() {
-			var b = tf.beacons[i];
-			assert.equal(b["h.pg"], "FROMSERVER");
-		});
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have a h.pg of FROMSERVER", function() {
+				var b = tf.beacons[i];
+				assert.equal(b["h.pg"], "FROMSERVER");
+			});
+		}
 	});
 });

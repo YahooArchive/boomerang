@@ -144,7 +144,39 @@
 
 	t.CONFIG_DEFAULTS = {
 		beacon_url: t.BEACON_URL,
+		site_domain: null,
 		ResourceTiming: {
+			enabled: false,
+			splitAtPath: true
+		},
+		Angular: {
+			enabled: false
+		},
+		Ember: {
+			enabled: false
+		},
+		Backbone: {
+			enabled: false
+		},
+		History: {
+			enabled: false
+		},
+		Errors: {
+			enabled: false
+		},
+		TPAnalytics: {
+			enabled: false
+		},
+		UserTiming: {
+			enabled: false
+		},
+		Continuity: {
+			enabled: false
+		},
+		IFrameDelay: {
+			enabled: false
+		},
+		Early: {
 			enabled: false
 		},
 		doNotTestErrorsParam: false,
@@ -1438,6 +1470,10 @@
 				m.startTime >= start &&
 				m.startTime <= end;
 		});
+	};
+
+	t.siteDomain = function() {
+		return window.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, "$1").toLowerCase();
 	};
 
 	window.BOOMR_test = t;

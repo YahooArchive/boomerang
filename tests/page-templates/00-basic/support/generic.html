@@ -22,10 +22,6 @@
 <body>
 	<div id="output"></div>
 	<script>
-	BOOMR_test.init({
-		site_domain: "boomerang-test.local"
-	});
-
 	// create a plugin that will run last
 	BOOMR.plugins.ONUNLOADTEST = {
 		init: function() {
@@ -37,6 +33,11 @@
 			return true;
 		}
 	};
+
+	BOOMR_test.init({
+		site_domain: "boomerang-test.local"
+	});
+
 	document.getElementById("output").innerHTML = "Generic Page w/ Boomerang";
 	document.getElementById("output").innerHTML += " " + document.location;
 	</script>

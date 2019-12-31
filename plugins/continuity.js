@@ -330,12 +330,13 @@
  * have loaded, e.g.:
  *
  * ```
- * window.BOOMR_config = {
+ * BOOMR.init({
+ *   ...
  *   Continuity: {
  *     enabled: true,
  *     ttiWaitForHeroImages: ".hero-image"
  *   }
- * };
+ * });
  * ```
  *
  * Note this only works in ResourceTiming-supported browsers (and won't be used in

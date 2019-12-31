@@ -16,6 +16,7 @@ BOOMR.session.domain = document.domain;
 BOOMR_test.init({
 	// forces it to happen at unload beacon
 	testAfterOnBeacon: 2,
+	site_domain: BOOMR_test.siteDomain(),
 	afterFirstBeacon: function() {
 		// fake an unload event
 		BOOMR.fireEvent("page_unload", {

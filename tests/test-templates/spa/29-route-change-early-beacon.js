@@ -71,75 +71,78 @@ BOOMR_test.templates.SPA["29-route-change-early-beacon"] = function() {
 			t.validateEarlyBeacon(tf.beacons[i], tf.beacons[i + 1]);
 		});
 
-		it("Should have custom metric 1 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet1, 11);
-		});
-
-		it("Should have custom metric 2 - JavaScript function", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet2, 22);
-		});
-
-		it("Should be missing custom metric 3 - undefined JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet3, undefined);
-		});
-
-		it("Should have the custom metric 4 - XPath", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet4, 444.44);
-		});
-
-		it("Should have the custom metric 5 - URL", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet5, 1);
-		});
-
-		it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom0);
-		});
-
-		it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom1, 11);
-		});
-
-		it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom2, 22);
-		});
-
-		it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
-			if (t.isUserTimingSupported()) {
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have custom metric 1 - JavaScript var", function() {
 				var b = tf.beacons[i];
-				assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet1, 11);
+			});
 
-		it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
-			if (!t.isUserTimingSupported()) {
+			it("Should have custom metric 2 - JavaScript function", function() {
 				var b = tf.beacons[i];
-				assert.isUndefined(t.parseTimers(b.t_other).custom3);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet2, 22);
+			});
 
-		it("Should be missing custom timer 4 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom4);
-		});
+			it("Should be missing custom metric 3 - undefined JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet3, undefined);
+			});
 
-		it("Should be missing custom timer 5 - UserTiming", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom5);
-		});
+			it("Should have the custom metric 4 - XPath", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet4, 444.44);
+			});
+
+			it("Should have the custom metric 5 - URL", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet5, 1);
+			});
+
+			it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom0);
+			});
+
+			it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom1, 11);
+			});
+
+			it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom2, 22);
+			});
+
+			it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
+				if (t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
+				if (!t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isUndefined(t.parseTimers(b.t_other).custom3);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing custom timer 4 - JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom4);
+			});
+
+			it("Should be missing custom timer 5 - UserTiming", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom5);
+			});
+		}
 	});
 
 	//
@@ -217,75 +220,78 @@ BOOMR_test.templates.SPA["29-route-change-early-beacon"] = function() {
 			}
 		});
 
-		it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet1, 11);
-		});
-
-		it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet2, 22);
-		});
-
-		it("Should be missing custom metric 3 - undefined JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet3, undefined);
-		});
-
-		it("Should have the custom metric 4 - XPath", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet4, 444.44);
-		});
-
-		it("Should have the custom metric 5 - URL", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet5, 1);
-		});
-
-		it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom0);
-		});
-
-		it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom1, 11);
-		});
-
-		it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom2, 22);
-		});
-
-		it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
-			if (t.isUserTimingSupported()) {
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet1, 11);
+			});
 
-		it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
-			if (!t.isUserTimingSupported()) {
+			it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isUndefined(t.parseTimers(b.t_other).custom3);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet2, 22);
+			});
 
-		it("Should be missing custom timer 4 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom4);
-		});
+			it("Should be missing custom metric 3 - undefined JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet3, undefined);
+			});
 
-		it("Should be missing custom timer 5 - UserTiming", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom5);
-		});
+			it("Should have the custom metric 4 - XPath", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet4, 444.44);
+			});
+
+			it("Should have the custom metric 5 - URL", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet5, 1);
+			});
+
+			it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom0);
+			});
+
+			it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom1, 11);
+			});
+
+			it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom2, 22);
+			});
+
+			it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
+				if (t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
+				if (!t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isUndefined(t.parseTimers(b.t_other).custom3);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing custom timer 4 - JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom4);
+			});
+
+			it("Should be missing custom timer 5 - UserTiming", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom5);
+			});
+		}
 	});
 
 	//
@@ -298,75 +304,78 @@ BOOMR_test.templates.SPA["29-route-change-early-beacon"] = function() {
 			t.validateEarlyBeacon(tf.beacons[i], tf.beacons[i + 1]);
 		});
 
-		it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet1, 1);
-		});
-
-		it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet2, 10);
-		});
-
-		it("Should be missing custom metric 3 - undefined JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet3, undefined);
-		});
-
-		it("Should have the custom metric 4 - XPath", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet4, 11.11);
-		});
-
-		it("Should have the custom metric 5 - URL", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet5, 1);
-		});
-
-		it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom0);
-		});
-
-		it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom1, 1);
-		});
-
-		it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom2, 10);
-		});
-
-		it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
-			if (t.isUserTimingSupported()) {
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet1, 1);
+			});
 
-		it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
-			if (!t.isUserTimingSupported()) {
+			it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isUndefined(t.parseTimers(b.t_other).custom3);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet2, 10);
+			});
 
-		it("Should be missing custom timer 4 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom4);
-		});
+			it("Should be missing custom metric 3 - undefined JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet3, undefined);
+			});
 
-		it("Should be missing custom timer 5 - UserTiming", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom5);
-		});
+			it("Should have the custom metric 4 - XPath", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet4, 11.11);
+			});
+
+			it("Should have the custom metric 5 - URL", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet5, 1);
+			});
+
+			it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom0);
+			});
+
+			it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom1, 1);
+			});
+
+			it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom2, 10);
+			});
+
+			it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
+				if (t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
+				if (!t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isUndefined(t.parseTimers(b.t_other).custom3);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing custom timer 4 - JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom4);
+			});
+
+			it("Should be missing custom timer 5 - UserTiming", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom5);
+			});
+		}
 	});
 
 	//
@@ -422,75 +431,78 @@ BOOMR_test.templates.SPA["29-route-change-early-beacon"] = function() {
 			}
 		});
 
-		it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet1, 1);
-		});
-
-		it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet2, 10);
-		});
-
-		it("Should be missing custom metric 3 - undefined JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet3, undefined);
-		});
-
-		it("Should have the custom metric 4 - XPath", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet4, 11.11);
-		});
-
-		it("Should have the custom metric 5 - URL", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet5, 1);
-		});
-
-		it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom0);
-		});
-
-		it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom1, 1);
-		});
-
-		it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom2, 10);
-		});
-
-		it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
-			if (t.isUserTimingSupported()) {
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet1, 1);
+			});
 
-		it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
-			if (!t.isUserTimingSupported()) {
+			it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isUndefined(t.parseTimers(b.t_other).custom3);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet2, 10);
+			});
 
-		it("Should be missing custom timer 4 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom4);
-		});
+			it("Should be missing custom metric 3 - undefined JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet3, undefined);
+			});
 
-		it("Should be missing custom timer 5 - UserTiming", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom5);
-		});
+			it("Should have the custom metric 4 - XPath", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet4, 11.11);
+			});
+
+			it("Should have the custom metric 5 - URL", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet5, 1);
+			});
+
+			it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom0);
+			});
+
+			it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom1, 1);
+			});
+
+			it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom2, 10);
+			});
+
+			it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
+				if (t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
+				if (!t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isUndefined(t.parseTimers(b.t_other).custom3);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing custom timer 4 - JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom4);
+			});
+
+			it("Should be missing custom timer 5 - UserTiming", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom5);
+			});
+		}
 	});
 
 	//
@@ -503,75 +515,78 @@ BOOMR_test.templates.SPA["29-route-change-early-beacon"] = function() {
 			t.validateEarlyBeacon(tf.beacons[i], tf.beacons[i + 1]);
 		});
 
-		it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet1, 11);
-		});
-
-		it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet2, 22);
-		});
-
-		it("Should be missing custom metric 3 - undefined JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet3, undefined);
-		});
-
-		it("Should have the custom metric 4 - XPath", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet4, 444.44);
-		});
-
-		it("Should have the custom metric 5 - URL", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet5, 1);
-		});
-
-		it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom0);
-		});
-
-		it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom1, 11);
-		});
-
-		it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom2, 22);
-		});
-
-		it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
-			if (t.isUserTimingSupported()) {
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet1, 11);
+			});
 
-		it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
-			if (!t.isUserTimingSupported()) {
+			it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isUndefined(t.parseTimers(b.t_other).custom3);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet2, 22);
+			});
 
-		it("Should be missing custom timer 4 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom4);
-		});
+			it("Should be missing custom metric 3 - undefined JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet3, undefined);
+			});
 
-		it("Should be missing custom timer 5 - UserTiming", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom5);
-		});
+			it("Should have the custom metric 4 - XPath", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet4, 444.44);
+			});
+
+			it("Should have the custom metric 5 - URL", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet5, 1);
+			});
+
+			it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom0);
+			});
+
+			it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom1, 11);
+			});
+
+			it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom2, 22);
+			});
+
+			it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
+				if (t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
+				if (!t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isUndefined(t.parseTimers(b.t_other).custom3);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing custom timer 4 - JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom4);
+			});
+
+			it("Should be missing custom timer 5 - UserTiming", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom5);
+			});
+		}
 	});
 
 	//
@@ -626,74 +641,77 @@ BOOMR_test.templates.SPA["29-route-change-early-beacon"] = function() {
 			}
 		});
 
-		it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet1, 11);
-		});
-
-		it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet2, 22);
-		});
-
-		it("Should be missing custom metric 3 - undefined JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet3, undefined);
-		});
-
-		it("Should have the custom metric 4 - XPath", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet4, 444.44);
-		});
-
-		it("Should have the custom metric 5 - URL", function() {
-			var b = tf.beacons[i];
-			assert.equal(b.cmet5, 1);
-		});
-
-		it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom0);
-		});
-
-		it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom1, 11);
-		});
-
-		it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
-			var b = tf.beacons[i];
-			assert.equal(t.parseTimers(b.t_other).custom2, 22);
-		});
-
-		it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
-			if (t.isUserTimingSupported()) {
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have custom metric 1 - JavaScript var - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet1, 11);
+			});
 
-		it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
-			if (!t.isUserTimingSupported()) {
+			it("Should have custom metric 2 - JavaScript function - having been updated by the SPA App", function() {
 				var b = tf.beacons[i];
-				assert.isUndefined(t.parseTimers(b.t_other).custom3);
-			}
-			else {
-				this.skip();
-			}
-		});
+				assert.equal(b.cmet2, 22);
+			});
 
-		it("Should be missing custom timer 4 - JavaScript var", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom4);
-		});
+			it("Should be missing custom metric 3 - undefined JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet3, undefined);
+			});
 
-		it("Should be missing custom timer 5 - UserTiming", function() {
-			var b = tf.beacons[i];
-			assert.isUndefined(t.parseTimers(b.t_other).custom5);
-		});
+			it("Should have the custom metric 4 - XPath", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet4, 444.44);
+			});
+
+			it("Should have the custom metric 5 - URL", function() {
+				var b = tf.beacons[i];
+				assert.equal(b.cmet5, 1);
+			});
+
+			it("Should be missing the custom timer 0 - NavigationTiming - because it's handled on the server", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom0);
+			});
+
+			it("Should have the custom timer 1 - JavaScript variable - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom1, 11);
+			});
+
+			it("Should have the custom timer 2 - JavaScript function - having been updated by the SPA App", function() {
+				var b = tf.beacons[i];
+				assert.equal(t.parseTimers(b.t_other).custom2, 22);
+			});
+
+			it("Should have the custom timer 3 - UserTiming (if UserTiming is supported)", function() {
+				if (t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isTrue(t.parseTimers(b.t_other).custom3 > 0);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing the custom timer 3 - UserTiming (if UserTiming is not supported)", function() {
+				if (!t.isUserTimingSupported()) {
+					var b = tf.beacons[i];
+					assert.isUndefined(t.parseTimers(b.t_other).custom3);
+				}
+				else {
+					this.skip();
+				}
+			});
+
+			it("Should be missing custom timer 4 - JavaScript var", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom4);
+			});
+
+			it("Should be missing custom timer 5 - UserTiming", function() {
+				var b = tf.beacons[i];
+				assert.isUndefined(t.parseTimers(b.t_other).custom5);
+			});
+		}
 	});
 };

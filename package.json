@@ -74,7 +74,7 @@
     "mocha": "^3.0.2",
     "performance-now": "^2.1.0",
     "phantomjs": "^1.9.13",
-    "protractor": "^5.2.0",
+    "protractor": "^5.4.2",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
     "react-router": "^1.0.0-rc3",

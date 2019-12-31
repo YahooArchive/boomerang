@@ -19,15 +19,13 @@
 <body>
 	<div id="output"></div>
 	<script>
-	window.BOOMR_config = {
+	BOOMR_test.init({
 		IFrameDelay: {
 			enabled: true,
 			registerParent: true
 		},
 		autorun: false
-	};
-	BOOMR_test.init({});
-
+	});
 
 	// set page ready before browser onload
 	BOOMR.page_ready();

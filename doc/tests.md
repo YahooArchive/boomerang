@@ -35,7 +35,11 @@ should create an End-to-End (E2E) test.
 Unit Tests are located in `tests/unit/*.js`.  They are loosely organized into
 components or plugins.
 
-Boomerang's Unit Tests can be run from your local browser or in headless mode.
+Boomerang's Unit Tests can be run from your local browser or in headless mode:
+
+```
+grunt test
+```
 
 To build, run or debug the Unit Tests in your local browser, you will need to spawn
 a local webserver to host the `tests/unit/*` files.  You can do this by running

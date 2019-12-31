@@ -18,9 +18,12 @@ describe("e2e/22-early/05-disabled", function() {
 			assert.isUndefined(b.early);
 		});
 
-		it("Should have a h.pg of MYPAGEGROUP", function() {
-			var b = tf.beacons[i];
-			assert.equal(b["h.pg"], "MYPAGEGROUP");
-		});
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have a h.pg of MYPAGEGROUP", function() {
+				var b = tf.beacons[i];
+				assert.equal(b["h.pg"], "MYPAGEGROUP");
+			});
+		}
 	});
 });

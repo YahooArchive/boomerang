@@ -26,14 +26,13 @@
 	<div id="output"></div>
 	<script>
 	var tf = BOOMR.plugins.TestFramework;
-	window.BOOMR_config = {
+	BOOMR_test.init({
 		IFrameDelay: {
 			enabled: true,
 			registerParent: true
 		},
 		autorun: false
-	};
-	BOOMR_test.init({});
+	});
 
 	// delay page ready until after browser onload
 	setTimeout(function() {

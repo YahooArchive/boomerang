@@ -22,15 +22,18 @@ describe("e2e/22-early/07-localstorage-config-after-onload", function() {
 			t.validateEarlyBeacon(tf.beacons[0], tf.beacons[1]);
 		});
 
-		it("Should have a h.pg of FROMLOCALSTORAGE when localStorage is supported", function() {
-			if (t.isLocalStorageSupported() && BOOMR.plugins.LOGN.isJson) {
-				var b = tf.beacons[i];
-				assert.equal(b["h.pg"], "FROMLOCALSTORAGE");
-			}
-			else {
-				this.skip();
-			}
-		});
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have a h.pg of FROMLOCALSTORAGE when localStorage is supported", function() {
+				if (t.isLocalStorageSupported() && BOOMR.plugins.LOGN.isJson) {
+					var b = tf.beacons[i];
+					assert.equal(b["h.pg"], "FROMLOCALSTORAGE");
+				}
+				else {
+					this.skip();
+				}
+			});
+		}
 	});
 
 	describe("Beacon 2 (page view)", function() {
@@ -41,9 +44,12 @@ describe("e2e/22-early/07-localstorage-config-after-onload", function() {
 			assert.isUndefined(b.early);
 		});
 
-		it("Should have a h.pg of FROMLOCALSTORAGE", function() {
-			var b = tf.beacons[i];
-			assert.equal(b["h.pg"], "FROMLOCALSTORAGE");
-		});
+		// the following tests are only executed if mPulse's PageParams plugin exists
+		if (BOOMR.plugins.PageParams) {
+			it("Should have a h.pg of FROMLOCALSTORAGE", function() {
+				var b = tf.beacons[i];
+				assert.equal(b["h.pg"], "FROMLOCALSTORAGE");
+			});
+		}
 	});
 });
