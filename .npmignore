@@ -2,11 +2,9 @@
 .editorconfig
 .eslintignore
 .eslintrc
-Gruntfile.js
 jsdoc.conf.json
 doc-template/
 images/
-lib/
 tests/
 build/
 tasks/

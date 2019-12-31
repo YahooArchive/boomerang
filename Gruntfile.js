@@ -81,6 +81,7 @@ module.exports = function() {
 	// Paths
 	//
 	var testsDir = path.join(__dirname, "tests");
+	var perfTestsDir = path.join(testsDir, "perf");
 	var pluginsDir = path.join(__dirname, "plugins");
 
 	//
@@ -96,13 +97,34 @@ module.exports = function() {
 	// Ensure env.json exists
 	//
 	var envFile = path.resolve(path.join(testsDir, "server", "env.json"));
+	var env;
 	if (!fs.existsSync(envFile)) {
-		var envFileSample = path.resolve(path.join(testsDir, "server", "env.json.sample"));
-		console.info("Creating env.json from defaults");
-		fse.copySync(envFileSample, envFile);
+		// use the sample file if it exists
+		var sampleFile = path.resolve(path.join(testsDir, "server", "env.json.sample"));
+		if (fs.existsSync(sampleFile)) {
+			console.info("Creating env.json from defaults");
+			fse.copySync(sampleFile, envFile);
+		}
 	}
 
-	var env = grunt.file.readJSON("tests/server/env.json");
+	// load the env.json or default content
+	if (fs.existsSync(envFile)) {
+		env = grunt.file.readJSON("tests/server/env.json");
+	} else {
+		// default content
+		env = {
+			publish: "www"
+		};
+	}
+
+	//
+	// Browser Unit Tests
+	//
+	var browserUnitTests = [];
+	var browserUnitTestsFile = path.join(testsDir, "browsers-unit.json");
+	if (fs.existsSync(browserUnitTestsFile)) {
+		browserUnitTests = JSON.parse(stripJsonComments(grunt.file.read(browserUnitTestsFile)));
+	}
 
 	//
 	// Build SauceLabs E2E test URLs
@@ -777,7 +799,7 @@ module.exports = function() {
 				options: Object.assign({
 					urls: [TEST_URL_BASE + "unit/"],
 					testname: "Boomerang Unit Tests",
-					browsers: JSON.parse(stripJsonComments(grunt.file.read("./tests/browsers-unit.json")))
+					browsers: browserUnitTests
 				}, SAUCELABS_CONFIG)
 			},
 			"unit-debug": {
@@ -795,7 +817,7 @@ module.exports = function() {
 				options: Object.assign({
 					urls: e2eUrls,
 					testname: "Boomerang E2E Tests",
-					browsers: JSON.parse(stripJsonComments(grunt.file.read("tests/browsers-unit.json")))
+					browsers: browserUnitTests
 				}, SAUCELABS_CONFIG)
 			},
 			"e2e-debug": {
@@ -919,16 +941,20 @@ module.exports = function() {
 		);
 	});
 
-	// The perf tests use NodeJS 8+ features such as async/await and util.promisify
-	var nodeVersionMajor = Number(process.version.match(/^v(\d+)\.\d+/)[1]);
 
-	if (nodeVersionMajor >= 8) {
-	   grunt.registerTask("perf-tests", "Tests Performance", require("./tests/perf/perf-tests"));
-	   grunt.registerTask("perf-compare", "Compares current Performance to Baseline", require("./tests/perf/perf-compare"));
-	}
-	else {
-	   grunt.log.writeln("Warning: Node version " + process.version + " does not support async or util.promisify, used by perf tests.");
-	   grunt.log.writeln("Use NodeJS 8+ to run perf tests.");
+	// Load perf test tasks
+	if (fs.existsSync(perfTestsDir)) {
+		// The perf tests use NodeJS 8+ features such as async/await and util.promisify
+		var nodeVersionMajor = Number(process.version.match(/^v(\d+)\.\d+/)[1]);
+
+		if (nodeVersionMajor >= 8) {
+			grunt.registerTask("perf-tests", "Tests Performance", require("./tests/perf/perf-tests"));
+			grunt.registerTask("perf-compare", "Compares current Performance to Baseline", require("./tests/perf/perf-compare"));
+		}
+		else {
+			grunt.log.writeln("Warning: Node version " + process.version + " does not support async or util.promisify, used by perf tests.");
+			grunt.log.writeln("Use NodeJS 8+ to run perf tests.");
+		}
 	}
 
 	// Custom aliases for configured grunt tasks
