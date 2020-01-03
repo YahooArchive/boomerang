@@ -38,8 +38,6 @@
  */
 /*eslint dot-notation:0*/
 (function() {
-	"use strict";
-
 	BOOMR = window.BOOMR || {};
 	BOOMR.plugins = BOOMR.plugins || {};
 
