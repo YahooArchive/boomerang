@@ -17,7 +17,7 @@ describe("e2e/21-continuity/33-interaction-iframe", function() {
 
 		if (t.isNavigationTimingSupported()) {
 			var st = parseInt(b["rt.tstart"], 10);
-			assert.closeTo(st + ttfi, window.ttfi, 20);
+			assert.closeTo(st + ttfi, window.ttfi, 50);
 		}
 		else {
 			assert.operator(ttfi, ">=", 0);
