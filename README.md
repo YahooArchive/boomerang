@@ -176,7 +176,7 @@ For boomerang, the asynchronous loader snippet you'll use is:
 ```html
 <script>
 (function() {
-    // Boomerang Loader Snippet version 12
+    // Boomerang Loader Snippet version 14
     if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
         return;
     }

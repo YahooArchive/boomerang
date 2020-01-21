@@ -52,7 +52,7 @@ Here's the snippet:
 ```html
 <script>
 (function() {
-    // Boomerang Loader Snippet version 12
+    // Boomerang Loader Snippet version 14
     if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
         return;
     }
@@ -265,7 +265,7 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
 ```html
 <script>
 (function() {
-    // Boomerang Loader Snippet version 12
+    // Boomerang Loader Snippet version 14
     if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
         return;
     }
