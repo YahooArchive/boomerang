@@ -67,6 +67,8 @@ Here's the snippet:
 
     var // document.currentScript is supported in all browsers other than IE
         where = document.currentScript || document.getElementsByTagName("script")[0],
+        // Parent element of the script we inject
+        parentNode = where.parentNode,
         // Whether or not Preload method has worked
         promoted = false,
         // How long to wait for Preload to work before falling back to iframe method
@@ -86,7 +88,7 @@ Here's the snippet:
         // but some naive parsers will see a missing async attribute and think we're not async
         script.async = true;
 
-        where.parentNode.appendChild(script);
+        parentNode.appendChild(script);
 
         promoted = true;
     }
@@ -117,7 +119,7 @@ Here's the snippet:
         if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [67]\./)) {
             window.BOOMR.snippetMethod = "s";
 
-            bootstrap(where.parentNode, "boomr-async");
+            bootstrap(parentNode, "boomr-async");
             return;
         }
 
@@ -142,7 +144,7 @@ Here's the snippet:
         iframeStyle.display = "none";
 
         // Append to the end of the current block
-        where.parentNode.appendChild(iframe);
+        parentNode.appendChild(iframe);
 
         // Try to get the iframe's document object
         try {
@@ -159,14 +161,14 @@ Here's the snippet:
             // Set the src of the iframe to a JavaScript URL that will immediately set its document.domain to match the parent.
             // This lets us access the iframe document long enough to inject our script.
             // Our script may need to do more domain massaging later.
-            iframe.src = "javascript:var d=document.open();d.domain='" + dom + "';void(0);";
+            iframe.src = "javascript:var d=document.open();d.domain='" + dom + "';void 0;";
             win = iframe.contentWindow;
 
             doc = win.document.open();
         }
 
         if (dom) {
-            // Unsafe version for IE8 compatability. If document.domain has changed, we can't use win, but we can use doc.
+            // Unsafe version for IE8 compatibility. If document.domain has changed, we can't use win, but we can use doc.
             doc._boomrl = function() {
                 this.domain = dom;
                 bootstrap();
@@ -225,7 +227,7 @@ Here's the snippet:
         BOOMR_lstart = new Date().getTime();
 
         // Append our link tag
-        where.parentNode.appendChild(link);
+        parentNode.appendChild(link);
     }
     else {
         // No Preload support, use iframe loader
@@ -278,6 +280,8 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
 
     var // document.currentScript is supported in all browsers other than IE
         where = document.currentScript || document.getElementsByTagName("script")[0],
+        // Parent element of the script we inject
+        parentNode = where.parentNode,
         // Whether or not Preload method has worked
         promoted = false,
         // How long to wait for Preload to work before falling back to iframe method
@@ -297,7 +301,7 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
         // but some naive parsers will see a missing async attribute and think we're not async
         script.async = true;
 
-        where.parentNode.appendChild(script);
+        parentNode.appendChild(script);
 
         promoted = true;
     }
@@ -328,7 +332,7 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
         if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [67]\./)) {
             window.BOOMR.snippetMethod = "s";
 
-            bootstrap(where.parentNode, "boomr-async");
+            bootstrap(parentNode, "boomr-async");
             return;
         }
 
@@ -353,7 +357,7 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
         iframeStyle.display = "none";
 
         // Append to the end of the current block
-        where.parentNode.appendChild(iframe);
+        parentNode.appendChild(iframe);
 
         // Try to get the iframe's document object
         try {
@@ -370,14 +374,14 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
             // Set the src of the iframe to a JavaScript URL that will immediately set its document.domain to match the parent.
             // This lets us access the iframe document long enough to inject our script.
             // Our script may need to do more domain massaging later.
-            iframe.src = "javascript:var d=document.open();d.domain='" + dom + "';void(0);";
+            iframe.src = "javascript:var d=document.open();d.domain='" + dom + "';void 0;";
             win = iframe.contentWindow;
 
             doc = win.document.open();
         }
 
         if (dom) {
-            // Unsafe version for IE8 compatability. If document.domain has changed, we can't use win, but we can use doc.
+            // Unsafe version for IE8 compatibility. If document.domain has changed, we can't use win, but we can use doc.
             doc._boomrl = function() {
                 this.domain = dom;
                 bootstrap();
@@ -437,7 +441,7 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
             BOOMR_lstart = new Date().getTime();
 
             // Append our link tag
-            where.parentNode.appendChild(link);
+            parentNode.appendChild(link);
         }
         else {
             // No Preload support, use iframe loader

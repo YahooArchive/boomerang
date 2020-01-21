@@ -10,7 +10,7 @@ s.text = "(function(){\x0d" +
 "if(!window.BOOMR||!window.BOOMR.version){\n" +
 "var c,b,d,a\x3ddocument.createElement(\x22iframe\x22);\n" +
 // This would stop a beacon in FF: "a.src\x3d\x22javascript:false\x22;\n" +
-"a.src\x3d\x22javascript:void(0)\x22;\n" +
+"a.src\x3d\x22javascript:void 0\x22;\n" +
 "a.role\x3d\x22presentation\x22;\n" +
 "(a.frameElement||a).style.cssText\x3d\x22width:0;height:0;border:0;display:none;\x22;\n" +
 "d\x3ddocument.getElementsByTagName(\x22script\x22)[0];\n" +
@@ -19,7 +19,7 @@ s.text = "(function(){\x0d" +
 "b\x3da.contentWindow.document;\n" +
 "}catch(e){\n" +
 "c\x3ddocument.domain;\n" +
-"a.src\x3d\x22javascript:var d\\x3ddocument.open();d.domain\\x3d\x27\x22+c+\x22\x27;void(0);\x22;\n" +
+"a.src\x3d\x22javascript:var d\\x3ddocument.open();d.domain\\x3d\x27\x22+c+\x22\x27;void 0;\x22;\n" +
 "b\x3da.contentWindow.document;\n" +
 "}\n" +
 "var zzz = b.open();\n" +
