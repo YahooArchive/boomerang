@@ -184,7 +184,7 @@ For boomerang, the asynchronous loader snippet you'll use is:
     window.BOOMR = window.BOOMR || {};
     window.BOOMR.snippetStart = new Date().getTime();
     window.BOOMR.snippetExecuted = true;
-    window.BOOMR.snippetVersion = 12;
+    window.BOOMR.snippetVersion = 14;
 
     // NOTE: Set Boomerang URL here
     window.BOOMR.url = "";

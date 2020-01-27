@@ -60,7 +60,7 @@ Here's the snippet:
     window.BOOMR = window.BOOMR || {};
     window.BOOMR.snippetStart = new Date().getTime();
     window.BOOMR.snippetExecuted = true;
-    window.BOOMR.snippetVersion = 12;
+    window.BOOMR.snippetVersion = 14;
 
     // NOTE: Set Boomerang URL here
     window.BOOMR.url = "";
@@ -273,7 +273,7 @@ Here is a modification of the Boomerang Loader Snippet to delay until after
     window.BOOMR = window.BOOMR || {};
     window.BOOMR.snippetStart = new Date().getTime();
     window.BOOMR.snippetExecuted = true;
-    window.BOOMR.snippetVersion = 12;
+    window.BOOMR.snippetVersion = 14;
 
     // NOTE: Set Boomerang URL here
     window.BOOMR.url = "";
