@@ -1770,6 +1770,90 @@
 		};
 	};
 
+	var LayoutShiftMonitor = function(w) {
+
+		if (!w.PerformanceObserver || !w.LayoutShift) {
+			return;
+		}
+
+		// whether or not we're enabled
+		var enabled = true;
+
+		// CumulativeLayoutShift score
+		var clsScore = 0;
+
+		// PerformanceObserver
+		var perfObserver = new w.PerformanceObserver(onLayoutShiftObserver);
+
+		try {
+			perfObserver.observe({type: "layout-shift", buffered: true});
+		}
+		catch (e) {
+			// layout-shift not supported
+			return;
+		}
+
+		function onLayoutShiftObserver(list) {
+			var entries, i;
+
+			if (!enabled) {
+				return;
+			}
+
+			entries = list.getEntries();
+			for (i = 0; i < entries.length; i++) {
+				// Only account for Layoutshift score that didnt have recent user input.
+				if (!entries[i].hadRecentInput) {
+					clsScore += entries[i].value;
+				}
+			}
+		}
+
+		/**
+		 * Record Cumulative Layout Shift score on beacon
+		 */
+		function analyze(startTime) {
+			// add data to beacon
+			impl.addToBeacon("c.cls", externalMetrics.clsScore());
+		}
+
+		function clearClsScore() {
+			clsScore = 0;
+		}
+
+		/**
+		 * Disables the monitor
+		 */
+		function stop() {
+			enabled = false;
+
+			perfObserver.disconnect();
+
+			clearClsScore();
+		}
+
+		/**
+		 * Resets on beacon
+		 */
+		function onBeacon() {
+			clearClsScore();
+		}
+
+		/**
+		 * Cumulative Layout Shift Score
+		 */
+		externalMetrics.clsScore = function() {
+			return clsScore;
+		};
+
+		return {
+			clearClsScore: clearClsScore,
+			analyze: analyze,
+			stop: stop,
+			onBeacon: onBeacon
+		};
+	};
+
 	/**
 	 * Monitors LongTasks
 	 */
@@ -3626,6 +3710,11 @@
 		monitorStats: false,
 
 		/**
+		 * Whether to monitor Layout Shifts
+		 */
+		monitorLayoutShifts: true,
+
+		/**
 		 * Whether to monitor for interactions after onload
 		 */
 		afterOnload: false,
@@ -3777,6 +3866,11 @@
 		statsMonitor: null,
 
 		/**
+		* LayoutShiftMonitor
+		*/
+		layoutShiftMonitor: null,
+
+		/**
 		 * All possible monitors
 		 */
 		monitors: [
@@ -3791,7 +3885,8 @@
 			"interactionMonitor",
 			"visibilityMonitor",
 			"orientationMonitor",
-			"statsMonitor"
+			"statsMonitor",
+			"layoutShiftMonitor"
 		],
 
 		/**
@@ -3997,6 +4092,8 @@
 		 * monitor Interactions.
 		 * @param {boolean} [config.Continuity.monitorStats=true] Whether or not to
 		 * monitor Page Statistics.
+		 * @param {boolean} [config.Continuity.monitorLayoutShifts=true] Whether or not to
+		 * monitor Layout Shift
 		 * @param {boolean} [config.Continuity.afterOnload=false] Whether or not to
 		 * monitor Long Tasks, Page Busy, Frame Rate, interactions and Page Statistics
 		 * after `onload` (up to `afterOnloadMaxLength`).
@@ -4029,7 +4126,7 @@
 				["monitorLongTasks", "monitorPageBusy", "monitorFrameRate", "monitorInteractions",
 					"monitorStats", "afterOnload", "afterOnloadMaxLength", "afterOnloadMinWait",
 					"waitAfterOnload", "ttiWaitForFrameworkReady", "ttiWaitForHeroImages",
-					"sendLog", "logMaxEntries", "sendTimeline"]);
+					"sendLog", "logMaxEntries", "sendTimeline", "monitorLayoutShifts"]);
 
 			if (impl.initialized) {
 				return this;
@@ -4097,6 +4194,12 @@
 				//
 				if (impl.monitorStats) {
 					impl.statsMonitor = new StatsMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+				}
+
+				if (impl.monitorLayoutShifts &&
+					BOOMR.window.PerformanceObserver) {
+					impl.layoutShiftMonitor = new LayoutShiftMonitor(BOOMR.window);
+
 				}
 			}
 
