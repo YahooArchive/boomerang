@@ -407,6 +407,12 @@
 		    typeof window.performance.getEntriesByType === "function";
 	};
 
+	t.isLargestContentfulPaintSupported = function() {
+		return window.performance &&
+		    typeof window.LargestContentfulPaint === "function" &&
+		    typeof window.PerformanceObserver === "function";
+	};
+
 	t.isLongTasksSupported = function() {
 		return window.PerformanceObserver && window.PerformanceLongTaskTiming;
 	};

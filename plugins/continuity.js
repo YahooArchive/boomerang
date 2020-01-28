@@ -279,6 +279,8 @@
  *     * These might just be paints of white, so they're not the only signal we should use
  * * First Contentful Paint (if available)
  *     * Via [PaintTiming](https://www.w3.org/TR/paint-timing/)
+ * * Largest Contentful Paint (if available)
+ *     * Via [Largest Contentful Paint API](https://wicg.github.io/largest-contentful-paint/)
  * * [domContentLoadedEventEnd](https://msdn.microsoft.com/en-us/library/ff974719)
  *     * "The DOMContentLoaded event is fired when the initial HTML document has been
  *         completely loaded and parsed, without waiting for stylesheets, images,
@@ -398,6 +400,7 @@
  * Time to Interactive:
  *
  * 1. Determine the highest Visually Ready timestamp (VRTS):
+ *     * Largest Contentful Paint (if available)
  *     * First Contentful Paint (if available)
  *     * First Paint (if available)
  *     * `domContentLoadedEventEnd`
@@ -1426,11 +1429,12 @@
 
 		/**
 		 * Determine Visually Ready time.  This is the last of:
-		 * 1. First Contentful Paint (if available)
-		 * 2. First Paint (if available)
-		 * 3. domContentLoadedEventEnd
-		 * 4. Hero Images are loaded (if configured)
-		 * 5. Framework Ready (if configured)
+		 * 1. Largest Contentful Paint (if available)
+		 * 2. First Contentful Paint (if available)
+		 * 3. First Paint (if available)
+		 * 4. domContentLoadedEventEnd
+		 * 5. Hero Images are loaded (if configured)
+		 * 6. Framework Ready (if configured)
 		 *
 		 * @returns {number|undefined} Timestamp, if everything is ready, or
 		 *    `undefined` if not
@@ -1447,12 +1451,17 @@
 				latestTs = impl.frameworkReady;
 			}
 
-			// use First Contentful Paint (if available) or
+			// use Largest/First Contentful Paint (if available) or
 			if (BOOMR.plugins.PaintTiming &&
 			    BOOMR.plugins.PaintTiming.is_supported() &&
 			    p &&
 			    p.timeOrigin) {
-				var fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");
+				var fp = BOOMR.plugins.PaintTiming.getTimingFor("largest-contentful-paint");
+
+				if (!fp) {
+					fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");
+				}
+
 				if (!fp) {
 					// or get First Paint directly from PaintTiming
 					fp = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
