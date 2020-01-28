@@ -48,7 +48,8 @@
     "resourcetiming-compression": "^1.2.3",
     "usertiming": "~0.1.8",
     "usertiming-compression": "^0.1.8",
-    "zone": "^0.8.26"
+    "zone": "^0.8.26",
+    "cookieconsent": "~3.1.1"
   },
   "resolutions": {
     "angular": "1.4.6"

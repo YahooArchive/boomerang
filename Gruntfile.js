@@ -253,7 +253,8 @@ module.exports = function() {
 				"tests/test-templates/**/*.js",
 				"!tests/page-templates/12-react/support/*",
 				"!tests/page-templates/03-load-order/01-after-page-load.html",  // fails on snippet include
-				"!tests/page-templates/03-load-order/07-after-page-load-boomr-page-ready.html"  // fails on snippet include
+				"!tests/page-templates/03-load-order/07-after-page-load-boomr-page-ready.html",  // fails on snippet include
+				"!tests/page-templates/29-opt-out-opt-in/01-opt-in-origin-injected-loader-wrapper.html"  // parse error on snippet include
 			]
 		},
 		"string-replace": {
@@ -334,6 +335,36 @@ module.exports = function() {
 					]
 				}
 			},
+			"doc-source-code": {
+				files: [
+					{
+						"./": "build/doc/boomerangjs/**/*.html"
+					}
+				],
+				options: {
+					replacements: [
+						{
+							pattern: /%minified_consent_inline_plugin_code%/g,
+							replacement: "<%= grunt.file.read('build/plugins/consent-inlined-plugin.min.js') %>"
+						}
+					]
+				}
+			},
+			"plugins-remove-sourcemappingurl": {
+				files: [
+					{
+						"./": "build/plugins/*.min.js"
+					}
+				],
+				options: {
+					replacements: [
+						{
+							pattern: /\n\/\/# sourceMappingURL=.*/g,
+							replacement: ""
+						}
+					]
+				}
+			},
 			"remove-sourcemappingurl": {
 				files: [
 					{
@@ -410,6 +441,17 @@ module.exports = function() {
 						dest: "tests/perf/results/baseline.json"
 					}
 				]
+			},
+			"inline-consent-plugin": {
+				files: [
+					{
+						expand: false,
+						nonull: true,
+						src: "build/plugins/consent-inlined-plugin.min.js",
+						force: true,
+						dest: "tests/page-template-snippets/consentInlinePluginNoScript.tpl"
+					}
+				]
 			}
 		},
 		uglify: {
@@ -434,6 +476,21 @@ module.exports = function() {
 				files: [{
 					src: buildTest,
 					dest: buildTestMin
+				}]
+			},
+			"inline-consent-plugin": {
+				options: {
+					preserveComments: false,
+					mangle: true,
+					banner: "",
+					sourceMap: false,
+					compress: {
+						sequences: false
+					}
+				},
+				files: [{
+					src: "plugins/consent-inlined-plugin.js",
+					dest: "tests/page-template-snippets/consentInlinePluginNoScriptMin.tpl"
 				}]
 			},
 			plugins: {
@@ -888,7 +945,7 @@ module.exports = function() {
 					"doc/**/**",
 					"README.md"
 				],
-				tasks: ["clean", "jsdoc"]
+				tasks: ["clean", "jsdoc", "doc-source-code"]
 			}
 		}
 	});
@@ -966,7 +1023,7 @@ module.exports = function() {
 		// Build
 		//
 		"build": ["concat", "build:apply-templates", "githash", "uglify", "string-replace:remove-sourcemappingurl", "compress", "metrics"],
-		"build:test": ["concat:debug", "concat:debug-tests", "!build:apply-templates", "uglify:debug-test-min"],
+		"build:test": ["concat:debug", "concat:debug-tests", "!build:apply-templates", "uglify:debug-test-min", "uglify:inline-consent-plugin"],
 
 		// Build steps
 		"build:apply-templates": [
@@ -1036,8 +1093,10 @@ module.exports = function() {
 		"test:e2e:IE": ["test:e2e:browser", "protractor:IE"],
 		"test:e2e:Safari": ["test:e2e:browser", "protractor:Safari"],
 
+		"doc-source-code": ["uglify:plugins", "string-replace:plugins-remove-sourcemappingurl", "string-replace:doc-source-code"],
+
 		// Documentation
-		"test:doc": ["clean", "jsdoc", "express:doc", "watch:doc"],
+		"test:doc": ["clean", "jsdoc", "doc-source-code", "express:doc", "watch:doc"],
 
 		// SauceLabs tests
 		"test:matrix": ["test:matrix:unit", "test:matrix:e2e"],
