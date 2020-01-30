@@ -2042,7 +2042,29 @@ BOOMR_check_doc_domain();
 					if (params[i]) {
 						kv = params[i].split("=");
 						if (kv.length && kv[0] === param) {
-							return kv.length > 1 ? decodeURIComponent(kv.splice(1).join("=").replace(/\+/g, " ")) : "";
+							try {
+								return kv.length > 1 ? decodeURIComponent(kv.splice(1).join("=").replace(/\+/g, " ")) : "";
+							}
+							catch (e) {
+								/**
+								 * We have different messages for the same error in different browsers but
+								 * we can look at the error name because it looks more consistent.
+								 *
+								 * Examples:
+								 *  - URIError: The URI to be encoded contains invalid character (Edge)
+								 *  - URIError: malformed URI sequence (Firefox)
+								 *  - URIError: URI malformed (Chrome)
+								 *  - URIError: URI error (Safari 13.0) / Missing on MDN but this is the result of my local tests.
+								 *
+								 * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Malformed_URI#Message
+								 */
+								if (e && typeof e.name === "string" && e.name.indexOf("URIError") !== -1) {
+									// NOP
+								}
+								else {
+									throw e;
+								}
+							}
 						}
 					}
 				}

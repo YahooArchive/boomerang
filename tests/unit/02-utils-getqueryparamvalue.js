@@ -61,4 +61,9 @@ describe("BOOMR.utils.getQueryParamValue()", function() {
 		assert.isNull(BOOMR.utils.getQueryParamValue("abc", url + "?foo=1&bar=2"));
 		assert.isNull(BOOMR.utils.getQueryParamValue("abc", getA(url + "?foo=1&bar=2")));
 	});
+
+	it("Should return null when the param is malformed query parameters", function() {
+		var url = "http://www.example.com/";
+		assert.isNull(BOOMR.utils.getQueryParamValue("bar", url + "?foo=1&bar=_v%B0%FC"));
+	});
 });
