@@ -77,7 +77,7 @@
  * * A `PerformanceObserver` will be turned on to capture all Long Tasks that happen
  *     on the page.
  * * Long Tasks will be used to calculate _Time to Interactive_
- * * A log (`c.lt`), timeline (`c.t.lt`) and other Long Task metrics (`c.lt.*`) will
+ * * A log (`c.lt`), timeline (`c.t.longtask`) and other Long Task metrics (`c.lt.*`) will
  *     be added to the beacon (see Beacon Parameters details below)
  *
  * The log `c.lt` is a JSON (or JSURL) object of compressed `LongTask` data.  See
@@ -197,7 +197,7 @@
  * If {@link BOOMR.plugins.Continuity.init `monitorInteractions`} is enabled:
  *
  * * Passive event handlers will be added to monitor clicks, keys, etc.
- * * A log and many interaction metrics (`c.f.*`) will be added to the
+ * * A log and many interaction metrics (`c.i.*`, `c.ttfi`) will be added to the
  *     beacon (see Beacon Parameters details below)
  *
  * For `interaction` beacons, the following will be set:
