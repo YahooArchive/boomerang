@@ -2533,7 +2533,7 @@
 			lastScroll = now;
 
 			// determine how many pixels were scrolled
-			var curY = BOOMR.utils.scroll().y;
+			var curY = Math.ceil(BOOMR.utils.scroll().y);
 			var diffY = Math.abs(lastY - curY);
 
 			scrollPixels += diffY;
