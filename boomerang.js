@@ -33,15 +33,21 @@
  * * `sv`: Boomerang Loader Snippet version
  * * `sm`: Boomerang Loader Snippet method
  * * `u`: The page's URL (for most beacons), or the `XMLHttpRequest` URL
+ * * `n`: The beacon number
  * * `pgu`: The page's URL (for `XMLHttpRequest` beacons)
  * * `pid`: Page ID (8 characters)
  * * `r`: Navigation referrer (from `document.location`)
  * * `vis.pre`: `1` if the page transitioned from prerender to visible
+ * * `vis.st`: Document's visibility state when beacon was sent
+ * * `vis.lh`: Timestamp when page was last hidden
+ * * `vis.lv`: Timestamp when page was last visible
  * * `xhr.pg`: The `XMLHttpRequest` page group
  * * `errors`: Error messages of errors detected in Boomerang code, separated by a newline
  * * `rt.si`: Session ID
  * * `rt.ss`: Session start timestamp
  * * `rt.sl`: Session length (number of pages), can be increased by XHR beacons as well
+ * * `ua.plt`: `navigator.platform`
+ * * `ua.vnd`: `navigator.vendor`
  */
 
 /**
