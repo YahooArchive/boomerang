@@ -141,7 +141,7 @@
 
 			impl.entries = impl.entries.concat(newEntries);
 
-			impl.firstInputDelay = newEntries[0].duration;
+			impl.firstInputDelay = newEntries[0].processingStart - newEntries[0].startTime;
 		}
 	};
 

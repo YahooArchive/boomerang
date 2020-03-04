@@ -10,10 +10,10 @@ describe("e2e/29-eventtiming/00-basic", function() {
 	});
 
 	it("Should have included raw events (et.e) on the beacon", function() {
-		assert.equal(tf.lastBeacon()["et.e"], "~(~(c~0~d~'p0~fi~1~p~'p0~s~'2s)~(c~0~d~'1e~n~'click~p~'1e~s~'rs))");
+		assert.equal(tf.lastBeacon()["et.e"], "~(~(c~0~d~'p0~fi~1~p~'nm~s~'2s)~(c~0~d~'1e~n~'click~p~'1e~s~'rs))");
 	});
 
 	it("Should have included First Input Delay (et.fid) on the beacon", function() {
-		assert.equal(tf.lastBeacon()["et.fid"], 900);
+		assert.equal(tf.lastBeacon()["et.fid"], 50);
 	});
 });
