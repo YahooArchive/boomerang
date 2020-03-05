@@ -70,6 +70,9 @@
 		 */
 		observer: null,
 
+		// Metrics that will be exported
+		externalMetrics: {},
+
 		/**
 		 * Executed on `page_ready`, `xhr_load` and `before_unload`
 		 */
@@ -151,6 +154,10 @@
 			impl.timingCache["largest-contentful-paint"] = lcpTime;
 
 			BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
+
+			impl.externalMetrics.lcp = function() {
+				return Math.floor(lcpTime);
+			};
 		}
 	};
 
@@ -283,7 +290,10 @@
 					}
 				}
 			}
-		}
+		},
+
+		// external metrics
+		metrics: impl.externalMetrics
 	};
 
 }());

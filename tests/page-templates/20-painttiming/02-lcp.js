@@ -51,4 +51,19 @@ describe("e2e/20-painttiming/02-lcp", function() {
 			return this.skip();
 		}.bind(this), 1000);
 	});
+
+	it("Should have exposed LCP metric (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.equal(tf.lastBeacon()["pt.lcp"], BOOMR.plugins.PaintTiming.metrics.lcp());
+	});
 });
