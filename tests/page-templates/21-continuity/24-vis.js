@@ -37,4 +37,9 @@ describe("e2e/21-continuity/24-vis", function() {
 		// visible
 		assert.equal(logs[3].s, 0);
 	});
+
+	it("Should have not sent FID metric for visibility change interaction (c.fid)", function() {
+		var b = tf.lastBeacon();
+		assert.isUndefined(b["c.fid"], "c.fid should not have been present");
+	});
 });

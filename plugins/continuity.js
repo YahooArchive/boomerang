@@ -169,6 +169,9 @@
  *     * Distinct Scrolls: Scrolls that happened over 2 seconds since the last scroll
  * * Page Visibility changes
  * * Orientation changes
+ * * Pointer Down and Up, Mouse Down and Touch Start:
+ *    Timestamp of these events is used to track and calculate interaction metrics
+ *    like _First Input Delay_
  *
  * These interactions are monitored and instrumented throughout the page load.  By using
  * the event's `timeStamp`, we can detect how long it took for the physical event (e.g.
@@ -442,6 +445,11 @@
  * to the user if the callback is delayed.
  *
  * This time (measured in milliseconds) is added to the beacon as `c.fid`.
+ *
+ * The polyfill for FirstInputDelay calculation from previous version of this plugin
+ * has been updated to match the latest industry standards for FID. This polyfill now
+ * evaluates click, mousedown, keydown, touchstart, pointerdown followed by pointerup
+ * events as indicators for First Input Delay calculations.
  *
  * ## Timelines
  *
@@ -773,6 +781,11 @@
 	 * character.
 	 */
 	var LARGE_NUMBER_WRAP = ".";
+
+	/**
+	 * Listener Options args with Passive and Capture set to true
+	 */
+	var listenerOpts = {passive: true, capture: true};
 
 	// Performance object
 	var p = BOOMR.getPerformance();
@@ -2551,8 +2564,7 @@
 				lastYLogged = curY;
 			}
 
-			// update the interaction monitor
-			i.interact("scroll", now, e);
+			// We wont consider Scroll events as triggering an interaction
 
 			// calculate percentage of document scrolled
 			intervalScrollPct += Math.round(diffY / documentHeight * 100);
@@ -2643,7 +2655,7 @@
 		};
 
 		// startup
-		BOOMR.utils.addListener(w, "scroll", onScroll, true);
+		BOOMR.utils.addListener(w, "scroll", onScroll, listenerOpts);
 
 		collectionInterval = setInterval(reportScroll, COLLECTION_INTERVAL);
 
@@ -2739,8 +2751,11 @@
 				y: newY
 			});
 
-			// update the interaction monitor
-			i.interact("click", now, e);
+			// Only count cancellable event for interactions.
+			if (e.cancelable) {
+				// update the interaction monitor
+				i.interact("click", now, e);
+			}
 		}
 
 		/**
@@ -2781,7 +2796,7 @@
 		//
 		// Startup
 		//
-		BOOMR.utils.addListener(w.document, "click", onClick, true);
+		BOOMR.utils.addListener(w.document, "click", onClick, listenerOpts);
 
 		return {
 			analyze: analyze,
@@ -2827,8 +2842,11 @@
 			// add to the log (don't track the actual keys)
 			t.log(LOG_TYPE_KEY, now);
 
-			// update the interaction monitor
-			i.interact("key", now, e);
+			// Only count cancellable event for interactions.
+			if (e.cancelable) {
+				// update the interaction monitor
+				i.interact("key", now, e);
+			}
 		}
 
 		/**
@@ -2866,7 +2884,7 @@
 		};
 
 		// start
-		BOOMR.utils.addListener(w.document, "keydown", onKeyDown, true);
+		BOOMR.utils.addListener(w.document, "keydown", onKeyDown, listenerOpts);
 
 		return {
 			analyze: analyze,
@@ -3049,7 +3067,7 @@
 		reportMouseLogInterval = setInterval(reportMouseLog, REPORT_LOG_INTERVAL);
 
 		// start
-		BOOMR.utils.addListener(w.document, "mousemove", onMouseMove, true);
+		BOOMR.utils.addListener(w.document, "mousemove", onMouseMove, listenerOpts);
 
 		return {
 			analyze: analyze,
@@ -3143,7 +3161,13 @@
 			interactions++;
 
 			if (!timeToFirstInteraction) {
-				timeToFirstInteraction = now;
+				if (e && e.timeStamp) {
+					// e.timeStamp is DomHighRes timestamp, so convert to epoch based.
+					timeToFirstInteraction = e.timeStamp + epoch;
+				}
+				else {
+					timeToFirstInteraction = now;
+				}
 			}
 
 			// check for interaction delay.
@@ -3324,6 +3348,9 @@
 			}
 		};
 
+		/**
+		 * ttfi relative to nav start
+		 */
 		externalMetrics.timeToFirstInteraction = function() {
 			if (timeToFirstInteraction) {
 				// milliseconds since nav start
@@ -3355,6 +3382,130 @@
 			analyze: analyze,
 			stop: stop,
 			onBeacon: onBeacon
+		};
+	};
+
+	/**
+	 * Monitor pointerdown followed by pointerup interaction event for calculating FID
+	 */
+	var PointerDownMonitor = function(w, t, i) {
+		// we are not registering timeline events for pointerdown as these end up as click
+		// events which are already tracked for timelines.
+
+		var enabled = true;
+		var now, originalEvent;
+
+		function onPointerUp() {
+			if (!enabled) {
+				// Either stop() was called because of onBeacon event shutting things down
+				// or 'pointercancel' event resulted in stop() being called.
+				return;
+			}
+
+			// Update the interaction monitor
+			i.interact("pd", now, originalEvent);
+			now = null;
+			originalEvent = null;
+
+			BOOMR.utils.removeListener(window, "pointerup", onPointerUp);
+		}
+
+		function onPointerDown(e) {
+			// Only count cancelable event that should trigger behavior
+			// important to user
+			if (!enabled || !e.cancelable) {
+				return;
+			}
+
+			now = BOOMR.now();
+			originalEvent = e;
+
+			BOOMR.utils.addListener(window, "pointerup", onPointerUp, listenerOpts);
+		}
+
+		/**
+		 * Stop this monitor
+		 */
+		function stop() {
+			enabled = false;
+			BOOMR.utils.removeListener(window, "pointerdown", onPointerDown);
+			BOOMR.utils.removeListener(window, "pointerup", onPointerUp);
+			BOOMR.utils.removeListener(window, "pointercancel", stop);
+		}
+
+		BOOMR.utils.addListener(window, "pointerdown", onPointerDown, listenerOpts);
+		BOOMR.utils.addListener(window, "pointercancel", stop, listenerOpts);
+
+		return {
+			stop: stop
+		};
+	};
+
+	/**
+	 * Monitor mousedown Event
+	 */
+	var MouseDownMonitor = function(w, t, i) {
+		var enabled = true;
+
+		function onMouseDown(e) {
+			// Only count cancelable event that should trigger behavior
+			// important to user
+			if (!enabled || !e.cancelable) {
+				return;
+			}
+
+			var now = BOOMR.now();
+
+			// Update the interaction monitor
+			i.interact("md", now, e);
+		}
+
+		/**
+		 * Stop this monitor
+		 */
+		function stop() {
+			enabled = false;
+			BOOMR.utils.removeListener(window, "mousedown", onMouseDown);
+		}
+
+		BOOMR.utils.addListener(window, "mousedown", onMouseDown, listenerOpts);
+
+		return {
+			stop: stop
+		};
+	};
+
+	/**
+	 * Monitors TouchStart event
+	 */
+	var TouchStartMonitor = function(w, t, i) {
+		var enabled = true;
+
+		function onTouchStart(e) {
+			// Only count cancelable event that should trigger behavior
+			// important to user
+			if (!enabled || !e.cancelable) {
+				return;
+			}
+
+			var now = BOOMR.now();
+
+			// Update the interaction monitor
+			i.interact("ts", now, e);
+		}
+
+		/**
+		 * Stop this monitor
+		 */
+		function stop() {
+			enabled = false;
+			BOOMR.utils.removeListener(window, "touchstart", onTouchStart);
+		}
+
+		BOOMR.utils.addListener(window, "touchstart", onTouchStart, listenerOpts);
+
+		return {
+			stop: stop
 		};
 	};
 
@@ -3398,9 +3549,7 @@
 			t.log(LOG_TYPE_VIS, now, {
 				s: VIS_MAP[BOOMR.visibilityState()]
 			});
-
-			// update the interaction monitor
-			i.interact("vis", now, e);
+			// Visibility change doesn't explicitly trigger an "interaction"
 		});
 
 		/**
@@ -3455,9 +3604,6 @@
 					a: angle
 				});
 			}
-
-			// update the interaction monitor
-			i.interact("orn", now, e);
 		}
 
 		/**
@@ -3472,7 +3618,7 @@
 		//
 		// Setup
 		//
-		BOOMR.utils.addListener(w, "orientationchange", onOrientationChange, true);
+		BOOMR.utils.addListener(w, "orientationchange", onOrientationChange, listenerOpts);
 
 		return {
 			stop: stop
@@ -3831,7 +3977,7 @@
 		interactionMonitor: null,
 
 		/**
-		 * ScrollMontior
+		 * ScrollMonitor
 		 */
 		scrollMonitor: null,
 
@@ -3861,6 +4007,21 @@
 		orientationMonitor: null,
 
 		/**
+		 * TouchStartMonitor
+		 */
+		touchStartMonitor: null,
+
+		/**
+		 * MouseDownMonitor
+		 */
+		mouseDownMonitor: null,
+
+		/**
+		 * PointerDownMonitor
+		 */
+		pointerDownMonitor: null,
+
+		/**
 		 * StatsMonitor
 		 */
 		statsMonitor: null,
@@ -3886,7 +4047,10 @@
 			"visibilityMonitor",
 			"orientationMonitor",
 			"statsMonitor",
-			"layoutShiftMonitor"
+			"layoutShiftMonitor",
+			"touchStartMonitor",
+			"mouseDownMonitor",
+			"pointerDownMonitor"
 		],
 
 		/**
@@ -4187,6 +4351,9 @@
 					impl.mouseMonitor = new MouseMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
 					impl.visibilityMonitor = new VisibilityMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
 					impl.orientationMonitor = new OrientationMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+					impl.touchStartMonitor = new TouchStartMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+					impl.mouseDownMonitor = new MouseDownMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+					impl.pointerDownMonitor = new PointerDownMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
 				}
 
 				//

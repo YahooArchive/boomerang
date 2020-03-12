@@ -18,14 +18,14 @@ BOOMR.fireEvent("visibility_changed");
 BOOMR.visibilityState = function() {
 	return "visible";
 };
-BOOMR.fireEvent("visibility_changed");
+BOOMR.fireEvent("visibility_changed", {"timeStamp": BOOMR.now()});
 BOOMR.visibilityState = function() {
 	return "hidden";
 };
-BOOMR.fireEvent("visibility_changed");
+BOOMR.fireEvent("visibility_changed", {"timeStamp": BOOMR.now()});
 BOOMR.visibilityState = function() {
 	return "visible";
 };
-BOOMR.fireEvent("visibility_changed");
+BOOMR.fireEvent("visibility_changed", {"timeStamp": BOOMR.now()});
 </script>
 <%= footer %>

@@ -1905,11 +1905,11 @@ BOOMR_check_doc_domain();
 			 * @param {DOMElement} el DOM element
 			 * @param {string} type Event name
 			 * @param {function} fn Callback function
-			 * @param {boolean} passive Passive mode
+			 * @param {boolean|object} passiveOrOpts Passive mode or Options object
 			 *
 			 * @memberof BOOMR.utils
 			 */
-			addListener: function(el, type, fn, passive) {
+			addListener: function(el, type, fn, passiveOrOpts) {
 				var opts = false;
 
 				/* BEGIN_DEBUG */
@@ -1917,7 +1917,10 @@ BOOMR_check_doc_domain();
 				/* END_DEBUG */
 
 				if (el.addEventListener) {
-					if (passive && BOOMR.browser.supportsPassive()) {
+					if (typeof passiveOrOpts === "object") {
+						opts = passiveOrOpts;
+					}
+					else if (typeof passiveOrOpts === "boolean" && passiveOrOpts && BOOMR.browser.supportsPassive()) {
 						opts = {
 							capture: false,
 							passive: true

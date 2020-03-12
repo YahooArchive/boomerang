@@ -29,4 +29,9 @@ describe("e2e/21-continuity/25-orn", function() {
 		assert.equal(parseInt(logs[1].a, 36), 90);
 		assert.equal(parseInt(logs[2].a, 36), -90);
 	});
+
+	it("Should have not sent FID metric for orientation interaction (c.fid)", function() {
+		var b = tf.lastBeacon();
+		assert.isUndefined(b["c.fid"], "c.fid should not have been present");
+	});
 });

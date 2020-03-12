@@ -73,24 +73,21 @@ describe("e2e/21-continuity/19-scroll", function() {
 		assert.operator(b["c.t.scrollpct"].length, ">=", 1);
 	});
 
-	it("Should have the interaction timeline (c.t.inter)", function() {
+	it("Should not have the interaction timeline (c.t.inter)", function() {
 		var b = tf.lastBeacon();
 
-		assert.isDefined(b["c.t.inter"]);
-		assert.operator(b["c.t.inter"].length, ">=", 1);
+		assert.isUndefined(b["c.t.inter"]);
 	});
 
-	it("Should have the Time to First Interaction (c.ttfi)", function() {
+	it("Should not have the Time to First Interaction (c.ttfi)", function() {
 		var b = tf.lastBeacon();
 
-		assert.isDefined(b["c.ttfi"]);
-		assert.operator(parseInt(b["c.ttfi"], 10), ">=", 1);
+		assert.isUndefined(b["c.ttfi"]);
 	});
 
-	it("Should have First Input Delay (c.fid)", function() {
+	it("Should not have First Input Delay (c.fid)", function() {
 		var b = tf.lastBeacon();
 
-		assert.isDefined(b["c.fid"]);
-		assert.operator(parseInt(b["c.fid"], 10), ">=", 0);
+		assert.isUndefined(b["c.fid"]);
 	});
 });
