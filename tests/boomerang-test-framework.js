@@ -956,7 +956,12 @@
 			BOOMR.plugins.PaintTiming.is_supported() &&
 			p &&
 			p.timeOrigin) {
-			fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");
+			// LCP
+			fp = BOOMR.plugins.PaintTiming.getTimingFor("largest-contentful-paint");
+			if (!fp) {
+				// or FCP
+				fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");
+			}
 			if (!fp) {
 				// or get First Paint directly from PaintTiming
 				fp = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
