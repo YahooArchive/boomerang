@@ -127,6 +127,11 @@ module.exports = function(req, res) {
 
 		var filePath = path.join(wwwRoot, file);
 
+		// ensure file requested is rooted to wwwRoot
+		if (filePath.indexOf(wwwRoot) !== 0) {
+			return res.sendStatus(404);
+		}
+
 		fs.exists(filePath, function(exists) {
 			if (!exists) {
 				return res.sendStatus(404);
