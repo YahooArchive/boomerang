@@ -86,6 +86,11 @@
 		firstInputDelay: null,
 
 		/**
+		 * Time to First Interaction
+		 */
+		timeToFirstInteraction: null,
+
+		/**
 		 * Executed on `before_beacon`
 		 */
 		onBeforeBeacon: function() {
@@ -142,6 +147,7 @@
 			impl.entries = impl.entries.concat(newEntries);
 
 			impl.firstInputDelay = newEntries[0].processingStart - newEntries[0].startTime;
+			impl.timeToFirstInteraction = newEntries[0].startTime;
 		}
 	};
 
@@ -287,6 +293,13 @@
 			 */
 			firstInputDelay: function() {
 				return impl.firstInputDelay;
+			},
+
+			/**
+			 * Returns the observed Time to First Interaction
+			 */
+			timeToFirstInteraction: function() {
+				return impl.timeToFirstInteraction;
 			}
 		}
 	};

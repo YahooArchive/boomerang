@@ -214,15 +214,10 @@ describe("e2e/21-continuity/28-after-onload", function() {
 		assert.operator(b["c.t.inter"].length, ">=", 1);
 	});
 
-	it("Should have the Continuity Time to First Interaction (c.ttfi) on the third beacon same as the second beacon", function() {
-		var b2 = tf.beacons[1];
+	it("Should not have the Continuity Time to First Interaction (c.ttfi) on the third beacon", function() {
 		var b3 = tf.beacons[2];
 
-		var second = parseInt(b2["c.ttfi"], 10);
-		var third = parseInt(b3["c.ttfi"], 10);
-
-		assert.isDefined(b3["c.ttfi"]);
-		assert.equal(second, third);
+		assert.isUndefined(b3["c.ttfi"]);
 	});
 
 	it("Should have the Continuity Start (rt.tstart) on the third beacon", function() {

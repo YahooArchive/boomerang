@@ -54,11 +54,17 @@ describe("e2e/21-continuity/10-key-after-load", function() {
 		assert.operator(b["c.t.inter"].length, ">=", 1);
 	});
 
-	it("Should have the Time to First Interaction (c.ttfi)", function() {
-		var b = tf.lastBeacon();
+	it("Should have the Time to First Interaction on the first beacon (c.ttfi)", function() {
+		var b = tf.beacons[0];
 
 		assert.isDefined(b["c.ttfi"]);
 		assert.operator(parseInt(b["c.ttfi"], 10), ">=", 1);
+	});
+
+	it("Should not have the Time to First Interaction on the second beacon (c.ttfi)", function() {
+		var b = tf.lastBeacon();
+
+		assert.isUndefined(b["c.ttfi"]);
 	});
 
 	it("Should have last Continuity beacon time (c.lb) on the second beacon but not on the first", function() {
@@ -80,10 +86,9 @@ describe("e2e/21-continuity/10-key-after-load", function() {
 		assert.operator(parseInt(b["c.fid"], 10), ">=", 0);
 	});
 
-	it("Should have First Input Delay (c.fid) on the second beacon", function() {
+	it("Should not have First Input Delay (c.fid) on the second beacon", function() {
 		var b = tf.lastBeacon();
 
-		assert.isDefined(b["c.fid"]);
-		assert.operator(parseInt(b["c.fid"], 10), ">=", 0);
+		assert.isUndefined(b["c.fid"]);
 	});
 });

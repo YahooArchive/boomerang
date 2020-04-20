@@ -3313,14 +3313,16 @@
 				    BOOMR.plugins.EventTiming.is_enabled()) {
 					fid = BOOMR.plugins.EventTiming.metrics.firstInputDelay();
 				}
-				else if (firstInputDelay !== null) {
+
+				if (!fid && firstInputDelay !== null) {
 					fid = externalMetrics.firstInputDelay();
 				}
 
 				if (fid) {
 					impl.addToBeacon("c.fid", Math.ceil(fid), true);
 
-					impl.addToBeacon("c.ttfi", externalMetrics.timeToFirstInteraction());
+					impl.addToBeacon("c.ttfi", BOOMR.plugins.EventTiming.metrics.timeToFirstInteraction() ||
+					    externalMetrics.timeToFirstInteraction());
 
 					sentTimers = true;
 				}
