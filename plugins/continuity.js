@@ -3157,6 +3157,7 @@
 		 */
 		function interact(type, now, e) {
 			var delay = 0;
+			var hrNow = BOOMR.hrNow();
 
 			now = now || BOOMR.now();
 
@@ -3185,8 +3186,8 @@
 					delay = now - e.timeStamp;
 				}
 				else {
-					// if timeStamp is a DOMHighResTimeStamp, convert BOOMR.now() to same
-					delay = (now - epoch) - e.timeStamp;
+					// if timeStamp is a DOMHighResTimeStamp, convert BOOMR.hrNow() to same
+					delay = BOOMR.hrNow() - e.timeStamp;
 				}
 
 				interactionsDelay += delay;
