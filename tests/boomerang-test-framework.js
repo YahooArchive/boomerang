@@ -342,6 +342,10 @@
 		    typeof window.PerformanceResourceTiming !== "undefined");
 	};
 
+	t.isServiceWorkerSupported = function() {
+		return (window.navigator && "serviceWorker" in window.navigator);
+	};
+
 	t.isServerTimingSupported = function() {
 		return this.isResourceTimingSupported() && typeof PerformanceServerTiming !== "undefined";
 	};
