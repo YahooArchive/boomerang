@@ -1,3 +1,4 @@
+/* eslint-disable no-script-url */
 (function() {
 	// Boomerang Loader Snippet version 14
 	if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {

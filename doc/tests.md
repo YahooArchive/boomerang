@@ -6,7 +6,7 @@ Test suites.
 To configure the test environment, you will need to install all of the required
 NPM and Bower dependencies:
 
-```
+```bash
 npm install
 bower install
 node node_modules/protractor/bin/webdriver-manager update
@@ -37,7 +37,7 @@ components or plugins.
 
 Boomerang's Unit Tests can be run from your local browser or in headless mode:
 
-```
+```bash
 grunt test
 ```
 
@@ -45,7 +45,7 @@ To build, run or debug the Unit Tests in your local browser, you will need to sp
 a local webserver to host the `tests/unit/*` files.  You can do this by running
 the following:
 
-```
+```bash
 grunt test:debug
 ```
 
@@ -98,7 +98,7 @@ To build, run or debug the E2E Tests in your local browser, you will need to spa
 a local webserver to host the `tests/pages/*` files.  You can do this by running
 the following:
 
-```
+```bash
 grunt test:debug
 ```
 

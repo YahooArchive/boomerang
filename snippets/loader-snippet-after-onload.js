@@ -1,3 +1,4 @@
+/* eslint-disable no-script-url */
 (function() {
 	// Boomerang Loader Snippet version 14
 	if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
@@ -21,24 +22,6 @@
 	    // How long to wait for Preload to work before falling back to iframe method
 	    LOADER_TIMEOUT = 3000;
 
-	/* BEGIN_TEST_CODE */
-	var prefix, suffix;
-
-	if (window.BOOMR_script_delay) {
-		prefix = "/delay?delay=3000&file=build/";
-		suffix = "&rnd=" + Math.random();
-	}
-	else {
-		prefix = "../../build/";
-		suffix = "";
-	}
-
-	if (/\/support\//.test(window.location.pathname)) {
-		prefix = prefix.replace("build/", "../build/");
-	}
-
-	window.BOOMR.url = prefix + (window.BOOMR_script_minified ? "boomerang-latest-debug.min.js" : "boomerang-latest-debug.js") + suffix;
-	/* END_TEST_CODE */
 	// Tells the browser to execute the Preloaded script by adding it to the DOM
 	function promote() {
 		if (promoted) {
@@ -161,42 +144,44 @@
 		doc.close();
 	}
 
-	// See if Preload is supported or not
-	var link = document.createElement("link");
+	function boomerangLoad() {
+		// See if Preload is supported or not
+		var link = document.createElement("link");
 
-	if (link.relList &&
-	    typeof link.relList.supports === "function" &&
-	    link.relList.supports("preload") &&
-	    ("as" in link)) {
-		window.BOOMR.snippetMethod = "p";
+		if (link.relList &&
+		    typeof link.relList.supports === "function" &&
+		    link.relList.supports("preload") &&
+		    ("as" in link)) {
+			window.BOOMR.snippetMethod = "p";
 
-		// Set attributes to trigger a Preload
-		link.href = window.BOOMR.url;
-		link.rel  = "preload";
-		link.as   = "script";
+			// Set attributes to trigger a Preload
+			link.href = window.BOOMR.url;
+			link.rel  = "preload";
+			link.as   = "script";
 
-		// Add our script tag if successful, fallback to iframe if not
-		link.addEventListener("load", promote);
-		link.addEventListener("error", function() {
-			iframeLoader(true);
-		});
-
-		// Have a fallback in case Preload does nothing or is slow
-		setTimeout(function() {
-			if (!promoted) {
+			// Add our script tag if successful, fallback to iframe if not
+			link.addEventListener("load", promote);
+			link.addEventListener("error", function() {
 				iframeLoader(true);
-			}
-		}, LOADER_TIMEOUT);
+			});
 
-		// Note the timestamp we started trying to Preload
-		BOOMR_lstart = new Date().getTime();
+			// Have a fallback in case Preload does nothing or is slow
+			setTimeout(function() {
+				if (!promoted) {
+					iframeLoader(true);
+				}
+			}, LOADER_TIMEOUT);
 
-		// Append our link tag
-		parentNode.appendChild(link);
-	}
-	else {
-		// No Preload support, use iframe loader
-		iframeLoader(false);
+			// Note the timestamp we started trying to Preload
+			BOOMR_lstart = new Date().getTime();
+
+			// Append our link tag
+			parentNode.appendChild(link);
+		}
+		else {
+			// No Preload support, use iframe loader
+			iframeLoader(false);
+		}
 	}
 
 	// Save when the onload event happened, in case this is a non-NavigationTiming browser
@@ -209,5 +194,26 @@
 	}
 	else if (window.attachEvent) {
 		window.attachEvent("onload", boomerangSaveLoadTime);
+	}
+
+	// Run at onload
+	function windowOnLoad(e) {
+		boomerangSaveLoadTime(e);
+		setTimeout(boomerangLoad, 0);
+	}
+
+	// If we think the load event has already fired, load Boomerang now
+	if (("performance" in win && win.performance && win.performance.timing && win.performance.timing.loadEventStart) ||
+		(document.readyState === "complete")) {
+		boomerangLoad();
+	}
+	else {
+		// Wait until onload
+		if (win.addEventListener) {
+			win.addEventListener("load", windowOnLoad, false);
+		}
+		else if (win.attachEvent) {
+			win.attachEvent("onload", windowOnLoad);
+		}
 	}
 })();

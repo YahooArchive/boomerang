@@ -7,6 +7,8 @@
  * This plugin also monitors DOM manipulations following a XHR to filter out
  * "background" XHRs.
  *
+ * This plugin has a corresponding {@tutorial header-snippets} that helps monitor XHRs prior to Boomerang loading.
+ *
  * For information on how to include this plugin, see the {@tutorial building} tutorial.
  *
  * ## What is Measured

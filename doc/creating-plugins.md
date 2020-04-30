@@ -6,7 +6,7 @@ Use the below example for creating a new Boomerang plugin.
 Once created, you can add the new plugin to your Boomerang build by adding
 it to `plugins.json`.  See {@tutorial building} for more details.
 
-```
+```javascript
 /**
  * Skeleton template for all boomerang plugins.
  *

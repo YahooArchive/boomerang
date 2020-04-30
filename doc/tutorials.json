@@ -31,23 +31,26 @@
 	"contributing": {
 		"title": "Contributing"
 	},
-	"methodology": {
-		"title": "Methodology"
-	},
 	"creating-plugins": {
 		"title": "Creating Plugins"
 	},
+	"header-snippets": {
+		"title": "Header Snippets"
+	},
+	"methodology": {
+		"title": "Methodology"
+	},
 	"loader-snippet": {
 		"title": "Non-Blocking Loader Snippet"
-	},
-	"tests": {
-		"title": "Tests"
 	},
 	"page-overrides": {
 		"title": "Page Overrides"
 	},
 	"perf-tests": {
 		"title": "Performance Tests"
+	},
+	"tests": {
+		"title": "Tests"
 	},
 	"version-history": {
 		"title": "Version History"

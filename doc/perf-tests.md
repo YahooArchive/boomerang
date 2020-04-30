@@ -6,7 +6,7 @@ The performance tests reside in `tests/perf/`.
 
 To run the performance tests:
 
-```
+```bash
 grunt perf
 ```
 
@@ -18,7 +18,7 @@ This should run all suites in `tests/perf/` and will save the results in `tests/
 
 Example results:
 
-```
+```json
 {
   "00-basic": {
     "00-empty": {
@@ -35,7 +35,7 @@ Example results:
 
 To compare performance results to a baseline, you first need to run this on the "before" codebase:
 
-```
+```bash
 grunt perf
 ```
 
@@ -43,13 +43,13 @@ This will create `tests/perf/results/baseline.json`.
 
 Then, you can run performance tests against the "current" code by executing:
 
-```
+```bash
 grunt perf:compare
 ```
 
 This will create a new `tests/perf/results/metrics.json` each run, and will compare those results to `tests/perf/results/baseline.json`:
 
-```
+```bash
 $ grunt perf-compare --diff-only
 Running "perf-compare" task
 Results comparison to baseline:

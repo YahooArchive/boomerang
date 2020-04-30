@@ -2,6 +2,8 @@
  * The Continuity plugin measures performance and user experience metrics beyond
  * just the traditional Page Load timings.
  *
+ * This plugin has a corresponding {@tutorial header-snippets} that helps measure events prior to Boomerang loading.
+ *
  * ## Approach
  *
  * The goal of the Continuity plugin is to capture the important aspects of your

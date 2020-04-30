@@ -2,6 +2,8 @@
  * The `Errors` plugin automatically captures JavaScript and other errors from
  * your web application.
  *
+ * This plugin has a corresponding {@tutorial header-snippets} that helps capture errors prior to Boomerang loading.
+ *
  * For information on how to include this plugin, see the {@tutorial building} tutorial.
  *
  * ## Sources of Errors
@@ -171,7 +173,7 @@
  * Assume `my-script.js` is the same file being served from both `website.com` and
  * `anothersite.com`:
  *
- * ```js
+ * ```javascript
  * function runCode() {
  *     a = b + 1;
  * }
@@ -265,7 +267,7 @@
  * setting ACAO (and aren't within your control) is by manually wrapping calls
  * to any of the third-party script's functions in a `try {} catch {}`.
  *
- * ```js
+ * ```javascript
  * try {
  *     // calls a cross-origin script that doesn't have ACAO
  *     runThirdPartyCode();
