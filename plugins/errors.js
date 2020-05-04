@@ -12,24 +12,27 @@
  *   [`onerror`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror)
  *   global event handler
  * * [``XMLHttpRequest``](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest)
- *   responses that were not successful.  Note {@link BOOMR.plugins.AutOXHR} is required
+ *   responses that were not successful.  Note {@link BOOMR.plugins.AutoXHR} is required
  *   if using this.
  * * Any calls to [``window.console.error``](https://developer.mozilla.org/en-US/docs/Web/API/Console/error)
  * * JavaScript runtime errors that happen during a callback for
  *   [``addEventListener``](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)
+ *   _(disabled by default, enabled via {@link BOOMR.plugins.Errors.init `monitorEvents`})_
  * * JavaScript runtime errors that happen during a callback for
  *   [``setTimeout``](https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setTimeout)
  *   and [``setInterval``](https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setInterval)
+ *   _(disabled by default, enabled via {@link BOOMR.plugins.Errors.init `monitorTimeout`})_
  * * Manually sent errors via {@link BOOMR.plugins.Errors.send}
  * * Functions that threw an exception that were wrapped via {@link BOOMR.plugins.Errors.wrap}
  * * Functions that threw an exception that were run via {@link BOOMR.plugins.Errors.test}
  * * JavaScript runtime errors captured via the
  *   [`unhandledrejection`](https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection)
- *   global event handler. Disabled by default.
+ *   global event handler _(disabled by default, enabled via {@link BOOMR.plugins.Errors.init `monitorRejections`})_
  * * JavaScript runtime warnings captured via the
- *   [`Reporting API`](https://www.w3.org/TR/reporting/#reporting-observer). Disabled by default.
+ *   [`Reporting API`](https://www.w3.org/TR/reporting/#reporting-observer)
+ *   _(disabled by default, enabled via {@link BOOMR.plugins.Errors.init `monitorReporting`})_
  *
- * These are all enabled by default, and can be
+ * All of the options above can be
  * {@link BOOMR.plugins.Errors.init manually turned off}.
  *
  * ## Supported Browsers
@@ -278,10 +281,17 @@
  * script as a result of browser events or callbacks (since you're not wrapping them).
  *
  * When using Boomerang to monitor JavaScript errors, Boomerang automatically wraps some
- * of the built-in browser APIs such as `setTimeout`, `setInterval` and `addEventListener`
+ * of the built-in browser APIs such as `setTimeout`, `setInterval`
+ * (via the {@link BOOMR.plugins.Errors.init `monitorTimeout`} option)
+ * and `addEventListener` (via the {@link BOOMR.plugins.Errors.init `monitorEvents`} option)
  * with a minimal-overhead wrapper.  It does this to help ensure as many cross-origin
  * exceptions as possible have full stack details. You may also do this manually via
  * [`` BOOMR.plugin.Errors.wrap(function)``](#BOOMR_plugin_Errors_wrap).
+ *
+ * Note that enabling {@link BOOMR.plugins.Errors.init `monitorTimeout`} or
+ * {@link BOOMR.plugins.Errors.init `monitorEvents`} can have side-effects and has caused
+ * compatibility issues with JavaScript code on some sites. Enabling those options is only
+ * recommended after verifying there are no problems.
  *
  * ## Why is Boomerang in my Error Stack?
  *
@@ -304,9 +314,11 @@
  * Examples of Boomerang wrapping native methods include:
  *
  * * `XMLHttpRequest` if the XHR instrumentation is turned on
- * * `setTimeout` and `setInterval` if error tracking is turned on
  * * `console.error` if error tracking is turned on
- * * `addEventListener` and `removeEventListener` if error tracking is turned on
+ * * `setTimeout` and `setInterval`(if error tracking is turned on
+ *    (with {@link BOOMR.plugins.Errors.init `monitorTimeout`})
+ * * `addEventListener` and `removeEventListener` (if error tracking is turned on
+ *    (with {@link BOOMR.plugins.Errors.init `monitorEvents`})
  *
  * All of these wrapped functions come into play when you see an error stack with
  * a `boomerang.js` function in it.
@@ -374,6 +386,27 @@
  * * `BOOMR_plugins_errors_wrap`
  * * `BOOMR.window.console.error`
  * * `BOOMR_plugins_errors_onrejection`
+ *
+ * ## Side Effects
+ *
+ * Enabling wrapping through {@link BOOMR.plugins.Errors.init `monitorEvents`} and
+ * {@link BOOMR.plugins.Errors.init `monitorTimeout`} may trigger some side effects:
+ *
+ * * Boomerang's monitoring code will be run first for every callback, which will add minimal (though non-zero)
+ *   overhead.
+ * * In browser console logs, errors that are triggered by other libraries that have been wrapped
+ *   will now look like they come from Boomerang instead, as Boomerang is now on the bottom of the call stack.
+ * * Browser developer tools such as Chrome's Performance and Profiler tabs may be confused about
+ *   JavaScript CPU attribution. In other words, they may think Boomerang is the cause of more work than it is.
+ * * Chrome Lighthouse may be confused about JavaScript CPU attribution, due to the same reasons as above.
+ * * WebPagetest may be confused about JavaScript CPU attribution, due to the same reasons as above.
+ * * There are some cases where JavaScript applications may have compatibility issues with the wrapping.  Some
+ *   notable cases include:
+ *     * Use of the global `window.event` object, [see issue](https://github.com/whatwg/dom/issues/735).
+ *     * Other libraries that wrap `setTimeout`, `addEventListener`, etc such as `history.js`.
+ *     * Pages that use the `<base href="...">` tag.
+ *
+ * For more details, you can read this [article](https://nicj.net/side-effects-of-boomerangs-javascript-error-tracking/).
  *
  * ## Beacon Parameters
  *
@@ -998,9 +1031,9 @@
 		monitorGlobal: true,
 		monitorNetwork: true,
 		monitorConsole: true,
-		monitorEvents: true,
-		monitorTimeout: true,
-		monitorRejections: false,  // new feature, off by default
+		monitorEvents: false,     // can cause compat issues, off by default
+		monitorTimeout: false,    // can cause compat issues, off by default
+		monitorRejections: false, // new feature, off by default
 		monitorReporting: false,  // new feature, off by default
 		sendAfterOnload: false,
 		maxErrors: 10,
@@ -1936,9 +1969,11 @@
 		 * @param {boolean} [config.Errors.monitorNetwork] Monitor XHR errors
 		 * @param {boolean} [config.Errors.monitorConsole] Monitor `console.error`
 		 * @param {boolean} [config.Errors.monitorEvents] Monitor event callbacks
-		 * (from `addEventListener`).
+		 * (from `addEventListener`). NOTE: Enabling this may cause compatibility issues with certain sites.
+		 * Verifications should be run before enabling in production.
 		 * @param {boolean} [config.Errors.monitorTimeout] Monitor `setTimout`
-		 * and `setInterval`.
+		 * and `setInterval`. NOTE: Enabling this may cause compatibility issues with certain sites.
+		 * Verifications should be run before enabling in production.
 		 * @param {boolean} [config.Errors.monitorRejections] Monitor unhandled
 		 * promise rejections.
 		 * @param {boolean} [config.Errors.monitorReporting] Monitor Reporting API
@@ -2124,6 +2159,8 @@
 			}
 
 			// listen for errors in addEventListener callbacks
+			// NOTE: Enabling this may cause compatibility issues with certain sites.
+			//       Verifications should be run before enabling in production
 			if (impl.monitorEvents) {
 				// EventTarget's addEventListener will catch events from window, document, Element and XHR in modern browsers.
 				// We want to instrument addEventListener at the end of the protocol chain in order to avoid conflicts with
@@ -2153,6 +2190,8 @@
 			}
 
 			// listen for errors in timeout callbacks
+			// NOTE: Enabling this may cause compatibility issues with certain sites.
+			//       Verifications should be run before enabling in production
 			if (impl.monitorTimeout) {
 				impl.wrapFn("setTimeout", BOOMR.window, false, 0, E.VIA_TIMEOUT);
 				impl.wrapFn("setInterval", BOOMR.window, false, 0, E.VIA_TIMEOUT);
