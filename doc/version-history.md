@@ -1,5 +1,58 @@
 # Boomerang Release Notes
 
+## 1.710.0 (May 6, 2020)
+### Breaking Changes
+
+* Errors: The `monitorEvents` and `monitorTimeout` options are now disabled by default.  As a result, some cross-origin JavaScript
+  Errors may not report the full message (and instead will only show `Script Error.`), and the stack will not be available.
+  Please see the Errors plugin documentation for details on the side-effects of re-enabling those options.
+* Continuity: First Input Delay calculations have changed slightly.  The plugin will now use the Event Timing plugin
+  (if available and the browser supports it) for First Input Delay calculation.  If not, `mousedown`, `touchstart` and
+  `pointerdown` events are now used for First Input Delay calculations, while Scroll, Visibility and Orientation changes
+  are not.  Only cancelable events are now tracked.  First Input Delay should be more accurate, though there may be less
+  overall measurements (due to not tracking Scroll for First Input).
+
+### New Features
+
+* Event Timing plugin (enabled by default)
+* ResourceTiming: Service Worker timing capture at resource level
+* PageParams: New option `jsVarPassArgs` (defaults to `true`, current behavior) which controls whether the variable
+  name is passed as the first argument to JavaScript-based Custom Metrics, Timers, and Dimensions
+* PageParams: Fixed warning when calling `getQueryParamValue()` with a malformed url
+* PageParams: Public `rerun()` function to re-calculate Custom Metrics, Timers and Dimensions on-demand
+* PaintTiming: Expose Largest Contentful Paint via `BOOMR.plugins.PaintTiming.metrics.lcp()`
+
+### Bug Fixes
+
+* Continuity: Scroll Log: Trim decimals
+
+### Documentation
+
+* Docs: Include minified snippets in built documentation
+* Docs: Add Header Snippets section
+* Docs: Fixed reference from `c.t.lt` to `c.t.longtask`
+* Boomerang: Document additional beacon vars
+
+### Tests
+
+* Tests: Ensure /delay path roots requested files to wwwRoot
+
+## 1.700.0 (January 29, 2020)
+### New Features:
+
+* Issue 1027: PaintTiming: Largest Contentful Paint
+* Issue 1030: Consent Inline Plugin and Docs
+* Issue 1040: Continuity: Add the ability to track Cumulative Layout Shift
+
+### Bug Fixes:
+
+* OS Issue 251: Add support for background image detection for `c.tti.hi`
+* OS Issue 261: NPM: Allow running grunt build
+* Issue 990: SPA: Only subtract SPA timeout when the timeout fires
+* Issue 1025: PageParams: Fix case where XHR is in Whitelist (match) mode and no filters were defined
+* Issue 1026: Update Snippet to have its own reference to the parentNode
+* Issue 1032: Sync with OS repo up to 1.678.0
+
 ## 1.687.0 (October 10, 2019)
 ### New Features:
 
