@@ -7,8 +7,8 @@ window.PerformanceObserver = function(callback) {
 	return {
 		entryTypes: undefined,
 		observe: function(config) {
-			this.entryTypes = config.entryTypes;
-			window.POs[this.entryTypes] = this;
+			this.type = config.type;
+			window.POs[this.type] = this;
 		},
 		trigger: function(data) {
 			callback(data);
@@ -30,10 +30,10 @@ BOOMR_test.init({
 });
 
 // trigger some events
-window.POs.firstInput.trigger({
+window.POs["first-input"].trigger({
 	getEntries: function() {
 		return [{
-			entryType: "firstInput",
+			entryType: "first-input",
 			startTime: 100,
 			duration: 900,
 			processingStart: 150,

@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
 /*global BOOMR_test,assert*/
 
-describe("e2e/29-eventtiming/00-basic", function() {
+describe("e2e/30-eventtiming/00-basic", function() {
 	var tf = BOOMR.plugins.TestFramework;
 	var t = BOOMR_test;
 
