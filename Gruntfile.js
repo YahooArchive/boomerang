@@ -54,6 +54,7 @@ var DEFAULT_UGLIFY_BOOMERANGJS_OPTIONS = {
 	ie8: true,
 	sourceMap: true,
 	compress: {
+		keep_fnames: true,
 		sequences: false
 	}
 };

@@ -43,8 +43,6 @@
 		"pointerdown": 12,
 		"pointerup": 13,
 		"pointermove": 14,
-		"pointerdown": 15,
-		"pointerdown": 16,
 		"compositionstart": 17,
 		"compositionupdate": 18,
 		"compositionend": 19,

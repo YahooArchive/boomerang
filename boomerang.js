@@ -3772,7 +3772,7 @@ BOOMR_check_doc_domain();
 		 * @memberof BOOMR
 		 */
 		real_sendBeacon: function() {
-			var k, form, url, errors = [], params = [], paramsJoined, varsSent = {}, _if;
+			var k, form, url, errors = [], params = [], paramsJoined, varsSent = {};
 
 			if (!impl.beaconQueued) {
 				return false;
@@ -3876,8 +3876,7 @@ BOOMR_check_doc_domain();
 			impl.vars.n = ++this.beaconsSent;
 
 			if (w !== window) {
-				_if = "if";  // work around uglifyJS minification that breaks in IE8 and quirks mode
-				impl.vars[_if] = "";
+				impl.vars["if"] = "";
 			}
 
 			for (k in impl.errors) {
@@ -3952,15 +3951,6 @@ BOOMR_check_doc_domain();
 			/* END_DEBUG */
 
 			return true;
-		},
-
-		/**
-		 * Determines whether or not a Page Load beacon has been sent.
-		 *
-		 * @returns {boolean} True if a Page Load beacon has been sent.
-		 */
-		hasSentPageLoadBeacon: function() {
-			return impl.hasSentPageLoadBeacon;
 		},
 
 		/**
