@@ -364,7 +364,7 @@
 		 * begin monitoring downloadable resources to measure the SPA soft navigation.
 		 *
 		 * @param {function} onComplete Called on completion
-		 * @param {object[]} routeFilterArgs Route Filter arguments
+		 * @param {object[]} routeFilterArgs Route Filter arguments array
 		 *
 		 * @memberof BOOMR.plugins.SPA
 		 */

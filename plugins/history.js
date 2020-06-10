@@ -115,7 +115,7 @@
 						impl.a.href = event.toUrl;
 						event.toUrl = impl.a.href;
 					}
-					BOOMR.plugins.SPA.route_change(null, event);
+					BOOMR.plugins.SPA.route_change(null, [event.type, event.fromUrl, event.toUrl]);
 				}
 				else {
 					debugLog("routeChangeInProgress, not triggering");
