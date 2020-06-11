@@ -960,8 +960,12 @@
 			BOOMR.plugins.PaintTiming.is_supported() &&
 			p &&
 			p.timeOrigin) {
-			// LCP
-			fp = BOOMR.plugins.PaintTiming.getTimingFor("largest-contentful-paint");
+			// LCP - get the largest one that happened by the beacon
+			var lb = BOOMR.plugins.TestFramework.lastBeacon();
+			if (lb["pt.lcp"]) {
+				fp = lb["pt.lcp"];
+			}
+
 			if (!fp) {
 				// or FCP
 				fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");

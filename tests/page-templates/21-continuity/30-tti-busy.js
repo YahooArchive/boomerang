@@ -41,8 +41,11 @@ describe("e2e/21-continuity/30-tti-busy", function() {
 			// the interval should end around the same time as workDoneTs, plus some rounding
 			assert.operator(parseInt(b["c.tti"], 10), ">=", workDoneTs - 200);
 
+			// should be minimum bound by TTVR
+			var minTTI = Math.max(t.getFirstOrContentfulPaint() - performance.timing.navigationStart, workDoneTs);
+
 			// should be within 200ms
-			assert.closeTo(parseInt(b["c.tti"], 10), workDoneTs, 200);
+			assert.closeTo(parseInt(b["c.tti"], 10), minTTI, 200);
 		}
 	});
 

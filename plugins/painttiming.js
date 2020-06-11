@@ -65,6 +65,13 @@
 		 */
 		timingCache: {},
 
+		/* BEGIN_DEBUG */
+		/**
+		 * History of timings
+		 */
+		timingHistory: {},
+		/* END_DEBUG */
+
 		/**
 		 * LCP observer
 		 */
@@ -151,7 +158,15 @@
 			var lcpTime = lcp.renderTime || lcp.loadTime;
 
 			// cache it for others who want to use it
-			impl.timingCache["largest-contentful-paint"] = lcpTime;
+			impl.timingCache[lcp.entryType] = lcpTime;
+
+			/* BEGIN_DEBUG */
+			/**
+			 * History of timings
+			 */
+			impl.timingHistory[lcp.entryType] = impl.timingHistory[lcp.entryType] || [];
+			impl.timingHistory[lcp.entryType].push(lcpTime);
+			/* END_DEBUG */
 
 			BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
 
@@ -291,6 +306,15 @@
 				}
 			}
 		},
+
+		/* BEGIN_DEBUG */
+		/**
+		 * Get the history of timings for the specified metric
+		 */
+		getHistoryFor: function(timingName) {
+			return impl.timingHistory[timingName] || [];
+		},
+		/* END_DEBUG */
 
 		// external metrics
 		metrics: impl.externalMetrics
