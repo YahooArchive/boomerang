@@ -244,6 +244,26 @@
  * This option is off by default, and can be turned on via the
  * {@link BOOMR.plugins.Continuity.init `monitorStats`} config option.
  *
+ * ### Monitoring Layout Shifts
+ *
+ * If {@link BOOMR.plugins.Continuity.init `monitorLayoutShifts`} is turned on,
+ * the Continuity plugin will measure visual instability via the
+ * [Layout Instability API](https://github.com/WICG/layout-instability), and will calculate the Cumulative
+ * Layout Shift (CLS) score.
+ *
+ * The Cumulative Layout Shift (CLS) score approximates the severity of visual layout changes by monitoring
+ * how DOM nodes shift during the user experience.  A CLS of `0` indicates a stable view where no DOM nodes shifted.  Each
+ * time an unexpected layout shifts occur, the CLS increases.  CLS is represented in decimal form, with a value of `0.1`
+ * indicating a fraction of the screen's elements were affected.  CLS values can be larger than `1.0` if the
+ * layout shifts multiple times.
+ *
+ * See [web.dev/cls](https://web.dev/cls/) for a more detailed explanation.
+ *
+ * CLS is included on the beacon as `c.cls`, and resets each beacon, so represents the CLS since the last beacon.
+ *
+ * This option is on by default, and can be disabled via the
+ * {@link BOOMR.plugins.Continuity.init `monitorLayoutShifts`} config option.
+ *
  * ## New Timers
  *
  * There are 4 new timers from the Continuity plugin that center around user
@@ -667,6 +687,7 @@
  * * `c.b`: Page Busy percentage (Base-10)
  * * `c.c.r`: Rage click count (Base-10)
  * * `c.c`: Click count (Base-10)
+ * * `c.cls`: Cumulative Layout Shift score (since last beacon) (Base-10 fraction)
  * * `c.e`: Continuity Epoch timestamp (when everything started measuring) (Base-36)
  * * `c.f.d`: Frame Rate duration (how long it has been measuring) (milliseconds) (Base-10)
  * * `c.f.l`: Number of Long Frames (>= 50ms) (Base-10)
@@ -1788,8 +1809,10 @@
 		};
 	};
 
+	/**
+	 * Monitors Layout Shift events
+	 */
 	var LayoutShiftMonitor = function(w) {
-
 		if (!w.PerformanceObserver || !w.LayoutShift) {
 			return;
 		}
@@ -4285,7 +4308,7 @@
 		 * @param {boolean} [config.Continuity.monitorStats=true] Whether or not to
 		 * monitor Page Statistics.
 		 * @param {boolean} [config.Continuity.monitorLayoutShifts=true] Whether or not to
-		 * monitor Layout Shift
+		 * monitor Layout Shifts
 		 * @param {boolean} [config.Continuity.afterOnload=false] Whether or not to
 		 * monitor Long Tasks, Page Busy, Frame Rate, interactions and Page Statistics
 		 * after `onload` (up to `afterOnloadMaxLength`).
