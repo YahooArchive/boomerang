@@ -38,6 +38,17 @@ There are several open-source projects that can receive and analyze Boomerang da
 * [boomcatch](http://cruft.io/posts/introducing-boomcatch/)
 * [boomerang-express](https://github.com/andreas-marschke/boomerang-express)
 * [PIWIK](https://piwik.org/)
+* [Backoffice of Basic RUM](https://github.com/basicrum/backoffice)
+* [Boomerang Beacon Catcher of Basic RUM](https://github.com/basicrum/boomerang-beacon-catcher)
+* [Boomerang-OpenTelemetry Plugin](https://github.com/NovatecConsulting/boomerang-opentelemetry-plugin)
+* [Boomerang Drupal Module](https://www.drupal.org/project/boomerang)
+* [Boomerang OpenACS plugin](https://openacs.org/xowiki/boomerang)
+
+Here are some articles for putting it all together:
+
+* [A Low Cost Performance Monitoring Setup with Boomerang, Boomcatch, and Datadog](https://www.tollmanz.com/rum-monitoring-boomerang-boomcatch-datadog/])
+* [End User Monitoring with Ocelot](https://inspectit.github.io/inspectit-ocelot/docs/enduser-monitoring/enduser-monitoring-server)
+* [Real User Monitoring using Boomerang, Boomcatch, StatsD, and Graphite — Setup guide](https://medium.com/@sunitj/real-user-measurement-using-boomerang-boomcatch-statsd-and-graphite-setup-guide-a2f60b5cb082)
 
 ### Protecting the Beacon from Abuse
 
