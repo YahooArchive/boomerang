@@ -2280,7 +2280,7 @@
 	 * Container for AutoXHR plugin Closure specific state configuration data
 	 *
 	 * @property {string[]} spaBackendResources Default resources to count as Back-End during a SPA nav
-	 * @property {FilterObject[]} filters Array of {@link FilterObject} that is used to apply filters on XHR Requests
+	 * @property {FilterObject[]} excludeFilters Array of {@link FilterObject} that is used to apply filters on XHR Requests
 	 * @property {boolean} initialized Set to true after the first run of
 	 * {@link BOOMR.plugins.AutoXHR#init}
 	 */
