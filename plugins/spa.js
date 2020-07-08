@@ -112,6 +112,7 @@
 	    firstSpaNav = true,
 	    routeFilter = false,
 	    routeChangeWaitFilter = false,
+	    routeChangeWaitFilterHardNavs = false,
 	    disableHardNav = false,
 	    supported = [],
 	    latestResource,
@@ -173,7 +174,13 @@
 				// No other resources (xhrs or mutations) were detected, so set the end time
 				// to NavigationTiming's page loadEventEnd if available (instead of 'now')
 				p = BOOMR.getPerformance();
-				if (p && p.timing && p.timing.navigationStart && p.timing.loadEventEnd) {
+
+				if (p &&
+				    p.timing &&
+				    p.timing.navigationStart &&
+				    p.timing.loadEventEnd &&
+				    // loadEventEnd may have been set by a wait filter
+				    typeof resource.timing.loadEventEnd === "undefined") {
 					resource.timing.loadEventEnd = p.timing.loadEventEnd;
 				}
 			}
@@ -323,6 +330,7 @@
 		 * @param {object} [options] Additional options
 		 * @param {BOOMR.plugins.SPA.spaRouteFilter} [options.routeFilter] Route filter
 		 * @param {BOOMR.plugins.SPA.spaRouteChangeWaitFilter} [options.routeChangeWaitFilter] Route change wait filter
+		 * @param {boolean} [options.routeChangeWaitFilterHardNavs] Whether to apply wait filter on hard navs
 		 * @param {boolean} [options.disableHardNav] Disable sending SPA hard beacons
 		 *
 		 * @returns {@link BOOMR.plugins.SPA} The SPA plugin for chaining
@@ -341,6 +349,10 @@
 
 			if (typeof options.routeChangeWaitFilter === "function") {
 				routeChangeWaitFilter = options.routeChangeWaitFilter;
+			}
+
+			if (typeof options.routeChangeWaitFilterHardNavs === "boolean") {
+				routeChangeWaitFilterHardNavs = options.routeChangeWaitFilterHardNavs;
 			}
 
 			if (options.disableHardNav) {
@@ -445,7 +457,7 @@
 
 			// if we have a routeChangeWaitFilter, make sure AutoXHR waits on the custom event
 			// for this SPA soft route
-			if (initiator === "spa" && routeChangeWaitFilter) {
+			if ((initiator === "spa" || routeChangeWaitFilterHardNavs) && routeChangeWaitFilter) {
 				debugLog("Running route change wait filter");
 				try {
 					if (routeChangeWaitFilter.apply(null, arguments)) {
