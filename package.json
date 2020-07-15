@@ -74,7 +74,7 @@
     "mocha": "^3.0.2",
     "performance-now": "^2.1.0",
     "phantomjs": "^1.9.13",
-    "protractor": "^5.4.2",
+    "protractor": "^5.4.4",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
     "react-router": "^1.0.0-rc3",
@@ -83,8 +83,11 @@
   },
   "scripts": {
     "test": "grunt test",
+    "install": "bower install && webdriver-manager update",
+    "build": "grunt clean build",
     "lint": "grunt lint",
-    "build": "grunt build"
+    "unit-test": "grunt test:unit",
+    "e2e-test": "grunt test:e2e"
   },
   "repository": {
     "type": "git",

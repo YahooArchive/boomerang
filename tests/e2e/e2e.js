@@ -18,7 +18,7 @@ var disabledTests = require("./e2e.disabled.json");
 //
 // Functions
 //
-function run(testPath, file) {
+function run(i, testPath, file) {
 	describe(testPath, function() {
 		var fileName = file + ".html";
 
@@ -29,6 +29,7 @@ function run(testPath, file) {
 			}
 
 			console.log(
+				i,
 				"Navigating to",
 				"http://" + servers.main + ":" + ports.main + "/pages/" + testPath + "/" + fileName
 			);
@@ -63,12 +64,16 @@ for (var i = 0; i < disabledTests.length; i++) {
 //
 // Run the tests in e2e.json
 //
-for (i = 0; i < tests.length; i++) {
+var start = parseInt(process.env.CI_NODE_INDEX) || 0;
+var steps = parseInt(process.env.CI_NODE_TOTAL) || 1;
+console.log("START: " + start);
+console.log("STEPS: " + steps);
+for (i = start; i < tests.length; i += steps) {
 	var data = tests[i];
 	key = data.path + "-" + data.file;
 	if (disabledTestLookup[key]) {
 		continue;
 	}
 
-	run(data.path, data.file);
+	run(i, data.path, data.file);
 }

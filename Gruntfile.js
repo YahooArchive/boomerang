@@ -110,7 +110,8 @@ module.exports = function() {
 	// load the env.json or default content
 	if (fs.existsSync(envFile)) {
 		env = grunt.file.readJSON("tests/server/env.json");
-	} else {
+	}
+	else {
 		// default content
 		env = {
 			publish: "www"
@@ -766,7 +767,7 @@ module.exports = function() {
 		protractor_webdriver: {
 			options: {
 				keepAlive: true,
-				command: "webdriver-manager start " + webDriverVersions
+				command: "webdriver-manager start " + (webDriverVersions || "")
 			},
 			e2e: {
 			}
