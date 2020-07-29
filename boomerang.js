@@ -443,6 +443,15 @@ BOOMR_check_doc_domain();
 
 		// waiting_for_config: false,
 
+		// All Boomerang cookies will be created with SameSite=Lax by default
+		same_site_cookie: "Lax",
+
+		// All Boomerang cookies will be without Secure attribute by default
+		secure_cookie: false,
+
+		// Sometimes we would like to be able to set the SameSite=None from a Boomerang plugin
+		forced_same_site_cookie_none: false,
+
 		events: {
 			/**
 			 * Boomerang event, subscribe via {@link BOOMR.subscribe}.
@@ -1384,6 +1393,20 @@ BOOMR_check_doc_domain();
 						c.push("expires=" + exp);
 					}
 
+					var extraAttributes = this.getSameSiteAttributeParts();
+
+					/**
+					 * 1. We check if the Secure attribute wasn't added already because SameSite=None will force adding it.
+					 * 2. We check the current protocol because if we are on HTTP and we try to create a secure cookie with
+					 *    SameSite=Strict then a cookie will be created with SameSite=Lax.
+					 */
+					if (location.protocol === "https:" && impl.secure_cookie === true && extraAttributes.indexOf("Secure") === -1) {
+						extraAttributes.push("Secure");
+					}
+
+					// add extra attributes
+					c = c.concat(extraAttributes);
+
 					/* BEGIN_DEBUG */
 					BOOMR.utils.mark("set_cookie_real");
 					/* END_DEBUG */
@@ -1485,6 +1508,73 @@ BOOMR_check_doc_domain();
 			 */
 			removeCookie: function(name) {
 				return this.setCookie(name, {}, -86400);
+			},
+
+			/**
+			 * Depending on Boomerang configuration and checks of current protocol and
+			 * compatible browsers the logic below will provide an array of cookie
+			 * attributes that are needed for a successful creation of a cookie that
+			 * contains the SameSite attribute.
+			 *
+			 * How it works:
+			 * 1. We read the Boomerang configuration key `same_site_cookie` where
+			 *    one of the following values `None`, `Lax` or `Strict` is expected.
+			 * 2. A configuration value of `same_site_cookie` will be read in case-insensitive
+			 *    manner. E.g. `Lax`, `lax` and `lAx` will produce same result - `SameSite=Lax`.
+			 * 3. If a `same_site_cookie` configuration value is not specified a cookie
+			 *    will be created with `SameSite=Lax`.
+			 * 4. If a `same_site_cookie` configuration value does't match any of
+			 *    `None`, `Lax` or `Strict` then a cookie will be created with `SameSite=Lax`.
+			 * 5. The `Secure` cookie attribute will be added when a cookie is created
+			 *    with `SameSite=None`.
+			 * 6. It's possible that a Boomerang plugin or external code may need cookies
+			 *    to be created with `SameSite=None`. In such cases we check a special
+			 *    flag `forced_same_site_cookie_none`. If the value of this flag is equal to `true`
+			 *    then the `same_site_cookie` value will be ignored and Boomerang cookies
+			 *    will be created with `SameSite=None`.
+			 *
+			 * SameSite=None - INCOMPATIBILITIES and EXCEPTIONS:
+			 *
+			 * There are known problems with older browsers where cookies created
+			 * with `SameSite=None` are `dropped` or created with `SameSite=Strict`.
+			 * Reference: https://www.chromium.org/updates/same-site/incompatible-clients
+			 *
+			 * 1. If we detect a browser that can't create safely a cookie with `SameSite=None`
+			 *    then Boomerang will create a cookie without the `SameSite` attribute.
+			 * 2. A cookie with `SameSite=None` can be created only over `HTTPS` connection.
+			 *    If current connection is `HTTP` then a cookie will be created
+			 *    without the `SameSite` attribute.
+			 *
+			 *
+			 * @returns {Array} of cookie attributes used for setting a cookie with SameSite attribute
+			 *
+			 * @memberof BOOMR.utils
+			 */
+			getSameSiteAttributeParts: function() {
+				var sameSiteMode = impl.same_site_cookie.toUpperCase();
+
+				if (impl.forced_same_site_cookie_none) {
+					sameSiteMode = "NONE";
+				}
+
+				if (sameSiteMode === "LAX") {
+					return ["SameSite=Lax"];
+				}
+
+				if (sameSiteMode === "NONE") {
+					if (location.protocol === "https:" && this.isCurrentUASameSiteNoneCompatible()) {
+						return ["SameSite=None", "Secure"];
+					}
+
+					// Fallback to browser's default
+					return [];
+				}
+
+				if (sameSiteMode === "STRICT") {
+					return ["SameSite=Strict"];
+				}
+
+				return ["SameSite=Lax"];
 			},
 
 			/**
@@ -2374,6 +2464,109 @@ BOOMR_check_doc_domain();
 				var hash = (hval >>> 0).toString() + string.length;
 
 				return parseInt(hash).toString(36);
+			},
+
+			/**
+			 * Wrapper of isUASameSiteNoneCompatible() that ensures that we pass correct User Agent string
+			 *
+			 * @returns {boolean} True if a browser can safely create SameSite=None cookie
+			 *
+			 * @memberof BOOMR.utils
+			 */
+			isCurrentUASameSiteNoneCompatible: function() {
+				if (w && w.navigator && w.navigator.userAgent && typeof w.navigator.userAgent === "string") {
+					return this.isUASameSiteNoneCompatible(w.navigator.userAgent);
+				}
+
+				return true;
+			},
+
+			/**
+			 * @param {string} uaString User agent string
+			 *
+			 * @returns {boolean} True if a browser can safely create SameSite=None cookie
+			 *
+			 * @memberof BOOMR.utils
+			 */
+			isUASameSiteNoneCompatible: function(uaString) {
+				/**
+				 * 1. UCBrowser lower than 12.13.2
+				 */
+				var result = uaString.match(/(UCBrowser)\/(\d+\.\d+)\.(\d+)/);
+
+				if (result) {
+					var ucMajorMinorPart = parseFloat(result[2]);
+					var ucPatch = result[3];
+
+					if (ucMajorMinorPart === 12.13) {
+						if (ucPatch <= 2) {
+							return false;
+						}
+
+						return true;
+					}
+
+					if (ucMajorMinorPart < 12.13) {
+						return false;
+					}
+
+					return true;
+				}
+
+				/**
+				 * 2. Chrome and Chromium version between 51 and 66
+				 *
+				 * This the regex covers both because a Chromium AU contains "Chromium/65.0.3325.181 Chrome/65.0.3325.181"
+				 */
+				result = uaString.match(/(Chrome)\/(\d+)\.(\d+)\.(\d+)\.(\d+)/);
+
+				if (result) {
+					var chromeMajor = result[2];
+					if (chromeMajor >= 51 && chromeMajor <= 66) {
+						return false;
+					}
+
+					return true;
+				}
+
+				/**
+				 * 3. Mac OS 10.14.* check
+				 */
+				result = uaString.match(/(Macintosh;.*Mac OS X 10_14[_\d]*.*) AppleWebKit\//);
+
+				if (result) {
+					// 3.2 Safari check
+					result = uaString.match(/Version\/.* Safari\//);
+
+					if (result) {
+						// 3.2.1 Not Chrome based check
+						result = uaString.match(/Chrom(?:e|ium)/);
+
+						if (result === null) {
+							return false;
+						}
+					}
+
+					// 3.3 Mac OS embeded browser
+					result = uaString.match(/^Mozilla\/\d+(?:\.\d+)* \(Macintosh;.*Mac OS X \d+(?:_\d+)*\) AppleWebKit\/\d+(?:\.\d+)* \(KHTML, like Gecko\)$/);
+
+					if (result) {
+						return false;
+					}
+
+					return true;
+				}
+
+				/**
+				 * 4. iOS and iPad OS 12 for all browsers
+				 */
+				result = uaString.match(/(iP.+; CPU .*OS 12(?:_\d+)*.*)/);
+
+				if (result) {
+					return false;
+				}
+
+				return true;
 			}
 
 			/* BEGIN_DEBUG */
@@ -2503,6 +2696,8 @@ BOOMR_check_doc_domain();
 		 * whether it should re-measure the user's bandwidth or just use the
 		 * value stored in the cookie. You may use IPv4, IPv6 or anything else
 		 * that you think can be used to identify the user's network connection.
+		 * @param {string} [config.same_site_cookie] Used for creating cookies with `SameSite` with one of the following values: `None`, `Lax` or `Strict`.
+		 * @param {boolean} [config.secure_cookie] When `true` all cookies will be created with `Secure` flag.
 		 * @param {function} [config.log] Logger to use. Set to `null` to disable logging.
 		 * @param {function} [<plugins>] Each plugin has its own section
 		 *
@@ -2523,7 +2718,9 @@ BOOMR_check_doc_domain();
 				    "beacon_type",
 				    "site_domain",
 				    "strip_query_string",
-				    "user_ip"
+				    "user_ip",
+				    "same_site_cookie",
+				    "secure_cookie"
 			    ];
 
 			/* BEGIN_DEBUG */
@@ -3011,6 +3208,18 @@ BOOMR_check_doc_domain();
 			catch (ignore) {
 				// empty
 			}
+		},
+
+		/**
+		 * Allows us to force SameSite=None from a Boomerang plugin or a third party code.
+		 *
+		 * When this function is called then Boomerang won't honor "same_site_cookie"
+		 * configuration key and won't attempt to return the default value of SameSite=Lax .
+		 *
+		 * @memberof BOOMR
+		 */
+		forceSameSiteCookieNone: function() {
+			impl.forced_same_site_cookie_none = true;
 		},
 
 		/**

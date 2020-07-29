@@ -1,0 +1,15 @@
+<%= header %>
+<%= boomerangScript %>
+<script src="12-strict-secure-attribute-config-override-in-current-window.js" type="text/javascript"></script>
+<script>
+window.BOOMR_config = window.BOOMR_config || {};
+BOOMR_config.autorun = true;
+BOOMR_config.same_site_cookie = "Strict";
+BOOMR_config.secure_cookie = true;
+
+BOOMR_test.init({
+	testAfterOnBeacon: 1,
+	site_domain: document.domain
+});
+</script>
+<%= footer %>
