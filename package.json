@@ -1,6 +1,6 @@
 {
   "name": "boomerangjs",
-  "version": "1.710.0",
+  "version": "1.720.0",
   "releaseVersion": "1",
   "description": "boomerang always comes back, except when it hits something",
   "main": "boomerang.js",
@@ -57,7 +57,7 @@
     "gruntify-eslint": "^3.1.0",
     "history": "^1.12.5",
     "jasmine-reporters": "^2.2.1",
-    "jsdoc": "^3.5.5",
+    "jsdoc": "^3.6.2",
     "json5": "^2.1.0",
     "karma": "^1.7.1",
     "karma-chrome-launcher": "^2.2.0",

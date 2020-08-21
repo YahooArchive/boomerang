@@ -1,5 +1,26 @@
 # Boomerang Release Notes
 
+## 1.720.0 (July 29, 2020)
+### Bug Fixes
+
+* Boomerang: Added support for SameSite and Secure cookie attributes
+
+## 1.715.0 (June 26, 2020)
+### Bug Fixes
+
+* History: Correctly forward arguments to `routeFilter`
+
+### Documentation
+
+* Docs: Release notes updated
+* Docs: Continuity Cumulative Layout Shift docs
+* Docs: Added additional Back-end Servers and integration guides
+
+## 1.711.0 (June 8, 2020)
+### Bug Fixes
+
+* EventTiming: Change `firstInput` type to `first-input` per spec change
+
 ## 1.710.0 (May 6, 2020)
 ### Breaking Changes
 
