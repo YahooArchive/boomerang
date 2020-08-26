@@ -37,10 +37,6 @@
 
 * Event Timing plugin (enabled by default)
 * ResourceTiming: Service Worker timing capture at resource level
-* PageParams: New option `jsVarPassArgs` (defaults to `true`, current behavior) which controls whether the variable
-  name is passed as the first argument to JavaScript-based Custom Metrics, Timers, and Dimensions
-* PageParams: Fixed warning when calling `getQueryParamValue()` with a malformed url
-* PageParams: Public `rerun()` function to re-calculate Custom Metrics, Timers and Dimensions on-demand
 * PaintTiming: Expose Largest Contentful Paint via `BOOMR.plugins.PaintTiming.metrics.lcp()`
 
 ### Bug Fixes
@@ -70,9 +66,7 @@
 * OS Issue 251: Add support for background image detection for `c.tti.hi`
 * OS Issue 261: NPM: Allow running grunt build
 * Issue 990: SPA: Only subtract SPA timeout when the timeout fires
-* Issue 1025: PageParams: Fix case where XHR is in Whitelist (match) mode and no filters were defined
 * Issue 1026: Update Snippet to have its own reference to the parentNode
-* Issue 1032: Sync with OS repo up to 1.678.0
 
 ## 1.687.0 (October 10, 2019)
 ### New Features:
