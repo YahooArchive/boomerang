@@ -19,7 +19,7 @@ describe("e2e/05-angular/03-ng-app", function() {
 
 	it("Should take as long as the longest img load (if MutationObserver and NavigationTiming are supported)", function() {
 		if (t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
-			t.validateBeaconWasSentAfter(0, "img.jpg", 100, 3000, 30000, true);
+			t.validateBeaconWasSentAfter(0, "img.jpg", 200, 3000, 30000, true);
 		}
 	});
 
@@ -32,7 +32,7 @@ describe("e2e/05-angular/03-ng-app", function() {
 
 	it("Should take as long as the XHRs (if MutationObserver is not supported but NavigationTiming is)", function() {
 		if (!t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
-			t.validateBeaconWasSentAfter(0, "widgets.json", 100, 0, 30000, true);
+			t.validateBeaconWasSentAfter(0, "widgets.json", 200, 0, 30000, true);
 		}
 	});
 
