@@ -111,6 +111,7 @@
  * Page Busy is not the most efficient way of measuring what the browser is doing,
  * but since it is calculated via `setInterval()`, it is supported in all browsers.
  * The Continuity plugin currently measures Page Busy by polling every 32 milliseconds.
+ * Page Busy is disabled if Long Tasks are supported in the browser.
  *
  * Page Busy can be an indicator of how likely the user will have a good experience
  * when they interact with it. If Page Busy is 100%, the user may see the page lag
@@ -330,6 +331,10 @@
  *
  * Visually Ready will add `c.tti.vr` to the beacon.
  *
+ * Visually Ready is only included on regular Page Load and Single Page App Hard navigation beacons.  It is not
+ * suitable for Single Page App Soft navigation beacons as the page has already been visually ready at the start
+ * of the soft navigation.
+ *
  * #### Controlling Visually Ready via Framework Ready
  *
  * There are two additional options for controlling when Visually Ready happens:
@@ -418,6 +423,10 @@
  * Time to Interaction will add `c.tti` to the beacon.  It will also add `c.tti.m`,
  * which is the higest-accuracy method available for TTI calculation: `lt` (Long Tasks),
  * `raf` (FPS), or `b` (Page Busy).
+ *
+ * Time to Interaction is only included on regular Page Load and Single Page App Hard navigation beacons.  It is not
+ * suitable for Single Page App Soft navigation beacons as the page is already interactive at the start of
+ * the soft navigation.
  *
  * #### Algorithm
  *
@@ -1238,6 +1247,9 @@
 		// hero images timestamp
 		var heroImagesReady = 0;
 
+		// whether or not to add Visually Ready to the next beacon
+		var addVisuallyReadyToBeacon = true;
+
 		// check for pre-Boomerang FPS log
 		if (BOOMR.fpsLog && BOOMR.fpsLog.length) {
 			// start at the first frame instead of now
@@ -1652,14 +1664,19 @@
 				}
 			}
 
-			// add Visually Ready to the beacon
-			impl.addToBeacon("c.tti.vr", externalMetrics.timeToVisuallyReady());
+			if (addVisuallyReadyToBeacon) {
+				// add Visually Ready to the beacon
+				impl.addToBeacon("c.tti.vr", externalMetrics.timeToVisuallyReady());
 
-			// add Framework Ready to the beacon
-			impl.addToBeacon("c.tti.fr", externalMetrics.timeToFrameworkReady());
+				// add Framework Ready to the beacon
+				impl.addToBeacon("c.tti.fr", externalMetrics.timeToFrameworkReady());
 
-			// add Framework Ready to the beacon
-			impl.addToBeacon("c.tti.hi", externalMetrics.timeToHeroImagesReady());
+				// add Framework Ready to the beacon
+				impl.addToBeacon("c.tti.hi", externalMetrics.timeToHeroImagesReady());
+
+				// only add to the first beacon
+				addVisuallyReadyToBeacon = false;
+			}
 
 			// Calculate TTI
 			if (!data.longtask && !data.fps && !data.busy) {
@@ -1794,6 +1811,9 @@
 
 			// reset the data log
 			dataLog = [];
+
+			// only add Visually Ready to the first beacon if available
+			addVisuallyReadyToBeacon = false;
 		}
 
 		return {
