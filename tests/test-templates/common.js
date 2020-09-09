@@ -87,6 +87,13 @@ describe("common", function() {
 			assert.operator(tm, ">", now - (60 * 1000), prefix + "time is greater than a minute ago");
 			assert.operator(tm, "<", now, prefix + "time is less than now");
 
+			if (!b.early && typeof b["rt.sl"] !== "undefined") {
+				assert.operator(parseInt(b["rt.sl"], 10), ">", 0);
+			}
+			else if (b.early && typeof b["rt.sl"] !== "undefined") {
+				assert.operator(parseInt(b["rt.sl"], 10), ">=", 0);
+			}
+
 			if (window.BOOMR_LOGN_always !== true) {
 				assert.equal(b["h.cr"], "abc", prefix + "has the correct crumb (h.cr)");
 			}

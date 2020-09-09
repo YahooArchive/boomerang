@@ -4058,7 +4058,14 @@ BOOMR_check_doc_domain();
 			if (BOOMR.session.enabled) {
 				impl.vars["rt.si"] = BOOMR.session.ID + "-" + Math.round(BOOMR.session.start / 1000).toString(36);
 				impl.vars["rt.ss"] = BOOMR.session.start;
-				impl.vars["rt.sl"] = BOOMR.session.length;
+
+				if (typeof impl.vars.early === "undefined") {
+					// make sure Session Length is always at least 1 for non-Early beacons
+					impl.vars["rt.sl"] = BOOMR.session.length >= 1 ? BOOMR.session.length : 1;
+				}
+				else {
+					impl.vars["rt.sl"] = BOOMR.session.length;
+				}
 			}
 			else {
 				BOOMR.removeVar("rt.si", "rt.ss", "rt.sl");
