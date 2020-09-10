@@ -828,12 +828,12 @@
 			    BOOMR.plugins.ResourceTiming.is_enabled() &&
 			    resource.timing &&
 			    resource.timing.requestStart) {
-				var r = BOOMR.plugins.ResourceTiming.getCompressedResourceTiming(
-						resource.timing.requestStart,
-						resource.timing.loadEventEnd
-					);
 
-				BOOMR.plugins.ResourceTiming.addToBeacon(r);
+				// Save resourceTiming data onto beacon as it may not go out right away
+				resource.restiming = BOOMR.plugins.ResourceTiming.getCompressedResourceTiming(
+					resource.timing.requestStart,
+					resource.timing.loadEventEnd
+				);
 			}
 
 			// For SPAs, calculate Back-End and Front-End timings

@@ -1816,7 +1816,12 @@
 		sentNavBeacon: false,
 		initialized: false,
 		supported: null,
-		xhr_load: function() {
+		xhr_load: function(data) {
+			if (data && data.restiming) {
+				// put RT data on beacon
+				addToBeacon(data.restiming);
+			}
+
 			if (this.complete) {
 				return;
 			}
