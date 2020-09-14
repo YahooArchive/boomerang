@@ -128,12 +128,14 @@
  * MutationObserver is used to detect "interesting" nodes. Interesting nodes are
  * new IMG/IMAGE/IFRAME/LINK (rel=stylesheet) nodes or existing nodes that are
  * changing their source URL.
+ *
  * We consider the following "uninteresting" nodes:
  *   - Nodes that have either a width or height <= 1px.
  *   - Nodes that have display:none.
  *   - Nodes that have visibility:hidden.
  *   - Nodes that update their source URL to the same value.
  *   - Nodes that have a blank source URL.
+ *   - Images with a loading="lazy" attribute
  *   - Nodes that have a source URL starting with `about:`, `javascript:` or `data:`.
  *   - SCRIPT nodes because there is no consistent way to detect when they have loaded.
  *   - Existing IFRAME nodes that are changing their source URL because is no consistent
@@ -1240,6 +1242,10 @@
 				}
 				else if (typeof node.getAttribute === "function" && node.getAttribute("src") === "") {
 					// placeholder IMG
+					return false;
+				}
+				else if (node.loading === "lazy") {
+					// lazy loading - we can't know when this request will be triggered
 					return false;
 				}
 			}
