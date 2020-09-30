@@ -10,3 +10,4 @@ build/
 tasks/
 .settings/
 .project
+.github/
