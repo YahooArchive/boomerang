@@ -13,6 +13,9 @@ BOOMR_test.init({
 	// fire touchstart event
 	var md = document.createEvent("Event");
 	md.initEvent("mousedown", true, true);
-	window.dispatchEvent(md);
+	// We add a delay because sometimes c.fid is too low and it's not reported
+	setTimeout(function() {
+		window.dispatchEvent(md);
+	}, 10);
 </script>
 <%= footer %>
