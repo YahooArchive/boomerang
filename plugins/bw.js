@@ -193,8 +193,8 @@
 		latency: null,
 		runs_left: 0,
 		aborted: false,
-		complete: true,		// defaults to true so we don't block other plugins if this cannot start.
-					// init sets it to false
+		complete: true,  // defaults to true so we don't block other plugins if this cannot start.
+		                 // init sets it to false
 		running: false,
 		initialized: false,
 
@@ -265,8 +265,8 @@
 
 
 			median = Math.round(
-					(lat_filtered[Math.floor(n / 2)] + lat_filtered[Math.ceil(n / 2)]) / 2
-				);
+				(lat_filtered[Math.floor(n / 2)] + lat_filtered[Math.ceil(n / 2)]) / 2
+			);
 
 			return { mean: amean, median: median, stddev: std_dev, stderr: std_err };
 		},
@@ -357,8 +357,8 @@
 
 			n = bandwidths.length - 1;
 			median = Math.round(
-					(bandwidths[Math.floor(n / 2)] + bandwidths[Math.ceil(n / 2)]) / 2
-				);
+				(bandwidths[Math.floor(n / 2)] + bandwidths[Math.ceil(n / 2)]) / 2
+			);
 
 			if (bandwidths_corrected.length < 1) {
 				BOOMR.debug("not enough valid corrected datapoints, falling back to uncorrected", "bw");
@@ -378,11 +378,11 @@
 
 				n = bandwidths_corrected.length - 1;
 				median_corrected = Math.round(
-							(
-								bandwidths_corrected[Math.floor(n / 2)] +
-								bandwidths_corrected[Math.ceil(n / 2)]
-							) / 2
-						);
+					(
+						bandwidths_corrected[Math.floor(n / 2)] +
+						bandwidths_corrected[Math.ceil(n / 2)]
+					) / 2
+				);
 			}
 
 			BOOMR.debug("amean: " + amean + ", median: " + median, "bw");
@@ -768,9 +768,9 @@
 		abort: function() {
 			impl.aborted = true;
 			if (impl.running) {
-				impl.finish();	// we don't defer this call because it might be called from
-						// onunload and we want the entire chain to complete
-						// before we return
+				impl.finish();  // we don't defer this call because it might be called from
+				                // onunload and we want the entire chain to complete
+				                // before we return
 			}
 		},
 
