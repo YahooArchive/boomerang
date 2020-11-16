@@ -83,3 +83,20 @@ Minified:
 ```javascript
 <script>%minified_delayed_loader_snippet%</script>
 ```
+
+## Known Issues
+
+* Websites using Google Tag Manager (GTM) to inject the Loader Snippet may not see beacons from Firefox <= 74
+    * These versions of Firefox do not support Preload, so fallback to using the IFRAME loader
+    * boomerang.js is not fetched due to a Firefox bug with setting the `iframe.src = "about:blank"`, which is done for Content Security Policies (CSP) compatibility
+    * Websites that are not using Content Security Policies can change:
+        ```
+        // An empty frame
+        iframe.src = "about:blank";
+        ```
+        to
+        ```
+        // An empty frame
+        iframe.src = "javascript:void(0)";
+        ```
+    * Websites that are using Content Security Policies should use a `<script async>` tag to load boomerang.js instead of the Loader Snippet

@@ -2483,7 +2483,7 @@
 		 * @param {boolean} [config.AutoXHR.monitorFetch] Whether or not to instrument fetch()
 		 * @param {number} [config.AuthXHR.fetchBodyUsedWait] If the fetch response's bodyUsed flag is false,
 		 * we'll wait this amount of ms before checking RT for an entry. Setting to 0 will disable this feature
-		 * @param {boolean} [config.AutoXHR.alwaysSendXhr] Whether or not to send XHR
+		 * @param {boolean|string[]|RegExp[]|function[]} [config.AutoXHR.alwaysSendXhr] Whether or not to send XHR
 		 * beacons for every XHR.
 		 * @param {boolean} [config.captureXhrRequestResponse] Whether or not to capture an XHR's
 		 * request and response bodies on for the {@link event:BOOMR#xhr_load xhr_load} event.
