@@ -17,6 +17,7 @@
   "devDependencies": {
     "async": "^3.2.0",
     "bower": "^1.8.8",
+    "brotli-size": "^4.0.0",
     "chai": "^4.2.0",
     "chrome-launcher": "^0.13.4",
     "chrome-remote-interface": "^0.28.2",
@@ -55,6 +56,7 @@
     "grunt-strip-code": "^1.0.6",
     "grunt-template": "^1.0.0",
     "gruntify-eslint": "^5.0.0",
+    "gzip-size": "^6.0.0",
     "history": "^1.12.5",
     "jasmine-reporters": "^2.3.2",
     "jsdoc": "^3.6.6",

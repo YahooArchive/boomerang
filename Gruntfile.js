@@ -1497,6 +1497,25 @@ function runForEachFlavor(logName, taskName, args, failOnError, done) {
 	// get all plugin definitions
 	var plugins = grunt.file.readJSON("plugins.json");
 
+	var pkg = grunt.file.readJSON("package.json");
+	var buildNumber = grunt.option("build-number") || 0;
+	var releaseVersion = pkg.releaseVersion + "." + buildNumber;
+
+	var flavorList = [];
+
+	// Add the base "full" version as its also a flavor.
+	flavorList.push(releaseVersion + ".0");
+
+	// Build list of all flavor version codes in this release
+	for (var f in plugins.flavors) {
+		if (!plugins.flavors.hasOwnProperty(f)) {
+			continue;
+		}
+
+		var buildFlavor = plugins.flavors[f];
+		flavorList.push(releaseVersion + "." + buildFlavor.revision);
+	}
+
 	// output log
 	var outputLogFile = path.join("build", logName + ".full.log");
 	var outputLogStream = fs.createWriteStream(outputLogFile, {
@@ -1509,13 +1528,14 @@ function runForEachFlavor(logName, taskName, args, failOnError, done) {
 	process.env.BUILD_FLAVOR = "full";
 
 	var argsWithTask = args.concat(taskName);
+	var argsWithTaskAndFlavors = argsWithTask.concat("--flavor-version=" + flavorList.join());
 
 	//
 	// Full build
 	//
 	var child = grunt.util.spawn({
 		grunt: true,
-		args: argsWithTask
+		args: argsWithTaskAndFlavors
 	}, function(error, result, code) {
 		outputLogStream.close();
 
@@ -1529,6 +1549,8 @@ function runForEachFlavor(logName, taskName, args, failOnError, done) {
 			}
 		}
 
+		// set parent flavor version
+		var argsWithTaskAndPVersion = argsWithTask.concat("--parent-flavor-version=" + releaseVersion + ".0");
 		//
 		// Each flavor
 		//
@@ -1546,7 +1568,7 @@ function runForEachFlavor(logName, taskName, args, failOnError, done) {
 
 			var child2 = grunt.util.spawn({
 				grunt: true,
-				args: argsWithTask.concat("--build-flavor=" + flavor)
+				args: argsWithTaskAndPVersion.concat("--build-flavor=" + flavor)
 			}, function(errorFlavor, resultFlavor) {
 				outputLogStream.close();
 

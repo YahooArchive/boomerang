@@ -25,7 +25,6 @@ function run(i, testPath, file, flavor) {
 		var fileName = file + ".html";
 
 		it(file + (buildFlavor ? ("." + buildFlavor) : ""), function(done) {
-
 			if (typeof browser.waitForAngularEnabled === "function") {
 				browser.waitForAngularEnabled(false);
 			}
