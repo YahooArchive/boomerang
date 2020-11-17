@@ -4,6 +4,12 @@
 describe("BOOMR.plugins.Errors", function() {
 	var assert = chai.assert;
 
+	beforeEach(function() {
+		if (!BOOMR.plugins.Errors) {
+			return this.skip();
+		}
+	});
+
 	describe("exports", function() {
 		it("Should have a Errors object", function() {
 			assert.isObject(BOOMR.plugins.Errors);

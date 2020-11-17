@@ -6,10 +6,21 @@ var grunt = require("grunt");
 var fs = require("fs");
 var path = require("path");
 var async = require("async");
+var JSON5 = require("json5");
+
+// Allow JSON5 for require statements
+require("json5/lib/register");
 
 //
 // Helper Functions
 //
+/**
+ * Gets all files underneath the specified directory
+ *
+ * @param {string} dir Directory
+ * @param {string} nameMatch Names to match
+ * @param {function} callback Callback with list of files
+ */
 function getFiles(dir, nameMatch, callback) {
 	async.waterfall([
 		function(cb) {
@@ -35,6 +46,12 @@ function getFiles(dir, nameMatch, callback) {
 	], callback);
 }
 
+/**
+ * Gets all subdirectories underneath the specified directory
+ *
+ * @param {string} dir Directory
+ * @param {function} callback Callback with list of directories
+ */
 function getDirs(dir, callback) {
 	async.waterfall([
 		function(cb) {
@@ -54,6 +71,43 @@ function getDirs(dir, callback) {
 	], callback);
 }
 
+/**
+ * Determines whether or not a test should be excluded for this build flavor
+ *
+ * @param {object} testsData Test data definitions
+ * @param {string[]} includedPlugins Plugins included in this build
+ * @param {string} templateDir Template directory
+ * @param {string} testName Test file name
+ *
+ * @returns {boolean} True if the test should be excluded
+ */
+function shouldExcludeTest(testsData, includedPlugins, templateDir, testName) {
+	if (!testsData || !includedPlugins || includedPlugins.length === 0) {
+		// no exclusions, so don't exclude
+		return false;
+	}
+
+	// plugins required for all tests in this directory
+	var requiredPlugins = (testsData.all && testsData.all.requires) || [];
+
+	// plugins required for this test
+	if (testsData[testName] && testsData[testName].requires) {
+		requiredPlugins = requiredPlugins.concat(testsData[testName].requires);
+	}
+
+	// make sure all required plugins are included in the build
+	for (var i = 0; i < requiredPlugins.length; i++) {
+		if (includedPlugins.indexOf(requiredPlugins[i]) === -1) {
+			// missing this required plugin
+			grunt.log.debug(templateDir + "/" + testName + " is missing " + requiredPlugins[i]);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 //
 // Exports
 //
@@ -67,6 +121,27 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 	testPagesDir = testPagesDir || path.join(testsDir, "pages");
 	e2eDir = e2eDir || path.join(testsDir, "e2e");
 	e2eJsonPath = e2eJsonPath || path.join(e2eDir, "e2e.json");
+
+	//
+	// Determine if there are any tests to exclude (based on the build flavor)
+	//
+
+	// get all plugin definitions
+	var pluginsJson = grunt.file.readJSON("plugins.json");
+
+	// default build
+	var includedPlugins = pluginsJson.plugins;
+
+	// if it's a build flavor, use that plugins list instead
+	var buildFlavor = grunt.option("build-flavor");
+	if (buildFlavor) {
+		includedPlugins = pluginsJson.flavors[buildFlavor].plugins;
+	}
+
+	// simplify plugin to just file name without extension
+	includedPlugins = includedPlugins.map(function(plugin) {
+		return plugin.replace("plugins/", "").replace(".js", "");
+	});
 
 	//
 	// Domains for test purposes
@@ -137,6 +212,20 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 				var templateDir = dir.replace(testTemplatesDir + path.sep, "");
 				var supportDir = path.join(testTemplatesDir, templateDir, "support");
 
+				//
+				// Test definitions
+				//
+				var testsDataFile = path.join(testTemplatesDir, templateDir, "tests.json5");
+				var testsData = {};
+				try {
+					if (grunt.file.exists(testsDataFile)) {
+						testsData = require(testsDataFile);
+					}
+				}
+				catch (e) {
+					// NOP, test file doesn't need to exist;
+				}
+
 				rootIndexHtml += "<p><a href='" + templateDir + "/index.html'>" + templateDir + "</a></p>";
 
 				// copy support files over
@@ -195,8 +284,14 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 						var templateFileName = templateFile.replace(templateDir + path.sep, "");
 						var templateFileDest = path.join(testPagesDir, templateFile);
 
-						grunt.log.ok(templateFile);
+						var testFile = templateFileName.replace(".html", "");
+						if (shouldExcludeTest(testsData, includedPlugins, templateDir, testFile)) {
+							grunt.log.ok("Skipping " + templateFile);
 
+							return;
+						}
+
+						grunt.log.ok(templateFile);
 
 						// javascript file
 						var jsFile = file.replace(".html", "") + ".js";
@@ -223,7 +318,7 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 						// save to our test definitions
 						testDefinitions.push({
 							path: templateDir,
-							file: templateFileName.replace(".html", "")
+							file: testFile
 						});
 
 						//

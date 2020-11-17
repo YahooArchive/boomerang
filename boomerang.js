@@ -77,6 +77,9 @@ if ("performance" in window &&
  * @global
  * @type {TimeStamp}
  * @desc
+ * This variable is added to the global scope (`window`) until Boomerang loads,
+ * at which point it is removed.
+ *
  * Timestamp the boomerang.js script started executing.
  *
  * This has to be global so that we don't wait for this entire
@@ -90,6 +93,8 @@ BOOMR_start = new Date().getTime();
  * @function
  * @global
  * @desc
+ * This function is added to the global scope (`window`).
+ *
  * Check the value of `document.domain` and fix it if incorrect.
  *
  * This function is run at the top of boomerang, and then whenever
@@ -4471,6 +4476,9 @@ BOOMR_check_doc_domain();
 	 * @type {TimeStamp}
 	 * @name BOOMR_lstart
 	 * @desc
+	 * This variable is added to the global scope (`window`) until Boomerang loads,
+	 * at which point it is removed.
+	 *
 	 * Time the loader script started fetching boomerang.js (if the asynchronous
 	 * loader snippet is used).
 	 */
@@ -4490,6 +4498,8 @@ BOOMR_check_doc_domain();
 	}
 
 	/**
+	 * This variable is added to the global scope (`window`).
+	 *
 	 * Time the `window.onload` event fired (if using the asynchronous loader snippet).
 	 *
 	 * This timestamp is logged in the case boomerang.js loads after the onload event

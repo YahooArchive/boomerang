@@ -34,14 +34,14 @@ Object.defineProperty(HTMLImageElement.prototype, "currentSrc", {
 });
 
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
+	testAfterOnBeacon: !BOOMR.plugins.Errors ? 1 : 2,
 	"BW": { "enabled": false },
 	"RT": { "session_exp": 1800 },
 	"Errors": {
 		"enabled": true,
 		"maxErrors": 10,
 		"sendAfterOnload": true,
-		"sendInterval": 10000
+		"sendInterval": 5000
 	},
 	afterFirstBeacon: function() {
 		// create an error after onload

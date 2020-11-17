@@ -850,8 +850,8 @@
 	/**
 	 * Compress JSON to a string for a URL parameter in the best way possible.
 	 *
-	 * If UserTimingCompression is available (which has JSURL), use that.  The
-	 * data will start with the character `~`
+	 * If BOOMR.utils.Compression.jsUrl, or UserTimingCompression is available (which has JSURL),
+	 * use that.  The data will start with the character `~`.
 	 *
 	 * Otherwise, use JSON.stringify.  The data will start with the character `{`.
 	 *
@@ -860,10 +860,12 @@
 	 * @returns {string} Compressed data
 	 */
 	function compressJson(data) {
-		var utc = window.UserTimingCompression || BOOMR.window.UserTimingCompression;
+		var jsUrlFn = (BOOMR.utils.Compression && BOOMR.utils.Compression.jsUrl) ||
+			(window.UserTimingCompression && window.UserTimingCompression.jsUrl) ||
+			(BOOMR.window.UserTimingCompression && BOOMR.window.UserTimingCompression.jsUrl);
 
-		if (utc) {
-			return utc.jsUrl(data);
+		if (jsUrlFn) {
+			return jsUrlFn(data);
 		}
 		else if (window.JSON) {
 			return JSON.stringify(data);
@@ -896,7 +898,7 @@
 	function compressBucketLog(type, backfill, dataSet, sinceBucket, endBucket) {
 		var out = "", val = 0, i, j, dupes, valStr, nextVal, wroteSomething;
 
-		if (!dataSet || !BOOMR.utils.Compression) {
+		if (!dataSet) {
 			return "";
 		}
 

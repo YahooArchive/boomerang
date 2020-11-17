@@ -10,7 +10,12 @@ describe("e2e/30-eventtiming/01-iframe-loader", function() {
 	});
 
 	it("Should have included raw events (et.e) on the beacon", function() {
-		assert.equal(tf.lastBeacon()["et.e"], "~(~(c~0~d~'p0~fi~1~p~'nm~s~'2s)~(c~0~d~'1e~n~'click~p~'1e~s~'rs))");
+		if (BOOMR.utils.Compression && BOOMR.utils.Compression.jsUrl) {
+			assert.equal(tf.lastBeacon()["et.e"], "~(~(c~0~d~'p0~fi~1~p~'nm~s~'2s)~(c~0~d~'1e~n~'click~p~'1e~s~'rs))");
+		}
+		else {
+			assert.isDefined(tf.lastBeacon()["et.e"]);
+		}
 	});
 
 	it("Should have included First Input Delay (et.fid) on the beacon", function() {

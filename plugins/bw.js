@@ -633,7 +633,7 @@
 		 * Note that if you're doing some kind of real-time streaming, then
 		 * chances are that this bandwidth test isn't right for you, so
 		 * setting this cookie to a shorter value isn't the right solution.
-		 * @param {boolean} [config.BW.timeout] The timeout in seconds for the entire bandwidth test.
+		 * @param {number} [config.BW.timeout] The timeout in seconds for the entire bandwidth test.
 		 *
 		 * The default is set to 15 seconds.
 		 *
@@ -647,7 +647,7 @@
 		 * Increasing the timeout can get you more data and increase the accuracy
 		 * of the test, but at the same time increases the risk of the test not
 		 * completing before the user leaves the page.
-		 * @param {boolean} [config.BW.nruns] The number of times the bandwidth test should run.
+		 * @param {number} [config.BW.nruns] The number of times the bandwidth test should run.
 		 *
 		 * The default is set to 5.
 		 *
