@@ -53,6 +53,12 @@ function respond301(req, res) {
 	res.redirect(301, file);
 }
 
+function respond302(req, res) {
+	var q = require("url").parse(req.url, true).query;
+	var to = q.to || "/blackhole";
+	res.redirect(to);
+}
+
 function respond500(req, res) {
 	res.status(500).send();
 }
@@ -86,6 +92,9 @@ app.post("/delay", require("./route-delay"));
 // /redirect - 301 redirects
 app.get("/redirect", respond301);
 app.post("/redirect", respond301);
+
+// /redirect - 302
+app.get("/302", respond302);
 
 // /500 - Internal Server Error
 app.get("/500", respond500);
@@ -125,7 +134,7 @@ app.get("/*", function(req, res, next) {
 	});
 	input.on("open", function() {
 		var headers = {};
-		var lineReader = readline.createInterface({input: input});
+		var lineReader = readline.createInterface({ input: input });
 		lineReader.on("line", function(line) {
 			var colon = ":";
 			var colonIndex = line.indexOf(colon);

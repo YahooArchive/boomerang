@@ -70,6 +70,10 @@
  * * `fetch.bnu`: For XHR beacons from fetch API requests, `1` if fetch response body was not used.
  * * `rt.tt`: Sum of load times across session
  * * `rt.obo`: Number of pages in session that did not have a load time
+ * * `xhr.ru`: final response URL after any redirects
+ *    - `XMLHttpRequest`: it will be present if any redirects happened
+ *       and final URL is not equivalent to the final response URL after any redirects.
+ *    - `fetch`: it will only be present if any redirects happened
  *
  * ## Cookie
  *
@@ -1571,6 +1575,10 @@
 
 				if (edata.responseBodyNotUsed) {
 					BOOMR.addVar("fetch.bnu", 1, true);
+				}
+
+				if (edata.responseUrl) {
+					BOOMR.addVar("xhr.ru", BOOMR.utils.cleanupURL(edata.responseUrl), true);
 				}
 			}
 

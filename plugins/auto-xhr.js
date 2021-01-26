@@ -1879,6 +1879,10 @@
 				return promise.then(function(response) {
 					var i, res, ct, parseJson = false, parseXML = false;
 
+					if (response.redirected) {
+						resource.responseUrl = response.url;
+					}
+
 					if (response.status < 200 || response.status >= 400) {
 						// put the HTTP error code on the resource if it's not a success
 						resource.status = response.status;
@@ -2085,6 +2089,11 @@
 								// meaning the request wasn't aborted.  Aborted requests will fire the
 								// next handler.
 								if (req.readyState === 4 && req.status !== 0) {
+
+									if (req.responseURL !== resource.url) {
+										resource.responseUrl = req.responseURL;
+									}
+
 									if (req.status < 200 || req.status >= 400) {
 										// put the HTTP error code on the resource if it's not a success
 										resource.status = req.status;
@@ -2124,11 +2133,18 @@
 								}
 								else if (req.readyState === 0 && typeof resource.timing.open === "number") {
 									// something called .abort() after the request was started
+									if (req.responseURL !== resource.url) {
+										resource.responseUrl = req.responseURL;
+									}
 									resource.status = XHR_STATUS_ABORT;
 									impl.loadFinished(resource);
 								}
 							}
 							else {
+								if (req.responseURL !== resource.url) {
+									resource.responseUrl = req.responseURL;
+								}
+
 								// load, timeout, error, abort
 								if (ename === "load") {
 									if (req.status !== 0 && (req.status < 200 || req.status >= 400)) {
