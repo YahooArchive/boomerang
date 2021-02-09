@@ -152,7 +152,8 @@
 		 * @param {BOOMR.plugins.AutoXHR.Resource} resource Resource
 		 */
 		spaHardMissedOnComplete: function(resource) {
-			var p, navigationStart = (BOOMR.plugins.RT && BOOMR.plugins.RT.navigationStart());
+			var p, navigationStart = (BOOMR.plugins.RT && BOOMR.plugins.RT.navigationStart()),
+			    ev, mh = BOOMR.plugins.AutoXHR.getMutationHandler();
 
 			waitingOnHardMissedComplete = false;
 
@@ -167,9 +168,10 @@
 			// always use the start time of navigationStart
 			resource.timing.requestStart = navigationStart;
 
-			if (resource.resources.length === 0) {
-				// No other resources were fetched, so set the end time
-				// to NavigationTiming's performance.loadEventEnd if available (instead of 'now')
+			ev = mh.pending_events[resource.index];
+			if (!ev || ev.total_nodes === 0) {
+				// No other resources (xhrs or mutations) were detected, so set the end time
+				// to NavigationTiming's page loadEventEnd if available (instead of 'now')
 				p = BOOMR.getPerformance();
 				if (p && p.timing && p.timing.navigationStart && p.timing.loadEventEnd) {
 					resource.timing.loadEventEnd = p.timing.loadEventEnd;
@@ -197,8 +199,9 @@
 		 *
 		 * @memberof BOOMR.plugins.SPA
 		 */
-		is_complete: function() {
-			return !waitingOnHardMissedComplete;
+		is_complete: function(vars) {
+			// allow error and early beacons to go through even if we're not complete
+			return !waitingOnHardMissedComplete || (vars && (vars["http.initiator"] === "error" || typeof vars.early !== "undefined"));
 		},
 
 		/**

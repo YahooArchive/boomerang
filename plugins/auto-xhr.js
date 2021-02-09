@@ -615,7 +615,8 @@
 			resource: resource,
 			nodes_to_wait: 0,  // MO resources + xhrs currently outstanding + wait filter (max: 1)
 			total_nodes: 0,  // total MO resources + xhrs + wait filter (max: 1)
-			resources: [],  // resources reported to MO handler (no xhrs)
+			resources: [],  // resources reported by MO handler (no xhrs)
+			xhr_resources: [],  // resources reported by xhr monitoring (for debugging only)
 			complete: false,
 			aborted: false,  // this event was aborted
 			firedEarlyBeacon: false
@@ -758,8 +759,6 @@
 			ev.complete = true;
 
 			this.watch--;
-
-			ev.resource.resources = ev.resources;
 
 			// for SPA events, the resource's URL may be set to the previous navigation's URL.
 			// reset it to the current document URL
@@ -1057,7 +1056,7 @@
 			if (BOOMR.utils.inArray(ev.type, BOOMR.constants.BEACON_TYPE_SPAS) && !BOOMR.hasBrowserOnloadFired()) {
 				// browser onload hasn't fired yet, lets wait because there might be more interesting
 				// things on the way
-				this.setTimeout(SPA_TIMEOUT, index);
+				this.setTimeout(impl.spaIdleTimeout, index);
 				return;
 			}
 
@@ -1202,6 +1201,7 @@
 								return;
 							}
 							current_event.firedEarlyBeacon = true;
+							debugLog("Triggering an early beacon");
 							BOOMR.plugins.Early.sendEarlyBeacon(current_event.resource, current_event.type);
 						}, SPA_EARLY_TIMEOUT);  // give the SPA framework a bit of time to load the resource
 					}
@@ -1479,6 +1479,7 @@
 		}
 
 		debugLog("Monitoring " + resource.type +  " URL: " + resource.url + " for event id: " + index);
+		current_event.xhr_resources.push(resource.url);  // for debugging
 
 		// increase the number of outstanding resources by one
 		current_event.nodes_to_wait++;
@@ -2577,17 +2578,17 @@
 		 * @param {string[]} [config.AutoXHR.spaBackEndResources] Default resources to count as
 		 * Back-End during a SPA nav
 		 * @param {boolean} [config.AutoXHR.monitorFetch] Whether or not to instrument fetch()
-		 * @param {number} [config.AuthXHR.fetchBodyUsedWait] If the fetch response's bodyUsed flag is false,
+		 * @param {number} [config.AutoXHR.fetchBodyUsedWait] If the fetch response's bodyUsed flag is false,
 		 * we'll wait this amount of ms before checking RT for an entry. Setting to 0 will disable this feature
 		 * @param {boolean|string[]|RegExp[]|function[]} [config.AutoXHR.alwaysSendXhr] Whether or not to send XHR
 		 * beacons for every XHR.
 		 * @param {boolean} [config.captureXhrRequestResponse] Whether or not to capture an XHR's
 		 * request and response bodies on for the {@link event:BOOMR#xhr_load xhr_load} event.
-		 * @param {number} [config.AuthXHR.spaIdleTimeout=1000] Timeout for Single Page Applications after the final
+		 * @param {number} [config.AutoXHR.spaIdleTimeout=1000] Timeout for Single Page Applications after the final
 		 * resource fetch has completed before calling the SPA navigation complete. Default is 1000ms.
-		 * @param {number} [config.AuthXHR.xhrIdleTimeout=50] Timeout for XHRs after final resource fetch has completed
+		 * @param {number} [config.AutoXHR.xhrIdleTimeout=50] Timeout for XHRs after final resource fetch has completed
 		 * before calling the XHR complete.  Default is 50ms.
-		 * @param {boolean} [config.AuthXHR.xhrRequireChanges=true] Whether or not a XHR beacon will only be triggered
+		 * @param {boolean} [config.AutoXHR.xhrRequireChanges=true] Whether or not a XHR beacon will only be triggered
 		 * if there were DOM changes.
 		 *
 		 * @returns {@link BOOMR.plugins.AutoXHR} The AutoXHR plugin for chaining

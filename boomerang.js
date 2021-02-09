@@ -362,8 +362,8 @@ BOOMR_check_doc_domain();
 
 	// visibilitychange is useful to detect if the page loaded through prerender
 	// or if the page never became visible
-	// http://www.w3.org/TR/2011/WD-page-visibility-20110602/
-	// http://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
+	// https://www.w3.org/TR/2011/WD-page-visibility-20110602/
+	// https://www.nczonline.net/blog/2011/08/09/introduction-to-the-page-visibility-api/
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/User_experience/Using_the_Page_Visibility_API
 
 	// Set the name of the hidden property and the change event for visibility
@@ -1128,7 +1128,7 @@ BOOMR_check_doc_domain();
 			/**
 			 * Maximum GET URL length.
 			 * Using 2000 here as a de facto maximum URL length based on:
- 			 * http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+ 			 * https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 			 *
 			 * @type {number}
 			 *
@@ -3419,7 +3419,7 @@ BOOMR_check_doc_domain();
 
 					if (e_name === "page_unload") {
 						// pagehide is for iOS devices
-						// see http://www.webkit.org/blog/516/webkit-page-cache-ii-the-unload-event/
+						// see https://www.webkit.org/blog/516/webkit-page-cache-ii-the-unload-event/
 						if (w.onpagehide || w.onpagehide === null) {
 							BOOMR.utils.addListener(w, "pagehide", unload_handler);
 						}
@@ -4010,6 +4010,10 @@ BOOMR_check_doc_domain();
 					}
 					if (!this.plugins[k].is_complete(impl.vars)) {
 						BOOMR.debug("Plugin " + k + " is not complete, deferring beacon send");
+						// if an Early beacon is blocked, then we'll cancel it.
+						// By removing the `early` param, the beacon params will be merged
+						// with the following load beacon.
+						delete impl.vars.early;
 						return false;
 					}
 				}

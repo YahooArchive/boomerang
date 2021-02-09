@@ -41,7 +41,7 @@ Note: We split the `<body` tag insertion into `<bo` and `dy` to avoid server-sid
 
 For proof that the non-blocking script loader pattern does not affect page load,
 you can look at this
-[test case](http://dev.nicj.net/boomerang-audit/test-mpulse-loader-snippet-delayed.html)
+[test case](https://dev.nicj.net/boomerang-audit/test-mpulse-loader-snippet-delayed.html)
 that delays JavaScript from loading by 5 seconds or these
 [WebPagetest results](https://www.webpagetest.org/result/171221_HD_bb090190517fa8dd101859e8c1f327fe/).
 
