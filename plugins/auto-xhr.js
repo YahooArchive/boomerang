@@ -85,14 +85,17 @@
  * We will not use MutationObserver in IE 11 due to several browser bugs.
  * See {@link BOOMR.utils.isMutationObserverSupported} for details.
  *
- * ## Excluding Certain Requests From Instrumentation
+ * ## Excluding Certain Requests or DOM Elements From Instrumentation
  *
- * Whenever Boomerang intercepts an `XMLHttpRequest`, it will check if that request
+ * Whenever Boomerang intercepts an `XMLHttpRequest` (or Fetch), it will check if that request
  * matches anything in the XHR exclude list. If it does, Boomerang will not
  * instrument, time, send a beacon for that request, or include it in the
  * {@link BOOMR.plugins.SPA} calculations.
  *
- * The XHR exclude list is defined by creating an `BOOMR.xhr_excludes` map, and
+ * There are two methods of excluding XHRs: Defining the `BOOMR.xhr_excludes` array,
+ * or using the {@link BOOMR.plugins.AutoXHR.init|excludeFilters} option.
+ *
+ * The `BOOMR.xhr_excludes` XHR excludes list is defined by creating a map, and
  * adding URL parts that you would like to exclude from instrumentation. You
  * can put any of the following in `BOOMR.xhr_excludes`:
  *
@@ -113,6 +116,37 @@
  * };
  * ```
  *
+ * The {@link BOOMR.plugins.AutoXHR.init|excludeFilters} gives you more control by allowing you
+ * to specify one or more callbacks that will be run for each XHR/Fetch.  If any callback
+ * returns `true`, the XHR/Fetch will *not* be instrumented.
+ *
+ * ```
+ * BOOMR.init({
+ *   AutoXHR: {
+ *     excludeFilters: [
+ *       function(anchor) {
+ *         return anchor.href.match(/non-trackable/);
+ *       }
+ *     ]
+ *   }
+ * });
+ * ```
+ *
+ * Finally, the {@link BOOMR.plugins.AutoXHR.init|domExcludeFilters} DOM filters can be used to filter out
+ * specific DOM elements from being tracked (marked as "uninteresting").
+ *
+ * ```
+ * BOOMR.init({
+ *   AutoXHR: {
+ *     domExcludeFilters: [
+ *       function(elem) {
+ *         return elem.id === "ignore";
+ *       }
+ *     ]
+ *   }
+ * });
+ * ```
+ *
  * ## Beacon Parameters
  *
  * XHR beacons have different parameters in general than Page Load beacons.
@@ -131,8 +165,10 @@
  *
  * We consider the following "uninteresting" nodes:
  *   - Nodes that have either a width or height <= 1px.
+ *   - Nodes with either a width or height of 0px.
  *   - Nodes that have display:none.
  *   - Nodes that have visibility:hidden.
+ *   - Nodes with an opacity:0.
  *   - Nodes that update their source URL to the same value.
  *   - Nodes that have a blank source URL.
  *   - Images with a loading="lazy" attribute
@@ -141,6 +177,7 @@
  *   - Existing IFRAME nodes that are changing their source URL because is no consistent
  *     way to detect when they have loaded.
  *   - Nodes that have a source URL that matches a AutoXHR exclude filter rule.
+ *   - Nodes that have been manually excluded
  *
  * ## Algorithm
  *
@@ -1288,21 +1325,36 @@
 			if (isNaN(domWidth)) {
 				domWidth = (node.style &&
 				   (node.style.width === "0" ||
-					node.style.width === "0px" ||
-					node.style.width === "1px")) ? 0 : undefined;
+				    node.style.width === "0px" ||
+				    node.style.width === "1px")) ? 0 : undefined;
 			}
 
-			if (!isNaN(domHeight) && domHeight <= 1 && !isNaN(domWidth) && domWidth <= 1) {
+			// Skip anything where *both* dimensions are 1px or less
+			if (!isNaN(domHeight) &&
+			    domHeight <= 1 &&
+			    !isNaN(domWidth) &&
+			    domWidth <= 1) {
 				return false;
 			}
 
-			// Check against display:none
-			if (node.style && node.style.display === "none") {
+			// Skip anything where *either* dimension is 0px
+			if (domHeight === 0 || domWidth === 0) {
 				return false;
 			}
 
-			// Check against visibility:hidden
-			if (node.style && node.style.visibility === "hidden") {
+			// Check against display:none, visibility:hidden, opacity: 0
+			if (node.style && (
+			    (node.style.display === "none") ||
+			    (node.style.visibility === "hidden") ||
+			    (node.style.opacity === "0"))) {
+				return false;
+			}
+
+			// Run any final customer-defined DOM exclusions
+			if (impl.domExcludeFilter(node)) {
+				debugLog("Exclude for DOM element matched, not monitoring");
+
+				// excluded resource, so abort
 				return false;
 			}
 
@@ -1330,7 +1382,7 @@
 			if (!current_event.resource.url) {
 				a.href = url;
 
-				if (impl.excludeFilter(a)) {
+				if (impl.xhrExcludeFilter(a)) {
 					debugLog("Exclude for " + a.href + " matched. Excluding");
 					// excluded resource, so abort
 					return false;
@@ -1744,7 +1796,7 @@
 			}
 
 			a.href = url;
-			if (impl.excludeFilter(a)) {
+			if (impl.xhrExcludeFilter(a)) {
 				// this fetch should be excluded from instrumentation
 				BOOMR.debug("Exclude found for resource: " + a.href + " Skipping Fetch instrumentation!", "AutoXHR");
 				// call the original open method
@@ -2060,7 +2112,7 @@
 			req.open = function(method, url, async) {
 				a.href = url;
 
-				if (impl.excludeFilter(a)) {
+				if (impl.xhrExcludeFilter(a)) {
 					// this xhr should be excluded from instrumentation
 					excluded = true;
 					debugLog("Exclude found for resource: " + a.href + " Skipping XHR instrumentation!");
@@ -2290,17 +2342,20 @@
 	}
 
 	/**
-	 * Container for AutoXHR plugin Closure specific state configuration data
+	 * Container for AutoXHR plugin state
 	 *
 	 * @property {string[]} spaBackendResources Default resources to count as Back-End during a SPA nav
-	 * @property {FilterObject[]} excludeFilters Array of {@link FilterObject} that is used to apply filters on XHR Requests
-	 * @property {boolean} initialized Set to true after the first run of
+	 * @property {XhrFilterObject[]} xhrExcludeFilters Array of {@link XhrFilterObject} that is used to apply filters on XHR Requests
+	 * @property {DomFilterObject[]} domExcludeFilters Array of {@link DomFilterObject} that is used to apply filters on DOM elements
+	 * @property {boolean} initialized Set to true after initialization
+	 *
 	 * {@link BOOMR.plugins.AutoXHR#init}
 	 */
 	impl = {
 		spaBackEndResources: SPA_RESOURCES_BACK_END,
 		alwaysSendXhr: false,
-		excludeFilters: [],
+		xhrExcludeFilters: [],
+		domExcludeFilters: [],
 		initialized: false,
 		captureXhrRequestResponse: false,
 		singlePageApp: false,
@@ -2312,20 +2367,21 @@
 		xhrRequireChanges: true,
 
 		/**
-		 * Filter function iterating over all available {@link FilterObject}s if
-		 * returns true will not instrument an XHR
+		 * Filter function iterating over all available {@link XhrFilterObject}s.
+		 *
+		 * If any filter returns true, the XHR will *not* be instrumented.
 		 *
 		 * @param {HTMLAnchorElement} anchor - HTMLAnchorElement node created with
-		 * the XHRs URL as `href` to evaluate by {@link FilterObject}s and passed
-		 * to {@link FilterObject#cb} callbacks.
+		 * the XHRs URL as `href` to evaluate by {@link XhrFilterObject}s and passed
+		 * to {@link XhrFilterObject#cb} callbacks.
 		 *
 		 * NOTE: The anchor needs to be created from the host document
 		 * (ie. `BOOMR.window.document`) to enable us to resolve relative URLs to
 		 * a full valid path and BASE HREF mechanics can take effect.
 		 *
-		 * @return {boolean} true if the XHR should not be instrumented false if it should be instrumented
+		 * @return {boolean} True if the XHR should not be instrumented.
 		 */
-		excludeFilter: function(anchor) {
+		xhrExcludeFilter: function(anchor) {
 			var idx, ret, ctx;
 
 			// If anchor is null we just throw it out period
@@ -2333,19 +2389,20 @@
 				return false;
 			}
 
-			for (idx = 0; idx < impl.excludeFilters.length; idx++) {
-				if (typeof impl.excludeFilters[idx].cb === "function") {
-					ctx = impl.excludeFilters[idx].ctx;
-					if (impl.excludeFilters[idx].name) {
-						debugLog("Running filter: " + impl.excludeFilters[idx].name + " on URL: " + anchor.href);
+			for (idx = 0; idx < impl.xhrExcludeFilters.length; idx++) {
+				if (typeof impl.xhrExcludeFilters[idx].cb === "function") {
+					ctx = impl.xhrExcludeFilters[idx].ctx;
+
+					if (impl.xhrExcludeFilters[idx].name) {
+						debugLog("Running XHR filter: " + impl.xhrExcludeFilters[idx].name + " on URL: " + anchor.href);
 					}
 
 					try {
-						ret = impl.excludeFilters[idx].cb.call(ctx, anchor);
+						ret = impl.xhrExcludeFilters[idx].cb.call(ctx, anchor);
 						if (ret) {
 							/* BEGIN_DEBUG */
-							debugLog("Found matching filter at: " +
-								impl.excludeFilters[idx].name + " for URL: " +
+							debugLog("Found matching XHR filter at: " +
+								impl.xhrExcludeFilters[idx].name + " for URL: " +
 								anchor.href);
 							/* END_DEBUG */
 
@@ -2353,7 +2410,46 @@
 						}
 					}
 					catch (exception) {
-						BOOMR.addError(exception, "BOOMR.plugins.AutoXHR.impl.excludeFilter()");
+						BOOMR.addError(exception, "BOOMR.plugins.AutoXHR.impl.xhrExcludeFilter()");
+					}
+				}
+			}
+			return false;
+		},
+
+		/**
+		 * Filter function iterating over all available {@link DomFilterObject}s.
+		 *
+		 * @param {HTMLElement} elem - HTMLElement to review for instrumentation.
+		 *
+		 * If any filter returns true, the DOM element will *not* be instrumented.
+		 *
+		 * @return {boolean} True if the DOM element should not be instrumented.
+		 */
+		domExcludeFilter: function(elem) {
+			var idx, ret, ctx;
+
+			for (idx = 0; idx < impl.domExcludeFilters.length; idx++) {
+				if (typeof impl.domExcludeFilters[idx].cb === "function") {
+					ctx = impl.domExcludeFilters[idx].ctx;
+
+					if (impl.domExcludeFilters[idx].name) {
+						debugLog("Running DOM filter: " + impl.domExcludeFilters[idx].name);
+					}
+
+					try {
+						ret = impl.domExcludeFilters[idx].cb.call(ctx, elem);
+						if (ret) {
+							/* BEGIN_DEBUG */
+							debugLog("Found matching DOM filter at: " +
+								impl.domExcludeFilters[idx].name);
+							/* END_DEBUG */
+
+							return true;
+						}
+					}
+					catch (exception) {
+						BOOMR.addError(exception, "BOOMR.plugins.AutoXHR.impl.domExcludeFilter()");
 					}
 				}
 			}
@@ -2526,10 +2622,39 @@
 				impl.initialized = true;
 			}
 
-			// Add filters from config
+			//
+			// Add XHR filters from config
+			// NOTE via config it's just called 'excudeFilters' (for compat), while in the code it's always
+			// 'xhrExcludeFilters' to differentiate itself from domExcludeFilters
+			//
 			if (config && config.AutoXHR && config.AutoXHR.excludeFilters && config.AutoXHR.excludeFilters.length > 0) {
 				for (idx = 0; idx < config.AutoXHR.excludeFilters.length; idx++) {
-					impl.excludeFilters.push(config.AutoXHR.excludeFilters[idx]);
+					if (typeof config.AutoXHR.excludeFilters[idx] === "function") {
+						impl.xhrExcludeFilters.push({
+							cb: config.AutoXHR.excludeFilters[idx],
+							ctx: this,
+							name: "unknown XHR filter"
+						});
+					}
+					else {
+						impl.xhrExcludeFilters.push(config.AutoXHR.excludeFilters[idx]);
+					}
+				}
+			}
+
+			// Add DOM filters from config
+			if (config && config.AutoXHR && config.AutoXHR.domExcludeFilters && config.AutoXHR.domExcludeFilters.length > 0) {
+				for (idx = 0; idx < config.AutoXHR.domExcludeFilters.length; idx++) {
+					if (typeof config.AutoXHR.domExcludeFilters[idx] === "function") {
+						impl.domExcludeFilters.push({
+							cb: config.AutoXHR.domExcludeFilters[idx],
+							ctx: this,
+							name: "unknown DOM filter"
+						});
+					}
+					else {
+						impl.domExcludeFilters.push(config.AutoXHR.domExcludeFilters[idx]);
+					}
 				}
 			}
 
@@ -2616,12 +2741,12 @@
 		/**
 		 * A callback with a HTML element.
 		 * @callback htmlElementCallback
-		 * @param {HTMLAnchorElement} elem HTML a element
+		 * @param {HTMLAnchorElement} elem HTML element
 		 * @memberof BOOMR.plugins.AutoXHR
 		 */
 
 		/**
-		 * Add a filter function to the list of functions to run to validate if an
+		 * Add a XHR filter function to the list of functions to run to validate if an
 		 * XHR should be instrumented.
 		 *
 		 * @example
@@ -2641,7 +2766,25 @@
 		 * @memberof BOOMR.plugins.AutoXHR
 		 */
 		addExcludeFilter: function(cb, ctx, name) {
-			impl.excludeFilters.push({cb: cb, ctx: ctx, name: name});
+			impl.xhrExcludeFilters.push({cb: cb, ctx: ctx, name: name});
+		},
+
+		/**
+		 * Add a DOM filter function to the list of functions to run to validate if an
+		 * DOM element should be instrumented.
+		 *
+		 * @example
+		 * BOOMR.plugins.AutoXHR.addDomExcludeFilter(function(elem) {
+		 *   return elem.id === "ignore";
+		 * }, null, "exampleFilter");
+		 * @param {BOOMR.plugins.AutoXHR.htmlElementCallback} cb Callback to run to validate filtering of an XHR Request
+		 * @param {Object} ctx Context to run {@param cb} in
+		 * @param {string} [name] Optional name for the filter, called out when running exclude filters for debugging purposes
+		 *
+		 * @memberof BOOMR.plugins.AutoXHR
+		 */
+		addDomExcludeFilter: function(cb, ctx, name) {
+			impl.domExcludeFilters.push({cb: cb, ctx: ctx, name: name});
 		},
 
 		/**
@@ -2708,14 +2851,26 @@
 	 */
 
 	/**
-	 * Filter object with data on the callback, context and name.
+	 * XHR filter object with data on the callback, context and name.
 	 *
-	 * @typedef FilterObject
+	 * @typedef XhrFilterObject
 	 *
 	 * @property {BOOMR.plugins.AutoXHR.htmlElementCallback} cb Callback
 	 * @property {Object} ctx Execution context to use when running `cb`
-	 * @property {string} [name] Name of the filter used for logging and debugging purposes (This is an entirely optional property)
+	 * @property {string} [name] Name of the filter used for logging and debugging purposes
 	 *
 	 * @memberof BOOMR.plugins.AutoXHR
 	 */
+
+	 /**
+ 	 * DOM filter object with data on the callback, context and name.
+ 	 *
+ 	 * @typedef DomFilterObject
+ 	 *
+ 	 * @property {BOOMR.plugins.AutoXHR.htmlElementCallback} cb Callback
+ 	 * @property {Object} ctx Execution context to use when running `cb`
+ 	 * @property {string} [name] Name of the filter used for logging and debugging purposes
+ 	 *
+ 	 * @memberof BOOMR.plugins.AutoXHR
+ 	 */
 })();
