@@ -2,6 +2,7 @@
 /*global jasmine*/
 
 var config = {
+	capabilities: {},
 	onPrepare: function() {
 		var reporters = require("jasmine-reporters");
 
@@ -24,7 +25,8 @@ console.log(JSON.stringify(process.env));
 // webdriver capabilities https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities
 var capabilities = process.env.CAPABILITIES;
 if (capabilities) {
-	config.capabilities = JSON.parse(capabilities);
+	config.capabilities = JSON.parse(capabilities) || {};
 }
 
+config.capabilities["acceptInsecureCerts"] = true;
 exports.config = config;

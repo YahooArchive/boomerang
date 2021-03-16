@@ -29,10 +29,11 @@ var BUILD_PATH = "build";
 var TEST_BUILD_PATH = path.join("tests", "build");
 var TEST_RESULTS_PATH = path.join("tests", "results");
 var TEST_DEBUG_PORT = parseInt(grunt.option("test-port")) || 4002;
-var TEST_URL_BASE = grunt.option("test-url") || "http://" + boomerangE2ETestDomain + ":" + TEST_DEBUG_PORT;
+var TEST_SCHEME = grunt.option("test-scheme") || "http";
+var TEST_URL_BASE = grunt.option("test-url") || TEST_SCHEME + "://" + boomerangE2ETestDomain + ":" + TEST_DEBUG_PORT;
 
 var SELENIUM_ADDRESS = grunt.option("selenium-address") || "http://" + boomerangE2ETestDomain + ":4444/wd/hub";
-var E2E_BASE_URL = "http://" + boomerangE2ETestDomain + ":" + TEST_DEBUG_PORT + "/";
+var E2E_BASE_URL = TEST_SCHEME + "://" + boomerangE2ETestDomain + ":" + TEST_DEBUG_PORT + "/";
 
 var DEFAULT_BROWSER = grunt.option("test-browser") || "ChromeHeadless";
 
@@ -193,7 +194,7 @@ function getConfig() {
 
 	// load the env.json or default content
 	if (fs.existsSync(envFile)) {
-		env = grunt.file.readJSON("tests/server/env.json");
+		env = grunt.file.readJSON(envFile);
 	}
 	else {
 		// default content
@@ -1051,13 +1052,15 @@ function getConfig() {
 			},
 			dev: {
 				options: {
-					script: "tests/server/app.js"
+					script: "tests/server/app.js",
+					args: [ TEST_SCHEME || "http" ]
 				}
 			},
-			"secondary": {
+			secondary: {
 				options: {
 					script: "tests/server/app.js",
-					port: (TEST_DEBUG_PORT + 1)
+					port: (TEST_DEBUG_PORT + 1),
+					args: [ TEST_SCHEME || "http" ]
 				}
 			},
 			doc: {
@@ -1162,6 +1165,26 @@ function getConfig() {
 				],
 				tasks: ["clean", "jsdoc", "doc-source-code"]
 			}
+		},
+		shell: {
+			"generate-certificate": {
+				stdin: true,
+				command: [
+					"echo '[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:" + DEFAULT_TEST_MAIN_DOMAIN + ",DNS:" + DEFAULT_TEST_SECONDARY_DOMAIN + "'",
+					"|",
+					"openssl req",
+					"-x509",
+					"-newkey rsa:4096",
+					"-sha256",
+					"-days 3560",
+					"-nodes",
+					"-keyout tests/server/certs/" + DEFAULT_TEST_MAIN_DOMAIN + ".pem",
+					"-out tests/server/certs/" + DEFAULT_TEST_MAIN_DOMAIN + ".crt",
+					"-subj '/CN=" + DEFAULT_TEST_MAIN_DOMAIN + "'",
+					"-extensions san",
+					"-config /dev/stdin"
+				].join(" ")
+			}
 		}
 	};
 }
@@ -1205,6 +1228,7 @@ module.exports = function() {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-jsdoc");
 	grunt.loadNpmTasks("grunt-githash");
+	grunt.loadNpmTasks("grunt-shell");
 
 	// tasks/*.js
 	if (grunt.file.exists("tasks")) {

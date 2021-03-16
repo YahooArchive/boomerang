@@ -533,13 +533,26 @@
 		return (" " + document.cookie + ";").indexOf(" " + testCookieName + "=") !== -1;
 	};
 
-	t.clearCookies = function(domain) {
-		var date = new Date();
+	/**
+	 * @param {String} [domain]
+	 * @param {String} [samesite] - Ignored when not HTTPS for now
+	 */
+	t.clearCookies = function(domain, samesite) {
+		var date = new Date(), cookie;
 		date.setTime(date.getTime() - (24 * 60 * 60 * 1000));
 		var cookies = document.cookie.split(";");
 		for (var i = 0; i < cookies.length; i++) {
 			var name = cookies[i].split("=")[0].replace(/^\s+|\s+$/g, "");  // trim spaces
-			document.cookie = [name + "=", "expires=" + date.toGMTString(), "path=/", "domain=" + (domain || location.hostname)].join("; ");
+			cookie = [name + "=", "expires=" + date.toGMTString(), "path=/", "domain=" + (domain || location.hostname)];
+			if (location.protocol === "https:") {
+				// this doesn't check that the browser is compatible
+				cookie.push("secure");
+
+				if (samesite) {
+					cookie.push("samesite=" + samesite);
+				}
+			}
+			document.cookie = cookie.join(";");
 		}
 	};
 
@@ -569,15 +582,27 @@
 
 	t.clearLocalStorage = function() {
 		// Clear localStorage
-		if (typeof window.localStorage === "object" && typeof window.localStorage.clear === "function") {
-			window.localStorage.clear();
+		try {
+			if (typeof window.localStorage === "object" && typeof window.localStorage.clear === "function") {
+				window.localStorage.clear();
+			}
+		}
+		catch (e) {
+			// can fail in incognito mode
+			console.error("Clearing local storage failed", e);
 		}
 	};
 
 	t.clearSessionStorage = function() {
 		// Clear sessionStorage
-		if (typeof window.sessionStorage === "object" && typeof window.sessionStorage.clear === "function") {
-			window.sessionStorage.clear();
+		try {
+			if (typeof window.sessionStorage === "object" && typeof window.sessionStorage.clear === "function") {
+				window.sessionStorage.clear();
+			}
+		}
+		catch (e) {
+			// can fail in incognito mode
+			console.error("Clearing session storage failed", e);
 		}
 	};
 

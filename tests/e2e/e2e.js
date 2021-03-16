@@ -25,6 +25,8 @@ function run(i, testPath, file, flavor) {
 		var fileName = file + ".html";
 
 		it(file + (buildFlavor ? ("." + buildFlavor) : ""), function(done) {
+			var url = servers.scheme + "://" + servers.main + ":" + ports.main + "/pages/" + testPath + "/" + fileName;
+
 			if (typeof browser.waitForAngularEnabled === "function") {
 				browser.waitForAngularEnabled(false);
 			}
@@ -32,10 +34,10 @@ function run(i, testPath, file, flavor) {
 			console.log(
 				i,
 				"Navigating to",
-				"http://" + servers.main + ":" + ports.main + "/pages/" + testPath + "/" + fileName
+				url
 			);
 
-			browser.driver.get("http://" + servers.main + ":" + ports.main + "/pages/" + testPath + "/" + fileName);
+			browser.driver.get(url);
 
 			browser.driver.wait(function() {
 				return element(by.css("#BOOMR_test_complete")).isPresent();

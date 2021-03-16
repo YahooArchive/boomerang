@@ -151,7 +151,8 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 
 	var boomerangE2ETestDomain = grunt.option("main-domain") || DEFAULT_TEST_MAIN_DOMAIN;
 	var boomerangE2ESecondDomain = grunt.option("secondary-domain") || DEFAULT_TEST_SECONDARY_DOMAIN;
-	var boomerangE2ETestPort = 4002;
+	var boomerangE2ETestPort = grunt.option("test-port") || 4002;
+	var boomerangE2ETestScheme = grunt.option("test-scheme") || "http";
 
 	//make grunt know this task is async.
 	var done = gruntTask.async();
@@ -174,7 +175,8 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 			opts.vars = {
 				mainServer: boomerangE2ETestDomain,
 				secondaryServer: boomerangE2ESecondDomain,
-				testPort: boomerangE2ETestPort
+				testPort: boomerangE2ETestPort,
+				testScheme: boomerangE2ETestScheme
 			};
 
 			// Set all template vars to their file name
@@ -351,14 +353,16 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
 				var testConfiguration = {
 					server: {
 						main: boomerangE2ETestDomain,
-						second: boomerangE2ESecondDomain
+						second: boomerangE2ESecondDomain,
+						scheme: boomerangE2ETestScheme
 					},
 					ports: {
-						main: 4002,
-						second: 4003
+						main: boomerangE2ETestPort,
+						second: boomerangE2ETestPort + 1
 					},
 					tests: testDefinitions
 				};
+
 				// test definitions
 				grunt.file.write(e2eJsonPath, JSON.stringify(testConfiguration, null, 2));
 

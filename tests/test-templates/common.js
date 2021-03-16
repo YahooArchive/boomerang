@@ -276,7 +276,7 @@ describe("common", function() {
 	};
 
 	it("Should have sent beacons that pass basic validation", function() {
-		var i, b, tm, now, prefix, nextb;
+		var i, b, tm, now = perfNow(), prefix, nextb;
 
 		if (!tf.beacons.length) {
 			return this.skip();
@@ -284,7 +284,6 @@ describe("common", function() {
 
 		for (i = 0; i < tf.beacons.length; i++) {
 			b = tf.beacons[i];
-			now = perfNow();
 			prefix = "ensure beacon " + (i + 1) + " ";
 
 			assert.equal(b.n, i + 1, prefix + "has the correct beacon number");
@@ -303,9 +302,6 @@ describe("common", function() {
 			assert.isDefined(b["h.d"], prefix + "has the domain (h.d) param");
 
 			assert.isDefined(b["h.t"], prefix + "has the time (h.t) param");
-			tm = parseInt(b["h.t"], 10);
-			// now +- an hour. Cloud based Simulators/Emulators might have clock skew
-			assert.closeTo(tm, now, (60 * 60 * 1000), prefix + "has time (h.t) as a valid timestamp");
 
 			if (!b.early) {
 				// not early beacon
@@ -444,8 +440,19 @@ describe("common", function() {
 		}
 	});
 
-	it("BUG: should have sent beacons without negative timers", function() {
-		var i, b, prefix, t_done, t_resp, t_page, timers, timer;
+	it("Should have sent beacons with valid timers", function() {
+		var i, j, b, prefix, timer;
+		var TIMERS = [
+			"t_done",
+			"t_resp",
+			"t_page",
+			"rt.tt",
+			"mob.rtt",
+			"pt.fp",
+			"pt.fcp",
+			"pt.lcp",
+			"rt.sstr_dur"
+		];
 
 		if (!tf.beacons.length) {
 			return this.skip();
@@ -454,20 +461,31 @@ describe("common", function() {
 		for (i = 0; i < tf.beacons.length; i++) {
 			b = tf.beacons[i];
 			prefix = "ensure beacon " + (i + 1) + " ";
-			if (b.t_done) {
-				t_done = parseInt(b.t_done, 10);
-				assert.operator(t_done, ">=", 0, prefix + "has a positive 't_done' timer");
+
+			if (typeof b["rt.tstart"] !== "undefined" && typeof b["rt.end"] !== "undefined" && typeof b.t_done !== "undefined") {
+				assert.equal(parseInt(b["rt.end"]) - parseInt(b["rt.tstart"]), parseInt(b.t_done), prefix + "has rt.end - rt.tstart == t_done");
 			}
 
-			if (b.t_resp) {
-				t_resp = parseInt(b.t_resp, 10);
-				assert.operator(t_resp, ">=", 0, prefix + "has a positive 't_resp' timer");
+			for (var j = 0; j < TIMERS.length; j++) {
+				timer = TIMERS[j];
+				if (typeof b[timer] !== "undefined") {
+					assert.operator(parseInt(b[timer], 10), ">=", 0, prefix + "has a positive '" + timer + "' timer");
+					assert.operator(parseInt(b[timer], 10), "<", 10 * 60 * 1000, prefix + "has a sane value for '" + timer + "' timer");
+				}
 			}
+		}
+	});
 
-			if (b.t_page) {
-				t_page = parseInt(b.t_page, 10);
-				assert.operator(t_page, ">=", 0, prefix + "has a positive 't_page' timer");
-			}
+	it("BUG: Should have sent beacons without negative custom timers", function() {
+		var i, b, prefix, timers, timer;
+
+		if (!tf.beacons.length) {
+			return this.skip();
+		}
+
+		for (i = 0; i < tf.beacons.length; i++) {
+			b = tf.beacons[i];
+			prefix = "ensure beacon " + (i + 1) + " ";
 
 			if (b.t_other) {
 				timers = t.parseTimers(b.t_other);
@@ -482,6 +500,62 @@ describe("common", function() {
 							assert.operator(parseInt(b[timer + "_st"], 10), ">=", 0, prefix + "has a positive '" + timer + "_st' value");
 						}
 					}
+				}
+			}
+		}
+	});
+
+	it("Should have sent beacons with valid epoch times", function() {
+		var i, j, b, prefix, param, tm, now = perfNow();
+		var TIMES = [
+			"h.t",
+			"rt.tstart",
+			"rt.end",
+			"rt.ss",
+			"t.bstart",
+			"nt_nav_st",
+			"nt_fet_st",
+			"nt_dns_st",
+			"nt_dns_end",
+			"nt_con_st",
+			"nt_con_end",
+			"nt_req_st",
+			"nt_res_st",
+			"nt_res_end",
+			"nt_domloading",
+			"nt_domint",
+			"nt_domcontloaded_st",
+			"nt_domcontloaded_end",
+			"nt_domcomp",
+			"nt_load_st",
+			"nt_load_end",
+			"nt_unload_st",
+			"nt_unload_end",
+			"nt_ssl_st",
+			"nt_first_paint"
+		];
+		if (!tf.beacons.length) {
+			return this.skip();
+		}
+
+		for (i = 0; i < tf.beacons.length; i++) {
+			b = tf.beacons[i];
+			prefix = "ensure beacon " + (i + 1) + " ";
+
+			for (var j = 0; j < TIMES.length; j++) {
+				param = TIMES[j];
+				if (b.nt_bad && param.match(/^nt_/)) {
+					// don't check navtiming timers, they were detected as bad
+					continue;
+				}
+				if (typeof b[param] !== "undefined") {
+					tm = parseInt(b[param], 10);
+					if (tm === 2997993600000) {
+						// this future timestamp is used for debugging
+						continue;
+					}
+					// now +- an hour. Cloud based Simulators/Emulators might have clock skew
+					assert.closeTo(tm, now, (70 * 60 * 1000), prefix + "has " + param + "  as a valid timestamp");
 				}
 			}
 		}
