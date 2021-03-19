@@ -1518,6 +1518,11 @@
 		});
 	};
 
+	/**
+	 * Gets the current site domain (from location.hostname)
+	 *
+	 * @returns {string} Site siteDomain
+	 */
 	t.siteDomain = function() {
 		return window.location.hostname.replace(/.*?([^.]+\.[^.]+)\.?$/, "$1").toLowerCase();
 	};
@@ -1647,6 +1652,133 @@
 			img.src = getURI(imgs[0], 200);
 		};
 	})();
+
+	//
+	// Dynamic content addition functions
+	//
+
+	// Array of XHR timestamps
+	t.xhrTimes = [];
+
+	/**
+	 * Creates a new XHR that will take around the time specified
+	 *
+	 * @param {string} id XHR ID (will be included in the URL)
+	 * @param {number} delay Delay (milliseconds)
+	 * @param {function} onComplete Callback
+	 */
+	t.xhrDelayed = function(id, delay, onComplete) {
+		var xhr = new XMLHttpRequest();
+
+		xhr.open("GET", "/delay?id=" + id + "&delay=" + delay + "&file=/assets/img.jpg&rnd=" + t.rnd36(), true);
+
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				// update timings
+				xhr.timing.end = BOOMR.now();
+				xhr.timing.duration = xhr.timing.end - xhr.timing.start;
+
+				return onComplete && onComplete(xhr);
+			}
+		};
+
+		// save timestamp
+		xhr.timing = {
+			start: BOOMR.now()
+		};
+
+		// add as both index and id
+		t.xhrTimes.push(xhr.timing);
+		t.xhrTimes[id] = xhr.timing;
+
+		xhr.send(null);
+	};
+
+	// Array of Image timestamps
+	t.imgTimes = [];
+
+	/**
+	 * Creates a new IMG that will be added to the DOM and will take around the time specified
+	 *
+	 * @param {string} id IMG ID (will be included in the URL)
+	 * @param {number} delay Delay (milliseconds)
+	 */
+	t.imgIntoDomDelayed = function(id, delay) {
+		var img = document.createElement("IMG");
+		img.src = "/delay?id=" + id + "&delay=" + delay + "&file=/assets/img.jpg?rnd=" + t.rnd36();
+		img.onload = function() {
+			// update timings
+			img.timing.end = BOOMR.now();
+			img.timing.duration = img.timing.end - img.timing.start;
+		};
+
+		img.timing = {
+			start: BOOMR.now()
+		};
+
+		// add as both index and id
+		t.imgTimes.push(img.timing);
+		t.imgTimes[id] = img.timing;
+
+		document.body.appendChild(img);
+	};
+
+	// Array of mouse event timestamps
+	t.mouseEventTimes = [];
+
+	/**
+	 * Fires a new mouse event on the page
+	 *
+	 * @param {string} etype Event type
+	 */
+	t.fireMouseEvent = function(etype) {
+		var clickable = document.getElementById("clickable");
+		if (!clickable) {
+			clickable = document.createElement("DIV");
+			document.body.appendChild(clickable);
+		}
+
+		// save timestamp
+		t.mouseEventTimes.push(BOOMR.now());
+
+		if (clickable.fireEvent) {
+			clickable.fireEvent("on" + etype);
+		}
+		else {
+			var evObj = document.createEvent("MouseEvent");
+			evObj.initEvent(etype, true, false);
+			clickable.dispatchEvent(evObj);
+		}
+
+		window.eventFired = true;
+	};
+
+	// Array of route change times
+	t.routeChangeTimes = [];
+
+	/**
+	 * Triggers a new route change via the History API to a random URL
+	 *
+	 * @param {string} name Route name (will have a random string appended)
+	 */
+	t.routeChangeRnd = function(name) {
+		if (window.history &&
+		    typeof history.pushState === "function") {
+			// save timestamp
+			t.routeChangeTimes.push(BOOMR.now());
+
+			history.pushState({}, "", "#" + name + "-" + t.rnd36());
+		}
+	};
+
+	/**
+	 * Gets a random number Base36 (1 trillion possibilities)
+	 *
+	 * @returns {string} Random number (Base36)
+	 */
+	t.rnd36 = function() {
+		return Math.round(Math.random() * 999999999999).toString(36);
+	};
 
 	window.BOOMR_test = t;
 

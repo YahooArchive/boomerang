@@ -7,6 +7,9 @@
  * This plugin also monitors DOM manipulations following a XHR to filter out
  * "background" XHRs.
  *
+ * This plugin provides the backbone for the {@link BOOMR.plugins.SPA} plugin.  Single Page App navigations
+ * use XHR and DOM monitoring to determine when the SPA navigations are complete.
+ *
  * This plugin has a corresponding {@tutorial header-snippets} that helps monitor XHRs prior to Boomerang loading.
  *
  * For information on how to include this plugin, see the {@tutorial building} tutorial.
@@ -35,9 +38,11 @@
  *
  * To enable AutoXHR, you should set {@link BOOMR.plugins.AutoXHR.init|instrument_xhr} to `true`:
  *
- *     BOOMR.init({
- *       instrument_xhr: true
- *     });
+ * ```
+ * BOOMR.init({
+ *     instrument_xhr: true
+ * });
+ * ```
  *
  * Once enabled and initialized, the `window.XMLHttpRequest` object will be
  * replaced with a "proxy" object that instruments all XHRs.
@@ -46,9 +51,11 @@
  *
  * After `AutoXHR` is enabled, any `XMLHttpRequest.send` will be monitored:
  *
- *     xhr = new XMLHttpRequest();
- *     xhr.open("GET", "/api/foo");
- *     xhr.send(null);
+ * ```
+ * xhr = new XMLHttpRequest();
+ * xhr.open("GET", "/api/foo");
+ * xhr.send(null);
+ * ```
  *
  * If this XHR triggers DOM changes, a beacon will eventually be sent.
  *
@@ -66,9 +73,40 @@
  * If you don't want this behavior, and want to measure *every* XHR on the page, you
  * can enable {@link BOOMR.plugins.AutoXHR.init|alwaysSendXhr=true}.  When set, every
  * distinct XHR will get its own XHR beacon.
+ *
+ * ```
+ * BOOMR.init({
+ *     AutoXHR: {
+ *         alwaysSendXhr: true
+ *     }
+ * });
+ * ```
+ *
  * {@link BOOMR.plugins.AutoXHR.init|alwaysSendXhr} can also be a list of strings
  * (matching URLs), regular expressions (matching URLs), or a function which returns
  * true for URLs to always send XHRs for.
+ *
+ * ```
+ * BOOMR.init({
+ *     AutoXHR: {
+ *         alwaysSendXhr: [
+ *             "domain.com",
+ *             /regexmatch/,
+ *         ]
+ *    }
+ * });
+ *
+ * // or
+ *
+ * BOOMR.init({
+ *     AutoXHR: {
+ *         alwaysSendXhr: function(url) {
+ *             return url.indexOf("domain.com") !== -1;
+ *         }
+ *    }
+ * });
+ * ```
+ *
  *
  * ### Compatibility and Browser Support
  *
@@ -159,7 +197,7 @@
  *
  * ## Interesting Nodes
  *
- * MutationObserver is used to detect "interesting" nodes. Interesting nodes are
+ * A `MutationObserver` is used to detect "interesting" nodes. Interesting nodes are
  * new IMG/IMAGE/IFRAME/LINK (rel=stylesheet) nodes or existing nodes that are
  * changing their source URL.
  *
@@ -222,6 +260,14 @@
  *   - We do not know if the developer's event listener has already run before
  *     ours or if it will run in the future or even if they do have an event listener.
  *   - Our best bet is the same as 0.1 above.
+ *
+ * - `0.3` SPA soft route change from a click that triggers a XHR before the state is
+ *    changed (when {@link BOOMR.plugins.AutoXHR.init|spaStartFromClick} is enabled).
+ *
+ *   - We store the time of the click
+ *   - If any additional XHRs come next, we track those
+ *   - When a pushState comes after the XHRs (before the timeout), we will "migrate" the
+ *     click to a SPA event
  *
  * - `1` Click initiated (Only available when no SPA plugins are enabled)
  *
@@ -337,7 +383,6 @@
 	 * @default
 	 */
 	var CLICK_XHR_TIMEOUT = 50;
-
 
 	/**
 	 * Fetch events that don't read the body of the response get an extra wait time before
@@ -636,7 +681,55 @@
 		}
 
 		if (last_ev) {
-			if (last_ev.type === "click") {
+			if (last_ev.type === "click" &&
+			    impl.singlePageApp &&
+			    impl.spaStartFromClick &&
+			    ev.type === "xhr") {
+				// spaStartFromClick active, we had a click, and this is an XHR
+
+				// mark that this XHR came from a click event
+				ev.resource.fromClick = true;
+
+				// transition XHR start time from the click
+				ev.resource.timing.click = last_ev.resource.timing.requestStart;
+				ev.resource.timing.requestStart = last_ev.resource.timing.requestStart;
+
+				ev.interesting = last_ev.interesting || 0;
+				ev.total_nodes += last_ev.total_nodes;
+				ev.resources = last_ev.resources.concat(ev.resources);
+				ev.xhr_resources = last_ev.xhr_resources.concat(ev.xhr_resources);
+
+				// stop the click event
+				this.pending_events[last_ev_index] = undefined;
+				this.watch--;
+			}
+			else if ((last_ev.type === "click" || last_ev.resource.fromClick) &&
+			         impl.singlePageApp &&
+			         impl.spaStartFromClick &&
+			         ev.type === "spa") {
+				// spaStartFromClick active, we have a click (or XHR from click) active,
+				// and this is a SPA
+
+				// transition all XHR times
+				ev.resource.timing = last_ev.resource.timing;
+
+				ev.interesting = last_ev.interesting || 0;
+				ev.total_nodes += last_ev.total_nodes;
+				ev.resources = last_ev.resources.concat(ev.resources);
+
+				// add previous XHR URL
+				if (last_ev.resource.url) {
+					ev.xhr_resources.push(last_ev.resource.url);
+				}
+
+				// add any other XHRs tracked in the previous
+				ev.xhr_resources = ev.xhr_resources.concat(last_ev.xhr_resources);
+
+				// stop the previous event
+				this.pending_events[last_ev_index] = undefined;
+				this.watch--;
+			}
+			else if (last_ev.type === "click") {
 				// 3.1 & 3.3
 				if (last_ev.nodes_to_wait === 0 || !last_ev.resource.url) {
 					this.pending_events[last_ev_index] = undefined;
@@ -775,21 +868,27 @@
 				return;
 			}
 
+			// if click event did not trigger additional resources or doesn't have
+			// a url then do not send a beacon
+			if (ev.type === "click" && (ev.total_nodes === 0 || !ev.resource.url)) {
+				debugLog("Click beacon cancelled, no resources triggered or no resource URL");
+				this.pending_events[index] = undefined;
+				return;
+			}
+
+			// when in spaStartFromClick mode, if we're tracking clicks, transition them to an 'xhr' event
+			if (ev.type === "click" && impl.singlePageApp && impl.spaStartFromClick) {
+				ev.type = ev.resource.initiator = "xhr";
+			}
+
 			// if this was a XHR that did not trigger additional resources then we will not send a beacon,
 			// note that XHRs start out with total_nodes=1 to account for itself
 			if (impl.xhrRequireChanges &&
 			    ev.type === "xhr" &&
 			    ev.total_nodes === 1 &&
+			    (typeof ev.interesting === "undefined" || ev.interesting === 0) &&
 			    !matchesAlwaysSendXhr(ev.resource.url, impl.alwaysSendXhr)) {
 				debugLog("XHR beacon cancelled, no resources triggered");
-				this.pending_events[index] = undefined;
-				return;
-			}
-
-			// if click event did not trigger additional resources or doesn't have
-			// a url then do not send a beacon
-			if (ev.type === "click" && (ev.total_nodes === 0 || !ev.resource.url)) {
-				debugLog("Click beacon cancelled, no resources triggered or no resource URL");
 				this.pending_events[index] = undefined;
 				return;
 			}
@@ -1656,7 +1755,7 @@
 	function instrumentClick() {
 		// Capture clicks and wait 50ms to see if they result in DOM mutations
 		BOOMR.subscribe("click", function() {
-			if (impl.singlePageApp) {
+			if (impl.singlePageApp && !impl.spaStartFromClick) {
 				// In a SPA scenario, only route changes (or events from the SPA
 				// framework) trigger an interesting event.
 				return;
@@ -1817,7 +1916,10 @@
 			handler.addEvent(resource);
 
 			try {
-				resource.timing.requestStart = BOOMR.now();
+				if (!resource.timing.requestStart) {
+					resource.timing.requestStart = BOOMR.now();
+				}
+
 				var promise = BOOMR.orig_fetch.apply(this, arguments);
 
 				/**
@@ -2295,7 +2397,10 @@
 
 				handler.addEvent(resource);
 
-				resource.timing.requestStart = BOOMR.now();
+				if (!resource.timing.requestStart) {
+					resource.timing.requestStart = BOOMR.now();
+				}
+
 				// call the original send method unless there was an error
 				// during .open
 				if (typeof resource.status === "undefined" ||
@@ -2360,6 +2465,7 @@
 		initialized: false,
 		captureXhrRequestResponse: false,
 		singlePageApp: false,
+		spaStartFromClick: false,
 		autoXhrEnabled: false,
 		monitorFetch: false,  // new feature, off by default
 		fetchBodyUsedWait: FETCH_BODY_USED_WAIT_DEFAULT,
@@ -2394,16 +2500,12 @@
 				if (typeof impl.xhrExcludeFilters[idx].cb === "function") {
 					ctx = impl.xhrExcludeFilters[idx].ctx;
 
-					if (impl.xhrExcludeFilters[idx].name) {
-						debugLog("Running XHR filter: " + impl.xhrExcludeFilters[idx].name + " on URL: " + anchor.href);
-					}
-
 					try {
 						ret = impl.xhrExcludeFilters[idx].cb.call(ctx, anchor);
 						if (ret) {
 							/* BEGIN_DEBUG */
-							debugLog("Found matching XHR filter at: " +
-								impl.xhrExcludeFilters[idx].name + " for URL: " +
+							debugLog("XHR exclude filter " +
+								impl.xhrExcludeFilters[idx].name + " matched for URL: " +
 								anchor.href);
 							/* END_DEBUG */
 
@@ -2454,6 +2556,9 @@
 					}
 				}
 			}
+
+			debugLog("XHR exclude filters did not match for URL: " + elem.href);
+
 			return false;
 		},
 
@@ -2527,8 +2632,10 @@
 							resource.timing.loadEventEnd = entryResponseEnd;
 						}
 
-						// use the startTime from ResourceTiming instead
-						resource.timing.requestStart = entryStartTime;
+						// use the startTime from ResourceTiming instead (if not already set from Click)
+						if (!resource.fromClick || !resource.timing.requestStart) {
+							resource.timing.requestStart = entryStartTime;
+						}
 
 						// also track it as the fetchStart time
 						resource.timing.fetchStart = entryStartTime;
@@ -2590,6 +2697,8 @@
 		 * before calling the XHR complete.  Default is 50ms.
 		 * @param {boolean} [config.AutoXHR.xhrRequireChanges=true] Whether or not a XHR beacon will only be triggered
 		 * if there were DOM changes.
+		 * @param {boolean} [config.AutoXHR.spaStartFromClick=false] In Single Page Apps, start tracking
+		 * the SPA Soft Navigation from any preceeding clicks.  If false, will start from the most recent pushState.
 		 *
 		 * @returns {@link BOOMR.plugins.AutoXHR} The AutoXHR plugin for chaining
 		 * @memberof BOOMR.plugins.AutoXHR
@@ -2609,7 +2718,7 @@
 			// gather config and config overrides
 			BOOMR.utils.pluginConfig(impl, config, "AutoXHR",
 			    ["spaBackEndResources", "alwaysSendXhr", "monitorFetch", "fetchBodyUsedWait",
-			    "spaIdleTimeout", "xhrIdleTimeout", "xhrRequireChanges"]);
+			    "spaIdleTimeout", "xhrIdleTimeout", "xhrRequireChanges", "spaStartFromClick"]);
 
 			BOOMR.instrumentXHR = instrumentXHR;
 			BOOMR.uninstrumentXHR = uninstrumentXHR;
