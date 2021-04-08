@@ -1552,8 +1552,11 @@ function runForEachFlavor(logName, taskName, args, failOnError, done) {
 	process.env.BUILD_FLAVOR = "full";
 
 	var argsWithTask = args.concat(taskName);
-	var argsWithTaskAndFlavors = argsWithTask.concat("--flavor-version=" + flavorList.join());
-
+	var argsWithTaskAndFlavors = argsWithTask.concat([
+		"--parent-flavor-version=" + releaseVersion + ".0",
+		"--is-parent-flavor=true",
+		"--is-child-flavor=false"
+	]);
 	//
 	// Full build
 	//
@@ -1574,7 +1577,11 @@ function runForEachFlavor(logName, taskName, args, failOnError, done) {
 		}
 
 		// set parent flavor version
-		var argsWithTaskAndPVersion = argsWithTask.concat("--parent-flavor-version=" + releaseVersion + ".0");
+		var argsWithTaskAndPVersion = argsWithTask.concat([
+			"--parent-flavor-version=" + releaseVersion + ".0",
+			"--is-parent-flavor=false",
+			"--is-child-flavor=true"
+		]);
 		//
 		// Each flavor
 		//
