@@ -1091,13 +1091,13 @@
 	/**
 	 * Whether or not the browser supports IFRAME loading method.
 	 *
-	 * i.e. not IE 6 / 7
+	 * i.e. not IE 6 / 7 / 8
 	 *
 	 * @returns {boolean} True if the browser supports IFRAME loading method
 	 */
 	t.supportsLoaderIframe = function() {
 		// Not IE 6 / 7
-		if (t.isIE() && navigator.userAgent.match(/MSIE [67]\./)) {
+		if (t.isIE() && navigator.userAgent.match(/MSIE [678]\./)) {
 			return false;
 		}
 
@@ -1217,7 +1217,7 @@
 	 */
 	t.forceSnippetScript = function() {
 		// If we're already IE6/7, leave as-is
-		if (t.isIE() && navigator.userAgent.match(/MSIE [67]\./)) {
+		if (t.isIE() && navigator.userAgent.match(/MSIE [678]\./)) {
 			return true;
 		}
 

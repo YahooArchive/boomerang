@@ -176,7 +176,7 @@ For boomerang, the asynchronous loader snippet you'll use is:
 ```javascript
 <script>
 (function() {
-	// Boomerang Loader Snippet version 14
+	// Boomerang Loader Snippet version 15
 	if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
 		return;
 	}
@@ -184,7 +184,7 @@ For boomerang, the asynchronous loader snippet you'll use is:
 	window.BOOMR = window.BOOMR || {};
 	window.BOOMR.snippetStart = new Date().getTime();
 	window.BOOMR.snippetExecuted = true;
-	window.BOOMR.snippetVersion = 14;
+	window.BOOMR.snippetVersion = 15;
 
 	// NOTE: Set Boomerang URL here
 	window.BOOMR.url = "";
@@ -218,7 +218,7 @@ For boomerang, the asynchronous loader snippet you'll use is:
 	}
 
 	// Non-blocking iframe loader (fallback for non-Preload scenarios) for all recent browsers.
-	// For IE 6/7, falls back to dynamic script node.
+	// For IE 6/7/8, falls back to dynamic script node.
 	function iframeLoader(wasFallback) {
 		promoted = true;
 
@@ -238,16 +238,18 @@ For boomerang, the asynchronous loader snippet you'll use is:
 			parent.appendChild(script);
 		};
 
-		// For IE 6/7, we'll just load the script in the current frame, as those browsers don't support 'about:blank'
-		// for an iframe src (it triggers warnings on secure sites).  This means loading on IE 6/7 may cause SPoF.
-		if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [67]\./)) {
+		// For IE 6/7/8, we'll just load the script in the current frame:
+		// * IE 6/7 don't support 'about:blank' for an iframe src (it triggers warnings on secure sites)
+		// * IE 8 required a doc write call for it to work, which is bad practice
+		// This means loading on IE 6/7/8 may cause SPoF.
+		if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [678]\./)) {
 			window.BOOMR.snippetMethod = "s";
 
 			bootstrap(parentNode, "boomr-async");
 			return;
 		}
 
-		// The rest of this function is IE8+ and other browsers that don't support Preload hints but will work with CSP & iframes
+		// The rest of this function is for browsers that don't support Preload hints but will work with CSP & iframes
 		iframe = document.createElement("IFRAME");
 
 		// An empty frame
@@ -291,29 +293,16 @@ For boomerang, the asynchronous loader snippet you'll use is:
 			doc = win.document.open();
 		}
 
-		if (dom) {
-			// Unsafe version for IE8 compatibility. If document.domain has changed, we can't use win, but we can use doc.
-			doc._boomrl = function() {
-				this.domain = dom;
-				bootstrap();
-			};
+		// document.domain hasn't changed, regular method should be OK
+		win._boomrl = function() {
+			bootstrap();
+		};
 
-			// Run our function at load.
-			// Split the string so HTML code injectors don't get confused and add code here.
-			doc.write("<bo" + "dy onload='document._boomrl();'>");
+		if (win.addEventListener) {
+			win.addEventListener("load", win._boomrl, false);
 		}
-		else {
-			// document.domain hasn't changed, regular method should be OK
-			win._boomrl = function() {
-				bootstrap();
-			};
-
-			if (win.addEventListener) {
-				win.addEventListener("load", win._boomrl, false);
-			}
-			else if (win.attachEvent) {
-				win.attachEvent("onload", win._boomrl);
-			}
+		else if (win.attachEvent) {
+			win.attachEvent("onload", win._boomrl);
 		}
 
 		// Finish the document
@@ -376,7 +365,7 @@ For boomerang, the asynchronous loader snippet you'll use is:
 Minified:
 
 ```javascript
-<script>(function(){if(window.BOOMR&&(window.BOOMR.version||window.BOOMR.snippetExecuted)){return}window.BOOMR=window.BOOMR||{};window.BOOMR.snippetStart=(new Date).getTime();window.BOOMR.snippetExecuted=true;window.BOOMR.snippetVersion=14;window.BOOMR.url="";var e=document.currentScript||document.getElementsByTagName("script")[0],a=e.parentNode,s=false,t=3e3;function n(){if(s){return}var e=document.createElement("script");e.id="boomr-scr-as";e.src=window.BOOMR.url;e.async=true;a.appendChild(e);s=true}function o(e){s=true;var t,o=document,n,i,d,r=window;window.BOOMR.snippetMethod=e?"if":"i";n=function(e,t){var n=o.createElement("script");n.id=t||"boomr-if-as";n.src=window.BOOMR.url;BOOMR_lstart=(new Date).getTime();e=e||o.body;e.appendChild(n)};if(!window.addEventListener&&window.attachEvent&&navigator.userAgent.match(/MSIE [67]\./)){window.BOOMR.snippetMethod="s";n(a,"boomr-async");return}i=document.createElement("IFRAME");i.src="about:blank";i.title="";i.role="presentation";i.loading="eager";d=(i.frameElement||i).style;d.width=0;d.height=0;d.border=0;d.display="none";a.appendChild(i);try{r=i.contentWindow;o=r.document.open()}catch(e){t=document.domain;i.src="javascript:var d=document.open();d.domain='"+t+"';void 0;";r=i.contentWindow;o=r.document.open()}if(t){o._boomrl=function(){this.domain=t;n()};o.write("<bo"+"dy onload='document._boomrl();'>")}else{r._boomrl=function(){n()};if(r.addEventListener){r.addEventListener("load",r._boomrl,false)}else if(r.attachEvent){r.attachEvent("onload",r._boomrl)}}o.close()}var i=document.createElement("link");if(i.relList&&typeof i.relList.supports==="function"&&i.relList.supports("preload")&&"as"in i){window.BOOMR.snippetMethod="p";i.href=window.BOOMR.url;i.rel="preload";i.as="script";i.addEventListener("load",n);i.addEventListener("error",function(){o(true)});setTimeout(function(){if(!s){o(true)}},t);BOOMR_lstart=(new Date).getTime();a.appendChild(i)}else{o(false)}function d(e){window.BOOMR_onload=e&&e.timeStamp||(new Date).getTime()}if(window.addEventListener){window.addEventListener("load",d,false)}else if(window.attachEvent){window.attachEvent("onload",d)}})();</script>
+<script>(function(){if(window.BOOMR&&(window.BOOMR.version||window.BOOMR.snippetExecuted)){return}window.BOOMR=window.BOOMR||{};window.BOOMR.snippetStart=(new Date).getTime();window.BOOMR.snippetExecuted=true;window.BOOMR.snippetVersion=15;window.BOOMR.url="";var e=document.currentScript||document.getElementsByTagName("script")[0],a=e.parentNode,s=false,t=3e3;function n(){if(s){return}var e=document.createElement("script");e.id="boomr-scr-as";e.src=window.BOOMR.url;e.async=true;a.appendChild(e);s=true}function i(e){s=true;var t,i=document,n,o,d,r=window;window.BOOMR.snippetMethod=e?"if":"i";n=function(e,t){var n=i.createElement("script");n.id=t||"boomr-if-as";n.src=window.BOOMR.url;BOOMR_lstart=(new Date).getTime();e=e||i.body;e.appendChild(n)};if(!window.addEventListener&&window.attachEvent&&navigator.userAgent.match(/MSIE [678]\./)){window.BOOMR.snippetMethod="s";n(a,"boomr-async");return}o=document.createElement("IFRAME");o.src="about:blank";o.title="";o.role="presentation";o.loading="eager";d=(o.frameElement||o).style;d.width=0;d.height=0;d.border=0;d.display="none";a.appendChild(o);try{r=o.contentWindow;i=r.document.open()}catch(e){t=document.domain;o.src="javascript:var d=document.open();d.domain='"+t+"';void 0;";r=o.contentWindow;i=r.document.open()}r._boomrl=function(){n()};if(r.addEventListener){r.addEventListener("load",r._boomrl,false)}else if(r.attachEvent){r.attachEvent("onload",r._boomrl)}i.close()}var o=document.createElement("link");if(o.relList&&typeof o.relList.supports==="function"&&o.relList.supports("preload")&&"as"in o){window.BOOMR.snippetMethod="p";o.href=window.BOOMR.url;o.rel="preload";o.as="script";o.addEventListener("load",n);o.addEventListener("error",function(){i(true)});setTimeout(function(){if(!s){i(true)}},t);BOOMR_lstart=(new Date).getTime();a.appendChild(o)}else{i(false)}function d(e){window.BOOMR_onload=e&&e.timeStamp||(new Date).getTime()}if(window.addEventListener){window.addEventListener("load",d,false)}else if(window.attachEvent){window.attachEvent("onload",d)}})();</script>
 ```
 
 Change the `boomerangUrl` to the location of Boomerang on your server.

@@ -9,24 +9,24 @@ describe("e2e/27-loader-snippet/00-script-mode", function() {
 		assert.isTrue(tf.fired_onbeacon);
 	});
 
-	it("Should have used the SCRIPT Snippet method (if IE 6 or IE 7)", function() {
+	it("Should have used the SCRIPT Snippet method (if IE 6 or IE 7 or IE 8)", function() {
 		if (!t.isIE()) {
 			return this.skip();
 		}
 
-		if (!navigator.userAgent.match(/MSIE [67]\./)) {
+		if (!navigator.userAgent.match(/MSIE [678]\./)) {
 			return this.skip();
 		}
 
 		assert.isTrue(t.snippetWasLoadedScript());
 	});
 
-	it("Should have set sm=s (if IE 6 or IE 7)", function() {
+	it("Should have set sm=s (if IE 6 or IE 7 or IE 8)", function() {
 		if (!t.isIE()) {
 			return this.skip();
 		}
 
-		if (!navigator.userAgent.match(/MSIE [67]\./)) {
+		if (!navigator.userAgent.match(/MSIE [678]\./)) {
 			return this.skip();
 		}
 

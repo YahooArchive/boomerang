@@ -1,6 +1,6 @@
 /* eslint-disable no-script-url */
 (function() {
-	// Boomerang Loader Snippet version 14
+	// Boomerang Loader Snippet version 15
 	if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
 		return;
 	}
@@ -8,7 +8,7 @@
 	window.BOOMR = window.BOOMR || {};
 	window.BOOMR.snippetStart = new Date().getTime();
 	window.BOOMR.snippetExecuted = true;
-	window.BOOMR.snippetVersion = 14;
+	window.BOOMR.snippetVersion = 15;
 
 	// NOTE: Set Boomerang URL here
 	window.BOOMR.url = "";
@@ -42,7 +42,7 @@
 	}
 
 	// Non-blocking iframe loader (fallback for non-Preload scenarios) for all recent browsers.
-	// For IE 6/7, falls back to dynamic script node.
+	// For IE 6/7/8, falls back to dynamic script node.
 	function iframeLoader(wasFallback) {
 		promoted = true;
 
@@ -62,16 +62,18 @@
 			parent.appendChild(script);
 		};
 
-		// For IE 6/7, we'll just load the script in the current frame, as those browsers don't support 'about:blank'
-		// for an iframe src (it triggers warnings on secure sites).  This means loading on IE 6/7 may cause SPoF.
-		if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [67]\./)) {
+		// For IE 6/7/8, we'll just load the script in the current frame:
+		// * IE 6/7 don't support 'about:blank' for an iframe src (it triggers warnings on secure sites)
+		// * IE 8 required a doc write call for it to work, which is bad practice
+		// This means loading on IE 6/7/8 may cause SPoF.
+		if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [678]\./)) {
 			window.BOOMR.snippetMethod = "s";
 
 			bootstrap(parentNode, "boomr-async");
 			return;
 		}
 
-		// The rest of this function is IE8+ and other browsers that don't support Preload hints but will work with CSP & iframes
+		// The rest of this function is for browsers that don't support Preload hints but will work with CSP & iframes
 		iframe = document.createElement("IFRAME");
 
 		// An empty frame
@@ -115,29 +117,16 @@
 			doc = win.document.open();
 		}
 
-		if (dom) {
-			// Unsafe version for IE8 compatibility. If document.domain has changed, we can't use win, but we can use doc.
-			doc._boomrl = function() {
-				this.domain = dom;
-				bootstrap();
-			};
+		// document.domain hasn't changed, regular method should be OK
+		win._boomrl = function() {
+			bootstrap();
+		};
 
-			// Run our function at load.
-			// Split the string so HTML code injectors don't get confused and add code here.
-			doc.write("<bo" + "dy onload='document._boomrl();'>");
+		if (win.addEventListener) {
+			win.addEventListener("load", win._boomrl, false);
 		}
-		else {
-			// document.domain hasn't changed, regular method should be OK
-			win._boomrl = function() {
-				bootstrap();
-			};
-
-			if (win.addEventListener) {
-				win.addEventListener("load", win._boomrl, false);
-			}
-			else if (win.attachEvent) {
-				win.attachEvent("onload", win._boomrl);
-			}
+		else if (win.attachEvent) {
+			win.attachEvent("onload", win._boomrl);
 		}
 
 		// Finish the document
