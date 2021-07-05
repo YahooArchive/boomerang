@@ -17,6 +17,8 @@
  * * `pt.lcp`: `largest-contentful-paint` in `DOMHighResTimestamp`
  * * `pt.hid`: The document was loaded hidden (at some point), so FP and FCP are
  *             user-driven events, and thus won't be added to the beacon.
+ * * `pt.lcp.src`: Source URL of the Largest Contentful Paint element
+ * * `pt.lcp.el`: Element tag name of the Largest Contentful Paint
  *
  * @see {@link https://www.w3.org/TR/paint-timing/}
  * @see {@link https://wicg.github.io/largest-contentful-paint/}
@@ -160,18 +162,39 @@
 			// cache it for others who want to use it
 			impl.timingCache[lcp.entryType] = lcpTime;
 
+			var lcpSrc = "";
+			var lcpEl = lcp.element ? lcp.element.tagName : "";
+			if (lcp.element && (lcp.element.href || lcp.element.src)) {
+				lcpSrc = (lcp.element.href || lcp.element.src);
+			}
+
 			/* BEGIN_DEBUG */
 			/**
 			 * History of timings
 			 */
 			impl.timingHistory[lcp.entryType] = impl.timingHistory[lcp.entryType] || [];
-			impl.timingHistory[lcp.entryType].push(lcpTime);
+			impl.timingHistory[lcp.entryType].push({
+				time: lcpTime,
+				src: lcpSrc,
+				el: lcpEl
+			});
+
 			/* END_DEBUG */
 
 			BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
+			BOOMR.addVar("pt.lcp.src", lcpSrc);
+			BOOMR.addVar("pt.lcp.el", lcpEl);
 
 			impl.externalMetrics.lcp = function() {
 				return Math.floor(lcpTime);
+			};
+
+			impl.externalMetrics.lcpSrc = function() {
+				return lcpSrc;
+			};
+
+			impl.externalMetrics.lcpEl = function() {
+				return lcpEl;
 			};
 		}
 	};
