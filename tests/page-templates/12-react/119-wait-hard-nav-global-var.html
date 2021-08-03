@@ -22,8 +22,11 @@ setTimeout(function() {
 
 <script src="119-wait-hard-nav-global-var.js" type="text/javascript"></script>
 <script>
-BOOMR_config = 	{
+BOOMR_test.init({
+	testAfterOnBeacon: true,
 	History: {
+		enabled: true,
+		auto: true,
 		routeChangeWaitFilter: function() {
 			var myGlobalVar;
 
@@ -45,14 +48,6 @@ BOOMR_config = 	{
 			return true;
 		},
 		routeChangeWaitFilterHardNavs: true
-	}
-};
-
-BOOMR_test.init({
-	testAfterOnBeacon: true,
-	History: {
-		enabled: true,
-		auto: true
 	},
 	Errors: {
 		enabled: false
