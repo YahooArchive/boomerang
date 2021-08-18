@@ -11,3 +11,4 @@ tasks/
 .settings/
 .project
 .github/
+docker/
