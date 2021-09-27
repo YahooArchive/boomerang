@@ -533,6 +533,10 @@
 		return (" " + document.cookie + ";").indexOf(" " + testCookieName + "=") !== -1;
 	};
 
+	t.isSecureConnection = function() {
+		return document.location.protocol.indexOf("https") > -1;
+	};
+
 	/**
 	 * @param {String} [domain]
 	 * @param {String} [samesite] - Ignored when not HTTPS for now

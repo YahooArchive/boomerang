@@ -262,6 +262,10 @@
 					if (n.connection && n.connection.hasOwnProperty("saveData")) {
 						BOOMR.addVar("net.sd", n.connection.saveData ? 1 : 0);
 					}
+
+					if (typeof n.deviceMemory !== "undefined") {
+						BOOMR.addVar("dev.mem", n.deviceMemory);
+					}
 				},
 				"navigator"
 			);
