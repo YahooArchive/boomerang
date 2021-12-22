@@ -1,9 +1,3 @@
-* _Copyright (c) 2011, Yahoo! Inc.  All rights reserved._
-* _Copyright (c) 2011-2012, Log-Normal Inc.  All rights reserved._
-* _Copyright (c) 2012-2017 SOASTA, Inc. All rights reserved._
-* _Copyright (c) 2017-2019, Akamai Technologies, Inc. All rights reserved._
-* _Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms._
-
 **boomerang always comes back, except when it hits something.**
 
 # Summary
@@ -486,3 +480,11 @@ Boomerang is brought to you by:
 * many independent contributors whose contributions are cemented in our git history
 
 To help out, please read our [contributing](https://akamai.github.io/boomerang/tutorial-contributing.html) page.
+
+# Copyright
+
+* _Copyright (c) 2011, Yahoo! Inc.  All rights reserved._
+* _Copyright (c) 2011-2012, Log-Normal Inc.  All rights reserved._
+* _Copyright (c) 2012-2017 SOASTA, Inc. All rights reserved._
+* _Copyright (c) 2017-2022, Akamai Technologies, Inc. All rights reserved._
+* _Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms._
