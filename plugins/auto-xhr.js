@@ -1858,6 +1858,12 @@
 			return;
 		}
 
+		if (BOOMR.wrapped_fetch) {
+			// Already wrapped, but something else has wrapped after us -- don't wrap again,
+			// or we may encounter an infinite loop.
+			return;
+		}
+
 		if (BOOMR.proxy_fetch &&
 		    BOOMR.orig_fetch &&
 		    BOOMR.orig_fetch === w.fetch) {
@@ -2138,6 +2144,7 @@
 		// if the Boomerang IFRAME is unloaded.  uninstrumentFetch() may also
 		// be used to swap the original back in.
 		BOOMR.utils.overwriteNative(w, "fetch", BOOMR.proxy_fetch);
+		BOOMR.wrapped_fetch = true;
 	}
 
 	/**
@@ -2147,6 +2154,8 @@
 		if (typeof w.fetch === "function" &&
 		    BOOMR.orig_fetch && BOOMR.orig_fetch !== w.fetch) {
 			w.fetch = BOOMR.orig_fetch;
+
+			BOOMR.wrapped_fetch = false;
 		}
 	}
 
@@ -2159,6 +2168,12 @@
 		if (BOOMR.proxy_XMLHttpRequest &&
 			BOOMR.proxy_XMLHttpRequest === w.XMLHttpRequest) {
 			// already instrumented
+			return;
+		}
+
+		if (BOOMR.wrapped_XMLHttpRequest) {
+			// Already wrapped, but something else has wrapped after us -- don't wrap again,
+			// or we may encounter an infinite loop.
 			return;
 		}
 
@@ -2420,6 +2435,7 @@
 		BOOMR.proxy_XMLHttpRequest.HEADERS_RECEIVED = 2;
 		BOOMR.proxy_XMLHttpRequest.LOADING = 3;
 		BOOMR.proxy_XMLHttpRequest.DONE = 4;
+
 		// set our proxy's prototype to the original XHR prototype, in case anyone
 		// is using it to save state
 		BOOMR.proxy_XMLHttpRequest.prototype = BOOMR.orig_XMLHttpRequest.prototype;
@@ -2428,6 +2444,7 @@
 		// if the Boomerang IFRAME is unloaded.  uninstrumentXHR() may also
 		// be used to swap the original back in.
 		BOOMR.utils.overwriteNative(w, "XMLHttpRequest", BOOMR.proxy_XMLHttpRequest);
+		BOOMR.wrapped_XMLHttpRequest = true;
 	}
 
 	/**
@@ -2436,6 +2453,8 @@
 	function uninstrumentXHR() {
 		if (BOOMR.orig_XMLHttpRequest && BOOMR.orig_XMLHttpRequest !== w.XMLHttpRequest) {
 			w.XMLHttpRequest = BOOMR.orig_XMLHttpRequest;
+
+			BOOMR.wrapped_XMLHttpRequest = false;
 		}
 	}
 
@@ -2721,13 +2740,14 @@
 			    ["spaBackEndResources", "alwaysSendXhr", "monitorFetch", "fetchBodyUsedWait",
 			    "spaIdleTimeout", "xhrIdleTimeout", "xhrRequireChanges", "spaStartFromClick"]);
 
-			BOOMR.instrumentXHR = instrumentXHR;
-			BOOMR.uninstrumentXHR = uninstrumentXHR;
-			BOOMR.instrumentFetch = instrumentFetch;
-			BOOMR.uninstrumentFetch = uninstrumentFetch;
-
-			// Ensure we're only once adding the shouldExcludeXhr
+			// Run one-time initializers
 			if (!impl.initialized) {
+				BOOMR.instrumentXHR = instrumentXHR;
+				BOOMR.uninstrumentXHR = uninstrumentXHR;
+				BOOMR.instrumentFetch = instrumentFetch;
+				BOOMR.uninstrumentFetch = uninstrumentFetch;
+
+				// Ensure we're only once adding the shouldExcludeXhr
 				this.addExcludeFilter(shouldExcludeXhr, null, "shouldExcludeXhr");
 
 				impl.initialized = true;
@@ -2769,10 +2789,11 @@
 				}
 			}
 
-			impl.autoXhrEnabled = config.instrument_xhr;
+			// check if XHR should be enabled (once enabled, always enabled)
+			impl.autoXhrEnabled = impl.autoXhrEnabled || config.instrument_xhr;
 
 			// check to see if any of the SPAs were enabled
-			impl.singlePageApp = BOOMR.plugins.SPA && BOOMR.plugins.SPA.isSinglePageApp(config);
+			impl.singlePageApp = impl.singlePageApp || (BOOMR.plugins.SPA && BOOMR.plugins.SPA.isSinglePageApp(config));
 
 			// Whether or not to always send XHRs.  If a SPA is enabled, this means it will
 			// send XHRs during the hard and soft navs.  If enabled, it will also disable
@@ -2797,26 +2818,29 @@
 				}
 			}
 
-			if (impl.singlePageApp) {
-				if (!impl.alwaysSendXhr) {
-					// Disable auto-xhr until the SPA has fired its first beacon.  The
-					// plugin will re-enable after it's ready.
-					impl.autoXhrEnabled = false;
-				}
+			// only turn on/off instrumentation if this config request is specifying a change
+			if (typeof config.instrument_xhr !== "undefined") {
+				if (impl.singlePageApp) {
+					if (!impl.alwaysSendXhr) {
+						// Disable auto-xhr until the SPA has fired its first beacon.  The
+						// plugin will re-enable after it's ready.
+						impl.autoXhrEnabled = false;
+					}
 
-				if (impl.autoXhrEnabled) {
-					BOOMR.instrumentXHR();
-					BOOMR.instrumentFetch();
+					if (impl.autoXhrEnabled) {
+						BOOMR.instrumentXHR();
+						BOOMR.instrumentFetch();
+					}
 				}
-			}
-			else {
-				if (impl.autoXhrEnabled) {
-					BOOMR.instrumentXHR();
-					BOOMR.instrumentFetch();
-				}
-				else if (impl.autoXhrEnabled === false) {
-					BOOMR.uninstrumentXHR();
-					BOOMR.uninstrumentFetch();
+				else {
+					if (impl.autoXhrEnabled) {
+						BOOMR.instrumentXHR();
+						BOOMR.instrumentFetch();
+					}
+					else if (impl.autoXhrEnabled === false) {
+						BOOMR.uninstrumentXHR();
+						BOOMR.uninstrumentFetch();
+					}
 				}
 			}
 
