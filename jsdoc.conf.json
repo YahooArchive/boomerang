@@ -20,7 +20,8 @@
 		"collapseSymbols": false,
 		"inverseNav": false,
 		"highlightTutorialCode": true,
-		"protocol": "html://"
+		"protocol": "html://",
+		"disablePackagePath": true
 	},
 	"markdown": {
 		"parser": "gfm"
