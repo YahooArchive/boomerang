@@ -1,5 +1,25 @@
 # Boomerang Release Notes
 
+## 1.746.0 (February 22, 2022)
+
+### New Features
+
+* Issue 1108: PaintTiming: Add reporting for element and source URL for LCP
+* Issue 1113: Memory: Add support for collecting `navigator.deviceMemory` as `dev.mem`
+
+### Bug Fixes:
+
+* Issue 1105: PageParams: If XHR is set to match but there are no rules defined, Boomerang was monitoring XHRs still
+* Issue 1116: AutoXHR: Avoid re-wrapping XHR/fetch during config refreshes
+
+### Misc:
+
+* Issue 1106: Tests: Allow setting `--config-path` from `environments.json`
+* Issue 1107: Loader Snippet: Reduced support for IE8, use `script src` instead of `doc.write` in IFRAME
+* Issue 1109: Misc sync with Akamai 2021 Q2 OS branch backport
+* Issue 1114: Docs: Disable deep package path publishing for jsdoc generation
+* Issue 1115: Docs: Copyright notice update
+
 ## 1.737.0 (Apr 16, 2021)
 
 ### New Features
@@ -225,7 +245,7 @@
 * Issue 905: Errors / AutoXHR: Un-register wrapped functions at unload
 * Issue 903: SPA: Make markNavigationComplete only apply to SPA events
 
-## 1.624.0 (November 2, 2019)
+## 1.624.0 (November 2, 2018)
 ### Bug Fixes:
 
 * Issue 892: Errors: Timing issue causing page load beacon to get tagged with the error type initiator marker
@@ -254,7 +274,7 @@
 * Issue 769: NavTiming: Don't look at `chrome.loadTimes()` if `nextHopProtocol` is empty
 * Issue 883: Cookie Compression
 
-## 1.612.0 (September 18, 2019)
+## 1.612.0 (September 18, 2018)
 ### Bug Fixes:
 
 * Issue 869: PaintTiming: Don't add FP/FCP if document is hidden or for SPA Soft/XHRs
@@ -359,7 +379,7 @@
 * Issue 776: Correctly detect our url on IE using non-standard loader
 * Issue 799: Move `alwaysSendXhr` into the `pluginConfig` section to make it clearer that this is an AutoXHR config
 
-## 1.566.0 (March 21, 2019 - restricted use)
+## 1.566.0 (March 21, 2018 - restricted use)
 ### New Features:
 
 * Issue 759: Update to new server timing header syntax
