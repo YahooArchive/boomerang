@@ -234,7 +234,7 @@
 			var iinp = BOOMR.plugins.EventTiming.metrics
 				.interactionToNextPaintData(impl.interactionsSinceLastBeacon);
 
-			if (iinp !== null) {
+			if (iinp) {
 				BOOMR.addVar("et.inp.inc", iinp.duration, true);
 				BOOMR.addVar("et.inp.inc.e", iinp.target, true);
 				BOOMR.addVar("et.inp.inc.t", iinp.startTime, true);
@@ -262,7 +262,7 @@
 			var inp = BOOMR.plugins.EventTiming.metrics
 				.interactionToNextPaintData(impl.interactions);
 
-			if (inp !== null) {
+			if (inp) {
 				BOOMR.addVar("et.inp", inp.duration, true);
 				BOOMR.addVar("et.inp.e", inp.target, true);
 				BOOMR.addVar("et.inp.t", inp.startTime, true);

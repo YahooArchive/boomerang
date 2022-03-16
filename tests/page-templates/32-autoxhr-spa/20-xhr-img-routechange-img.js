@@ -36,7 +36,7 @@ describe("e2e/32-autoxhr-spa/20-xhr-img-routechange-img.js", function() {
 		});
 
 		it("Should have rt.tstart around the time of the first XHR", function() {
-			assert.closeTo(tf.beacons[1]["rt.tstart"], t.xhrTimes.xhr1.start, 5);
+			assert.closeTo(tf.beacons[1]["rt.tstart"], t.xhrTimes.xhr1.start, 25);
 		});
 
 		it("Should have Page Load Time ~4030ms", function() {

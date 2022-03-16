@@ -899,7 +899,6 @@ function getConfig() {
 					"FirefoxHeadless",
 					"IE",
 					"Opera",
-					"PhantomJS",
 					"Safari",
 					"Edge"
 				]
@@ -907,8 +906,7 @@ function getConfig() {
 			allHeadless: {
 				browsers: [
 					"ChromeHeadless",
-					"FirefoxHeadless",
-					"PhantomJS"
+					"FirefoxHeadless"
 				]
 			},
 			Chrome: {
@@ -932,9 +930,6 @@ function getConfig() {
 			Opera: {
 				browsers: ["Opera"]
 			},
-			PhantomJS: {
-				browsers: ["PhantomJS"]
-			},
 			Safari: {
 				browsers: ["Safari"]
 			},
@@ -943,21 +938,9 @@ function getConfig() {
 			}
 		},
 		protractor: {
-			// NOTE: https://github.com/angular/protractor/issues/1512 Selenium+PhantomJS not working in 1.6.1
 			options: {
 				noColor: false,
 				keepAlive: false
-			},
-
-			PhantomJS: {
-				options: {
-					configFile: "tests/protractor-config/phantom.js",
-					args: {
-						seleniumAddress: SELENIUM_ADDRESS,
-						specs: ["tests/e2e/e2e.js"],
-						baseUrl: E2E_BASE_URL
-					}
-				}
 			},
 			Chrome: {
 				options: {
@@ -1360,13 +1343,11 @@ module.exports = function() {
 		"test:unit:IE": ["build", "karma:IE"],
 		"test:unit:Opera": ["build", "karma:Opera"],
 		"test:unit:Safari": ["build", "karma:Safari"],
-		"test:unit:PhantomJS": ["build", "karma:PhantomJS"],
 
 		// End-to-End tests
 		"test:e2e": ["test:e2e:" + DEFAULT_BROWSER],
 		"test:e2e:browser": ["test:build", "build", "express:dev", "express:secondary"],
 		"test:e2e:debug": ["test:e2e:browser", "protractor:debug"],
-		"test:e2e:PhantomJS": ["test:e2e:browser", "protractor:PhantomJS"],
 		"test:e2e:Chrome": ["test:e2e:browser", "protractor:Chrome"],
 		"test:e2e:ChromeHeadless": ["test:e2e:browser", "protractor:ChromeHeadless"],
 		"test:e2e:Firefox": ["test:e2e:browser", "protractor:Firefox"],

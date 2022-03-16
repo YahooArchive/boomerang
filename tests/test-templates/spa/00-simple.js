@@ -84,6 +84,7 @@ BOOMR_test.templates.SPA["00-simple"] = function() {
 	it("Should have NavigationTiming metrics (if MutationObserver and NavigationTiming are supported)", function() {
 		if (t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
 			var b = tf.lastBeacon();
+
 			assert.equal(b.nt_red_cnt, 0, "nt_red_cnt is 0");  // no redirects
 			assert.isDefined(b.nt_nav_type, "nt_nav_type is defined");
 			assert.isDefined(b.nt_nav_st, "nt_nav_st is defined");
@@ -104,8 +105,10 @@ BOOMR_test.templates.SPA["00-simple"] = function() {
 			assert.isDefined(b.nt_domcomp, "nt_domcomp is defined");
 			assert.isDefined(b.nt_load_st, "nt_load_st is defined");
 			assert.isDefined(b.nt_load_end, "nt_load_end is defined");
-			assert.isDefined(b.nt_unload_st, "nt_unload_st is defined");
-			assert.isDefined(b.nt_unload_end, "nt_unload_end is defined");
+
+			// Unload times may be 0 and thus not on the beacon
+			// assert.isDefined(b.nt_unload_st, "nt_unload_st is defined");
+			// assert.isDefined(b.nt_unload_end, "nt_unload_end is defined");
 		}
 		else {
 			return this.skip();

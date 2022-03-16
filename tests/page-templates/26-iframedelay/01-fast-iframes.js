@@ -1,7 +1,7 @@
 /*eslint-env mocha*/
 /*global BOOMR_test,assert,BOOMR*/
 
-describe("e2e/26-iframedelay/00-iframedelay", function() {
+describe("e2e/26-iframedelay/01-fast-iframes", function() {
 
 	var tf = BOOMR.plugins.TestFramework;
 	var t = BOOMR_test;
@@ -71,7 +71,7 @@ describe("e2e/26-iframedelay/00-iframedelay", function() {
 		it("Should have rt.end greater than the slowest iframe", function() {
 			var b = tf.lastBeacon(), bf1 = getIFrameBeacon("frame1"), bf2 = getIFrameBeacon("frame2");
 			var loadEnd = Math.max(bf1["rt.end"], bf2["rt.end"]);
-			assert.operator(b["rt.end"], ">", loadEnd);
+			assert.operator(b["rt.end"], ">=", loadEnd);
 		});
 	});
 });

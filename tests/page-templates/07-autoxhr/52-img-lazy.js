@@ -36,7 +36,7 @@ describe("e2e/07-autoxhr/52-img-lazy", function() {
 				done,
 				function() {
 					assert.operator(tf.beacons[i].t_done, ">=", 2000);
-					assert.closeTo(tf.beacons[i].t_done, 200, 2000);
+					assert.closeTo(tf.beacons[i].t_done, 2000, 250);
 					done();
 				},
 				this.skip.bind(this));

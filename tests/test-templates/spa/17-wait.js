@@ -40,7 +40,7 @@ BOOMR_test.templates.SPA["17-wait"] = function() {
 				// t_done should be close to the end time of the first request for widgets.json
 				var r = t.findFirstResource("widgets.json");
 				assert.isDefined(b.t_done);
-				assert.closeTo(r.responseEnd /* HR timestamp */, b.t_done, 100);
+				assert.closeTo(r.responseEnd /* HR timestamp */, b.t_done, 300);
 			}
 			else {
 				this.skip();

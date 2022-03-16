@@ -14,7 +14,8 @@
 		"console": false,
 		"unescape": false,
 		"BOOMR_configt": true,
-		"BOOMR_check_doc_domain": true
+		"BOOMR_check_doc_domain": true,
+		"_BOOMR_userAgentCheck": true
 	},
 	"rules": {
 		//

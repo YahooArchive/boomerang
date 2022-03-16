@@ -17,8 +17,8 @@ BOOMR_test.templates.XHR["00-xhrs-duplicate"] = function() {
 	});
 
 	function check(b, ms) {
-		assert.closeTo(b.t_done, ms, 250);
-		assert.closeTo(b.nt_res_end - b.nt_req_st, b.t_resp, 250);
+		assert.closeTo(b.t_done, ms, 400);
+		assert.closeTo(b.nt_res_end - b.nt_req_st, b.t_resp, 400);
 
 		if (b.nt_fet_st) {
 			// not avail in PhantomJS

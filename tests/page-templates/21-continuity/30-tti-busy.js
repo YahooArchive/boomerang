@@ -31,6 +31,11 @@ describe("e2e/21-continuity/30-tti-busy", function() {
 	it("Should have set the Time to Interactive (c.tti)", function() {
 		var b = tf.lastBeacon();
 
+		if (t.isFirefox()) {
+			// no TTI method was available (e.g. Firefox without FPS/LongTask/Busy)
+			return this.skip();
+		}
+
 		if (t.isNavigationTimingSupported()) {
 			var workDoneTs = window.workDone - performance.timing.navigationStart;
 			var workStartTs = window.workStart - performance.timing.navigationStart;
@@ -51,6 +56,11 @@ describe("e2e/21-continuity/30-tti-busy", function() {
 
 	it("Should have set the Time to Interactive Method (c.tti.m)", function() {
 		var b = tf.lastBeacon();
+
+		if (t.isFirefox()) {
+			// no TTI method was available (e.g. Firefox without FPS/LongTask/Busy)
+			return this.skip();
+		}
 
 		assert.isDefined(b["c.tti.m"]);
 

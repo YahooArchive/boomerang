@@ -56,7 +56,7 @@ if (!window.disableBoomerangHook) {
 const App = React.createClass({
 	getInitialState() {
 		var that = this;
-		if ( window.nav_routes && window.nav_routes.hasOwnProperty("length") && window.nav_routes.length > 0) {
+		if (window.nav_routes && window.nav_routes.hasOwnProperty("length") && window.nav_routes.length > 0) {
 			if (!subscribed) {
 				BOOMR.subscribe("beacon", function(beacon) {
 					// only continue for non-early SPA beacons
@@ -65,11 +65,12 @@ const App = React.createClass({
 						return;
 					}
 
-					if(window.nav_routes.length > 0) {
+					if (window.nav_routes.length > 0) {
 						var newRoute = window.nav_routes.shift();
 						setTimeout(function() {
 							history.pushState(null, `${newRoute}`);
-						}, 100);
+						// delay for 1s to allow for any late-loading images to appear
+						}, 1000);
 					}
 				});
 			}

@@ -440,6 +440,10 @@
  * suitable for Single Page App Soft navigation beacons as the page is already interactive at the start of
  * the soft navigation.
  *
+ * Note: TTI isn't as reliable of a metric on Firefox, as it does not yet support
+ * Long Tasks (as of 2022), and has bugs with Page Busy monitoring (it intentionally delays setTimeouts
+ * during Page Load), so only Frame Rate monitoring is available.
+ *
  * #### Algorithm
  *
  * Putting these two timers together, here's how we measure Visually Ready and

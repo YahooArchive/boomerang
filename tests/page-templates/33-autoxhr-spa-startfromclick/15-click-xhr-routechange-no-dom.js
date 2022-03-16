@@ -36,7 +36,7 @@ describe("e2e/33-autoxhr-spa-startfromclick/15-click-xhr-routechange-no-dom.js",
 		});
 
 		it("Should have rt.tstart around the time of the click", function() {
-			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[0], 5);
+			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[0], 100);
 		});
 
 		it("Should have Page Load Time ~2030ms", function() {
@@ -51,8 +51,12 @@ describe("e2e/33-autoxhr-spa-startfromclick/15-click-xhr-routechange-no-dom.js",
 			assert.closeTo(tf.beacons[1].t_resp, t.xhrTimes.xhr1.duration, 100);
 		});
 
-		it("Should have Front End Time ~30ms", function() {
-			assert.closeTo(tf.beacons[1].t_page, 30, 100);
+		it("Should have Front End Time >30ms", function() {
+			assert.operator(tf.beacons[1].t_page, ">=", 30);
+		});
+
+		it("Should have Front End Time <= 150ms", function() {
+			assert.operator(tf.beacons[1].t_page, "<=", 150);
 		});
 	});
 });

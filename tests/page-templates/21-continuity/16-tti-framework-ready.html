@@ -3,8 +3,8 @@
 <%= boomerangScript %>
 <!-- trigger First Paint -->
 <h1>16-tti-framework-ready</h1>
-<!-- before this delayed image -->
-<img src="/delay?delay=5000&amp;file=assets/img.jpg"/>
+<!-- before this delayed image -- small, so it doesn't affect LCP -->
+<img src="/delay?delay=5000&amp;file=assets/img.jpg" height="10" width="10" />
 <script src="16-tti-framework-ready.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({

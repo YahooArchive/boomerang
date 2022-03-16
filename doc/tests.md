@@ -70,7 +70,6 @@ all `tests/unit/*.js` files via Grunt and [Karma](https://karma-runner.github.io
 * `grunt test:unit:IE`
 * `grunt test:unit:Opera`
 * `grunt test:unit:Safari`
-* `grunt test:unit:PhantomJS`
 
 The Unit Tests utilize [Chai Assert](http://www.chaijs.com/api/assert/) for validations.
 
@@ -108,7 +107,6 @@ all E2E tests files via Grunt and [Protractor](https://www.protractortest.org/):
 * `grunt test:e2e`
 * `grunt test:e2e:browser`
 * `grunt test:e2e:debug` - will only run tests in `tests/e2e/e2e-debug.json`
-* `grunt test:e2e:PhantomJS`
 * `grunt test:e2e:Chrome`
 * `grunt test:e2e:ChromeHeadless`
 * `grunt test:e2e:Firefox`

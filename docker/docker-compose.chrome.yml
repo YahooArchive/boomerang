@@ -8,6 +8,9 @@ services:
       - HUB_PORT_4444_TCP_PORT=4444
       - SCREEN_WIDTH=1024
       - SCREEN_HEIGHT=768
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
       #- START_XVFB=false  # headless chrome crashes when this is false
     volumes:
       - /dev/shm:/dev/shm  # See https://github.com/SeleniumHQ/docker-selenium & https://code.google.com/p/chromium/issues/detail?id=519952

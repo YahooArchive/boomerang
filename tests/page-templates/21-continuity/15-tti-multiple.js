@@ -31,6 +31,11 @@ describe("e2e/21-continuity/15-tti-multiple", function() {
 	it("Should have set the Time to Interactive (c.tti)", function() {
 		var b = tf.lastBeacon();
 
+		if (t.isFirefox()) {
+			// TTI isn't as reliable on Firefox because it can't use LongTasks or Page Busy monitoring
+			return this.skip();
+		}
+
 		if (t.isNavigationTimingSupported()) {
 			var workDoneTs = window.workDone - performance.timing.navigationStart;
 

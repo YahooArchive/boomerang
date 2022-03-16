@@ -2,7 +2,8 @@
 /*global assert*/
 
 describe("e2e/17-memory/06-onunload", function() {
-	var beaconData;
+	var tf = BOOMR.plugins.TestFramework;
+	var t = BOOMR_test;
 
 	var UNLOAD_MEMORY_PARAMS = [
 		"cpu.cnc",
@@ -29,23 +30,13 @@ describe("e2e/17-memory/06-onunload", function() {
 		"scr.xy "
 	];
 
-	it("Should have sent an unload beacon", function(done) {
-		var unloadBeaconHandler = function(data) {
-			beaconData = data;
-			assert.isString(beaconData["rt.quit"]);
-			done();
-		};
-
-		setTimeout(function() {
-			var testFrame = document.getElementById("boomer_test_frame");
-			testFrame.contentWindow.BOOMR.subscribe("beacon", unloadBeaconHandler, null, this);
-			testFrame.src = "about:blank";
-		}, 1000);
+	it("Should have sent an unload beacon", function() {
+		assert.isDefined(tf.beacons[1]["rt.quit"]);
 	});
 
 	it("Should not have Memory data on the Unload beacon", function() {
 		for (var i = 0; i < UNLOAD_MEMORY_PARAMS.length; i++) {
-			assert.isUndefined(beaconData[UNLOAD_MEMORY_PARAMS[i]],
+			assert.isUndefined(tf.beacons[1][UNLOAD_MEMORY_PARAMS[i]],
 				UNLOAD_MEMORY_PARAMS[i] + " should not be on the beacon");
 		}
 	});

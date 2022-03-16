@@ -574,8 +574,11 @@ describe("common", function() {
 	});
 
 	it("User-Agent Deprecation: If navigator.userAgentData is available, ensure navigator.userAgentData.platform is used instead of navigator.platform", function() {
-		if (window.navigator.userAgentData && !window.navigator.userAgentData.testOverride) {
-			assert.isString(tf.lastBeacon()["ua.plt"], "ua.plt");
+		if (window.navigator.userAgentData &&
+		    !window.navigator.userAgentData.testOverride &&
+		    tf.lastBeacon() &&
+		    tf.lastBeacon()["ua.plt"]) {
+			assert.isString(tf.lastBeacon()["ua.plt"], "ua.plt is not a string");
 			assert.equal(tf.lastBeacon()["ua.plt"], navigator.userAgentData.platform);
 		}
 	});

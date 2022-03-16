@@ -301,7 +301,15 @@
 
 	t.configureTestEnvironment = function(config) {
 		// setup Mocha
-		var globals = ["BOOMR", "PageGroupVariable", "mochaResults", "BOOMR_configt", "_bmrEvents"];
+		var globals = [
+			"BOOMR",
+			"PageGroupVariable",
+			"mochaResults",
+			"BOOMR_configt",
+			"_bmrEvents",
+			"_BOOMR_userAgentCheck"
+		];
+
 		if (config && config.ignoreGlobals) {
 			Array.prototype.push.apply(globals, config.ignoreGlobals);
 		}
@@ -427,6 +435,12 @@
 
 	t.isLongTasksSupported = function() {
 		return window.PerformanceObserver && window.PerformanceLongTaskTiming;
+	};
+
+	t.isEventTimingSupported = function() {
+		return window.performance &&
+			typeof window.PerformanceEventTiming !== "undefined" &&
+			typeof window.PerformanceObserver === "function";
 	};
 
 	t.isUserTimingSupported = function() {
@@ -827,6 +841,7 @@
 		if (BOOMR.plugins.AutoXHR) {
 			return (testXhr || done || function(){})();
 		}
+
 		(testDegenerate || done || function(){})();
 	};
 
@@ -1219,34 +1234,90 @@
 		).length === 1;
 	};
 
+	/**
+	 * Determines if the current function is being called by the specified
+	 * matching string.
+	 *
+	 * @param {RegExp} match Regular expression match
+	 *
+	 * @returns {boolean} True if being called by the match
+	 */
+	t.isBeingCalledFrom = function(match) {
+		try {
+			throw new Error("test-error");
+		}
+		catch (e) {
+			return e.stack && e.stack.match(match) !== -1;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Regular expression matches to skip .userAgent access for
+	 *
+	 * These are third-party libraries that may be checking .userAgent directly
+	 */
+	t.skipUserAgentCheckMatch = /assertive-chai|angular|ember|backbone|react/;
+
+	/**
+	 * Forces navigator.userAgent to throw an Exception
+	 */
 	t.forceUserAgentDataUsage = function() {
+		var errorMessage = "Accessed navigator.userAgent while navigator.userAgentData exists!";
+
 		if (window.navigator && window.navigator.userAgentData) {
+			var userAgentValue = window.navigator.userAgent;
+
 			if (window.navigator.__defineGetter__) {
 				window.navigator.__defineGetter__("userAgent", function() {
-					window._BOOMR_userAgentCheck = new Error("Accessed navigator.userAgent while navigator.userAgentData exists!");
+					if (!t.isBeingCalledFrom(t.skipUserAgentCheckMatch)) {
+						window._BOOMR_userAgentCheck = new Error(errorMessage);
+					}
+
+					return userAgentValue;
 				});
 			}
 			else if (Object.defineProperty) {
 				Object.defineProperty(window.navigator, "userAgent", {
 					get: function() {
-						window._BOOMR_userAgentCheck = new Error("Accessed navigator.userAgent while navigator.userAgentData exists!");
+						if (!t.isBeingCalledFrom(t.skipUserAgentCheckMatch)) {
+							window._BOOMR_userAgentCheck = new Error(errorMessage);
+						}
+
+						return userAgentValue;
 					}
 				});
 			}
 		}
 	};
 
+	/**
+	 * Forces navigator.platform to throw an Exception
+	 */
 	t.forceUserAgentDataPlatformUsage = function() {
+		var errorMessage = "Accessed navigator.platform while navigator.userAgentData.platform exists!";
+
 		if (window.navigator && window.navigator.userAgentData && window.navigator.userAgentData.platform) {
+			var userAgentPlatformValue = window.navigator.platform || window.navigator.userAgentData.platform;
+
 			if (window.navigator.__defineGetter__) {
 				window.navigator.__defineGetter__("platform", function() {
-					window._BOOMR_navigatorCheck = new Error("Accessed navigator.platform while navigator.userAgentData.platform exists!");
+					if (!t.isBeingCalledFrom(t.skipUserAgentCheckMatch)) {
+						window._BOOMR_navigatorCheck = new Error(errorMessage);
+					}
+
+					return userAgentPlatformValue;
 				});
 			}
 			else if (Object.defineProperty) {
 				Object.defineProperty(window.navigator, "platform", {
 					get: function() {
-						window._BOOMR_navigatorCheck = new Error("Accessed navigator.platform while navigator.userAgentData.platform exists!");
+						if (!t.isBeingCalledFrom(t.skipUserAgentCheckMatch)) {
+							window._BOOMR_navigatorCheck = new Error(errorMessage);
+						}
+
+						return userAgentPlatformValue;
 					}
 				});
 			}

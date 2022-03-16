@@ -53,7 +53,12 @@ describe("e2e/19-navtiming/00-onload", function() {
 		}
 
 		if (location.protocol === "https:") {
-			assert.isNumber(tf.lastBeacon().nt_ssl_st, "nt_ssl_st");
+			// SSL start might be 0 if the connection is re-used (so nt_ssl_st
+			// would be missing from the beacon)
+			var pt = window.performance.timing;
+			if (pt.secureConnectionStart - pt.navigationStart >= 2) {
+				assert.isNumber(tf.lastBeacon().nt_ssl_st, "nt_ssl_st");
+			}
 		}
 	});
 

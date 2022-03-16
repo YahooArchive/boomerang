@@ -48,7 +48,7 @@ describe("e2e/07-autoxhr/01-img-src-change", function() {
 					function() {
 						var b = tf.beacons[i];
 						// ~ 500 img + 2000 img + 300 of setTimeout delays
-						assert.closeTo(b.t_done, 2800, 200);
+						assert.closeTo(b.t_done, 2800, 250);
 						done();
 					},
 				this.skip.bind(this));
@@ -64,7 +64,7 @@ describe("e2e/07-autoxhr/01-img-src-change", function() {
 					done,
 					function() {
 						var b = tf.beacons[i];
-						assert.closeTo(b.t_done, 0, 200);
+						assert.closeTo(b.t_done, 0, 250);
 						done();
 					},
 					this.skip.bind(this));

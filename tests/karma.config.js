@@ -85,18 +85,10 @@ module.exports = function(config) {
 					},
 					platform: "ANY",
 					version: "ANY"
-				},
-				"PhantomJS": {
-					base: "WebDriver",
-					config: webdriverConfig,
-					browserName: "phantomjs",
-					flags: [],
-					platform: "ANY",
-					version: "ANY"
 				}
 			},
 
-			browsers: ["ChromeHeadless", "FirefoxHeadless", "PhantomJS"]
+			browsers: ["ChromeHeadless", "FirefoxHeadless"]
 		});
 	}
 };

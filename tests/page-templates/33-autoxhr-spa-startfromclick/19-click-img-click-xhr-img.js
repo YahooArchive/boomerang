@@ -36,7 +36,7 @@ describe("e2e/33-autoxhr-spa-startfromclick/19-click-img-click-xhr-img.js", func
 		});
 
 		it("Should have rt.tstart around the time of the first click", function() {
-			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[0], 5);
+			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[0], 10);
 		});
 
 		it("Should have Page Load Time ~2030ms", function() {
@@ -58,7 +58,7 @@ describe("e2e/33-autoxhr-spa-startfromclick/19-click-img-click-xhr-img.js", func
 		});
 
 		it("Should have rt.tstart around the time of the second click", function() {
-			assert.closeTo(tf.beacons[2]["rt.tstart"], t.mouseEventTimes[1], 5);
+			assert.closeTo(tf.beacons[2]["rt.tstart"], t.mouseEventTimes[1], 10);
 		});
 
 		it("Should have Page Load Time ~4030ms", function() {

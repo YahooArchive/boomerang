@@ -17,13 +17,16 @@ describe("e2e/06-bug/issue-606", function() {
 
 			assert.equal(resources.length, 2);
 
+			var frameIndex = resources[0].initiatorType === "frame" ? 0 : 1;
+			var cssIndex = frameIndex === 0 ? 1 : 0;
+
 			// find our iframe
-			assert.equal(resources[0].initiatorType, "frame");
-			assert.include(resources[0].name, "support/92542-iframe.html");
+			assert.equal(resources[frameIndex].initiatorType, "frame");
+			assert.include(resources[frameIndex].name, "support/92542-iframe.html");
 
 			// find our css
-			assert.equal(resources[1].initiatorType, "css");
-			assert.include(resources[1].name, "support/img.jpg");
+			assert.equal(resources[cssIndex].initiatorType, "css");
+			assert.include(resources[cssIndex].name, "support/img.jpg");
 		}
 	});
 });

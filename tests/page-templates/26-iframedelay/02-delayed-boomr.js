@@ -26,17 +26,17 @@ describe("e2e/26-iframedelay/01-delayed-boomr", function() {
 
 	describe("IFrame 1 Beacon 1 (onload)", function(done) {
 		var id = "frame1";
-		it("Should have a t_done less than 1s", function() {
+		it("Should have a t_done less than ~1s", function() {
 			var b = getIFrameBeacon(id);
-			assert.operator(b.t_done, "<", 1000);
+			assert.operator(b.t_done, "<", 1050);
 		});
 	});
 
 	describe("IFrame 2 Beacon 1 (onload)", function(done) {
 		var id = "frame2";
-		it("Should have a t_done less than 1s", function() {
+		it("Should have a t_done less than ~1s", function() {
 			var b = getIFrameBeacon(id);
-			assert.operator(b.t_done, "<", 1000);
+			assert.operator(b.t_done, "<", 1050);
 		});
 	});
 

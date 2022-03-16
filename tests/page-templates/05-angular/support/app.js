@@ -171,7 +171,8 @@ app.run(["$rootScope", "$location", "$timeout", function($rootScope, $location, 
 
 				$timeout(function() {
 					$location.url(nextRoute);
-				}, 100);
+				// delay for 1s to allow for any late-loading images to appear
+				}, 1000);
 			}
 		});
 	}

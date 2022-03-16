@@ -100,11 +100,18 @@
 	 *
 	 * @param {number} offset navigationStart offset (0 if using NavTiming1)
 	 * @param {number} val DOMHighResTimestamp
+	 * @param {boolean} forceIfZero Force the offset even if the value is zero
 	 *
 	 * @returns {number} Timestamp for beacon
 	 */
-	function calcNavTimingTimestamp(offset, val) {
+	function calcNavTimingTimestamp(offset, val, forceIfZero) {
 		if (typeof val !== "number" || val === 0) {
+			// if the timestamp is 0 and forceIfZero is set,
+			// return the offset so the timestamp is still on the beacon
+			if (val === 0 && forceIfZero) {
+				return Math.floor(offset || 0);
+			}
+
 			return undefined;
 		}
 
@@ -247,11 +254,11 @@
 						// all other entries have the same name on .timing vs timeline entry
 						nt_red_st: calcNavTimingTimestamp(offset, pt.redirectStart),
 						nt_red_end: calcNavTimingTimestamp(offset, pt.redirectEnd),
-						nt_fet_st: calcNavTimingTimestamp(offset, pt.fetchStart),
-						nt_dns_st: calcNavTimingTimestamp(offset, pt.domainLookupStart),
-						nt_dns_end: calcNavTimingTimestamp(offset, pt.domainLookupEnd),
-						nt_con_st: calcNavTimingTimestamp(offset, pt.connectStart),
-						nt_con_end: calcNavTimingTimestamp(offset, pt.connectEnd),
+						nt_fet_st: calcNavTimingTimestamp(offset, pt.fetchStart, true),
+						nt_dns_st: calcNavTimingTimestamp(offset, pt.domainLookupStart, true),
+						nt_dns_end: calcNavTimingTimestamp(offset, pt.domainLookupEnd, true),
+						nt_con_st: calcNavTimingTimestamp(offset, pt.connectStart, true),
+						nt_con_end: calcNavTimingTimestamp(offset, pt.connectEnd, true),
 						nt_req_st: calcNavTimingTimestamp(offset, pt.requestStart),
 						nt_res_st: calcNavTimingTimestamp(offset, pt.responseStart),
 						nt_res_end: calcNavTimingTimestamp(offset, pt.responseEnd),

@@ -36,7 +36,7 @@ describe("e2e/33-autoxhr-spa-startfromclick/06-click-click-xhr-img.js", function
 		});
 
 		it("Should have rt.tstart around the time of the second click", function() {
-			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[1], 5);
+			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[1], 10);
 		});
 
 		it("Should have Page Load Time ~4030ms", function() {

@@ -36,7 +36,7 @@ describe("e2e/33-autoxhr-spa-startfromclick/02-click-multiple-xhr-routechange-im
 		});
 
 		it("Should have rt.tstart around the time of the click", function() {
-			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[0], 5);
+			assert.closeTo(tf.beacons[1]["rt.tstart"], t.mouseEventTimes[0], 100);
 		});
 
 		it("Should have Page Load Time ~6040ms", function() {

@@ -1149,6 +1149,11 @@
 		onconfig: function(config) {
 			if (config.beacon_url) {
 				impl.beacon_url = config.beacon_url;
+
+				// make sure the cookie is updated
+				impl.updateCookie({
+					"bcn": impl.beacon_url
+				});
 			}
 
 			if (config.RT) {

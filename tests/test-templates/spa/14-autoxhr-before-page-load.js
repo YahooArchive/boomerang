@@ -16,7 +16,7 @@ BOOMR_test.templates.SPA["14-autoxhr-before-page-load"] = function() {
 
 	it("Should take as long as the longest img load (if MutationObserver and NavigationTiming are supported)", function() {
 		if (t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
-			t.validateBeaconWasSentAfter(0, "img.jpg", 100, 3000, 30000, true);
+			t.validateBeaconWasSentAfter(0, "img.jpg", 250, 3000, 30000, true);
 		}
 		else {
 			return this.skip();
@@ -35,7 +35,7 @@ BOOMR_test.templates.SPA["14-autoxhr-before-page-load"] = function() {
 
 	it("Should take as long as the XHRs (if MutationObserver is not supported but NavigationTiming is)", function() {
 		if (!t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
-			t.validateBeaconWasSentAfter(0, "widgets.json", 100, 0, 30000, true);
+			t.validateBeaconWasSentAfter(0, "widgets.json", 250, 0, 30000, true);
 		}
 		else {
 			return this.skip();

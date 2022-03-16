@@ -24,6 +24,11 @@ describe("e2e/05-angular/125-continuity-no-tti-first-beacon.js", function() {
 		});
 
 		it("Should not have set Time to Interactive (c.tti)", function() {
+			if (t.isFirefox()) {
+				// TTI isn't as reliable on Firefox because it can't use LongTasks or Page Busy monitoring
+				return this.skip();
+			}
+
 			assert.isUndefined(tf.beacons[0]["c.tti"]);
 		});
 	});

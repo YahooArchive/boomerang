@@ -31,11 +31,16 @@ describe("e2e/21-continuity/18-tti-wait-after-onload", function() {
 	it("Should have set the Time to Interactive (c.tti)", function() {
 		var b = tf.lastBeacon();
 
+		if (t.isFirefox()) {
+			// TTI isn't as reliable on Firefox because it can't use LongTasks or Page Busy monitoring
+			return this.skip();
+		}
+
 		if (t.isNavigationTimingSupported()) {
 			var workDoneTs = window.workDone - performance.timing.navigationStart;
 
 			assert.isDefined(b["c.tti"]);
-			assert.closeTo(parseInt(b["c.tti"], 10), workDoneTs, 100);
+			assert.closeTo(parseInt(b["c.tti"], 10), workDoneTs, 120);
 		}
 	});
 });
