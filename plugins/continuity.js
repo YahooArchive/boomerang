@@ -3238,7 +3238,7 @@
 				}
 				else {
 					// if timeStamp is a DOMHighResTimeStamp, convert BOOMR.hrNow() to same
-					delay = BOOMR.hrNow() - e.timeStamp;
+					delay = hrNow - e.timeStamp;
 				}
 
 				interactionsDelay += delay;
@@ -3370,7 +3370,7 @@
 					fid = externalMetrics.firstInputDelay();
 				}
 
-				if (fid) {
+				if (typeof fid === "number") {
 					impl.addToBeacon("c.fid", Math.ceil(fid), true);
 
 					impl.addToBeacon("c.ttfi", BOOMR.plugins.EventTiming.metrics.timeToFirstInteraction() ||
