@@ -129,6 +129,9 @@
  * experience.  The 32-millisecond polling is lightweight and should barely register
  * on JavaScript CPU profiles.
  *
+ * Page Busy is disabled in Firefox, as that browser
+ * [de-prioritizes](https://bugzilla.mozilla.org/show_bug.cgi?id=1270059) `setInterval()` during page load.
+ *
  * ### Monitoring Frame Rate
  *
  * If {@link BOOMR.plugins.Continuity.init `monitorFrameRate`} is turned on,
@@ -4409,7 +4412,12 @@
 				// Page Busy (if LongTasks aren't supported or aren't enabled)
 				//
 				if (impl.monitorPageBusy &&
-					(!BOOMR.window.PerformanceObserver || !BOOMR.window.PerformanceLongTaskTiming || !impl.monitorLongTasks)) {
+					BOOMR.window &&
+					(!BOOMR.window.PerformanceObserver || !BOOMR.window.PerformanceLongTaskTiming || !impl.monitorLongTasks) &&
+					// Don't use Page Busy for Firefox, as setInterval is de-prioritized during Page Load
+					// https://bugzilla.mozilla.org/show_bug.cgi?id=1270059
+					(BOOMR.window.navigator &&
+						(BOOMR.window.navigator.userAgentData || !BOOMR.window.navigator.userAgent.match(/Firefox\//)))) {
 					impl.pageBusyMonitor = new PageBusyMonitor(BOOMR.window, impl.timeline);
 
 					if (!impl.ttiMethod) {
