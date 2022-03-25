@@ -384,6 +384,8 @@
 		 * @memberof BOOMR.plugins.SPA
 		 */
 		route_change: function(onComplete, routeFilterArgs) {
+			var now = BOOMR.now();
+
 			debugLog("Route Change");
 
 			var firedEvent = false;
@@ -416,7 +418,7 @@
 			// If this was the first request, use navStart as the begin timestamp.  Otherwise, use
 			// "now" as the begin timestamp.
 			var navigationStart = (BOOMR.plugins.RT && BOOMR.plugins.RT.navigationStart());
-			var requestStart = initialRouteChangeCompleted ? BOOMR.now() : navigationStart;
+			var requestStart = firstSpaNav ? navigationStart : now;
 
 			// use the document.URL even though it may be the URL of the previous nav. We will updated
 			// it in AutoXHR sendEvent
@@ -434,26 +436,26 @@
 				url: url
 			};
 
+			// if route_change was called, we're not the initial SPA nav anymore
 			firstSpaNav = false;
 
-			if (!initialRouteChangeCompleted || typeof onComplete === "function") {
-				initialRouteChangeCompleted = true;
+			// a new route has started, so the initial one must be completed
+			initialRouteChangeCompleted = true;
 
-				// if we haven't completed our initial SPA navigation yet (this is a hard nav), wait
-				// for all of the resources to be downloaded
-				resource.onComplete = function(onCompleteResource) {
-					if (!firedEvent) {
-						firedEvent = true;
+			// if we haven't completed our initial SPA navigation yet (this is a hard nav), wait
+			// for all of the resources to be downloaded
+			resource.onComplete = function(onCompleteResource) {
+				if (!firedEvent) {
+					firedEvent = true;
 
-						// fire a SPA navigation completed event so that other plugins can act on it
-						BOOMR.fireEvent("spa_navigation");
-					}
+					// fire a SPA navigation completed event so that other plugins can act on it
+					BOOMR.fireEvent("spa_navigation");
+				}
 
-					if (typeof onComplete === "function") {
-						onComplete(onCompleteResource);
-					}
-				};
-			}
+				if (typeof onComplete === "function") {
+					onComplete(onCompleteResource);
+				}
+			};
 
 			// if we have a routeChangeWaitFilter, make sure AutoXHR waits on the custom event
 			// for this SPA soft route
