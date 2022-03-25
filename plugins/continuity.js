@@ -1424,7 +1424,7 @@
 		 * @returns {number} Last image load time
 		 */
 		function determineImageLoadTime(selector) {
-			var combinedSelector, elements, latestTs = 0, i, j, src, entries;
+			var combinedSelector, elements, latestTs = 0, i, j, src, entries, a;
 
 			// check to see if we have querySelectorAll available
 			if (!BOOMR.window ||
@@ -1460,7 +1460,11 @@
 							if (bgStyle) {
 								var bgImgUrl = bgStyle.match(/url\(["']?([^"']*)["']?\)/);
 								if (bgImgUrl && bgImgUrl.length > 0) {
-									src = bgImgUrl[1];
+									// get the canonical URL if needed
+									a = a || document.createElement("a");
+									a.href = bgImgUrl[1];
+
+									src = a.href;
 								}
 							}
 						}
