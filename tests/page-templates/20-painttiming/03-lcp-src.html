@@ -10,7 +10,11 @@ BOOMR_test.init({
 	PaintTiming: {
 		enabled: true
 	},
-	testAfterOnBeacon: true
+	testAfterOnBeacon: 2,
+	afterFirstBeacon: function() {
+		// send a second beacon, shouldn't have elements
+		BOOMR.responseEnd("beacon 2");
+	}
 });
 </script>
 <script src="/delay?delay=2500&amp;file=/assets/blank.js"></script>

@@ -182,8 +182,8 @@
 			/* END_DEBUG */
 
 			BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
-			BOOMR.addVar("pt.lcp.src", lcpSrc);
-			BOOMR.addVar("pt.lcp.el", lcpEl);
+			BOOMR.addVar("pt.lcp.src", lcpSrc, true);
+			BOOMR.addVar("pt.lcp.el", lcpEl, true);
 
 			impl.externalMetrics.lcp = function() {
 				return Math.floor(lcpTime);
