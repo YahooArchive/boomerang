@@ -573,4 +573,18 @@ describe("common", function() {
 			this.skip.bind(this)
 		);
 	});
+
+	it("User-Agent Deprecation: If navigator.userAgentData is available, ensure navigator.userAgentData.platform is used instead of navigator.platform", function() {
+		if (window.navigator.userAgentData) {
+			assert.isString(tf.lastBeacon()["ua.plt"], "ua.plt");
+			assert.equal(tf.lastBeacon()["ua.plt"], navigator.userAgentData.platform);
+		}
+	});
+
+	it("Should not access navigator.platform if navigator.userAgentData.platform exists", function() {
+		if (window._BOOMR_navigatorCheck) {
+			throw window._BOOMR_navigatorCheck;
+		}
+	});
+
 });

@@ -46,7 +46,7 @@
  * * `rt.si`: Session ID
  * * `rt.ss`: Session start timestamp
  * * `rt.sl`: Session length (number of pages), can be increased by XHR beacons as well
- * * `ua.plt`: `navigator.platform`
+ * * `ua.plt`: `navigator.platform` or if available `navigator.userAgentData.platform`
  * * `ua.vnd`: `navigator.vendor`
  */
 
@@ -4090,7 +4090,15 @@ BOOMR_check_doc_domain();
 				}
 			}
 
-			impl.vars["ua.plt"] = navigator.platform;
+			var platform = "";
+			if (navigator.userAgentData && typeof navigator.userAgentData.platform === "string") {
+				platform = navigator.userAgentData.platform;
+			}
+			else {
+				platform = navigator.platform;
+			}
+
+			impl.vars["ua.plt"] = platform;
 			impl.vars["ua.vnd"] = navigator.vendor;
 
 			if (this.pageId) {

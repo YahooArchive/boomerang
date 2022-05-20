@@ -1213,6 +1213,23 @@
 		).length === 1;
 	};
 
+	t.forceUserAgentDataPlatformUsage = function() {
+		if (window.navigator && window.navigator.userAgentData && window.navigator.userAgentData.platform) {
+			if (window.navigator.__defineGetter__) {
+				window.navigator.__defineGetter__("platform", function() {
+					window._BOOMR_navigatorCheck = new Error("Accessed navigator.platform while navigator.userAgentData.platform exists!");
+				});
+			}
+			else if (Object.defineProperty) {
+				Object.defineProperty(window.navigator, "platform", {
+					get: function() {
+						window._BOOMR_navigatorCheck = new Error("Accessed navigator.platform while navigator.userAgentData.platform exists!");
+					}
+				});
+			}
+		}
+	};
+
 	/**
 	 * Forces the Boomerang Loader Snippet to use the SCRIPT fallback
 	 * (by trying to overwrite navigator.userAgent and overwriting aEL/attachEvent)
@@ -1646,6 +1663,9 @@
 			return fBound;
 		};
 	}
+
+	// Execute this here so we can harvest the value in common.js
+	t.forceUserAgentDataPlatformUsage();
 	/*eslint-enable no-extend-native*/
 
 }(window));
