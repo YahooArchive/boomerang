@@ -599,6 +599,9 @@ function getConfig() {
 				options: {
 					patterns: [
 						/BOOMR\.debug\(.*\);/g,
+						/BOOMR\.info\(.*\);/g,
+						/BOOMR\.warn\(.*\);/g,
+						/BOOMR\.error\(.*\);/g,
 						/debugLog\(.*\);/g
 					]
 				}
