@@ -466,6 +466,9 @@ BOOMR_check_doc_domain();
 		// Client hints use for Architecture, Model and Platform detail is disabled by default
 		request_client_hints: false,
 
+		// Disables all Unload handlers and Unload beacons
+		no_unload: false,
+
 		events: {
 			/**
 			 * Boomerang event, subscribe via {@link BOOMR.subscribe}.
@@ -2852,6 +2855,7 @@ BOOMR_check_doc_domain();
 		 * @param {boolean} [config.secure_cookie] When `true` all cookies will be created with `Secure` flag.
 		 * @param {boolean} [config.request_client_hints] When `true`, gather high entropy values for Architecture,
 		 * Model and Platform data from navigator.userAgentData.
+		 * @param {boolean} [config.no_unload] Disables all unload handlers and the Unload beacons
 		 * @param {function} [config.log] Logger to use. Set to `null` to disable logging.
 		 * @param {function} [<plugins>] Each plugin has its own section
 		 *
@@ -2875,7 +2879,8 @@ BOOMR_check_doc_domain();
 				    "user_ip",
 				    "same_site_cookie",
 				    "secure_cookie",
-				    "request_client_hints"
+				    "request_client_hints",
+				    "no_unload"
 			    ];
 
 			/* BEGIN_DEBUG */
@@ -3551,23 +3556,24 @@ BOOMR_check_doc_domain();
 				this.setImmediate(fn, null, cb_data, cb_scope);
 			}
 
-			// Attach unload handlers directly to the window.onunload and
-			// window.onbeforeunload events. The first of the two to fire will clear
-			// fn so that the second doesn't fire. We do this because technically
-			// onbeforeunload is the right event to fire, but not all browsers
-			// support it.  This allows us to fall back to onunload when onbeforeunload
-			// isn't implemented
-			if (e_name === "page_unload" || e_name === "before_unload") {
+			// Note: If no_unload is set, don't listen to any unload-style events.
+			if (!impl.no_unload && (e_name === "page_unload" || e_name === "before_unload")) {
 				// Keep track of how many pagehide/unload/beforeunload handlers we're registering
 				impl.unloadEventsCount++;
 
 				(function() {
-					var unload_handler, evt_idx = ev.length;
+					var unloadHandler = function boomerangUnloadHandler(evt) {
+						if (impl.no_unload) {
+							// may have been set after the initial load
+							return;
+						}
 
-					unload_handler = function(evt) {
 						if (fn) {
 							fn.call(cb_scope, evt || w.event, cb_data);
 						}
+
+						// clear so this doesn't run twice
+						fn = null;
 
 						// If this was the last pagehide/unload/beforeunload handler,
 						// we'll try to send the beacon immediately after it is done.
@@ -3577,17 +3583,26 @@ BOOMR_check_doc_domain();
 						}
 					};
 
-					if (e_name === "page_unload") {
-						// pagehide is for iOS devices
-						// see https://www.webkit.org/blog/516/webkit-page-cache-ii-the-unload-event/
-						if (w.onpagehide || w.onpagehide === null) {
-							BOOMR.utils.addListener(w, "pagehide", unload_handler);
-						}
-						else {
-							BOOMR.utils.addListener(w, "unload", unload_handler);
-						}
+					//
+					// For modern browsers that support pagehide, listen to that event,
+					// and do not listen to beforeunload/unload as they can break BFCache navigations.
+					//
+					if (w.onpagehide || w.onpagehide === null) {
+						BOOMR.utils.addListener(w, "pagehide", unloadHandler);
 					}
-					BOOMR.utils.addListener(w, "beforeunload", unload_handler);
+					else {
+						//
+						// For before_unload event in older browsers, attach handlers directly
+						// to the unload and beforeunload events. Not all older browsers support
+						// beforeunload. The first of the two to fire will clear so that the
+						// second doesn't fire.
+						//
+						if (e_name === "page_unload") {
+							BOOMR.utils.addListener(w, "unload", unloadHandler);
+						}
+
+						BOOMR.utils.addListener(w, "beforeunload", unloadHandler);
+					}
 				}());
 			}
 
