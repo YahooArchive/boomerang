@@ -247,6 +247,9 @@
 	// Service worker type
 	var SPECIAL_DATA_SERVICE_WORKER_TYPE = "6";
 
+	// Next Hop Protocol
+	var SPECIAL_DATA_PROTOCOL = "7";
+
 	/**
 	 * Converts entries to a Trie (`splitAtPath=true`) or Radix
 	 * Trie (`splitAtPath=false`):
@@ -1395,6 +1398,13 @@
 				var wsRoundedUp = roundUpTiming(e.workerStart);
 				var workerStartOffset = trimTiming(wsRoundedUp, e.startTime);
 				data += SPECIAL_DATA_PREFIX + SPECIAL_DATA_SERVICE_WORKER_TYPE + toBase36(workerStartOffset);
+			}
+
+			if (e.hasOwnProperty("nextHopProtocol") && e.startTime <= e.requestStart) {
+				// change http/1.1 to h1.1 to be consistent with h2 & h3.
+				// Empty string means either cross-origin without TAO or the resource was read from cache.
+				// We skip the TAO case with our condition above, so replace empty string with C to signify cache
+				data += SPECIAL_DATA_PREFIX + SPECIAL_DATA_PROTOCOL + (e.nextHopProtocol ? e.nextHopProtocol.replace("http/", "h") : "C");
 			}
 
 			url = trimUrl(e.name, impl.trimUrls);
