@@ -1213,6 +1213,23 @@
 		).length === 1;
 	};
 
+	t.forceUserAgentDataUsage = function() {
+		if (window.navigator && window.navigator.userAgentData) {
+			if (window.navigator.__defineGetter__) {
+				window.navigator.__defineGetter__("userAgent", function() {
+					window._BOOMR_userAgentCheck = new Error("Accessed navigator.userAgent while navigator.userAgentData exists!");
+				});
+			}
+			else if (Object.defineProperty) {
+				Object.defineProperty(window.navigator, "userAgent", {
+					get: function() {
+						window._BOOMR_userAgentCheck = new Error("Accessed navigator.userAgent while navigator.userAgentData exists!");
+					}
+				});
+			}
+		}
+	};
+
 	t.forceUserAgentDataPlatformUsage = function() {
 		if (window.navigator && window.navigator.userAgentData && window.navigator.userAgentData.platform) {
 			if (window.navigator.__defineGetter__) {
@@ -1666,6 +1683,7 @@
 
 	// Execute this here so we can harvest the value in common.js
 	t.forceUserAgentDataPlatformUsage();
+	t.forceUserAgentDataUsage();
 	/*eslint-enable no-extend-native*/
 
 }(window));

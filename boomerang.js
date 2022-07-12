@@ -1893,7 +1893,7 @@ BOOMR_check_doc_domain();
 			 */
 			isMutationObserverSupported: function() {
 				// We can only detect IE 11 bugs by UA sniffing.
-				var ie11 = (w && w.navigator && w.navigator.userAgent && w.navigator.userAgent.match(/Trident.*rv[ :]*11\./));
+				var ie11 = (w && w.navigator && !w.navigator.userAgentData && w.navigator.userAgent && w.navigator.userAgent.match(/Trident.*rv[ :]*11\./));
 				return (!ie11 && w && w.MutationObserver && typeof w.MutationObserver === "function");
 			},
 
@@ -2479,8 +2479,10 @@ BOOMR_check_doc_domain();
 			 * @memberof BOOMR.utils
 			 */
 			isCurrentUASameSiteNoneCompatible: function() {
-				if (w && w.navigator && w.navigator.userAgent && typeof w.navigator.userAgent === "string") {
-					return this.isUASameSiteNoneCompatible(w.navigator.userAgent);
+				if (w && w.navigator && !w.navigator.userAgentData) {
+					if (w.navigator.userAgent && typeof w.navigator.userAgent === "string") {
+						return this.isUASameSiteNoneCompatible(w.navigator.userAgent);
+					}
 				}
 
 				return true;
@@ -4768,6 +4770,7 @@ BOOMR_check_doc_domain();
 					}
 				}
 			}
+
 			return overridden;
 		};
 

@@ -14,7 +14,7 @@ describe("e2e/27-loader-snippet/00-script-mode", function() {
 			return this.skip();
 		}
 
-		if (!navigator.userAgent.match(/MSIE [678]\./)) {
+		if (navigator.userAgentData || !navigator.userAgent.match(/MSIE [678]\./)) {
 			return this.skip();
 		}
 
@@ -26,7 +26,7 @@ describe("e2e/27-loader-snippet/00-script-mode", function() {
 			return this.skip();
 		}
 
-		if (!navigator.userAgent.match(/MSIE [678]\./)) {
+		if (navigator.userAgentData || !navigator.userAgent.match(/MSIE [678]\./)) {
 			return this.skip();
 		}
 

@@ -762,7 +762,7 @@
 				this.responseStart = ti.responseStart || undefined;
 
 				// bug in Firefox 7 & 8 https://bugzilla.mozilla.org/show_bug.cgi?id=691547
-				if (navigator.userAgent.match(/Firefox\/[78]\./)) {
+				if (!navigator.userAgentData && navigator.userAgent.match(/Firefox\/[78]\./)) {
 					this.navigationStart = ti.unloadEventStart || ti.fetchStart || undefined;
 				}
 			}

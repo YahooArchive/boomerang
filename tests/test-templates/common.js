@@ -587,4 +587,10 @@ describe("common", function() {
 		}
 	});
 
+	it("Should not access navigator.userAgent if navigator.userAgentData exists", function() {
+		if (window._BOOMR_userAgentCheck) {
+			throw window._BOOMR_userAgentCheck;
+		}
+	});
+
 });
