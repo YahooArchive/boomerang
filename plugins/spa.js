@@ -424,9 +424,6 @@
 			// it in AutoXHR sendEvent
 			var url = BOOMR.window.document.URL;
 
-			// `this` is unbound, use BOOMR.plugins.SPA
-			BOOMR.fireEvent("spa_init", [BOOMR.plugins.SPA.current_spa_nav(), url]);
-
 			// construct the resource we'll be waiting for
 			var resource = {
 				timing: {
@@ -449,7 +446,7 @@
 					firedEvent = true;
 
 					// fire a SPA navigation completed event so that other plugins can act on it
-					BOOMR.fireEvent("spa_navigation");
+					BOOMR.fireEvent("spa_navigation", [resource.timing]);
 				}
 
 				if (typeof onComplete === "function") {
@@ -479,6 +476,12 @@
 
 			// start listening for changes
 			resource.index = BOOMR.plugins.AutoXHR.getMutationHandler().addEvent(resource);
+
+			// Fire spa_init event listeners
+			BOOMR.fireEvent("spa_init", [
+				BOOMR.plugins.SPA.current_spa_nav(),
+				url,
+				resource.timing]);
 
 			// re-enable AutoXHR if it's enabled
 			if (autoXhrEnabled) {

@@ -55,4 +55,20 @@ describe("e2e/33-autoxhr-spa-startfromclick/01-click-xhr-routechange-img.js", fu
 			assert.closeTo(tf.beacons[1].t_page, t.imgTimes.img1.duration + 30 + 10, 100);
 		});
 	});
+
+	describe("event spa_init", function() {
+		it("Should have sent the timing in the callback", function() {
+			assert.isDefined(window.spaInitTiming);
+
+			assert.equal(tf.beacons[1]["rt.tstart"], window.spaInitTiming.requestStart);
+		});
+	});
+
+	describe("event spa_navigation", function() {
+		it("Should have sent the timing in the callback", function() {
+			assert.isDefined(window.spaNavigationTiming);
+
+			assert.equal(tf.beacons[1].t_done, window.spaNavigationTiming.loadEventEnd - window.spaNavigationTiming.requestStart);
+		});
+	});
 });

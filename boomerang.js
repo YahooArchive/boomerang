@@ -641,8 +641,7 @@ BOOMR_check_doc_domain();
 			 * Fired whenever a SPA plugin is about to track a new navigation.
 			 *
 			 * @event BOOMR#spa_init
-			 * @property {string} navType Navigation type (`spa` or `spa_hard`)
-			 * @property {object} param SPA navigation parameters
+			 * @property {object[]} parameters Navigation type (`spa` or `spa_hard`), URL and timings
 			 */
 			"spa_init": [],
 
@@ -652,6 +651,7 @@ BOOMR_check_doc_domain();
 			 * Fired whenever a SPA navigation is complete.
 			 *
 			 * @event BOOMR#spa_navigation
+			 * @property {object[]} parameters Timings
 			 */
 			"spa_navigation": [],
 
