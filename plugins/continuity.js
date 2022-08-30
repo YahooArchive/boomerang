@@ -265,6 +265,15 @@
  *
  * CLS is included on the beacon as `c.cls`, and resets each beacon, so represents the CLS since the last beacon.
  *
+ * In addition to the CLS, this plugin captures data about each of the contributing layout shifts of the CLS,
+ * including the layout shift value, start time, and sources, within `c.cls.d` on the beacon.
+ *
+ * The top layout shift value is included on the beacon as `c.cls.tops`, and the corresponding Pseudo-CSS selector
+ * of the first source of the top layout shift is included on the beacon as `c.cls.topid`.
+ *
+ * Like `c.cls`, `c.cls.tops`, `c.cls.d`, and `c.cls.topid` reset each beacon. `c.cls.tops`, `c.cls.d`, and `c.cls.topid`
+ * also undergo compression and jsUrl serialization before being added to the beacon.
+ *
  * This option is on by default, and can be disabled via the
  * {@link BOOMR.plugins.Continuity.init `monitorLayoutShifts`} config option.
  *
@@ -700,6 +709,9 @@
  * * `c.c.r`: Rage click count (Base-10)
  * * `c.c`: Click count (Base-10)
  * * `c.cls`: Cumulative Layout Shift score (since last beacon) (Base-10 fraction)
+ * * `c.cls.d`: Cumulative Layout Shift data (since last beacon)
+ * * `c.cls.tops`: Top Layout Shift score within CLS (since last beacon)
+ * * `c.cls.topid`: Pseudo-CSS selector of the first source corresponding to the Top Layout Shift score (since last beacon)
  * * `c.e`: Continuity Epoch timestamp (when everything started measuring) (Base-36)
  * * `c.f.d`: Frame Rate duration (how long it has been measuring) (milliseconds) (Base-10)
  * * `c.f.l`: Number of Long Frames (>= 50ms) (Base-10)
@@ -1839,6 +1851,194 @@
 	};
 
 	/**
+	 * Compress top score by limiting to 3 digits of precision
+	 *
+	 * @param {float} score CLS value
+	 *
+	 * @returns {float} Compressed CLS score
+	 */
+	function compressClsScore(score) {
+		return parseFloat(score.toFixed(3));
+	}
+
+	/* BEGIN_DEBUG */
+	/**
+	 * Decompress top score
+	 *
+	 * @param {string} score Compressed CLS score
+	 *
+	 * @returns {float} Decompressed CLS score
+	 */
+	function decompressClsScore(score) {
+		return parseFloat(score);
+	}
+	/* END_DEBUG */
+
+	/**
+	 * Compress CLS Sources by:
+	 *
+	 * * Shortening dictionary key names
+	 *     * value -> v, startTime -> t, sources -> s, selector -> s, previousRect -> p
+	 * * Replacing currentRect with a deltaRect, d, of only the changes in x, y, width (w), or height (h)
+	 * * Converting the value and start time to base36, scaling the value up to do so
+	 * * Shortening previousRect and deltaRect key names
+	 *     * width -> w, height -> h
+	 * * Converting all previousRect and deltaRect values to base36
+	 * * jsURL string compression
+	 *
+	 * @param {object} clsSources Dictionary holding cls Sources info
+	 *
+	 * @returns {string} Seralized and compressed clsSources
+	 */
+	function compressClsSources(clsSources) {
+		var compressedSources = [];
+
+		// iterate through each layout shift and its respective data
+		for (var shift = 0; shift < clsSources.length; shift++) {
+			var newClsSource = {};
+
+			// scale up and convert value to base36
+			newClsSource.v = Math.round(clsSources[shift].value * 1000).toString(36);
+
+			// convert startTime to base36
+			newClsSource.t = clsSources[shift].startTime.toString(36);
+
+			// CLS sources
+			newClsSource.s = [];
+
+			var sources = clsSources[shift].sources;
+
+			// iterate through list of sources of this specific layout shift
+			for (var i = 0; i < sources.length; i++) {
+				var newSource = {};
+
+				newSource.s = sources[i].selector;
+
+				// convert all the previousRect ints to base36
+				var prevRect = sources[i].previousRect;
+				var currRect = sources[i].currentRect;
+
+				newSource.p = {
+					x: prevRect.x.toString(36),
+					y: prevRect.y.toString(36),
+					w: prevRect.width.toString(36),
+					h: prevRect.height.toString(36)
+				};
+
+				// only store changes from previous to currect rect as key 'd'
+				newSource.d = {};
+				if (currRect.x - prevRect.x !== 0) {
+					newSource.d.x = (currRect.x - prevRect.x).toString(36);
+				}
+
+				if (currRect.y - prevRect.y !== 0) {
+					newSource.d.y = (currRect.y - prevRect.y).toString(36);
+				}
+
+				if (currRect.width - prevRect.width !== 0) {
+					newSource.d.w = (currRect.width - prevRect.width).toString(36);
+				}
+
+				if (currRect.height - prevRect.height !== 0) {
+					newSource.d.h = (currRect.height - prevRect.height).toString(36);
+				}
+
+				// add newSource object to serSources list for this entry of compressedSources
+				newClsSource.s.push(newSource);
+			}
+
+			// store serSources under 's' in newClsSource object,
+			// then push this object to compressedSources
+			compressedSources.push(newClsSource);
+		}
+
+		return BOOMR.utils.serializeForUrl(compressedSources);
+	}
+
+	/* BEGIN_DEBUG */
+	/**
+	 * Decompress CLS Sources by:
+	 * * de-jsURL-compressing
+	 * * Lengthening dictionary key names
+	 *     * v -> value, t -> startTime, s -> sources, s -> selector,  p -> previousRect
+	 * * Replacing deltaRect with the currentRect
+	 * * Converting the value and start time to base10, scaling down value
+	 * * Lengthening previousRect and currentRect key names
+	 *     * w -> width, h -> height
+	 * * Converting all previousRect and currentRect values to base10
+	 *
+	 * @param {string} compressedSources Compressed clsSources object
+	 *
+	 * @returns {object} Decompressed clsSources object
+	 */
+	function decompressClsSources(compressedSources) {
+		var clsSources = [];
+
+		// deserialize compressedSources string to object
+		compressedSources = BOOMR.utils.deserializeForUrl(compressedSources);
+
+		// iterate through compressed layout shift entries and decompress each
+		for (var shift = 0; shift < compressedSources.length; shift++) {
+			var newClsSource = {};
+
+			// parse to base10 and downscale value
+			newClsSource.value = parseInt(compressedSources[shift].v, 36) / 1000.0;
+
+			// convert startTime to base10
+			newClsSource.startTime = parseInt(compressedSources[shift].t, 36);
+
+			var serSources = compressedSources[shift].s;
+			var sources = [];
+
+			// iterate through individual sources of this layout shift
+			// and add decompressed version to sources list
+			for (var i = 0; i < serSources.length; i++) {
+				var newSource = {};
+				var prevRect = serSources[i].p;
+
+				newSource.selector = serSources[i].s;
+
+				// decompress previousRect int values by parsing back to base10
+				newSource.previousRect = {
+					x: parseInt(prevRect.x, 36),
+					y: parseInt(prevRect.y, 36),
+					width: parseInt(prevRect.w, 36),
+					height: parseInt(prevRect.h, 36)
+				};
+
+				var deltaRect = serSources[i].d;
+
+				// recreate currentRect from prevRect and delta values,
+				// if no delta value then current = prev for that key
+				newSource.currentRect = {};
+				newSource.currentRect.x = deltaRect.x ?
+					newSource.previousRect.x + parseInt(deltaRect.x, 36) :
+					newSource.previousRect.x;
+
+				newSource.currentRect.y = deltaRect.y ?
+					newSource.previousRect.y + parseInt(deltaRect.y, 36) :
+					newSource.previousRect.y;
+
+				newSource.currentRect.width = deltaRect.w ?
+					newSource.previousRect.width + parseInt(deltaRect.w, 36) :
+					newSource.previousRect.width;
+
+				newSource.currentRect.height = deltaRect.h ?
+					newSource.previousRect.height + parseInt(deltaRect.h, 36) :
+					newSource.previousRect.height;
+
+				sources.push(newSource);
+			}
+
+			newClsSource.sources = sources;
+			clsSources.push(newClsSource);
+		}
+
+		return clsSources;
+	}
+	/* END_DEBUG */
+
+	/**
 	 * Monitors Layout Shift events
 	 */
 	var LayoutShiftMonitor = function(w) {
@@ -1852,6 +2052,15 @@
 		// CumulativeLayoutShift score
 		var clsScore = 0;
 
+		// CumulativeLayoutShift corresponding sources and info
+		var clsSources = [];
+
+		// Top layout shift score within CLS
+		var topScore = 0;
+
+		// Pseudo-CSS Selector of first source corresponding to topScore
+		var topID = "";
+
 		// PerformanceObserver
 		var perfObserver = new w.PerformanceObserver(onLayoutShiftObserver);
 
@@ -1864,31 +2073,108 @@
 		}
 
 		function onLayoutShiftObserver(list) {
-			var entries, i;
-
+			// Entries format: [{value: ..., sources: [...], startTime: ...}]
 			if (!enabled) {
 				return;
 			}
 
-			entries = list.getEntries();
-			for (i = 0; i < entries.length; i++) {
-				// Only account for Layoutshift score that didnt have recent user input.
-				if (!entries[i].hadRecentInput) {
-					clsScore += entries[i].value;
+			var entries = list.getEntries();
+			var firstSelector = "";
+
+			// iterate through each layout shift that occurrs
+			for (var i = 0; i < entries.length; i++) {
+				// only account for layout shifts that don't have recent input
+				if (entries[i].hadRecentInput) {
+					continue;
+				}
+
+				// add layout shift value to overall CLS
+				clsScore += entries[i].value;
+
+				var newClsSource = {};
+
+				// record layout shift value rounded to three decimals
+				newClsSource.value = parseFloat(entries[i].value.toFixed(3));
+
+				// record start time as an int
+				newClsSource.startTime = Math.round(entries[i].startTime);
+
+				var sources = entries[i].sources;
+				var sourceList = [];
+
+				// create list of sources for this layout shift
+				for (var s = 0; s < sources.length; s++) {
+					// store each source as a dictionary of corresponding info, beginning with its Pseudo-CSS selector
+					var newSource = {
+						selector: BOOMR.utils.makeSelector(sources[s].node)
+					};
+
+					// keep track of first source per layout shift
+					if (s === 0) {
+						firstSelector = newSource.selector;
+					}
+
+					// keep track of previous and current rectangle data as separate dictionaries of x, y, width, and height info
+					var prevRect = sources[s].previousRect;
+					newSource.previousRect = {
+						x: prevRect.x,
+						y: prevRect.y,
+						width: prevRect.width,
+						height: prevRect.height
+					};
+
+					var currRect = sources[s].currentRect;
+					newSource.currentRect = {
+						x: currRect.x,
+						y: currRect.y,
+						width: currRect.width,
+						height: currRect.height
+					};
+
+					// add this newSource object to sourceList
+					sourceList.push(newSource);
+				}
+
+				newClsSource.sources = sourceList;
+				clsSources.push(newClsSource);
+
+				// update highest layout shift value and Pseudo-CSS selector of
+				// first source corresponding to it when needed
+				if (entries[i].value > topScore) {
+					topScore = entries[i].value;
+					topID = firstSelector;
 				}
 			}
+
+			// round topScore to three decimals
+			topScore = parseFloat(topScore.toFixed(3));
 		}
 
 		/**
-		 * Record Cumulative Layout Shift score on beacon
+		 * Record Cumulative Layout Shift score, sources, top shift, and top ID on beacon
 		 */
 		function analyze(startTime) {
-			// add data to beacon
-			impl.addToBeacon("c.cls", externalMetrics.clsScore());
+			// add compressed data to beacon
+			impl.addToBeacon("c.cls", compressClsScore(externalMetrics.clsScore()));
+			impl.addToBeacon("c.cls.d", compressClsSources(externalMetrics.clsSources()));
+			impl.addToBeacon("c.cls.tops", compressClsScore(externalMetrics.topScore()));
+			impl.addToBeacon("c.cls.topid", externalMetrics.topID());
 		}
 
 		function clearClsScore() {
 			clsScore = 0;
+		}
+
+		function clearClsSources() {
+			clsSources = [];
+		}
+
+		function clearTopScore() {
+			topScore = 0;
+		}
+
+		function clearTopID() {
+			topID = "";
 		}
 
 		/**
@@ -1900,6 +2186,9 @@
 			perfObserver.disconnect();
 
 			clearClsScore();
+			clearClsSources();
+			clearTopScore();
+			clearTopID();
 		}
 
 		/**
@@ -1907,6 +2196,9 @@
 		 */
 		function onBeacon() {
 			clearClsScore();
+			clearClsSources();
+			clearTopScore();
+			clearTopID();
 		}
 
 		/**
@@ -1916,13 +2208,39 @@
 			return clsScore;
 		};
 
+		/**
+		 * Cumulative Layout Shift Sources
+		 */
+		externalMetrics.clsSources = function() {
+			return clsSources;
+		};
+
+		/**
+		 * Top Layout Shift Score
+		 */
+		externalMetrics.topScore = function() {
+			return topScore;
+		};
+
+		/**
+		 * Top Layout Shift ID
+		 */
+		externalMetrics.topID = function() {
+			return topID;
+		};
+
 		return {
 			clearClsScore: clearClsScore,
+			clearClsSources: clearClsSources,
+			clearTopScore: clearTopScore,
+			clearTopID: clearTopID,
 			analyze: analyze,
 			stop: stop,
 			onBeacon: onBeacon
 		};
 	};
+
+
 
 	/**
 	 * Monitors LongTasks
@@ -4495,7 +4813,12 @@
 		compressBucketLog: compressBucketLog,
 		decompressBucketLog: decompressBucketLog,
 		decompressBucketLogNumber: decompressBucketLogNumber,
-		decompressLog: decompressLog
+		decompressLog: decompressLog,
+		determineTti: determineTti,
+		compressClsScore: compressClsScore,
+		decompressClsScore: decompressClsScore,
+		compressClsSources: compressClsSources,
+		decompressClsSources: decompressClsSources
 		/* END_DEBUG */
 	};
 }());

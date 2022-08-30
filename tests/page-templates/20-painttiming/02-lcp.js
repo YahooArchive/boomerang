@@ -66,4 +66,122 @@ describe("e2e/20-painttiming/02-lcp", function() {
 
 		assert.equal(tf.lastBeacon()["pt.lcp"], BOOMR.plugins.PaintTiming.metrics.lcp());
 	});
+
+	it("Should have exposed LCP metric src (pt.lcp.src) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.equal(tf.lastBeacon()["pt.lcp"], BOOMR.plugins.PaintTiming.metrics.lcp());
+
+		assert.isString(tf.lastBeacon()["pt.lcp.src"]);
+
+		assert.equal(tf.lastBeacon()["pt.lcp.src"], BOOMR.plugins.PaintTiming.metrics.lcpSrc());
+		assert.include(tf.lastBeacon()["pt.lcp.src"], "delay?delay=2000&file=/assets/img.jpg&id=2000");
+	});
+
+	it("Should have exposed LCP metric element (pt.lcp.el) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.isString(tf.lastBeacon()["pt.lcp.el"]);
+
+		assert.equal(tf.lastBeacon()["pt.lcp.el"], BOOMR.plugins.PaintTiming.metrics.lcpEl());
+		assert.equal(tf.lastBeacon()["pt.lcp.el"], "IMG");
+	});
+
+	it("Should not have exposed LCP metric ID (pt.lcp.id) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.notProperty(tf.lastBeacon(), "pt.lcp.id");
+	});
+
+	it("Should have exposed LCP metric Pseudo-CSS Selector (pt.lcp.e) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.isString(tf.lastBeacon()["pt.lcp.e"]);
+
+		assert.equal(tf.lastBeacon()["pt.lcp.e"], BOOMR.plugins.PaintTiming.metrics.lcpE());
+		assert.equal(tf.lastBeacon()["pt.lcp.e"], "img");
+	});
+
+	it("Should not have exposed LCP metric src-set (pt.lcp.srcset) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.notProperty(tf.lastBeacon(), "pt.lcp.srcset");
+	});
+
+	it("Should not have exposed LCP metric sizes (pt.lcp.sizes) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.notProperty(tf.lastBeacon(), "pt.lcp.sizes");
+	});
+
+	it("Should not have exposed LCP metric size (pt.lcp.s) (if LargestContentfulPaint is supported and happened by load)", function() {
+		var observerWait, that = this;
+
+		if (!t.isLargestContentfulPaintSupported()) {
+			return this.skip();
+		}
+
+		if (typeof tf.lastBeacon()["pt.fp"] === "undefined") {
+			// No paint
+			return this.skip();
+		}
+
+		assert.isTrue(Number.isInteger(tf.lastBeacon()["pt.lcp.s"]));
+
+		assert.equal(tf.lastBeacon()["pt.lcp.s"], BOOMR.plugins.PaintTiming.metrics.lcpS());
+	});
 });

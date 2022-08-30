@@ -19,6 +19,11 @@
  *             user-driven events, and thus won't be added to the beacon.
  * * `pt.lcp.src`: Source URL of the Largest Contentful Paint element
  * * `pt.lcp.el`: Element tag name of the Largest Contentful Paint
+ * * `pt.lcp.id`: Element ID of the Largest Contentful Paint
+ * * `pt.lcp.e`: Element Pseudo-CSS selector for the Largest Contentful Paint
+ * * `pt.lcp.srcset`: Element srcset property of the Largest Contentful Paint
+ * * `pt.lcp.sizes`: Element sizes property of the Largest Contentful Paint
+ * * `pt.lcp.s`: Size of the Largest Contentful Paint in device-independent pixels squared
  *
  * @see {@link https://www.w3.org/TR/paint-timing/}
  * @see {@link https://wicg.github.io/largest-contentful-paint/}
@@ -162,11 +167,35 @@
 			// cache it for others who want to use it
 			impl.timingCache[lcp.entryType] = lcpTime;
 
+			var lcpEl = "";
 			var lcpSrc = "";
-			var lcpEl = lcp.element ? lcp.element.tagName : "";
-			if (lcp.element && (lcp.element.href || lcp.element.src)) {
-				lcpSrc = (lcp.element.href || lcp.element.src);
+			var lcpId = "";
+			var lcpE = "";
+			var lcpSrcset = "";
+			var lcpSizes = "";
+
+			if (lcp.element) {
+				// tag name
+				lcpEl = lcp.element.tagName;
+
+				// src / href
+				lcpSrc = (lcp.element.href || lcp.element.src) || "";
+
+				// element ID
+				lcpId = lcp.element.id || "";
+
+				// Pseudo-CSS selector
+				lcpE = BOOMR.utils.makeSelector(lcp.element);
+
+				// srcset attribute
+				lcpSrcset = lcp.element.srcset || "";
+
+				// sizes attribute
+				lcpSizes = lcp.element.sizes || "";
 			}
+
+			// size
+			var lcpS = lcp.size ? lcp.size : 0;
 
 			/* BEGIN_DEBUG */
 			/**
@@ -176,14 +205,44 @@
 			impl.timingHistory[lcp.entryType].push({
 				time: lcpTime,
 				src: lcpSrc,
-				el: lcpEl
+				el: lcpEl,
+				id: lcpId,
+				e: lcpE,
+				srcset: lcpSrcset,
+				sizes: lcpSizes,
+				s: lcpS
 			});
-
 			/* END_DEBUG */
 
 			BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
-			BOOMR.addVar("pt.lcp.src", lcpSrc, true);
-			BOOMR.addVar("pt.lcp.el", lcpEl, true);
+
+			if (lcpSrc) {
+				BOOMR.addVar("pt.lcp.src", lcpSrc, true);
+			}
+
+			if (lcpEl) {
+				BOOMR.addVar("pt.lcp.el", lcpEl, true);
+			}
+
+			if (lcpId) {
+				BOOMR.addVar("pt.lcp.id", lcpId, true);
+			}
+
+			if (lcpE) {
+				BOOMR.addVar("pt.lcp.e", lcpE, true);
+			}
+
+			if (lcpSrcset) {
+				BOOMR.addVar("pt.lcp.srcset", lcpSrcset, true);
+			}
+
+			if (lcpSizes) {
+				BOOMR.addVar("pt.lcp.sizes", lcpSizes, true);
+			}
+
+			if (lcpS) {
+				BOOMR.addVar("pt.lcp.s", lcpS, true);
+			}
 
 			impl.externalMetrics.lcp = function() {
 				return Math.floor(lcpTime);
@@ -196,6 +255,27 @@
 			impl.externalMetrics.lcpEl = function() {
 				return lcpEl;
 			};
+
+			impl.externalMetrics.lcpId = function() {
+				return lcpId;
+			};
+
+			impl.externalMetrics.lcpE = function() {
+				return lcpE;
+			};
+
+			impl.externalMetrics.lcpSrcset = function() {
+				return lcpSrcset;
+			};
+
+			impl.externalMetrics.lcpSizes = function() {
+				return lcpSizes;
+			};
+
+			impl.externalMetrics.lcpS = function() {
+				return lcpS;
+			};
+
 		}
 	};
 

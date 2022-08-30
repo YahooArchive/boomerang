@@ -15,8 +15,22 @@ describe("e2e/21-continuity/36-cls", function() {
 			return this.skip();
 		}
 
-		assert.isNumber(tf.lastBeacon()["c.cls"]);
-		assert.equal(tf.lastBeacon()["c.cls"], clsScoreOnBeaconSend);
+		var clsScore = BOOMR.plugins.Continuity.decompressClsScore(tf.lastBeacon()["c.cls"]);
+		assert.isNumber(clsScore);
+		assert.equal(clsScore, parseFloat(clsScoreOnBeaconSend.toFixed(3)));
+
+		done();
+	});
+
+	it("Should have set c.cls.tops (if PerformanceObserver is supported)", function(done) {
+		if (!typeof BOOMR.window.PerformanceObserver === "function" || !BOOMR.window.LayoutShift) {
+			return this.skip();
+		}
+
+		var topScore = BOOMR.plugins.Continuity.decompressClsScore(tf.lastBeacon()["c.cls.tops"]);
+		assert.isNumber(topScore);
+		assert.equal(topScore, topScoreOnBeaconSend);
+
 		done();
 	});
 });

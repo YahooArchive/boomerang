@@ -789,7 +789,7 @@
 	 *
 	 * @param {Window} win Window to search
 	 * @param {number[]} [winDims] position and size of the window if it is an embedded iframe in the format returned by this function
-	 * @returns {Object} Object with URLs of visible assets as keys, and Array[height, width, top, left, naturalHeight, naturalWidth] as value
+	 * @returns {object} Object with URLs of visible assets as keys, and Array[height, width, top, left, naturalHeight, naturalWidth] as value
 	 */
 	function getVisibleEntries(win, winDims) {
 		// lower-case tag names should be used: https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByTagName
@@ -1697,7 +1697,7 @@
 	 * }
 	 *
 	 * @param {Array} lookup compressed lookup array
-	 * @returns {Object} indexed version of the compressed lookup array
+	 * @returns {object} indexed version of the compressed lookup array
 	 */
 	function indexServerTiming(lookup) {
 		return lookup.reduce(function(serverTimingIndex, compressedEntry, entryIndex) {
@@ -1776,7 +1776,7 @@
 	 *
 	 * @param {Array} lookup compressed lookup array
 	 * @param {Integer} key key into the compressed lookup
-	 * @returns {Object} decompressed resource timing entry (name, duration, description)
+	 * @returns {object} decompressed resource timing entry (name, duration, description)
 	 */
 	/* BEGIN_DEBUG */
 	function decompressServerTiming(lookup, key) {

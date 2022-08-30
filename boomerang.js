@@ -2235,6 +2235,29 @@ BOOMR_check_doc_domain();
 				return "";
 			},
 
+			/* BEGIN_DEBUG */
+			/**
+			 * Attempt to deserialize an object, preferring JSURL over JSON.parse
+			 *
+			 * @param {string} value String to deserialize
+			 *
+			 * @returns {object|undefined} Deserialized version of value, undefined if not possible
+			 */
+			deserializeForUrl: function(value) {
+				if (BOOMR.utils.Compression && BOOMR.utils.Compression.jsUrlDecompress) {
+					return BOOMR.utils.Compression.jsUrlDecompress(value);
+				}
+
+				if (window.JSON) {
+					return JSON.parse(value);
+				}
+
+				// not supported
+				BOOMR.debug("JSON is not supported");
+				return;
+			},
+			/* END_DEBUG */
+
 			/**
 			 * Attempt to identify the URL of boomerang itself using multiple methods for cross-browser support
 			 *
@@ -2574,6 +2597,119 @@ BOOMR_check_doc_domain();
 				}
 
 				return true;
+			},
+
+			/**
+			 * Given a HTML node, returns a Pseudo-CSS selector.
+			 *
+			 * Algorithm:
+			 * * Starting at the node itself, gather its selector: `elementName#elementId.elementClasses`
+			 *     * If the ID or classes are missing, skip them, e.g. just `elementName` or `elementName.elementClasses`
+			 * * Going up the parent tree via the `.parentNode`, stop at the first of:
+			 *     * The closest node (or itself) with an ID
+			 *     * The BODY node
+			 * * For each node found, prepend the node's selector to the full selector string
+			 * * Limit the number of selectors added to 5
+			 *     * If it takes more than 5 to get to an element with an ID or BODY, collapse to a `*` until they are reached
+			 *
+			 * For example:
+			 * * `<div> <span> <h1>` -> `div span h1`
+			 * * `<div id="test"> <span class="first">` -> `div#test span.first`
+			 * * `<span class="second"> <div id="test"> <span class="first">` -> `div#test span.first`
+			 * * `<span class="second"> <div id="test"> <span class="first second">` -> `div#test span.first.second`
+			 *
+			 * @param {Node} elementNode Node to generate a Pseudo-CSS selector for
+			 *
+			 * @return {string} Pseudo-CSS selector
+			 *
+			 * @memberof BOOMR.utils
+			 */
+			makeSelector: function(elementNode) {
+				var cssSelectors = [];
+				var node = elementNode;
+
+				// checks to see if a node is valid (element type, not null)
+				// NOTE: Also sets the funtion-local `node` as the next node to iterate over
+				function validateAndSetNode(nodeToCheck, isParent) {
+					var isValid = true;
+
+					// node invalid if null
+					if (nodeToCheck === null) {
+						isValid = false;
+					}
+
+					// if node is not valid, see if there's a parent that is
+					else {
+						// nodeType 1 == Node.ELEMENT_NODE
+						while (nodeToCheck !== null && nodeToCheck.nodeType !== 1) {
+							nodeToCheck = nodeToCheck.parentNode || nodeToCheck.parentElement;
+						}
+
+						// BODY is also invalid
+						if (nodeToCheck === null || nodeToCheck.tagName === "BODY") {
+							isValid = false;
+						}
+					}
+
+					//
+					// If we're not just checking to see if a parent exists,
+					// set node to the nearest valid parent if there is one.
+					//
+					// If node itself is valid, it will stay itself
+					// (only changes if invalid but has a valid parent).
+					if (!isParent) {
+						node = nodeToCheck;
+					}
+
+					return isValid;
+				}
+
+				while (node !== null) {
+					// if node isn't null but is the wrong type, will set it to nearest valid parent
+					var nodeIsValid = validateAndSetNode(node, false);
+
+					if (!nodeIsValid || !node) {
+						// if node is invalid and no valid parent, stop iterating
+						break;
+					}
+
+					// add tagname and ID to selector if ID exists
+					if (node.hasAttribute("id")) {
+						var nodeId = node.tagName.toLowerCase() +
+							"#" + node.getAttribute("id");
+
+						cssSelectors.unshift(nodeId);
+
+						// selector ends if an ID is found
+						break;
+					}
+
+					// check if parent of this node is valid
+					var parentIsValid = validateAndSetNode(node.parentNode, true);
+
+					// if we don't have three tagnames in the selector yet,
+					// or we do but this is the last valid one, add class if exists
+					if (cssSelectors.length < 3 || (cssSelectors.length >= 3 && !parentIsValid)) {
+						var nodeClass = node.tagName.toLowerCase();
+
+						if (node.hasAttribute("class")) {
+							nodeClass += "." + node.getAttribute("class").replace(/ +/g, ".");
+						}
+
+						cssSelectors.unshift(nodeClass);
+					}
+					// if > 3 tagnames in selector and parent is valid,
+					// add an asterick if there is not one already
+					else if (cssSelectors[0] !== "*") {
+						cssSelectors.unshift("*");
+					}
+
+					// go to next node in sequence
+					node = node.parentNode || node.parentElement;
+				}
+
+				// return CSS selector
+				return cssSelectors.join(" ");
 			}
 
 			/* BEGIN_DEBUG */

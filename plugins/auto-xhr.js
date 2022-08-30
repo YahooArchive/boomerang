@@ -2395,7 +2395,7 @@
 			 * Mark requestStart timestamp and start the request unless the resource
 			 * has already been marked as having an error code or a result to itself.
 			 *
-			 * @returns {Object} The data normal XHR.send() would return
+			 * @returns {object} The data normal XHR.send() would return
 			 *
 			 * @memberof ProxyXHRImplementation
 			 */

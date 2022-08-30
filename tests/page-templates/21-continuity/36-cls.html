@@ -17,26 +17,35 @@ BOOMR_test.init({
 
 var clsScoreOnBeaconSend = 0;
 var clsScore = 0;
+var topScoreOnBeaconSend = 0;
+var topScore = 0;
 var observer;
 
 function onBeforeBeaconSend() {
 	clsScoreOnBeaconSend = clsScore;
+	topScoreOnBeaconSend = topScore;
 	observer.disconnect();
 }
 
 window.BOOMR.subscribe("before_beacon", onBeforeBeaconSend, null, this);
 
 observer = new window.PerformanceObserver(function(list) {
-
 	var entries, i;
 
 	entries = list.getEntries();
 
 	for (i = 0; i < entries.length; i++) {
-		if (!entries[i].hadRecentInput) {
-			clsScore += entries[i].value;
+		if (entries[i].hadRecentInput) {
+			continue;
+		}
+
+		clsScore += entries[i].value;
+		if (entries[i].value > topScore) {
+			topScore = entries[i].value;
 		}
 	}
+
+	topScore = parseFloat(topScore.toFixed(3));
 });
 
 observer.observe({ type: "layout-shift", buffered: true });
