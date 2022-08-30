@@ -1,4 +1,5 @@
 <%= header %>
+<span id="interaction-target"></span>
 <script>
 // polyfill / overwrite PO for testing
 window.PerformanceObserver = function(callback) {
@@ -20,12 +21,18 @@ window.PerformanceObserver = function(callback) {
 window.PerformanceEventTiming = {};
 </script>
 <%= boomerangScript %>
-<script src="00-basic.js" type="text/javascript"></script>
+<script src="05-inp-just-fid.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
+	testAfterOnBeacon: 2,
 	EventTiming: {
 		enabled: true
+	},
+	afterFirstBeacon: function() {
+		// fake an unload
+		BOOMR.fireEvent("page_unload", {
+			type: "beforeunload"
+		});
 	}
 });
 
@@ -39,25 +46,10 @@ window.POs["first-input"].trigger({
 			processingStart: 150,
 			processingEnd: 1000,
 			cancelable: false,
-			interactionId: 10
-		}];
-	}
-});
-
-window.POs.event.trigger({
-	getEntries: function() {
-		return [{
-			name: "click",
-			entryType: "event",
-			startTime: 1000,
-			duration: 50,
-			processingStart: 1000,
-			processingEnd: 1050,
-			cancelable: false,
-			interactionId: 100
+			interactionId: 10,
+			target: document.getElementById("interaction-target")
 		}];
 	}
 });
 </script>
-<img src="/delay?delay=5000&file=/assets/img.jpg" />
 <%= footer %>

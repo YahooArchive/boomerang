@@ -2634,19 +2634,19 @@ BOOMR_check_doc_domain();
 					var isValid = true;
 
 					// node invalid if null
-					if (nodeToCheck === null) {
+					if (!nodeToCheck) {
 						isValid = false;
 					}
 
 					// if node is not valid, see if there's a parent that is
 					else {
 						// nodeType 1 == Node.ELEMENT_NODE
-						while (nodeToCheck !== null && nodeToCheck.nodeType !== 1) {
+						while (nodeToCheck && nodeToCheck.nodeType !== 1) {
 							nodeToCheck = nodeToCheck.parentNode || nodeToCheck.parentElement;
 						}
 
 						// BODY is also invalid
-						if (nodeToCheck === null || nodeToCheck.tagName === "BODY") {
+						if (!nodeToCheck || nodeToCheck.tagName === "BODY") {
 							isValid = false;
 						}
 					}
@@ -2664,7 +2664,7 @@ BOOMR_check_doc_domain();
 					return isValid;
 				}
 
-				while (node !== null) {
+				while (node) {
 					// if node isn't null but is the wrong type, will set it to nearest valid parent
 					var nodeIsValid = validateAndSetNode(node, false);
 
