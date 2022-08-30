@@ -638,7 +638,8 @@
 						encodedBodySize: navEntry.encodedBodySize,
 						decodedBodySize: navEntry.decodedBodySize,
 						transferSize: navEntry.transferSize,
-						serverTiming: readServerTiming(navEntry)
+						serverTiming: readServerTiming(navEntry),
+						nextHopProtocol: navEntry.nextHopProtocol
 					});
 				}
 				else if (frame.performance.timing) {
@@ -683,6 +684,7 @@
 
 			for (i = 0; frameEntries && i < frameEntries.length; i++) {
 				t = frameEntries[i];
+
 				rtEntry = {
 					name: t.name,
 					initiatorType: t.initiatorType,
@@ -691,8 +693,10 @@
 					transferSize: t.transferSize,
 					serverTiming: readServerTiming(t),
 					visibleDimensions: visibleEntries[t.name],
-					latestTime: getResourceLatestTime(t)
+					latestTime: getResourceLatestTime(t),
+					nextHopProtocol: t.nextHopProtocol
 				};
+
 				for (var field = 0; field < RT_FIELDS_TIMESTAMPS.length; field++) {
 					var key = RT_FIELDS_TIMESTAMPS[field];
 					rtEntry[key] = ((key === "startTime") || t[key]) ? (t[key] + offset) : 0;
@@ -1294,6 +1298,36 @@
 	}
 
 	/**
+	 * Guesses whether or a not a resource is a cache hit.
+	 *
+	 * We can get this directly from the beacon if it has ResourceTiming2 sizing
+	 * data, and the resource is same-origin or has TAO.
+	 *
+	 * For all other cases, we have to guess based on the timing
+	 *
+	 * @param {PerformanceResourceTiming} entry ResourceTiming entry
+	 *
+	 * @returns {boolean} True if we estimate it was a cache hit.
+	 */
+	function isCacheHit(entry) {
+		// if we transferred bytes, it must not be a cache hit
+		// (will return false for 304 Not Modified)
+		if (entry.transferSize > 0) {
+			return false;
+		}
+
+		// if the body size is non-zero, it must mean this is a
+		// ResourceTiming2 browser, this was same-origin or TAO,
+		// and transferSize was 0, so it was in the cache
+		if (entry.decodedBodySize > 0) {
+			return true;
+		}
+
+		// fall back to duration checking (non-RT2 or cross-origin)
+		return entry.duration < 30;
+	}
+
+	/**
 	 * Gathers performance entries and compresses the result.
 	 *
 	 * @param {number} from Only get timings from
@@ -1400,11 +1434,12 @@
 				data += SPECIAL_DATA_PREFIX + SPECIAL_DATA_SERVICE_WORKER_TYPE + toBase36(workerStartOffset);
 			}
 
-			if (e.hasOwnProperty("nextHopProtocol") && e.startTime <= e.requestStart) {
+			// nextHopProtocol handling
+			if (e.hasOwnProperty("nextHopProtocol") &&
+			    e.nextHopProtocol &&
+			    !isCacheHit(e)) {
 				// change http/1.1 to h1.1 to be consistent with h2 & h3.
-				// Empty string means either cross-origin without TAO or the resource was read from cache.
-				// We skip the TAO case with our condition above, so replace empty string with C to signify cache
-				data += SPECIAL_DATA_PREFIX + SPECIAL_DATA_PROTOCOL + (e.nextHopProtocol ? e.nextHopProtocol.replace("http/", "h") : "C");
+				data += SPECIAL_DATA_PREFIX + SPECIAL_DATA_PROTOCOL + e.nextHopProtocol.replace("http/", "h");
 			}
 
 			url = trimUrl(e.name, impl.trimUrls);

@@ -7,10 +7,10 @@ describe("e2e/11-restiming/09-link-attrs", function() {
 
 	function assertLinkRel(data, expectedRel) {
 		var RT = BOOMR.plugins.ResourceTiming;
-		var LINK_ATTR_EXPR = new RegExp("^.*\\" + RT.SPECIAL_DATA_PREFIX + RT.SPECIAL_DATA_LINK_ATTR_TYPE);
+		var LINK_ATTR_EXPR = new RegExp("^.*\\" + RT.SPECIAL_DATA_PREFIX + RT.SPECIAL_DATA_LINK_ATTR_TYPE + "(\\d)");
 
 		assert.match(data, LINK_ATTR_EXPR);
-		assert.strictEqual(data.replace(LINK_ATTR_EXPR, ""), String(expectedRel));
+		assert.strictEqual(data.match(LINK_ATTR_EXPR)[1], String(expectedRel));
 	}
 
 	function getInteresting() {
