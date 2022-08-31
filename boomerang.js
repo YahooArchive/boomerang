@@ -47,6 +47,9 @@
  * * `rt.ss`: Session start timestamp
  * * `rt.sl`: Session length (number of pages), can be increased by XHR beacons as well
  * * `ua.plt`: `navigator.platform` or if available `navigator.userAgentData.platform`
+ * * `ua.arch`: navigator userAgentData architecture, if client hints requested
+ * * `ua.model`: navigator userAgentData model, if client hints requested
+ * * `ua.pltv`: navigator userAgentData platform version, if client hints requested
  * * `ua.vnd`: `navigator.vendor`
  */
 
@@ -456,6 +459,12 @@ BOOMR_check_doc_domain();
 
 		// Sometimes we would like to be able to set the SameSite=None from a Boomerang plugin
 		forced_same_site_cookie_none: false,
+
+		// Navigator User Agent data object holding Architecture, Model and Platform information from Client Hints API
+		userAgentData: undefined,
+
+		// Client hints use for Architecture, Model and Platform detail is disabled by default
+		request_client_hints: false,
 
 		events: {
 			/**
@@ -2841,6 +2850,8 @@ BOOMR_check_doc_domain();
 		 * that you think can be used to identify the user's network connection.
 		 * @param {string} [config.same_site_cookie] Used for creating cookies with `SameSite` with one of the following values: `None`, `Lax` or `Strict`.
 		 * @param {boolean} [config.secure_cookie] When `true` all cookies will be created with `Secure` flag.
+		 * @param {boolean} [config.request_client_hints] When `true`, gather high entropy values for Architecture,
+		 * Model and Platform data from navigator.userAgentData.
 		 * @param {function} [config.log] Logger to use. Set to `null` to disable logging.
 		 * @param {function} [<plugins>] Each plugin has its own section
 		 *
@@ -2863,7 +2874,8 @@ BOOMR_check_doc_domain();
 				    "strip_query_string",
 				    "user_ip",
 				    "same_site_cookie",
-				    "secure_cookie"
+				    "secure_cookie",
+				    "request_client_hints"
 			    ];
 
 			/* BEGIN_DEBUG */
@@ -2988,6 +3000,16 @@ BOOMR_check_doc_domain();
 				if (config[properties[i]] !== undefined) {
 					impl[properties[i]] = config[properties[i]];
 				}
+			}
+
+			// if client hints are requested, then squirrel away user agent data of architecture, model, and platform
+			// version on impl for later use on the beacon
+			if (impl.request_client_hints === true &&
+				w && w.navigator && w.navigator.userAgentData &&
+				typeof w.navigator.userAgentData.getHighEntropyValues === "function") {
+				w.navigator.userAgentData.getHighEntropyValues(["architecture", "model", "platformVersion"]).then(function(ua) {
+					impl.userAgentData = ua;
+				});
 			}
 
 			// if it's the first call to init (handlers aren't attached) and we're not asked to wait OR
@@ -4241,6 +4263,13 @@ BOOMR_check_doc_domain();
 
 			impl.vars["ua.plt"] = platform;
 			impl.vars["ua.vnd"] = navigator.vendor;
+
+			// if userAgentData exists, then store on the beacon
+			if (impl.userAgentData) {
+				impl.vars["ua.arch"] = impl.userAgentData.architecture;
+				impl.vars["ua.model"] = impl.userAgentData.model;
+				impl.vars["ua.pltv"] = impl.userAgentData.platformVersion;
+			}
 
 			if (this.pageId) {
 				impl.vars.pid = this.pageId;

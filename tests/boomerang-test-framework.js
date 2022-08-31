@@ -338,6 +338,12 @@
 		return null;
 	};
 
+	t.isClientHintsSupported = function() {
+		return (window.navigator &&
+				window.navigator.userAgentData &&
+				typeof window.navigator.userAgentData.getHighEntropyValues === "function");
+	};
+
 	t.isResourceTimingSupported = function() {
 		return (window.performance &&
 		    typeof window.performance.getEntriesByType === "function" &&
