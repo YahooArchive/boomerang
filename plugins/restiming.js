@@ -693,7 +693,6 @@
 					transferSize: t.transferSize,
 					serverTiming: readServerTiming(t),
 					visibleDimensions: visibleEntries[t.name],
-					latestTime: getResourceLatestTime(t),
 					nextHopProtocol: t.nextHopProtocol
 				};
 
@@ -1065,42 +1064,6 @@
 
 		return resource;
 	}
-
-	/**
-	 * Decompress compressed timepoints into a timepoint object with painted and finalized pixel counts
-	 * @param {string} comp The compressed timePoint object returned by getOptimizedTimepoints
-	 * @returns {object} An object in the form { <timePoint>: [ <pixel count>, <finalized pixel count>], ... }
-	 */
-	function decompressTimePoints(comp) {
-		var result = {}, timePoints, i, split, prevs = [0, 0, 0];
-
-		timePoints = comp.split("!");
-
-		for (i = 0; i < timePoints.length; i++) {
-			split = timePoints[i]
-				.replace(/^~/, "Infinity~")
-				.replace("-", "~0~")
-				.split("~")
-				.map(function(v, j) {
-					v = (v === "Infinity" ? Infinity : parseInt(v, 36));
-
-					if (j === 2) {
-						v = prevs[1] - v;
-					}
-					else {
-						v = v + prevs[j];
-					}
-
-					prevs[j] = v;
-
-					return v;
-				});
-
-			result[split[0]] = [ split[1], split[2] || split[1] ];
-		}
-
-		return result;
-	}
 	/* END_DEBUG */
 
 	/**
@@ -1137,164 +1100,6 @@
 
 		// apply limits
 		return BOOMR.utils.cleanupURL(url, impl.urlLimit);
-	}
-
-	/**
-	 * Get the latest timepoint for this resource from ResourceTiming. If the resource hasn't started downloading yet, return Infinity
-	 * @param {PerformanceResourceEntry} res The resource entry to get the latest time for
-	 * @returns {number} latest timepoint for the resource or now if the resource is still in progress
-	 */
-	function getResourceLatestTime(res) {
-		// If responseEnd is non zero, return it
-		if (res.responseEnd) {
-			return res.responseEnd;
-		}
-
-		// If responseStart is non zero, assume it accounts for 80% of the load time, and bump it by 20%
-		if (res.responseStart && res.startTime) {
-			return res.responseStart + (res.responseStart - res.startTime) * 0.2;
-		}
-
-		// If the resource hasn't even started loading, assume it will come at some point in the distant future (after the beacon)
-		// we'll let the server determine what to do
-		return Infinity;
-	}
-
-	/**
-	 * Given a 2D array representing the screen and a list of rectangular dimension tuples, turn on the screen pixels that match the dimensions.
-	 * Previously set pixels that are also set with the current call will be overwritten with the new value of pixelValue
-	 * @param {number[][]} currentPixels A 2D sparse array of numbers representing set pixels or undefined if no pixels are currently set.
-	 * @param {number[][]} dimList A list of rectangular dimension tuples in the form [height, width, top, left] for resources to be painted on the virtual screen
-	 * @param {number} pixelValue The numeric value to set all new pixels to
-	 * @returns {number[][]} An updated version of currentPixels.
-	 */
-	function mergePixels(currentPixels, dimList, pixelValue) {
-		var s = BOOMR.window.screen,
-		    h = s.height, w = s.width;
-
-		return dimList.reduce(
-			function(acc, val) {
-				var x_min, x_max,
-				    y_min, y_max,
-				    x, y;
-
-				x_min = Math.max(0, val[3]);
-				y_min = Math.max(0, val[2]);
-				x_max = Math.min(val[3] + val[1], w);
-				y_max = Math.min(val[2] + val[0], h);
-
-				// Object is off-screen
-				if (x_min >= x_max || y_min >= y_max) {
-					return acc;
-				}
-
-				// We fill all pixels of this resource with a true
-				// this is needed to correctly account for overlapping resources
-				for (y = y_min; y < y_max; y++) {
-					if (!acc[y]) {
-						acc[y] = [];
-					}
-
-					for (x = x_min; x < x_max; x++) {
-						acc[y][x] = pixelValue;
-					}
-				}
-
-				return acc;
-			},
-			currentPixels || []
-		);
-	}
-
-	/**
-	 * Counts the number of pixels that are set in the given 2D array representing the screen
-	 * @param {number[][]} pixels A 2D boolean array representing the screen with painted pixels set to true
-	 * @param {number} [rangeMin] If included, will only count pixels >= this value
-	 * @param {number} [rangeMax] If included, will only count pixels <= this value
-	 * @returns {number} The number of pixels set in the passed in array
-	 */
-	function countPixels(pixels, rangeMin, rangeMax) {
-		rangeMin = rangeMin || 0;
-		rangeMax = rangeMax || Infinity;
-
-		return pixels
-			.reduce(function(acc, val) {
-				return acc +
-					val.filter(function(v) {
-						return rangeMin <= v && v <= rangeMax;
-					}).length;
-			},
-			0
-			);
-	}
-
-	/**
-	 * Returns a compressed string representation of a hash of timepoints to painted pixel count and finalized pixel count.
-	 * - Timepoints are reduced to milliseconds relative to the previous timepoint while pixel count is reduced to pixels relative to the previous timepoint. Finalized pixels are reduced to be relative (negated) to full pixels for that timepoint
-	 * - The relative timepoint and relative pixels are then each Base36 encoded and combined with a ~
-	 * - Finally, the list of timepoints is merged, separated by ! and returned
-	 * @param {object} timePoints An object in the form { "<timePoint>" : [ <object dimensions>, <object dimensions>, ...], <timePoint>: [...], ...}, where <object dimensions> is [height, width, top, left]
-	 * @returns {string} The serialized compressed timepoint object with ! separating individual triads and ~ separating timepoint and pixels within the triad. The elements of the triad are the timePoint, number of pixels painted at that point, and the number of pixels finalized at that point (ie, no further paints). If the third part of the triad is 0, it is omitted, if the second part of the triad is 0, it is omitted and the repeated ~~ is replaced with a -
-	 */
-	function getOptimizedTimepoints(timePoints) {
-		var i, roundedTimePoints = {}, timeSequence, tPixels,
-		    t_prev, t, p_prev, p, f_prev, f,
-		    comp, result = [];
-
-		// Round timepoints to the nearest integral ms
-		timeSequence = Object.keys(timePoints);
-
-		for (i = 0; i < timeSequence.length; i++) {
-			t = Math.round(Number(timeSequence[i]));
-			if (typeof roundedTimePoints[t] === "undefined") {
-				roundedTimePoints[t] = [];
-			}
-
-			// Merge
-			Array.prototype.push.apply(roundedTimePoints[t], timePoints[timeSequence[i]]);
-		}
-
-		// Get all unique timepoints nearest ms sorted in ascending order
-		timeSequence = Object.keys(roundedTimePoints).map(Number).sort(function(a, b) { return a - b; });
-
-		if (timeSequence.length === 0) {
-			return {};
-		}
-
-		// First loop identifies pixel first paints
-		for (i = 0; i < timeSequence.length; i++) {
-			t = timeSequence[i];
-			tPixels = mergePixels(tPixels, roundedTimePoints[t], t);
-
-			p = countPixels(tPixels);
-			timeSequence[i] = [t, p];
-		}
-
-		// We'll make all times and pixel counts relative to the previous ones
-		t_prev = 0;
-		p_prev = 0;
-		f_prev = 0;
-
-		// Second loop identifies pixel final paints
-		for (i = 0; i < timeSequence.length; i++) {
-			t = timeSequence[i][0];
-			p = timeSequence[i][1];
-			f = countPixels(tPixels, 0, t);
-
-			if (p > p_prev || f > f_prev) {
-				comp = (t === Infinity ? "" : toBase36(Math.round(t - t_prev))) + "~" + toBase36(p - p_prev) + "~" + toBase36(p - f);
-
-				comp = comp.replace(/~~/, "-").replace(/~$/, "");
-
-				result.push(comp);
-
-				t_prev = t;
-				p_prev = p;
-				f_prev = f;
-			}
-		}
-
-		return result.join("!").replace(/!+$/, "");
 	}
 
 	/**
@@ -1339,7 +1144,7 @@
 	 */
 	function getCompressedResourceTiming(from, to) {
 		/*eslint no-script-url:0*/
-		var i, e, results = {}, initiatorType, url, data, timePoints = {};
+		var i, e, results = {}, initiatorType, url, data;
 
 		var ret = getFilteredResourceTiming(from, to, impl.trackedResourceTypes);
 		var entries = ret.entries, serverTiming = ret.serverTiming;
@@ -1482,13 +1287,6 @@
 					// forget the timing data of `e`, just supplement the previous entry with the new `namespacedData`
 					results[url] += namespacedData;
 				}
-			}
-
-			if (e.visibleDimensions) {
-				if (!timePoints[e.latestTime]) {
-					timePoints[e.latestTime] = [];
-				}
-				timePoints[e.latestTime].push(e.visibleDimensions);
 			}
 		}
 
@@ -2085,11 +1883,6 @@
 		compressSize: compressSize,
 		decompressSize: decompressSize,
 		trimUrl: trimUrl,
-		getResourceLatestTime: getResourceLatestTime,
-		mergePixels: mergePixels,
-		countPixels: countPixels,
-		getOptimizedTimepoints: getOptimizedTimepoints,
-		decompressTimePoints: decompressTimePoints,
 		accumulateServerTimingEntries: accumulateServerTimingEntries,
 		compressServerTiming: compressServerTiming,
 		indexServerTiming: indexServerTiming,
