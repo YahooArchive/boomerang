@@ -16,6 +16,7 @@
  *   * `mem.lsln`: Number of localStorage keys used
  *   * `mem.sssz`: Number of sessionStorage bytes used
  *   * `mem.ssln`: Number of sessionStorage keys used
+ *   * `dev.mem`: Device memory
  * * Screen
  *   * `scr.xy`: [`screen.width`](https://developer.mozilla.org/en-US/docs/Web/API/Screen/width)
  *     and [`screen.height`](https://developer.mozilla.org/en-US/docs/Web/API/Screen/height) (e.g. `100x200`)
