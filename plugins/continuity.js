@@ -1892,9 +1892,13 @@
 	 *
 	 * @param {object} clsSources Dictionary holding cls Sources info
 	 *
-	 * @returns {string} Seralized and compressed clsSources
+	 * @returns {string|undefined} Seralized and compressed CLS sources, or undefined if there were no CLS sources
 	 */
 	function compressClsSources(clsSources) {
+		if (!clsSources || !clsSources.length) {
+			return undefined;
+		}
+
 		var compressedSources = [];
 
 		// iterate through each layout shift and its respective data
@@ -2063,7 +2067,7 @@
 		var topScore = 0;
 
 		// Pseudo-CSS Selector of first source corresponding to topScore
-		var topID = "";
+		var topID;
 
 		// PerformanceObserver
 		var perfObserver = new w.PerformanceObserver(onLayoutShiftObserver);
@@ -2178,7 +2182,7 @@
 		}
 
 		function clearTopID() {
-			topID = "";
+			topID = undefined;
 		}
 
 		/**
