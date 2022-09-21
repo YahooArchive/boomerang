@@ -33,6 +33,10 @@ describe("e2e/31-eventtiming/02-inp", function() {
 		it("Should have included Incremental Interaction to Next Paint timestamp (et.inp.inc.t) on the Page Load beacon", function() {
 			assert.operator(parseInt(tf.beacons[0]["et.inp.inc.t"], 10), ">=", 0);
 		});
+
+		it("Should have included Incremental Interaction to Next Paint timestamp (et.inp.inc.t) and it should be rounded on the Page Load beacon", function() {
+			assert.equal(parseFloat(tf.beacons[0]["et.inp.inc.t"]), parseInt(tf.beacons[0]["et.inp.inc.t"], 10));
+		});
 	});
 
 	describe("Unload beacon", function() {
@@ -46,6 +50,10 @@ describe("e2e/31-eventtiming/02-inp", function() {
 
 		it("Should have included Interaction to Next Paint timestamp (et.inp.t) on the Unload beacon", function() {
 			assert.operator(parseInt(tf.beacons[1]["et.inp.t"], 10), ">=", 0);
+		});
+
+		it("Should have included Interaction to Next Paint timestamp (et.inp.t) and it should be rounded on the Unload beacon", function() {
+			assert.equal(parseFloat(tf.beacons[1]["et.inp.t"]), parseInt(tf.beacons[1]["et.inp.t"], 10));
 		});
 
 		it("Should not have included Incremental Interaction to Next Paint (et.inp.inc) on the Unload beacon", function() {

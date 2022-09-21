@@ -301,9 +301,9 @@
 					entries[i].duration > impl.interactionsSinceLastBeacon[interactionId].duration) {
 					// this duration is higher than what we saw for this ID before
 					impl.interactionsSinceLastBeacon[interactionId] = {
-						duration: entries[i].duration,
+						duration: Math.ceil(entries[i].duration),
 						target: BOOMR.utils.makeSelector(entries[i].target),
-						startTime: entries[i].startTime
+						startTime: Math.floor(entries[i].startTime)
 					};
 				}
 			}
@@ -328,14 +328,14 @@
 
 			impl.entries = impl.entries.concat(newEntries);
 
-			impl.firstInputDelay = fid.processingStart - fid.startTime;
-			impl.timeToFirstInteraction = fid.startTime;
+			impl.firstInputDelay = Math.ceil(fid.processingStart - fid.startTime);
+			impl.timeToFirstInteraction = Math.floor(fid.startTime);
 
 			// consider FID for INP
 			impl.interactionsSinceLastBeacon.fid = {
-				duration: fid.duration,
+				duration: Math.ceil(fid.duration),
 				target: BOOMR.utils.makeSelector(fid.target),
-				startTime: fid.startTime
+				startTime: Math.floor(fid.startTime)
 			};
 		}
 	};

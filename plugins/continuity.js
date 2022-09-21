@@ -3756,7 +3756,7 @@
 		externalMetrics.timeToFirstInteraction = function() {
 			if (timeToFirstInteraction) {
 				// milliseconds since nav start
-				return timeToFirstInteraction - epoch;
+				return Math.floor(timeToFirstInteraction - epoch);
 			}
 
 			// no data

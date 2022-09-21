@@ -95,6 +95,7 @@ describe("e2e/21-continuity/07-click", function() {
 
 		assert.isDefined(b["c.ttfi"]);
 		assert.operator(parseInt(b["c.ttfi"], 10), ">=", 1);
+		assert.equal(parseFloat(b["c.ttfi"]), parseInt(b["c.ttfi"], 10));
 	});
 
 	it("Should have First Input Delay (c.fid) (if creating Mouse Events is supported)", function() {

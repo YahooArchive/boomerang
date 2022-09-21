@@ -36,9 +36,9 @@ BOOMR_test.init({
 	}
 });
 
-var curStartTime = 1000;
+var curStartTime = Math.random() * 1000;
 function generateEvent(processing, duration, interactionId) {
-	curStartTime += 10;
+	curStartTime += Math.random() * 10;
 	return {
 		name: "click",
 		entryType: "event",
@@ -62,12 +62,12 @@ window.POs.event.trigger({
 			generateEvent(10, 10, 0),
 
 			// an interaction
-			generateEvent(100, 100, 1),
-			generateEvent(10, 10, 1),
-			generateEvent(20, 20, 1),
+			generateEvent(100, 99.1, 1),
+			generateEvent(10, 10.1, 1),
+			generateEvent(20, 20.3, 1),
 
 			// another interaction
-			generateEvent(50, 50, 2)
+			generateEvent(50, 49.5, 2)
 		];
 	}
 });
