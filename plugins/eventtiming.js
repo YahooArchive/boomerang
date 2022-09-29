@@ -275,9 +275,8 @@
 		 */
 		onPageUnload: function(data) {
 			// merge any recent interactions into the full interactions list
-			for (var interactionId in impl.interactionsSinceLastBeacon) {
-				impl.interactions[interactionId] = impl.interactionsSinceLastBeacon[interactionId];
-			}
+			// NOTE: Object.assign is OK to use as all browsers w/ EventTiming support Object.assign
+			Object.assign(impl.interactions, impl.interactionsSinceLastBeacon);
 
 			// Interaction to Next Paint
 			var inp = BOOMR.plugins.EventTiming.metrics
@@ -533,7 +532,12 @@
 			 * Returns the Interaction to Next Paint metric for the session.
 			 */
 			interactionToNextPaint: function() {
-				var inp = this.interactionToNextPaintData(impl.interactions);
+				// merge both maps
+				// NOTE: Object.assign is OK to use as all browsers w/ EventTiming support Object.assign
+				var interactions = Object.assign({}, impl.interactions, impl.interactionsSinceLastBeacon);
+
+				// Interaction to Next Paint from the combined list
+				var inp = this.interactionToNextPaintData(interactions);
 				return inp ? inp.duration : undefined;
 			},
 
