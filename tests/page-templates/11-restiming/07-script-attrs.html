@@ -11,6 +11,7 @@
 
 <script>
 var s = document.createElement("script");
+
 s.src = "support/07-script-attrs.async.js";
 s.async = true;
 document.getElementsByTagName("head")[0].appendChild(s);
@@ -24,10 +25,10 @@ document.getElementsByTagName("head")[0].appendChild(s);
 
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	ResourceTiming: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  ResourceTiming: {
+    enabled: true
+  }
 });
 </script>
 <%= footer %>

@@ -8,11 +8,11 @@
 <script src="36-cls.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true,
-		monitorLayoutShifts: true
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true,
+    monitorLayoutShifts: true
+  }
 });
 
 var clsScoreOnBeaconSend = 0;
@@ -22,30 +22,31 @@ var topScore = 0;
 var observer;
 
 function onBeforeBeaconSend() {
-	clsScoreOnBeaconSend = clsScore;
-	topScoreOnBeaconSend = topScore;
-	observer.disconnect();
+  clsScoreOnBeaconSend = clsScore;
+  topScoreOnBeaconSend = topScore;
+  observer.disconnect();
 }
 
 window.BOOMR.subscribe("before_beacon", onBeforeBeaconSend, null, this);
 
 observer = new window.PerformanceObserver(function(list) {
-	var entries, i;
+  var entries, i;
 
-	entries = list.getEntries();
+  entries = list.getEntries();
 
-	for (i = 0; i < entries.length; i++) {
-		if (entries[i].hadRecentInput) {
-			continue;
-		}
+  for (i = 0; i < entries.length; i++) {
+    if (entries[i].hadRecentInput) {
+      continue;
+    }
 
-		clsScore += entries[i].value;
-		if (entries[i].value > topScore) {
-			topScore = entries[i].value;
-		}
-	}
+    clsScore += entries[i].value;
 
-	topScore = parseFloat(topScore.toFixed(3));
+    if (entries[i].value > topScore) {
+      topScore = entries[i].value;
+    }
+  }
+
+  topScore = parseFloat(topScore.toFixed(3));
 });
 
 observer.observe({ type: "layout-shift", buffered: true });

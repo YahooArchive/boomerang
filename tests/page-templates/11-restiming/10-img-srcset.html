@@ -13,24 +13,26 @@ This is the same test as 16-img-srcset-getdim but with getSrcsetDimensions = fal
 <img id="srcset-img">
 <script>
 var widths = [800, 480, 320];
-(function() {
-	var srcset = [];
-	var sizes = [];
-	var img = document.getElementById("srcset-img");
-	for (var i = 0; i < widths.length; i++) {
-		srcset.push("support/09-" + widths[i] + ".jpg?" + Math.random() + " " + widths[i] + "w");
-	}
 
-	img.srcset = srcset.join(", ");
-	img.src = "support/09-" + widths[widths.length - 1] + ".jpg?" + Math.random();
+(function() {
+  var srcset = [];
+  var sizes = [];
+  var img = document.getElementById("srcset-img");
+
+  for (var i = 0; i < widths.length; i++) {
+    srcset.push("support/09-" + widths[i] + ".jpg?" + Math.random() + " " + widths[i] + "w");
+  }
+
+  img.srcset = srcset.join(", ");
+  img.src = "support/09-" + widths[widths.length - 1] + ".jpg?" + Math.random();
 })();
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	ResourceTiming: {
-		enabled: true
-		// getSrcsetDimensions defaults to false
-	}
+  testAfterOnBeacon: true,
+  ResourceTiming: {
+    enabled: true
+    // getSrcsetDimensions defaults to false
+  }
 });
 </script>
 <%= footer %>

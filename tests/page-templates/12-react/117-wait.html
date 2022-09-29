@@ -22,10 +22,10 @@ window.nav_routes = ["/widgets/1", "/widgets/2", ""];
 
 // how long we should wait for each route
 var routeWaits = [
-	// spa_hard isn't filtered
-	5000,
-	1,
-	0
+  // spa_hard isn't filtered
+  5000,
+  1,
+  0
 ];
 
 // we'll put the end timestamps of each route in here so we can validate against beacons
@@ -36,31 +36,31 @@ var routeNumber = 0;
 
 // callback for each route
 window.route_wait = function() {
-	if (routeWaits[routeNumber]) {
-		setTimeout(function() {
-			window.spaWaitCompleteTimes.push(BOOMR.now());
+  if (routeWaits[routeNumber]) {
+    setTimeout(function() {
+      window.spaWaitCompleteTimes.push(BOOMR.now());
 
-			// call complete 5 seconds afterward route start
-			BOOMR.plugins.SPA.markNavigationComplete();
-		}, routeWaits[routeNumber]);
+      // call complete 5 seconds afterward route start
+      BOOMR.plugins.SPA.markNavigationComplete();
+    }, routeWaits[routeNumber]);
 
-		// this will test that a history event issued while a routeChangeWaitFilter
-		// is in progress will be ignored
-		if (routeNumber === 1) {
-			setTimeout(function() {
-				history.state.foo = "bar";
-				history.replaceState(history.state, document.title);  // update the state object
-			}, 1000);
-		}
+    // this will test that a history event issued while a routeChangeWaitFilter
+    // is in progress will be ignored
+    if (routeNumber === 1) {
+      setTimeout(function() {
+        history.state.foo = "bar";
+        history.replaceState(history.state, document.title);  // update the state object
+      }, 1000);
+    }
 
-		routeNumber++;
+    routeNumber++;
 
-		return true;
-	}
-	else {
-		// not waiting for this route
-		return false;
-	}
+    return true;
+  }
+  else {
+    // not waiting for this route
+    return false;
+  }
 };
 </script>
 
@@ -71,15 +71,15 @@ window.route_wait = function() {
 <script src="117-wait.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
-	History: {
-		enabled: true
-	},
-	Errors: {
-		enabled: false
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
+  History: {
+    enabled: true
+  },
+  Errors: {
+    enabled: false
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <!-- start the app after config so that boomerang catches all requests and makes the test results the same as the other apps -->

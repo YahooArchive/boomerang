@@ -11,38 +11,38 @@
 
 <script>
 window.onerror = function() {
-	window.onerrorFired = true;
+  window.onerrorFired = true;
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: false,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  testAfterOnBeacon: false,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		// first, start an XHR to trigger AutoXHR
-		var xhr = new XMLHttpRequest();
+    // first, start an XHR to trigger AutoXHR
+    var xhr = new XMLHttpRequest();
 
-		xhr.open("GET", "/delay?delay=500&file=/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState !== 4) {
-				return;
-			}
+    xhr.open("GET", "/delay?delay=500&file=/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== 4) {
+        return;
+      }
 
-			// clone the SVG animated image and insert into the DOM
-			var svg = document.getElementById("svg-source").cloneNode(true);
+      // clone the SVG animated image and insert into the DOM
+      var svg = document.getElementById("svg-source").cloneNode(true);
 
-			document.body.appendChild(svg.getElementsByTagName("image")[0]);
+      document.body.appendChild(svg.getElementsByTagName("image")[0]);
 
-			// Run tests in 2 seconds to ensure XHR is ignored
-			setTimeout(BOOMR_test.runTests, 2000);
-		};
+      // Run tests in 2 seconds to ensure XHR is ignored
+      setTimeout(BOOMR_test.runTests, 2000);
+    };
 
-		xhr.send(null);
-	},
-	instrument_xhr: true,
-	autorun: true
+    xhr.send(null);
+  },
+  instrument_xhr: true,
+  autorun: true
 });
 </script>
 

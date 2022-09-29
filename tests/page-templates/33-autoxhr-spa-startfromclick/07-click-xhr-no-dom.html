@@ -5,33 +5,33 @@
 
 <script>
 BOOMR_test.init({
-	AutoXHR: {
-		spaStartFromClick: true
-	},
-	testAfterOnBeacon: false,
-	History: {
-		enabled: true,
-		auto: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  AutoXHR: {
+    spaStartFromClick: true
+  },
+  testAfterOnBeacon: false,
+  History: {
+    enabled: true,
+    auto: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		// 1. click
-		// 2. wait 30ms
-		// 3. XHR (2000ms)
-		// 4. nothing more
-		BOOMR_test.fireMouseEvent("mouseup");
+    // 1. click
+    // 2. wait 30ms
+    // 3. XHR (2000ms)
+    // 4. nothing more
+    BOOMR_test.fireMouseEvent("mouseup");
 
-		setTimeout(function() {
-			BOOMR_test.xhrDelayed("xhr1", 2000, function() {
-				setTimeout(BOOMR_test.runTests, 2000);
-			});
-		}, 30);
-	}
+    setTimeout(function() {
+      BOOMR_test.xhrDelayed("xhr1", 2000, function() {
+        setTimeout(BOOMR_test.runTests, 2000);
+      });
+    }, 30);
+  }
 });
 </script>
 <%= footer %>

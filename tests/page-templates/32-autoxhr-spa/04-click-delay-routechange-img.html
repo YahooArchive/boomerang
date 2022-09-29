@@ -5,36 +5,36 @@
 
 <script>
 BOOMR_test.init({
-	AutoXHR: {
-		spaStartFromClick: false
-	},
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
-	History: {
-		enabled: true,
-		auto: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  AutoXHR: {
+    spaStartFromClick: false
+  },
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
+  History: {
+    enabled: true,
+    auto: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		// 1. click
-		// 2. wait 2000ms
-		// 3. route change <- beacon 1
-		// 5. wait 50ms
-		// 6. add IMG to DOM (2000ms)
-		BOOMR_test.fireMouseEvent("mouseup");
+    // 1. click
+    // 2. wait 2000ms
+    // 3. route change <- beacon 1
+    // 5. wait 50ms
+    // 6. add IMG to DOM (2000ms)
+    BOOMR_test.fireMouseEvent("mouseup");
 
-		setTimeout(function() {
-			BOOMR_test.routeChangeRnd("newstate");
+    setTimeout(function() {
+      BOOMR_test.routeChangeRnd("newstate");
 
-			setTimeout(function() {
-				BOOMR_test.imgIntoDomDelayed("img1", 2000);
-			}, 50);
-		}, 2000);
-	}
+      setTimeout(function() {
+        BOOMR_test.imgIntoDomDelayed("img1", 2000);
+      }, 50);
+    }, 2000);
+  }
 });
 </script>
 <%= footer %>

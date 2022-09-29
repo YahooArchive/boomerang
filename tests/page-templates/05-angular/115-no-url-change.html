@@ -22,42 +22,42 @@ window.total_spa_cancels = 0;
 <script src="115-no-url-change.js" type="text/javascript"></script>
 <script>
 BOOMR.subscribe("spa_navigation", function() {
-	// 1 for the hard nav
-	// 2 for each soft nav
-	window.total_spa_navigations++;
+  // 1 for the hard nav
+  // 2 for each soft nav
+  window.total_spa_navigations++;
 });
 
 BOOMR.subscribe("spa_init", function() {
-	// we should receive 3 spa_init events
-	// 1 for the hard nav
-	// 1 for the /nothing route.
-	//   Angular won't find it and quickly redirect back to the "otherwise" path.
-	//   Boomerang will detect that a route change is in progress and ignore the redirect back.
-	//   Boomerang will also detect that the url didn't change and no resources were fetched
-	//   and will cancel the beacon.
-	// 0 for redirect back to 115-no-url-change.html
-	// 1 for /widgets/1
-	// 1 for 115-no-url-change.html
-	window.total_spa_inits++;
+  // we should receive 3 spa_init events
+  // 1 for the hard nav
+  // 1 for the /nothing route.
+  //   Angular won't find it and quickly redirect back to the "otherwise" path.
+  //   Boomerang will detect that a route change is in progress and ignore the redirect back.
+  //   Boomerang will also detect that the url didn't change and no resources were fetched
+  //   and will cancel the beacon.
+  // 0 for redirect back to 115-no-url-change.html
+  // 1 for /widgets/1
+  // 1 for 115-no-url-change.html
+  window.total_spa_inits++;
 });
 
 BOOMR.subscribe("spa_cancel", function() {
-	// 1 for the /nothing route
-	window.total_spa_cancels++;
+  // 1 for the /nothing route
+  window.total_spa_cancels++;
 });
 
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 3,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 </script>
 <%= footer %>

@@ -14,38 +14,39 @@ window.angular_imgs = [2500];
 window.angular_nav_routes = ["/widgets/1", "125-continuity-no-tti-first-beacon.html"];
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	Continuity: {
-		enabled: true
-	}
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  Continuity: {
+    enabled: true
+  }
 });
 
 var called = 0;
+
 setTimeout(function redo() {
-	called++;
+  called++;
 
-	// loop for 250ms 10x to trigger a bunch of work
-	BOOMR_test.busy(250);
+  // loop for 250ms 10x to trigger a bunch of work
+  BOOMR_test.busy(250);
 
-	if (called === 25) {
-		// time to interactive should be around this timestamp
-		window.workDone = BOOMR.now();
+  if (called === 25) {
+    // time to interactive should be around this timestamp
+    window.workDone = BOOMR.now();
 
-		return;
-	}
-	else {
-		setTimeout(redo, 20);
-	}
+    return;
+  }
+  else {
+    setTimeout(redo, 20);
+  }
 }, 20);
 
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 
 </script>

@@ -35,131 +35,133 @@
  * @class BOOMR.plugins.DNS
  */
 (function() {
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	if (BOOMR.plugins.DNS) {
-		return;
-	}
+  if (BOOMR.plugins.DNS) {
+    return;
+  }
 
-	var impl = {
-		complete: false,
-		base_url: "",
-		t_start: null,
-		t_dns: null,
-		t_http: null,
-		img: null,
+  var impl = {
+    complete: false,
+    base_url: "",
+    t_start: null,
+    t_dns: null,
+    t_http: null,
+    img: null,
 
-		gen_url: "",
+    gen_url: "",
 
-		start: function() {
-			if (impl.gen_url) {	// already running
-				return;
-			}
+    start: function() {
+      if (impl.gen_url) {
+        // already running
+        return;
+      }
 
-			var random = BOOMR.utils.generateId(10);
+      var random = BOOMR.utils.generateId(10);
 
-			impl.gen_url = impl.base_url.replace(/\*/, random);
+      impl.gen_url = impl.base_url.replace(/\*/, random);
 
-			impl.img = new Image();
-			impl.img.onload = impl.A_loaded;
+      impl.img = new Image();
+      impl.img.onload = impl.A_loaded;
 
-			impl.t_start = new Date().getTime();
-			impl.img.src = impl.gen_url + "image-l.gif?t=" + random;
-		},
+      impl.t_start = new Date().getTime();
+      impl.img.src = impl.gen_url + "image-l.gif?t=" + random;
+    },
 
-		A_loaded: function() {
-			var random = BOOMR.utils.generateId(10);
+    A_loaded: function() {
+      var random = BOOMR.utils.generateId(10);
 
-			impl.t_dns = new Date().getTime() - impl.t_start;
+      impl.t_dns = new Date().getTime() - impl.t_start;
 
-			impl.img = new Image();
-			impl.img.onload = impl.B_loaded;
+      impl.img = new Image();
+      impl.img.onload = impl.B_loaded;
 
-			impl.t_start = new Date().getTime();
-			impl.img.src = impl.gen_url + "image-l.gif?t=" + random;
-		},
+      impl.t_start = new Date().getTime();
+      impl.img.src = impl.gen_url + "image-l.gif?t=" + random;
+    },
 
-		B_loaded: function() {
-			impl.t_http = new Date().getTime() - impl.t_start;
+    B_loaded: function() {
+      impl.t_http = new Date().getTime() - impl.t_start;
 
-			impl.img = null;
-			impl.done();
-		},
+      impl.img = null;
+      impl.done();
+    },
 
-		done: function() {
-			// DNS time is the time to load the image with uncached DNS
-			// minus the time to load the image with cached DNS
+    done: function() {
+      // DNS time is the time to load the image with uncached DNS
+      // minus the time to load the image with cached DNS
 
-			var dns = impl.t_dns - impl.t_http;
+      var dns = impl.t_dns - impl.t_http;
 
-			BOOMR.addVar("dns.t", dns);
-			impl.complete = true;
-			impl.gen_url = "";
-			BOOMR.sendBeacon();
-		}
-	};
+      BOOMR.addVar("dns.t", dns);
+      impl.complete = true;
+      impl.gen_url = "";
+      BOOMR.sendBeacon();
+    }
+  };
 
-	BOOMR.plugins.DNS = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * @param {object} config Configuration
-		 * @param {string} config.DNS.base_url The `base_url` parameter tells the DNS
-		 * plugin where it can find its DNS testing images. This URL must contain
-		 * a wildcard character (`*`) which will be replaced with a random string.
-		 *
-		 * The images will be appended to this string without any other modification.
-		 *
-		 * If you have any pages served over HTTPS, then this URL should be configured
-		 * to work over HTTPS as well as HTTP.
-		 *
-		 * The protocol part of the URL will be automatically changed to fit the
-		 * current document.
-		 *
-		 * @returns {@link BOOMR.plugins.DNS} The DNS plugin for chaining
-		 * @example
-		 * BOOMR.init({
-		 *   DNS: {
-		 *     base_url: "http://*.yoursite.com/images/"
-		 *   }
-		 * });
-		 * @memberof BOOMR.plugins.DNS
-		 */
-		init: function(config) {
-			BOOMR.utils.pluginConfig(impl, config, "DNS", ["base_url"]);
+  BOOMR.plugins.DNS = {
+    /**
+     * Initializes the plugin.
+     *
+     * @param {object} config Configuration
+     * @param {string} config.DNS.base_url The `base_url` parameter tells the DNS
+     * plugin where it can find its DNS testing images. This URL must contain
+     * a wildcard character (`*`) which will be replaced with a random string.
+     *
+     * The images will be appended to this string without any other modification.
+     *
+     * If you have any pages served over HTTPS, then this URL should be configured
+     * to work over HTTPS as well as HTTP.
+     *
+     * The protocol part of the URL will be automatically changed to fit the
+     * current document.
+     *
+     * @returns {@link BOOMR.plugins.DNS} The DNS plugin for chaining
+     * @example
+     * BOOMR.init({
+     *   DNS: {
+     *     base_url: "http://*.yoursite.com/images/"
+     *   }
+     * });
+     * @memberof BOOMR.plugins.DNS
+     */
+    init: function(config) {
+      BOOMR.utils.pluginConfig(impl, config, "DNS", ["base_url"]);
 
-			if (config && config.wait) {
-				return this;
-			}
+      if (config && config.wait) {
+        return this;
+      }
 
-			if (!impl.base_url) {
-				BOOMR.warn("DNS.base_url is not set.  Cannot run DNS test.", "dns");
-				impl.complete = true;  // set to true so that is_complete doesn't
-				                       // block other plugins
-				return this;
-			}
+      if (!impl.base_url) {
+        BOOMR.warn("DNS.base_url is not set.  Cannot run DNS test.", "dns");
+        // set to true so that is_complete doesn't block other plugins
+        impl.complete = true;
 
-			// do not run test over https
-			if (BOOMR.window.location.protocol === "https:") {
-				impl.complete = true;
-				return this;
-			}
+        return this;
+      }
 
-			BOOMR.subscribe("page_ready", impl.start, null, impl);
+      // do not run test over https
+      if (BOOMR.window.location.protocol === "https:") {
+        impl.complete = true;
 
-			return this;
-		},
+        return this;
+      }
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.DNS
-		 */
-		is_complete: function() {
-			return impl.complete;
-		}
-	};
+      BOOMR.subscribe("page_ready", impl.start, null, impl);
 
+      return this;
+    },
+
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.DNS
+     */
+    is_complete: function() {
+      return impl.complete;
+    }
+  };
 }());

@@ -4,7 +4,7 @@ base = require("./base.js");
 var config = base.config;
 
 var capabilities = {
-	browserName: "internet explorer"
+  browserName: "internet explorer"
 };
 
 // capabilities in this file will take precedence

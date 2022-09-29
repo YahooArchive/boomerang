@@ -2,7 +2,7 @@
 <script>
 window.errorsLogged1 = 0;
 window.onerror = function() {
-	window.errorsLogged1++;
+  window.errorsLogged1++;
 };
 </script>
 <%= captureErrorsSnippet %>
@@ -11,22 +11,25 @@ window.onerror = function() {
 window.oldOnError = window.onerror;
 window.errorsLogged2 = 0;
 window.onerror = function() {
-	window.errorsLogged2++;
-	window.oldOnError.apply(window, arguments);
+  window.errorsLogged2++;
+  window.oldOnError.apply(window, arguments);
 };
 
 function errorFunction1() {
-	// a is not defined
-	a.foo = 1;
+  // a is not defined
+  a.foo = 1;
 }
+
 function errorFunction2() {
-	// a is not defined
-	a.foo = 1;
+  // a is not defined
+  a.foo = 1;
 }
+
 function errorFunction3() {
-	// a is not defined
-	a.foo = 2;
+  // a is not defined
+  a.foo = 2;
 }
+
 errorFunction1();
 </script>
 <script>
@@ -36,11 +39,11 @@ errorFunction2();
 <script src="27-loader-snippet-overwritten.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Errors: {
-		enabled: true,
-		monitorGlobal: true
-	}
+  testAfterOnBeacon: true,
+  Errors: {
+    enabled: true,
+    monitorGlobal: true
+  }
 });
 </script>
 <!-- delay the page by 1second so an error can fire -->

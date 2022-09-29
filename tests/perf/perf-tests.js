@@ -9,6 +9,7 @@ const writeFile = util.promisify(fs.writeFile);
 
 // allow loading of JSON5 from require()
 const JSON5 = require("json5");
+
 require("json5/lib/register");
 
 //
@@ -27,30 +28,30 @@ const allMetricsPath = path.join(resultsPath, "metrics.json");
 // Exports
 //
 module.exports = async function() {
-	var done = this.async();
+  var done = this.async();
 
-	let allMetrics = {};
+  let allMetrics = {};
 
-	//
-	// Collect Browser Profiler data
-	//
-	console.debug("Running Profiler");
+  //
+  // Collect Browser Profiler data
+  //
+  console.debug("Running Profiler");
 
-	await Profiler.run(allMetrics);
+  await Profiler.run(allMetrics);
 
-	//
-	// Collect script sizes
-	//
-	console.debug("Running Sizer");
+  //
+  // Collect script sizes
+  //
+  console.debug("Running Sizer");
 
-	await Sizer.run(allMetrics);
+  await Sizer.run(allMetrics);
 
-	//
-	// Write out all metrics
-	//
-	console.debug("Writing out final metrics.json");
+  //
+  // Write out all metrics
+  //
+  console.debug("Writing out final metrics.json");
 
-	await writeFile(allMetricsPath, JSON.stringify(allMetrics, null, 2));
+  await writeFile(allMetricsPath, JSON.stringify(allMetrics, null, 2));
 
-	done();
+  done();
 };

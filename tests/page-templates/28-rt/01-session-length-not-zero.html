@@ -6,8 +6,8 @@
 BOOMR.session.domain = document.domain;
 
 BOOMR_test.init({
-	testAfterOnBeacon: 1,
-	site_domain: document.domain
+  testAfterOnBeacon: 1,
+  site_domain: document.domain
 });
 
 // this start time is "old", so next time maybeResetSession is run we'll set SL=0
@@ -15,19 +15,19 @@ BOOMR.session.start = 1500000000000;
 BOOMR.plugins.RT.updateCookie();
 
 BOOMR.plugins.Hold = {
-	ready: false,
-	is_complete: function() {
-		return BOOMR.plugins.Hold.ready;
-	}
+  ready: false,
+  is_complete: function() {
+    return BOOMR.plugins.Hold.ready;
+  }
 };
 
 setTimeout(function() {
-	BOOMR.plugins.Hold.ready = true;
+  BOOMR.plugins.Hold.ready = true;
 
-	// init happens again, maybeResetSession is called so it'll set SL=0
-	BOOMR.init({});
+  // init happens again, maybeResetSession is called so it'll set SL=0
+  BOOMR.init({});
 
-	BOOMR.sendBeacon();
+  BOOMR.sendBeacon();
 }, 1000);
 </script>
 <%= footer %>

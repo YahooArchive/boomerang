@@ -26,30 +26,30 @@ window.nav_routes = ["/widgets/1", "/"];
 // issue a replaceState call for the same URL while the first route change is in progress.
 // This call should be ignored by the History plugin
 if (window.history && typeof history.replaceState === "function") {
-	BOOMR.subscribe("spa_init", function() {
-		setTimeout(function() {
-			// just set the path, this test doesn't use hashes
-			// History should figure out that the resulting url is the same as document.URL
-			history.replaceState(history.state, document.title, window.location.pathname);
-		}, 500);
-		setTimeout(function() {
-			// don't send the optional URL param
-			// History should figure out that the resulting url is the same as document.URL
-			history.replaceState(history.state, document.title);
-		}, 1000);
-	}, null, null, true);
+  BOOMR.subscribe("spa_init", function() {
+    setTimeout(function() {
+      // just set the path, this test doesn't use hashes
+      // History should figure out that the resulting url is the same as document.URL
+      history.replaceState(history.state, document.title, window.location.pathname);
+    }, 500);
+    setTimeout(function() {
+      // don't send the optional URL param
+      // History should figure out that the resulting url is the same as document.URL
+      history.replaceState(history.state, document.title);
+    }, 1000);
+  }, null, null, true);
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	History: {
-		enabled: true
-	},
-	Errors: {
-		enabled: false
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 3,
+  History: {
+    enabled: true
+  },
+  Errors: {
+    enabled: false
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <%= footer %>

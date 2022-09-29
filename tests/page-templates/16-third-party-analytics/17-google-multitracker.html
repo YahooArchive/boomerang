@@ -6,30 +6,31 @@
 // polyfill for google analytics
 function FakeTracker() {};
 FakeTracker.prototype.get = function(key) {
-	if (key === "clientId") {
-		return "XXXXXXXXXX.YYYYYYYYYY";
-	}
+  if (key === "clientId") {
+    return "XXXXXXXXXX.YYYYYYYYYY";
+  }
 };
 
 window.ga = function(cb) {
-	cb(
-		{
-			get: function() {
-				return undefined;
-			}
-		}
-	);
+  cb(
+    {
+      get: function() {
+        return undefined;
+      }
+    }
+  );
 };
+
 window.ga.getAll = function() {
-	return [new FakeTracker(), new FakeTracker(), new FakeTracker()];
+  return [new FakeTracker(), new FakeTracker(), new FakeTracker()];
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	TPAnalytics: {
-		enabled: true,
-		clientids: true
-	}
+  testAfterOnBeacon: true,
+  TPAnalytics: {
+    enabled: true,
+    clientids: true
+  }
 });
 </script>
 <%= footer %>

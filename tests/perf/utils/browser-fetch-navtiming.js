@@ -1,3 +1,3 @@
 (function() {
-	return JSON.parse(JSON.stringify(window.performance.timing));
+  return JSON.parse(JSON.stringify(window.performance.timing));
 })();

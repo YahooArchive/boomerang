@@ -3,6 +3,7 @@
 <script>
 // GTM-like script
 var s = document.createElement("script");
+
 s.async = false;
 s.type = "text/javascript";
 s.text = "(function(){\x0d" +
@@ -39,7 +40,7 @@ document.body.insertBefore(s, null);
 </script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true
+  testAfterOnBeacon: true
 });
 </script>
 <%= footer %>

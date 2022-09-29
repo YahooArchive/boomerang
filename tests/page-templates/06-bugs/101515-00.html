@@ -5,7 +5,7 @@ Bug: while in prerender, if a xhr completes after the page's onload then the xhr
 <script>
 // polyfill document.hidden if needed
 if (typeof document.hidden === "undefined") {
-	document.hidden = false;
+  document.hidden = false;
 }
 </script>
 <%= boomerangScript %>
@@ -14,36 +14,39 @@ if (typeof document.hidden === "undefined") {
 
 // pretend the browser is in prerender
 BOOMR.visibilityState = function() {
-	return "prerender";
+  return "prerender";
 };
+
 BOOMR.fireEvent("visibility_changed");
 
 setTimeout(function() {
-	BOOMR_test.init({
-		testAfterOnBeacon: 2,
-		AutoXHR: {
-			xhrRequireChanges: false
-		},
-		ResourceTiming: {
-			enabled: true
-		},
-		instrument_xhr: true
-	});
+  BOOMR_test.init({
+    testAfterOnBeacon: 2,
+    AutoXHR: {
+      xhrRequireChanges: false
+    },
+    ResourceTiming: {
+      enabled: true
+    },
+    instrument_xhr: true
+  });
 }, 100);
 
 setTimeout(function() {
-	// fire a xhr in prerender (the page's onload should have fired already)
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "/delay?delay=10&file=build/boomerang-latest-debug.js");
-	xhr.send(null);
+  // fire a xhr in prerender (the page's onload should have fired already)
+  var xhr = new XMLHttpRequest();
+
+  xhr.open("GET", "/delay?delay=10&file=build/boomerang-latest-debug.js");
+  xhr.send(null);
 }, 200);
 
 setTimeout(function() {
-	// fake visible event
-	BOOMR.visibilityState = function() {
-		return "visible";
-	};
-	BOOMR.fireEvent("visibility_changed");
+  // fake visible event
+  BOOMR.visibilityState = function() {
+    return "visible";
+  };
+
+  BOOMR.fireEvent("visibility_changed");
 }, 1500);
 
 </script>

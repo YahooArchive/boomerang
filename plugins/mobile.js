@@ -12,61 +12,75 @@
  * * `mob.ct`: [`navigator.connection.type`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/type)
  * * `mob.bw`: [`navigator.connection.bandwidth`](https://developer.mozilla.org/en-US/docs/Web/API/Connection/bandwidth)
  * * `mob.mt`: [`navigator.connection.metered`](https://developer.mozilla.org/en-US/docs/Web/API/Connection/metered)
- * * `mob.etype`: [`navigator.connection.effectiveType`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType)
- * * `mob.lm`: [`navigator.connection.downlinkMax`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlinkMax)
- * * `mob.dl`: [`navigator.connection.downlink](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlink)
- * * `mob.rtt`: [`navigator.connection.rtt`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/rtt)
- * * `mob.sd`: [`navigator.connection.saveData`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData)
+ * * `mob.etype`: [`navigator.connection.effectiveType`]
+ * (https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType)
+ * * `mob.lm`:
+ *     [`navigator.connection.downlinkMax`]
+ *     (https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlinkMax)
+ * * `mob.dl`:
+ *     [`navigator.connection.downlink]
+ *     (https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlink)
+ * * `mob.rtt`:
+ *     [`navigator.connection.rtt`]
+ *     (https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/rtt)
+ * * `mob.sd`:
+ *     [`navigator.connection.saveData`]
+ *     (https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData)
  *
  * @class BOOMR.plugins.Mobile
  */
 (function() {
-	var connection, param_map = {
-		"type": "ct",
-		"bandwidth": "bw",
-		"metered": "mt",
-		"effectiveType": "etype",
-		"downlinkMax": "lm",
-		"downlink": "dl",
-		"rtt": "rtt",
-		"saveData": "sd"
-	};
+  var connection,
+      param_map = {
+        "type": "ct",
+        "bandwidth": "bw",
+        "metered": "mt",
+        "effectiveType": "etype",
+        "downlinkMax": "lm",
+        "downlink": "dl",
+        "rtt": "rtt",
+        "saveData": "sd"
+      };
 
-	BOOMR = window.BOOMR || {};
+  BOOMR = window.BOOMR || {};
 
-	if (typeof BOOMR.addVar !== "function") {
-		return;
-	}
+  if (typeof BOOMR.addVar !== "function") {
+    return;
+  }
 
-	if (typeof navigator === "object") {
-		connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || navigator.msConnection;
-	}
+  if (typeof navigator === "object") {
+    connection = navigator.connection ||
+      navigator.mozConnection ||
+      navigator.webkitConnection ||
+      navigator.msConnection;
+  }
 
-	if (!connection) {
-		return;
-	}
+  if (!connection) {
+    return;
+  }
 
-	function setVars() {
-		var k;
+  function setVars() {
+    var k;
 
-		for (k in param_map) {
-			if (typeof connection[k] !== "undefined") {
-				// Remove old parameter value from the beacon because new value might be falsy which won't overwrite old value
-				BOOMR.removeVar("mob." + param_map[k]);
-				if (connection[k]) {
-					BOOMR.addVar("mob." + param_map[k], connection[k]);
-				}
-			}
-		}
-	}
+    for (k in param_map) {
+      if (typeof connection[k] !== "undefined") {
+        // Remove old parameter value from the beacon because new value might be falsy which won't overwrite old value
+        BOOMR.removeVar("mob." + param_map[k]);
 
-	// If connection information changes, we collect the latest values
-	if (connection.addEventListener) {
-		connection.addEventListener("change", function() {
-			setVars();
-			BOOMR.fireEvent("netinfo", connection);
-		});
-	}
+        if (connection[k]) {
+          BOOMR.addVar("mob." + param_map[k], connection[k]);
+        }
+      }
+    }
+  }
 
-	setVars();
+  // If connection information changes, we collect the latest values
+  if (connection.addEventListener) {
+    connection.addEventListener("change", function() {
+      setVars();
+      BOOMR.fireEvent("netinfo", connection);
+    });
+  }
+
+  setVars();
 }());

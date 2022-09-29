@@ -18,26 +18,28 @@ window.backbone_nav_routes = ["widgets/1"];
 <script src="27-route-change-back.js" type="text/javascript"></script>
 <script>
 var beaconNum = 0;
-BOOMR.subscribe("beacon", function() {
-	if (!BOOMR.plugins.AutoXHR) {
-		return;
-	}
 
-	beaconNum++;
-	if (beaconNum === 2) {
-		setTimeout(function() {
-			window.history.back();
-		}, 200);
-	}
+BOOMR.subscribe("beacon", function() {
+  if (!BOOMR.plugins.AutoXHR) {
+    return;
+  }
+
+  beaconNum++;
+
+  if (beaconNum === 2) {
+    setTimeout(function() {
+      window.history.back();
+    }, 200);
+  }
 });
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
-	Backbone: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
+  Backbone: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <%= footer %>

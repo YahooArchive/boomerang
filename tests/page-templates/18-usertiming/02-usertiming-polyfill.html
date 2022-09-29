@@ -11,29 +11,29 @@ window.BOOMR_no_mark = true;
 // then bring it back later
 //
 if (BOOMR_test.isUserTimingSupported()) {
-	window.getEntriesByTypeCopy = window.performance.getEntriesByType;
-	window.performance.getEntriesByType = undefined;
+  window.getEntriesByTypeCopy = window.performance.getEntriesByType;
+  window.performance.getEntriesByType = undefined;
 
-	BOOMR_test.init({
-		testAfterOnBeacon: true,
-		UserTiming: {
-			enabled: true
-		},
-		onBoomerangLoaded: function() {
-			window.performance.getEntriesByType = window.getEntriesByTypeCopy;
-			window.performance.mark("mark1");
-			window.performance.mark("mark2");
-			window.performance.measure("measure1", "mark1", "mark2");
-		}
-	});
+  BOOMR_test.init({
+    testAfterOnBeacon: true,
+    UserTiming: {
+      enabled: true
+    },
+    onBoomerangLoaded: function() {
+      window.performance.getEntriesByType = window.getEntriesByTypeCopy;
+      window.performance.mark("mark1");
+      window.performance.mark("mark2");
+      window.performance.measure("measure1", "mark1", "mark2");
+    }
+  });
 }
 else {
-	BOOMR_test.init({
-		testAfterOnBeacon: true,
-		UserTiming: {
-			enabled: true
-		}
-	});
+  BOOMR_test.init({
+    testAfterOnBeacon: true,
+    UserTiming: {
+      enabled: true
+    }
+  });
 }
 </script>
 <div id="content"></div>

@@ -11,34 +11,37 @@
 window.backbone_imgs = [-1];
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  testAfterOnBeacon: true,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		//
-		// Same setup as 11-autoxhr-trigger-additional
-		//
-		setTimeout(function(){
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/delay?delay=1&file=/pages/09-backbone/support/widgets.json&id=1&rnd=" + Math.random(), true);
-			xhr.onreadystatechange = function() {
-				// fire another XHR
-				if (xhr.readyState === 4) {
-					var img = document.createElement("img");
-					img.src = "/delay?delay=1&file=/pages/09-backbone/support/img.jpg&rnd=" + Math.random();
-					document.body.appendChild(img);
-				}
-			};
-			xhr.send(null);
-		}, 0);
-	},
-	Backbone: {
-		enabled: true
-	},
-	instrument_xhr: false,
-	autorun: false
+    //
+    // Same setup as 11-autoxhr-trigger-additional
+    //
+    setTimeout(function(){
+      var xhr = new XMLHttpRequest();
+
+      xhr.open("GET", "/delay?delay=1&file=/pages/09-backbone/support/widgets.json&id=1&rnd=" + Math.random(), true);
+      xhr.onreadystatechange = function() {
+        // fire another XHR
+        if (xhr.readyState === 4) {
+          var img = document.createElement("img");
+
+          img.src = "/delay?delay=1&file=/pages/09-backbone/support/img.jpg&rnd=" + Math.random();
+          document.body.appendChild(img);
+        }
+      };
+
+      xhr.send(null);
+    }, 0);
+  },
+  Backbone: {
+    enabled: true
+  },
+  instrument_xhr: false,
+  autorun: false
 });
 </script>
 <%= footer %>

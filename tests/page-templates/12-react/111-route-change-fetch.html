@@ -21,18 +21,18 @@ window.use_fetch = true;
 
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR_test.isFetchApiSupported() ? 3 : 1,
-	AutoXHR: {
-		monitorFetch: true
-	},
-	History: {
-		enabled: true
-	},
-	Errors: {
-		enabled: false
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR_test.isFetchApiSupported() ? 3 : 1,
+  AutoXHR: {
+    monitorFetch: true
+  },
+  History: {
+    enabled: true
+  },
+  Errors: {
+    enabled: false
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <script src="support/app.js"></script>

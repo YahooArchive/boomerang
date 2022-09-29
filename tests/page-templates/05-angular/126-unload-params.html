@@ -10,27 +10,27 @@
 window.angular_imgs = [0];
 
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
-	Angular: {
-		enabled: true
-	},
-	ResourceTiming: {
-		enabled: true
-	},
-	Memory: {
-		enabled: true
-	},
-	autorun: false,
-	afterFirstBeacon: function() {
-		// fake an unload
-		BOOMR.fireEvent("before_unload", {
-			type: "beforeunload"
-		});
+  testAfterOnBeacon: 2,
+  Angular: {
+    enabled: true
+  },
+  ResourceTiming: {
+    enabled: true
+  },
+  Memory: {
+    enabled: true
+  },
+  autorun: false,
+  afterFirstBeacon: function() {
+    // fake an unload
+    BOOMR.fireEvent("before_unload", {
+      type: "beforeunload"
+    });
 
-		BOOMR.fireEvent("page_unload", {
-			type: "beforeunload"
-		});
-	}
+    BOOMR.fireEvent("page_unload", {
+      type: "beforeunload"
+    });
+  }
 });
 </script>
 <script>

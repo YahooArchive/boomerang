@@ -23,57 +23,57 @@ window.disableBoomerangHook = true;
 
 <script type="text/javascript">
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	afterFirstBeacon: function()  {
-		// call during the first spa soft nav
-		BOOMR.subscribe("spa_init", function() {
-			setTimeout(function() {
-				var root = document.querySelector("#root");
-				var el1 = document.createElement("img"),
-				    el2 = document.createElement("img"),
-				    el3 = document.createElement("img"),
-				    el4 = document.createElement("img");
+  testAfterOnBeacon: 3,
+  afterFirstBeacon: function()  {
+    // call during the first spa soft nav
+    BOOMR.subscribe("spa_init", function() {
+      setTimeout(function() {
+        var root = document.querySelector("#root");
+        var el1 = document.createElement("img"),
+            el2 = document.createElement("img"),
+            el3 = document.createElement("img"),
+            el4 = document.createElement("img");
 
-				el1.alt = "test-img1";
-				el1.src = "/delay?delay=200&id=el1&file=/assets/img.jpg&rnd=" + Math.random();
-				root.appendChild(el1);
+        el1.alt = "test-img1";
+        el1.src = "/delay?delay=200&id=el1&file=/assets/img.jpg&rnd=" + Math.random();
+        root.appendChild(el1);
 
-				el2.alt = "test-img2";
-				el2.src = "/delay?delay=200&id=el2&file=/assets/img.jpg&rnd=" + Math.random();
-				root.appendChild(el2);
+        el2.alt = "test-img2";
+        el2.src = "/delay?delay=200&id=el2&file=/assets/img.jpg&rnd=" + Math.random();
+        root.appendChild(el2);
 
-				el3.alt = "test-img3";
-				el3.src = "/delay?delay=200&id=el3a&file=/assets/img.jpg&rnd=" + Math.random();
-				root.appendChild(el3);
+        el3.alt = "test-img3";
+        el3.src = "/delay?delay=200&id=el3a&file=/assets/img.jpg&rnd=" + Math.random();
+        root.appendChild(el3);
 
-				el4.alt = "test-img4";
-				el4.src = "/delay?delay=200&id=el4&file=/assets/img.jpg&rnd=" + Math.random();
-				root.appendChild(el4);
+        el4.alt = "test-img4";
+        el4.src = "/delay?delay=200&id=el4&file=/assets/img.jpg&rnd=" + Math.random();
+        root.appendChild(el4);
 
-				// autoxhr mutation observer will fire before this timeout and wait for the node.
-				setTimeout(function() {
-					// remove src attribute, will not fire a "load" or "error" event for the node.
-					el1.removeAttribute("src");
+        // autoxhr mutation observer will fire before this timeout and wait for the node.
+        setTimeout(function() {
+          // remove src attribute, will not fire a "load" or "error" event for the node.
+          el1.removeAttribute("src");
 
-					// blanking src normally fires an "onerror" for cancelled resource but our MO
-					// will handle it before that happens
-					el2.src = "";
+          // blanking src normally fires an "onerror" for cancelled resource but our MO
+          // will handle it before that happens
+          el2.src = "";
 
-					// change src
-					el3.src = "/delay?delay=200&id=el3b&file=/assets/img.jpg&rnd=" + Math.random();
+          // change src
+          el3.src = "/delay?delay=200&id=el3b&file=/assets/img.jpg&rnd=" + Math.random();
 
-					// re-assign src, should not fire a MO event
-					el4.src = el4.src + "";
-				}, 0);
-			}, 1000);
-		}, null, null, true);
-	},
-	History: {
-		enabled: true,
-		auto: true
-	},
-	autorun: false,
-	instrument_xhr: true
+          // re-assign src, should not fire a MO event
+          el4.src = el4.src + "";
+        }, 0);
+      }, 1000);
+    }, null, null, true);
+  },
+  History: {
+    enabled: true,
+    auto: true
+  },
+  autorun: false,
+  instrument_xhr: true
 });
 </script>
 

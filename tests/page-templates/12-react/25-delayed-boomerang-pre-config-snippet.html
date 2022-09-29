@@ -15,29 +15,29 @@
 BOOMR = window.BOOMR || {};
 window.timestamp = new Date().getTime();
 BOOMR.xhr = {
-	stop: function(callback) {
-		callback({
-			timing: {
-				requestStart: window.timestamp + 5,
-				responseStart: window.timestamp + 8,
-				responseEnd: window.timestamp + 10,
-				loadEventEnd: window.timestamp + 11
-			},
-			url: "http://foo.com/xhr/"
-		});
-	}
+  stop: function(callback) {
+    callback({
+      timing: {
+        requestStart: window.timestamp + 5,
+        responseStart: window.timestamp + 8,
+        responseEnd: window.timestamp + 10,
+        loadEventEnd: window.timestamp + 11
+      },
+      url: "http://foo.com/xhr/"
+    });
+  }
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
-	History: {
-		enabled: true
-	},
-	AutoXHR: {
-		alwaysSendXhr: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 2,
+  History: {
+    enabled: true
+  },
+  AutoXHR: {
+    alwaysSendXhr: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <%= footer %>

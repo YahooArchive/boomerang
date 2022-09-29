@@ -6,5 +6,5 @@
 * directive.
 */
 describe("e2e/05-angular/07-soft-nav-resources", function() {
-	BOOMR_test.templates.SPA["07-soft-nav-resources"]();
+  BOOMR_test.templates.SPA["07-soft-nav-resources"]();
 });

@@ -15,35 +15,36 @@ include the load time of the resources that are triggered when the XHR completes
 <%= boomerangScript %>
 <script>
 BOOMR_test.init({
-	instrument_xhr: true,
-	testAfterOnBeacon: (BOOMR.plugins.AutoXHR) ? 2 : 1,
-	afterFirstBeacon:
-		function() {
-			if (!BOOMR.plugins.AutoXHR) {
-				return;
-			}
+  instrument_xhr: true,
+  testAfterOnBeacon: (BOOMR.plugins.AutoXHR) ? 2 : 1,
+  afterFirstBeacon:
+    function() {
+      if (!BOOMR.plugins.AutoXHR) {
+        return;
+      }
 
-			setTimeout(function() {
-				// on completion, get a UTF-8 XHR
-				var xhr = new XMLHttpRequest();
-				xhr.open("GET", "/delay?file=/pages/07-autoxhr/support/30-ie1011-bug.xml");
+      setTimeout(function() {
+        // on completion, get a UTF-8 XHR
+        var xhr = new XMLHttpRequest();
 
-				xhr.onreadystatechange = function() {
-					if (xhr.readyState === 4) {
-						// save the value of responseXML's first node for later
-						BOOMR_test.xhrValue = xhr.responseXML.documentElement.childNodes[0].nodeValue;
+        xhr.open("GET", "/delay?file=/pages/07-autoxhr/support/30-ie1011-bug.xml");
 
-						// create an IMG on the document to validate that the XHR beacon will
-						// include the load time of the IMG if MutationObserver is enabled
-						BOOMR_test.img = document.createElement("img");
-						BOOMR_test.img.src = "/delay?file=/assets/img.jpg&delay=3000";
-						document.body.appendChild(BOOMR_test.img);
-					}
-				};
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            // save the value of responseXML's first node for later
+            BOOMR_test.xhrValue = xhr.responseXML.documentElement.childNodes[0].nodeValue;
 
-				xhr.send(null);
-			}, 1000);
-		}
+            // create an IMG on the document to validate that the XHR beacon will
+            // include the load time of the IMG if MutationObserver is enabled
+            BOOMR_test.img = document.createElement("img");
+            BOOMR_test.img.src = "/delay?file=/assets/img.jpg&delay=3000";
+            document.body.appendChild(BOOMR_test.img);
+          }
+        };
+
+        xhr.send(null);
+      }, 1000);
+    }
 });
 </script>
 <%= footer %>

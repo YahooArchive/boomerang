@@ -7,15 +7,15 @@ delete BOOMR.plugins.RT;
 delete BOOMR.plugins.Continuity;
 
 document.addEventListener("DOMContentLoaded", function(event) {
-	BOOMR.sendBeacon();
+  BOOMR.sendBeacon();
 });
 
 // BOOMR sends a beacon itself on pageready...
 
 window.onload = function() {
-	window.setTimeout(function() {
-		BOOMR.sendBeacon();
-	}, 1000);
+  window.setTimeout(function() {
+    BOOMR.sendBeacon();
+  }, 1000);
 };
 
 </script>
@@ -23,7 +23,7 @@ window.onload = function() {
 <script src="04-no-resend-after-complete.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 3
+  testAfterOnBeacon: 3
 });
 </script>
 <%= footer %>

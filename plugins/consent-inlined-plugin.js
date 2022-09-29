@@ -1,8 +1,9 @@
 /**
  *
- * The **Consent Inlined Plugin** enables website visitors to allow or disallow Boomerang to send performance monitoring data to a remote server.
- * This plugin comes handy because Boomerang is considered in some countries in the EU and Asia as **“cookie technology”**
- * and triggers certain data protection requirements. In the [Boomerang opt-out/opt-in tutorial](./tutorial-howto-opt-out-or-opt-in.html)
+ * The **Consent Inlined Plugin** enables website visitors to allow or disallow Boomerang to send
+ * performance monitoring data to a remote server.  This plugin comes handy because Boomerang is considered
+ * in some countries in the EU and Asia as **“cookie technology”** and triggers certain data protection
+ * requirements. In the [Boomerang opt-out/opt-in tutorial](./tutorial-howto-opt-out-or-opt-in.html)
  * we discuss various cases how this plugin could be instrumented.
  *
  * ## How it works?
@@ -13,7 +14,8 @@
  * Opt-out usually happens when a visitor doesn't agree with website's Cookie, Privacy and 3rd party policies.
  * * **Opt-in** required: No beacons wil be sent until visitor does opt-in. This plugin exposes public
  * function `window.BOOMR_OPT_IN()` and Boomerang will hold all beacons until `window.BOOMR_OPT_IN()` is not called.
- * `window.BOOMR_OPT_IN()` should be called after visitor accepts and agrees with website's Cookie, Privacy and 3rd party policies.
+ * `window.BOOMR_OPT_IN()` should be called after visitor accepts and agrees with website's Cookie, Privacy and
+ * 3rd party policies.
  *
  * ## Setup
  *
@@ -87,207 +89,209 @@
  */
 // w is the window object
 (function(w) {
-	"use strict";
+  "use strict";
 
-	// Basic check if configuration exists and if Opt-out/opt-in pligin is enabled.
-	if (w.BOOMR_CONSENT_CONFIG === undefined || w.BOOMR_CONSENT_CONFIG.enabled !== true) {
-		return;
-	}
+  // Basic check if configuration exists and if Opt-out/opt-in pligin is enabled.
+  if (w.BOOMR_CONSENT_CONFIG === undefined || w.BOOMR_CONSENT_CONFIG.enabled !== true) {
+    return;
+  }
 
-	w.BOOMR = (w.BOOMR !== undefined) ? w.BOOMR :  {};
+  w.BOOMR = (w.BOOMR !== undefined) ? w.BOOMR :  {};
 
-	var b = w.BOOMR;
+  var b = w.BOOMR;
 
-	b.plugins = (b.plugins !== undefined) ? b.plugins : {};
+  b.plugins = (b.plugins !== undefined) ? b.plugins : {};
 
-	if (b.plugins.ConsentInlinedPlugin) {
-		return;
-	}
+  if (b.plugins.ConsentInlinedPlugin) {
+    return;
+  }
 
-	var impl = {
+  var impl = {
 
-		/**
+    /**
  		 * We would like to keep track of this plugin version because we may have new releases
-		 * but it could be hard to keep track who is using which version of the plugin. We have
-		 * to do it this way because the plugin is not part of the final Boomerang bundle.
-		 */
-		v: "1",
+     * but it could be hard to keep track who is using which version of the plugin. We have
+     * to do it this way because the plugin is not part of the final Boomerang bundle.
+     */
+    v: "1",
 
-		OPT_COOKIE: "BOOMR_CONSENT",
+    OPT_COOKIE: "BOOMR_CONSENT",
 
-		OPT_IN_COOKIE_VAL: "opted-in",
+    OPT_IN_COOKIE_VAL: "opted-in",
 
-		OPT_OUT_COOKIE_VAL: "opted-out",
+    OPT_OUT_COOKIE_VAL: "opted-out",
 
-		// 1 year cookie expire period
-		COOKIE_EXP: 365 * 86400,
+    // 1 year cookie expire period
+    COOKIE_EXP: 365 * 86400,
 
-		complete: false,
+    complete: false,
 
-		enabled: true,
+    enabled: true,
 
-		firedPageReady: false,
+    firedPageReady: false,
 
-		deferredOptIn: false,
+    deferredOptIn: false,
 
-		deferredOptOut: false,
+    deferredOptOut: false,
 
-		rtCookieFromConfig: false,
+    rtCookieFromConfig: false,
 
-		bwCookieFromConfig: false,
+    bwCookieFromConfig: false,
 
-		optOut: function() {
-			if (!b.utils.setCookie(impl.OPT_COOKIE, impl.OPT_OUT_COOKIE_VAL, impl.COOKIE_EXP)) {
-				b.error("Can not set Opt Out cookie", "ConsentInlinedPlugin");
-				return false;
-			}
+    optOut: function() {
+      if (!b.utils.setCookie(impl.OPT_COOKIE, impl.OPT_OUT_COOKIE_VAL, impl.COOKIE_EXP)) {
+        b.error("Can not set Opt Out cookie", "ConsentInlinedPlugin");
 
-			// Older versions of Boomerang do not have disable capability
-			if (typeof b.disable === "function") {
-				b.disable();
-			}
+        return false;
+      }
 
-			impl.complete = false;
+      // Older versions of Boomerang do not have disable capability
+      if (typeof b.disable === "function") {
+        b.disable();
+      }
 
-			impl.removeBoomerangCookies();
+      impl.complete = false;
 
-			return true;
-		},
+      impl.removeBoomerangCookies();
 
-		optIn: function() {
-			if (impl.complete === true) {
-				return true;
-			}
+      return true;
+    },
 
-			if (!b.utils.setCookie(impl.OPT_COOKIE, impl.OPT_IN_COOKIE_VAL, impl.COOKIE_EXP)) {
-				b.error("Can not set Opt In value", "ConsentInlinedPlugin");
-				return false;
-			}
+    optIn: function() {
+      if (impl.complete === true) {
+        return true;
+      }
 
-			// These days we do not have a way to wake up Boomerang but in newer versions we may implement such a function
-			if (typeof b.wakeUp === "function") {
-				b.wakeUp();
-			}
+      if (!b.utils.setCookie(impl.OPT_COOKIE, impl.OPT_IN_COOKIE_VAL, impl.COOKIE_EXP)) {
+        b.error("Can not set Opt In value", "ConsentInlinedPlugin");
 
-			impl.complete = true;
+        return false;
+      }
 
-			b.addVar("cip.in", "1", true);
-			b.addVar("cip.v", impl.v, true);
+      // These days we do not have a way to wake up Boomerang but in newer versions we may implement such a function
+      if (typeof b.wakeUp === "function") {
+        b.wakeUp();
+      }
 
-			b.sendBeacon();
+      impl.complete = true;
 
-			return true;
-		},
+      b.addVar("cip.in", "1", true);
+      b.addVar("cip.v", impl.v, true);
 
-		removeBoomerangCookies: function() {
-			var RT_COOKIE = impl.rtCookieFromConfig || "RT";
-			var BW_COOKIE = impl.bwCookieFromConfig || "BA";
+      b.sendBeacon();
 
-			b.utils.removeCookie(RT_COOKIE);
-			b.utils.removeCookie(BW_COOKIE);
-		},
+      return true;
+    },
 
-		/**
-		 * Callback when the page is ready
-		 */
-		onPageReady: function() {
-			impl.firedPageReady = true;
+    removeBoomerangCookies: function() {
+      var RT_COOKIE = impl.rtCookieFromConfig || "RT";
+      var BW_COOKIE = impl.bwCookieFromConfig || "BA";
 
-			if (impl.deferredOptIn) {
-				impl.optIn();
-			}
+      b.utils.removeCookie(RT_COOKIE);
+      b.utils.removeCookie(BW_COOKIE);
+    },
 
-			if (impl.deferredOptOut) {
-				impl.optOut();
-			}
-		}
-	};
+    /**
+     * Callback when the page is ready
+     */
+    onPageReady: function() {
+      impl.firedPageReady = true;
 
-	//
-	// Exports
-	//
+      if (impl.deferredOptIn) {
+        impl.optIn();
+      }
 
-	/**
-	 * Boomerang will not send more beacons after this function is called.
-	 *
-	 * @name BOOMR_OPT_OUT()
-	 * @memberof BOOMR.plugins.ConsentInlinedPlugin
-	 */
-	w.BOOMR_OPT_OUT = function() {
-		if (impl.firedPageReady) {
-			impl.optOut();
-		}
-		else {
-			impl.deferredOptOut = true;
-		}
-	};
+      if (impl.deferredOptOut) {
+        impl.optOut();
+      }
+    }
+  };
 
-	/**
-	 * If opt-in to Boomerang was required and this functions is called then Boomerang will
-	 * start sending beacons.
-	 *
-	 * @name BOOMR_OPT_IN()
-	 * @memberof BOOMR.plugins.ConsentInlinedPlugin
-	 */
-	w.BOOMR_OPT_IN = function() {
-		if (impl.firedPageReady) {
-			impl.optIn();
-		}
-		else {
-			impl.deferredOptIn = true;
-		}
-	};
+  //
+  // Exports
+  //
 
-	b.plugins.ConsentInlinedPlugin = {
-		init: function(config) {
-			if (config.RT !== undefined && config.RT.cookie !== undefined) {
-				impl.rtCookieFromConfig = config.RT.cookie;
-			}
+  /**
+   * Boomerang will not send more beacons after this function is called.
+   *
+   * @name BOOMR_OPT_OUT()
+   * @memberof BOOMR.plugins.ConsentInlinedPlugin
+   */
+  w.BOOMR_OPT_OUT = function() {
+    if (impl.firedPageReady) {
+      impl.optOut();
+    }
+    else {
+      impl.deferredOptOut = true;
+    }
+  };
 
-			if (config.BW !== undefined && config.BW.cookie !== undefined) {
-				impl.bwCookieFromConfig = config.BW.cookie;
-			}
+  /**
+   * If opt-in to Boomerang was required and this functions is called then Boomerang will
+   * start sending beacons.
+   *
+   * @name BOOMR_OPT_IN()
+   * @memberof BOOMR.plugins.ConsentInlinedPlugin
+   */
+  w.BOOMR_OPT_IN = function() {
+    if (impl.firedPageReady) {
+      impl.optIn();
+    }
+    else {
+      impl.deferredOptIn = true;
+    }
+  };
 
-			b.subscribe("page_ready", impl.onPageReady, null, impl);
+  b.plugins.ConsentInlinedPlugin = {
+    init: function(config) {
+      if (config.RT !== undefined && config.RT.cookie !== undefined) {
+        impl.rtCookieFromConfig = config.RT.cookie;
+      }
 
-			if (w.BOOMR_CONSENT_CONFIG.optInRequired) {
-				if (b.utils.getCookie(impl.OPT_COOKIE) !== impl.OPT_IN_COOKIE_VAL) {
-					impl.complete = false;
-					return this;
-				}
-			}
+      if (config.BW !== undefined && config.BW.cookie !== undefined) {
+        impl.bwCookieFromConfig = config.BW.cookie;
+      }
 
+      b.subscribe("page_ready", impl.onPageReady, null, impl);
 
-			if (b.utils.getCookie(impl.OPT_COOKIE) === impl.OPT_OUT_COOKIE_VAL) {
-				/**
-				 * BOOMR.init() is being called periodically. Usually every 5 minutes. This triggers
-				 * logic that creates Boomerang cookies. We use a workaround that sets the cookie names
-				 * to empty string which prevents Boomerang from creating Cookies.
-				 */
-				if (config.RT === undefined) {
-					config.RT = {};
-				}
+      if (w.BOOMR_CONSENT_CONFIG.optInRequired) {
+        if (b.utils.getCookie(impl.OPT_COOKIE) !== impl.OPT_IN_COOKIE_VAL) {
+          impl.complete = false;
 
-				config.RT.cookie = "";
+          return this;
+        }
+      }
 
-				if (config.BW === undefined) {
-					config.BW = {};
-				}
+      if (b.utils.getCookie(impl.OPT_COOKIE) === impl.OPT_OUT_COOKIE_VAL) {
+        /**
+         * BOOMR.init() is being called periodically. Usually every 5 minutes. This triggers
+         * logic that creates Boomerang cookies. We use a workaround that sets the cookie names
+         * to empty string which prevents Boomerang from creating Cookies.
+         */
+        if (config.RT === undefined) {
+          config.RT = {};
+        }
 
-				config.BW.cookie = "";
+        config.RT.cookie = "";
 
-				impl.complete = false;
-				return this;
-			}
+        if (config.BW === undefined) {
+          config.BW = {};
+        }
 
-			impl.complete = true;
+        config.BW.cookie = "";
 
-			return this;
-		},
+        impl.complete = false;
 
-		is_complete: function() {
-			return impl.complete;
-		}
-	};
+        return this;
+      }
 
+      impl.complete = true;
+
+      return this;
+    },
+
+    is_complete: function() {
+      return impl.complete;
+    }
+  };
 }(window));

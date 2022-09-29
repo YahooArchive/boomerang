@@ -17,7 +17,7 @@ var https = require("https");
 var envFile = path.resolve(path.join(__dirname, "env.json"));
 
 if (!fs.existsSync(envFile)) {
-	throw new Error("[APP] Please create " + envFile + ". There's a env.json.sample in the same dir.");
+  throw new Error("[APP] Please create " + envFile + ". There's a env.json.sample in the same dir.");
 }
 
 // load JSON
@@ -27,26 +27,29 @@ var env = require(envFile);
 // Start HTTP server / Express
 //
 var wwwRoot = env.www;
+
 if (wwwRoot.indexOf("/") !== 0) {
-	wwwRoot = path.join(__dirname, "..", "..", wwwRoot);
+  wwwRoot = path.join(__dirname, "..", "..", wwwRoot);
 }
 
 if (!fs.existsSync(wwwRoot)) {
-	wwwRoot = path.join(__dirname, "..");
+  wwwRoot = path.join(__dirname, "..");
 }
 
 var credentials = {};
+
 try {
-	var privatekey  = fs.readFileSync(path.join(__dirname, env.privatekey), "utf8");
-	var certificate = fs.readFileSync(path.join(__dirname, env.certificate), "utf8");
-	credentials = {
-		key: privatekey,
-		cert: certificate
-	};
-	console.log("[APP] Found credentials, key: " + env.privatekey + " cert: " + env.certificate);
+  var privatekey  = fs.readFileSync(path.join(__dirname, env.privatekey), "utf8");
+  var certificate = fs.readFileSync(path.join(__dirname, env.certificate), "utf8");
+
+  credentials = {
+    key: privatekey,
+    cert: certificate
+  };
+  console.log("[APP] Found credentials, key: " + env.privatekey + " cert: " + env.certificate);
 }
 catch (e) {
-	console.log("[APP] Credentials not found ", e);
+  console.log("[APP] Credentials not found ", e);
 }
 
 var app = express();
@@ -58,30 +61,31 @@ app.use(compress());
 // Quick Handlers
 //
 function respond204(req, res) {
-	res.status(204).send();
+  res.status(204).send();
 }
 
 function respond301(req, res) {
-	var q = require("url").parse(req.url, true).query;
-	var file = q.file;
+  var q = require("url").parse(req.url, true).query;
+  var file = q.file;
 
-	res.set("Access-Control-Allow-Origin", "*");
-	res.redirect(301, file);
+  res.set("Access-Control-Allow-Origin", "*");
+  res.redirect(301, file);
 }
 
 function respond302(req, res) {
-	var q = require("url").parse(req.url, true).query;
-	var to = q.to || "/blackhole";
-	res.redirect(to);
+  var q = require("url").parse(req.url, true).query;
+  var to = q.to || "/blackhole";
+
+  res.redirect(to);
 }
 
 function respond500(req, res) {
-	res.status(500).send();
+  res.status(500).send();
 }
 
 function dropRequest(req, res) {
-	// drop request, no http response
-	req.socket.destroy();
+  // drop request, no http response
+  req.socket.destroy();
 }
 
 //
@@ -130,41 +134,45 @@ app.post("/drop", dropRequest);
 
 // load in any additional routes
 if (fs.existsSync(path.resolve(path.join(__dirname, "routes.js")))) {
-	require("./routes")(app);
+  require("./routes")(app);
 }
 
 // for every GET, look for a file with the same name appended with ".headers"
 // if found, parse the headers and write them on the response
 // whether found or not, let the req/res pass through with next()
 app.get("/*", function(req, res, next) {
-	var fullPath = path.resolve(path.join(wwwRoot, req.url));
-	var qIndex = fullPath.indexOf("?");
-	if (qIndex > -1) {
-		fullPath = fullPath.substring(0, qIndex);
-	}
+  var fullPath = path.resolve(path.join(wwwRoot, req.url));
+  var qIndex = fullPath.indexOf("?");
 
-	var headersFilePath = fullPath + ".headers";
-	var input = fs.createReadStream(headersFilePath);
-	input.on("error", function() {
-		next();
-	});
-	input.on("open", function() {
-		var headers = {};
-		var lineReader = readline.createInterface({ input: input });
-		lineReader.on("line", function(line) {
-			var colon = ":";
-			var colonIndex = line.indexOf(colon);
-			var name = line.substring(0, colonIndex).trim();
-			headers[name] = headers[name] || [];
-			headers[name].push(line.substring(colonIndex + colon.length).trim());
-		});
-		lineReader.on("close", function(line) {
-			Object.keys(headers).forEach(function(name) {
-				res.setHeader(name, headers[name]);
-			});
-			next();
-		});
-	});
+  if (qIndex > -1) {
+    fullPath = fullPath.substring(0, qIndex);
+  }
+
+  var headersFilePath = fullPath + ".headers";
+  var input = fs.createReadStream(headersFilePath);
+
+  input.on("error", function() {
+    next();
+  });
+  input.on("open", function() {
+    var headers = {};
+    var lineReader = readline.createInterface({ input: input });
+
+    lineReader.on("line", function(line) {
+      var colon = ":";
+      var colonIndex = line.indexOf(colon);
+      var name = line.substring(0, colonIndex).trim();
+
+      headers[name] = headers[name] || [];
+      headers[name].push(line.substring(colonIndex + colon.length).trim());
+    });
+    lineReader.on("close", function(line) {
+      Object.keys(headers).forEach(function(name) {
+        res.setHeader(name, headers[name]);
+      });
+      next();
+    });
+  });
 });
 
 // all static content follows afterwards
@@ -172,13 +180,13 @@ app.get("/*", function(req, res, next) {
 
 // do not cache certain static resources
 app.use("/assets", express.static(path.join(wwwRoot, "/assets"), {
-	etag: false,
-	lastModified: false,
-	index: false,
-	cacheControl: false,
-	setHeaders: function(res, _path) {
-		res.setHeader("Cache-Control", "no-cache, no-store");
-	}
+  etag: false,
+  lastModified: false,
+  index: false,
+  cacheControl: false,
+  setHeaders: function(res, _path) {
+    res.setHeader("Cache-Control", "no-cache, no-store");
+  }
 }));
 
 app.use(express.static(wwwRoot));
@@ -191,15 +199,16 @@ var port = process.env.PORT || env.port;
 var scheme = (process.argv.length >= 2 && process.argv[2]) || "http";
 
 if (scheme === "https" && credentials.key && credentials.cert) {
-	var httpsServer = https.createServer(credentials, app);
+  var httpsServer = https.createServer(credentials, app);
 
-	httpsServer.listen(port, function() {
-		console.log("[APP] HTTPS Server starting on port " + port + " for " + wwwRoot);
-	});
+  httpsServer.listen(port, function() {
+    console.log("[APP] HTTPS Server starting on port " + port + " for " + wwwRoot);
+  });
 }
 else {
-	var httpServer = http.createServer(app);
-	httpServer.listen(port, function() {
-		console.log("[APP] HTTP Server starting on port " + port + " for " + wwwRoot);
-	});
+  var httpServer = http.createServer(app);
+
+  httpServer.listen(port, function() {
+    console.log("[APP] HTTP Server starting on port " + port + " for " + wwwRoot);
+  });
 }

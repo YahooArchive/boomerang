@@ -2,11 +2,11 @@
 <script>
 // fake a NavigationTiming browser even if it is one
 if (!window.performance) {
-	window.performance = {
-		timing: {
-			navigationStart: +(new Date()) - 60000
-		}
-	};
+  window.performance = {
+    timing: {
+      navigationStart: +(new Date()) - 60000
+    }
+  };
 }
 </script>
 <%= boomerangScript %>
@@ -14,15 +14,15 @@ if (!window.performance) {
 <script>
 BOOMR.session.domain = document.domain;
 BOOMR_test.init({
-	// forces it to happen at unload beacon
-	testAfterOnBeacon: 2,
-	site_domain: BOOMR_test.siteDomain(),
-	afterFirstBeacon: function() {
-		// fake an unload event
-		BOOMR.fireEvent("page_unload", {
-			type: "unload"
-		});
-	}
+  // forces it to happen at unload beacon
+  testAfterOnBeacon: 2,
+  site_domain: BOOMR_test.siteDomain(),
+  afterFirstBeacon: function() {
+    // fake an unload event
+    BOOMR.fireEvent("page_unload", {
+      type: "unload"
+    });
+  }
 });
 </script>
 <%= footer %>

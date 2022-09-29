@@ -4,10 +4,10 @@ base = require("./base.js");
 var config = base.config;
 
 var capabilities = {
-	browserName: "firefox",
-	"moz:firefoxOptions": {
-		args: [ "--headless" ]
-	}
+  browserName: "firefox",
+  "moz:firefoxOptions": {
+    args: [ "--headless" ]
+  }
 };
 
 // capabilities in this file will take precedence

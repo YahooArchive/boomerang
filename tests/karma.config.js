@@ -3,92 +3,94 @@
 var url = require("url");
 
 module.exports = function(config) {
-	var remoteSelenium = false, u, webdriverConfig;
+  var remoteSelenium = false,
+      u, webdriverConfig;
 
-	var tapFileName = "results/unit" + (process.env.BUILD_FLAVOR ? ("-" + process.env.BUILD_FLAVOR) : "") + ".tap";
+  var tapFileName = "results/unit" + (process.env.BUILD_FLAVOR ? ("-" + process.env.BUILD_FLAVOR) : "") + ".tap";
 
-	if (config.SELENIUM_ADDRESS) {
-		remoteSelenium = true;
-		u = url.parse(config.SELENIUM_ADDRESS, true);
-		webdriverConfig = {
-			hostname: u.hostname,
-			port: u.port
-		};
-		if (u.auth) {
-			webdriverConfig.user = u.auth.split(":")[0];
-			webdriverConfig.pwd = u.auth.split(":")[1];
-		}
-	}
+  if (config.SELENIUM_ADDRESS) {
+    remoteSelenium = true;
+    u = url.parse(config.SELENIUM_ADDRESS, true);
+    webdriverConfig = {
+      hostname: u.hostname,
+      port: u.port
+    };
 
-	config.set({
-		basePath: "./",
+    if (u.auth) {
+      webdriverConfig.user = u.auth.split(":")[0];
+      webdriverConfig.pwd = u.auth.split(":")[1];
+    }
+  }
 
-		port: 4000,
+  config.set({
+    basePath: "./",
 
-		logLevel: config.LOG_INFO,
+    port: 4000,
 
-		colors: true,
-		autoWatch: false,
+    logLevel: config.LOG_INFO,
 
-		frameworks: ["mocha"],
-		reporters: ["progress", "coverage", "tap"],
-		plugins: [
-			"karma-coverage",
-			"karma-mocha",
+    colors: true,
+    autoWatch: false,
 
-			// reporters
-			"karma-tap-reporter",
-			"karma-mocha-reporter"
-		],
+    frameworks: ["mocha"],
+    reporters: ["progress", "coverage", "tap"],
+    plugins: [
+      "karma-coverage",
+      "karma-mocha",
 
-		coverageReporter: {
-			type: "html",
-			dir: "coverage/"
-		},
+      // reporters
+      "karma-tap-reporter",
+      "karma-mocha-reporter"
+    ],
 
-		tapReporter: {
-			outputFile: tapFileName
-		}
-	});
+    coverageReporter: {
+      type: "html",
+      dir: "coverage/"
+    },
 
-	if (!remoteSelenium) {
-		config.runnerPort = 4001;
+    tapReporter: {
+      outputFile: tapFileName
+    }
+  });
 
-		// launchers
-		config.plugins.push(
-			"karma-chrome-launcher",
-			"karma-firefox-launcher",
-			"karma-ie-launcher",
-			"karma-opera-launcher",
-			"karma-safari-launcher");
-	}
-	else {
-		// launchers
-		config.plugins.push("karma-webdriver-launcher");
+  if (!remoteSelenium) {
+    config.runnerPort = 4001;
 
-		config.set({
-			customLaunchers: {
-				"ChromeHeadless": {
-					base: "WebDriver",
-					config: webdriverConfig,
-					browserName: "chrome",
-					flags: ["--headless", "--disable-gpu", "--window-size=1024,768"],
-					platform: "ANY",
-					version: "ANY"
-				},
-				"FirefoxHeadless": {
-					base: "WebDriver",
-					config: webdriverConfig,
-					browserName: "firefox",
-					"moz:firefoxOptions": {
-						args: [ "--headless" ]
-					},
-					platform: "ANY",
-					version: "ANY"
-				}
-			},
+    // launchers
+    config.plugins.push(
+      "karma-chrome-launcher",
+      "karma-firefox-launcher",
+      "karma-ie-launcher",
+      "karma-opera-launcher",
+      "karma-safari-launcher");
+  }
+  else {
+    // launchers
+    config.plugins.push("karma-webdriver-launcher");
 
-			browsers: ["ChromeHeadless", "FirefoxHeadless"]
-		});
-	}
+    config.set({
+      customLaunchers: {
+        "ChromeHeadless": {
+          base: "WebDriver",
+          config: webdriverConfig,
+          browserName: "chrome",
+          flags: ["--headless", "--disable-gpu", "--window-size=1024,768"],
+          platform: "ANY",
+          version: "ANY"
+        },
+        "FirefoxHeadless": {
+          base: "WebDriver",
+          config: webdriverConfig,
+          browserName: "firefox",
+          "moz:firefoxOptions": {
+            args: [ "--headless" ]
+          },
+          platform: "ANY",
+          version: "ANY"
+        }
+      },
+
+      browsers: ["ChromeHeadless", "FirefoxHeadless"]
+    });
+  }
 };

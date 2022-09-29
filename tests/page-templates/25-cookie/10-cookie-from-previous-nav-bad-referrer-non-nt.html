@@ -7,16 +7,16 @@ window.lastNav = +(new Date()) - 10000;
 window.lastLoad = lastNav + 1000;
 window.lastUnload = lastNav + 1000 + 1000;
 BOOMR_test.setCookie({
-	si: "abc123-1234",
-	sl: (1).toString(36),
-	ss: (lastNav).toString(36),
-	tt: (1000).toString(36),
-	bcn: "/beacon",
-	dm: document.domain,
-	ld: (1000).toString(36),
-	ul: (2000).toString(36),
-	r: BOOMR_test.hashString("BAD_REFERRER"),
-	z: 1
+  si: "abc123-1234",
+  sl: (1).toString(36),
+  ss: (lastNav).toString(36),
+  tt: (1000).toString(36),
+  bcn: "/beacon",
+  dm: document.domain,
+  ld: (1000).toString(36),
+  ul: (2000).toString(36),
+  r: BOOMR_test.hashString("BAD_REFERRER"),
+  z: 1
 });
 </script>
 <%= boomerangScript %>
@@ -24,7 +24,7 @@ BOOMR_test.setCookie({
 <script>
 BOOMR.session.domain = document.domain;
 BOOMR_test.init({
-	testAfterOnBeacon: true
+  testAfterOnBeacon: true
 });
 </script>
 <%= footer %>

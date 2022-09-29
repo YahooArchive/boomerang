@@ -30,397 +30,399 @@
  * @class BOOMR.plugins.PaintTiming
  */
 (function() {
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	if (BOOMR.plugins.PaintTiming) {
-		return;
-	}
+  if (BOOMR.plugins.PaintTiming) {
+    return;
+  }
 
-	/**
-	 * Map of Paint Timing API names to `pt.*` beacon parameters
-	 *
-	 * https://www.w3.org/TR/paint-timing/
-	 */
-	var PAINT_TIMING_MAP = {
-		"first-paint": "fp",
-		"first-contentful-paint": "fcp",
-		"largest-contentful-paint": "lcp"
-	};
+  /**
+   * Map of Paint Timing API names to `pt.*` beacon parameters
+   *
+   * https://www.w3.org/TR/paint-timing/
+   */
+  var PAINT_TIMING_MAP = {
+    "first-paint": "fp",
+    "first-contentful-paint": "fcp",
+    "largest-contentful-paint": "lcp"
+  };
 
-	/**
-	 * Private implementation
-	 */
-	var impl = {
-		/**
-		 * Whether or not we've initialized yet
-		 */
-		initialized: false,
+  /**
+   * Private implementation
+   */
+  var impl = {
+    /**
+     * Whether or not we've initialized yet
+     */
+    initialized: false,
 
-		/**
-		 * Whether or not we've added data to the beacon
-		 */
-		complete: false,
+    /**
+     * Whether or not we've added data to the beacon
+     */
+    complete: false,
 
-		/**
-		 * Whether or not the browser supports PaintTiming (cached value)
-		 */
-		supported: null,
+    /**
+     * Whether or not the browser supports PaintTiming (cached value)
+     */
+    supported: null,
 
-		/**
-		 * Cached PaintTiming values
-		 */
-		timingCache: {},
+    /**
+     * Cached PaintTiming values
+     */
+    timingCache: {},
 
-		/* BEGIN_DEBUG */
-		/**
-		 * History of timings
-		 */
-		timingHistory: {},
-		/* END_DEBUG */
+    /* BEGIN_DEBUG */
+    /**
+     * History of timings
+     */
+    timingHistory: {},
+    /* END_DEBUG */
 
-		/**
-		 * LCP observer
-		 */
-		observer: null,
+    /**
+     * LCP observer
+     */
+    observer: null,
 
-		// Metrics that will be exported
-		externalMetrics: {},
+    // Metrics that will be exported
+    externalMetrics: {},
 
-		/**
-		 * Executed on `page_ready`, `xhr_load` and `before_unload`
-		 */
-		done: function(edata, ename) {
-			var p, paintTimings, i;
+    /**
+     * Executed on `page_ready`, `xhr_load` and `before_unload`
+     */
+    done: function(edata, ename) {
+      var p, paintTimings, i;
 
-			if (this.complete) {
-				// we've already added data to the beacon
-				return this;
-			}
+      if (this.complete) {
+        // we've already added data to the beacon
+        return this;
+      }
 
-			//
-			// Don't add PaintTimings to SPA Soft or XHR beacons --
-			// Only add to Page Load (ename: load) and SPA Hard (ename: xhr
-			// and initiator: spa_hard) beacons.
-			//
-			if (ename !== "load" && (!edata || edata.initiator !== "spa_hard")) {
-				this.complete = true;
+      //
+      // Don't add PaintTimings to SPA Soft or XHR beacons --
+      // Only add to Page Load (ename: load) and SPA Hard (ename: xhr
+      // and initiator: spa_hard) beacons.
+      //
+      if (ename !== "load" && (!edata || edata.initiator !== "spa_hard")) {
+        this.complete = true;
 
-				return this;
-			}
+        return this;
+      }
 
-			p = BOOMR.getPerformance();
-			if (!p || typeof p.getEntriesByType !== "function") {
-				// can't do anything if window.performance isn't available
-				this.complete = true;
+      p = BOOMR.getPerformance();
 
-				return;
-			}
+      if (!p || typeof p.getEntriesByType !== "function") {
+        // can't do anything if window.performance isn't available
+        this.complete = true;
 
-			//
-			// Get First Paint, First Contentful Paint, etc from Paint Timing API
-			// https://www.w3.org/TR/paint-timing/
-			//
-			paintTimings = p.getEntriesByType("paint");
+        return;
+      }
 
-			if (paintTimings && paintTimings.length) {
-				BOOMR.info("This user agent supports PaintTiming", "pt");
+      //
+      // Get First Paint, First Contentful Paint, etc from Paint Timing API
+      // https://www.w3.org/TR/paint-timing/
+      //
+      paintTimings = p.getEntriesByType("paint");
 
-				for (i = 0; i < paintTimings.length; i++) {
-					// cache it for others who want to use it
-					impl.timingCache[paintTimings[i].name] = paintTimings[i].startTime;
+      if (paintTimings && paintTimings.length) {
+        BOOMR.info("This user agent supports PaintTiming", "pt");
 
-					if (PAINT_TIMING_MAP[paintTimings[i].name]) {
-						// add pt.* to a single beacon
-						BOOMR.addVar(
-							"pt." + PAINT_TIMING_MAP[paintTimings[i].name],
-							Math.floor(paintTimings[i].startTime),
-							true);
-					}
-				}
+        for (i = 0; i < paintTimings.length; i++) {
+          // cache it for others who want to use it
+          impl.timingCache[paintTimings[i].name] = paintTimings[i].startTime;
 
-				this.complete = true;
+          if (PAINT_TIMING_MAP[paintTimings[i].name]) {
+            // add pt.* to a single beacon
+            BOOMR.addVar(
+              "pt." + PAINT_TIMING_MAP[paintTimings[i].name],
+              Math.floor(paintTimings[i].startTime),
+              true);
+          }
+        }
 
-				BOOMR.sendBeacon();
-			}
-		},
+        this.complete = true;
 
-		/**
-		 * Performance observer callback for LCP
-		 *
-		 * @param {PerformanceEntry[]} list Performance entries
-		 */
-		onObserver: function(list) {
-			var entries = list.getEntries();
-			if (entries.length === 0) {
-				return;
-			}
+        BOOMR.sendBeacon();
+      }
+    },
 
-			// Use the latest one
-			var lcp = entries[entries.length - 1];
+    /**
+     * Performance observer callback for LCP
+     *
+     * @param {PerformanceEntry[]} list Performance entries
+     */
+    onObserver: function(list) {
+      var entries = list.getEntries();
 
-			// LCP can change over time, so always take the latest value.  Use renderTime
-			// if available (for same-origin resources or if they have Timing-Allow-Origin),
-			// otherwise loadTime is the best we can get.
-			var lcpTime = lcp.renderTime || lcp.loadTime;
+      if (entries.length === 0) {
+        return;
+      }
 
-			// cache it for others who want to use it
-			impl.timingCache[lcp.entryType] = lcpTime;
+      // Use the latest one
+      var lcp = entries[entries.length - 1];
 
-			var lcpEl = "";
-			var lcpSrc = "";
-			var lcpId = "";
-			var lcpE = "";
-			var lcpSrcset = "";
-			var lcpSizes = "";
+      // LCP can change over time, so always take the latest value.  Use renderTime
+      // if available (for same-origin resources or if they have Timing-Allow-Origin),
+      // otherwise loadTime is the best we can get.
+      var lcpTime = lcp.renderTime || lcp.loadTime;
 
-			if (lcp.element) {
-				// tag name
-				lcpEl = lcp.element.tagName;
+      // cache it for others who want to use it
+      impl.timingCache[lcp.entryType] = lcpTime;
 
-				// src / href
-				lcpSrc = (lcp.element.href || lcp.element.src) || "";
+      var lcpEl = "";
+      var lcpSrc = "";
+      var lcpId = "";
+      var lcpE = "";
+      var lcpSrcset = "";
+      var lcpSizes = "";
 
-				// element ID
-				lcpId = lcp.element.id || "";
+      if (lcp.element) {
+        // tag name
+        lcpEl = lcp.element.tagName;
 
-				// Pseudo-CSS selector
-				lcpE = BOOMR.utils.makeSelector(lcp.element);
+        // src / href
+        lcpSrc = (lcp.element.href || lcp.element.src) || "";
 
-				// srcset attribute
-				lcpSrcset = lcp.element.srcset || "";
+        // element ID
+        lcpId = lcp.element.id || "";
 
-				// sizes attribute
-				lcpSizes = lcp.element.sizes || "";
-			}
+        // Pseudo-CSS selector
+        lcpE = BOOMR.utils.makeSelector(lcp.element);
 
-			// size
-			var lcpS = lcp.size ? lcp.size : 0;
+        // srcset attribute
+        lcpSrcset = lcp.element.srcset || "";
 
-			/* BEGIN_DEBUG */
-			/**
+        // sizes attribute
+        lcpSizes = lcp.element.sizes || "";
+      }
+
+      // size
+      var lcpS = lcp.size ? lcp.size : 0;
+
+      /* BEGIN_DEBUG */
+      /**
 			 * History of timings
 			 */
-			impl.timingHistory[lcp.entryType] = impl.timingHistory[lcp.entryType] || [];
-			impl.timingHistory[lcp.entryType].push({
-				time: lcpTime,
-				src: lcpSrc,
-				el: lcpEl,
-				id: lcpId,
-				e: lcpE,
-				srcset: lcpSrcset,
-				sizes: lcpSizes,
-				s: lcpS
-			});
-			/* END_DEBUG */
+      impl.timingHistory[lcp.entryType] = impl.timingHistory[lcp.entryType] || [];
+      impl.timingHistory[lcp.entryType].push({
+        time: lcpTime,
+        src: lcpSrc,
+        el: lcpEl,
+        id: lcpId,
+        e: lcpE,
+        srcset: lcpSrcset,
+        sizes: lcpSizes,
+        s: lcpS
+      });
+      /* END_DEBUG */
 
-			BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
+      BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
 
-			if (lcpSrc) {
-				BOOMR.addVar("pt.lcp.src", lcpSrc, true);
-			}
+      if (lcpSrc) {
+        BOOMR.addVar("pt.lcp.src", lcpSrc, true);
+      }
 
-			if (lcpEl) {
-				BOOMR.addVar("pt.lcp.el", lcpEl, true);
-			}
+      if (lcpEl) {
+        BOOMR.addVar("pt.lcp.el", lcpEl, true);
+      }
 
-			if (lcpId) {
-				BOOMR.addVar("pt.lcp.id", lcpId, true);
-			}
+      if (lcpId) {
+        BOOMR.addVar("pt.lcp.id", lcpId, true);
+      }
 
-			if (lcpE) {
-				BOOMR.addVar("pt.lcp.e", lcpE, true);
-			}
+      if (lcpE) {
+        BOOMR.addVar("pt.lcp.e", lcpE, true);
+      }
 
-			if (lcpSrcset) {
-				BOOMR.addVar("pt.lcp.srcset", lcpSrcset, true);
-			}
+      if (lcpSrcset) {
+        BOOMR.addVar("pt.lcp.srcset", lcpSrcset, true);
+      }
 
-			if (lcpSizes) {
-				BOOMR.addVar("pt.lcp.sizes", lcpSizes, true);
-			}
+      if (lcpSizes) {
+        BOOMR.addVar("pt.lcp.sizes", lcpSizes, true);
+      }
 
-			if (lcpS) {
-				BOOMR.addVar("pt.lcp.s", lcpS, true);
-			}
+      if (lcpS) {
+        BOOMR.addVar("pt.lcp.s", lcpS, true);
+      }
 
-			impl.externalMetrics.lcp = function() {
-				return Math.floor(lcpTime);
-			};
+      impl.externalMetrics.lcp = function() {
+        return Math.floor(lcpTime);
+      };
 
-			impl.externalMetrics.lcpSrc = function() {
-				return lcpSrc;
-			};
+      impl.externalMetrics.lcpSrc = function() {
+        return lcpSrc;
+      };
 
-			impl.externalMetrics.lcpEl = function() {
-				return lcpEl;
-			};
+      impl.externalMetrics.lcpEl = function() {
+        return lcpEl;
+      };
 
-			impl.externalMetrics.lcpId = function() {
-				return lcpId;
-			};
+      impl.externalMetrics.lcpId = function() {
+        return lcpId;
+      };
 
-			impl.externalMetrics.lcpE = function() {
-				return lcpE;
-			};
+      impl.externalMetrics.lcpE = function() {
+        return lcpE;
+      };
 
-			impl.externalMetrics.lcpSrcset = function() {
-				return lcpSrcset;
-			};
+      impl.externalMetrics.lcpSrcset = function() {
+        return lcpSrcset;
+      };
 
-			impl.externalMetrics.lcpSizes = function() {
-				return lcpSizes;
-			};
+      impl.externalMetrics.lcpSizes = function() {
+        return lcpSizes;
+      };
 
-			impl.externalMetrics.lcpS = function() {
-				return lcpS;
-			};
+      impl.externalMetrics.lcpS = function() {
+        return lcpS;
+      };
+    }
+  };
 
-		}
-	};
+  //
+  // Exports
+  //
+  BOOMR.plugins.PaintTiming = {
+    /**
+     * Initializes the plugin.
+     *
+     * This plugin does not have any configuration.
+     *
+     * @returns {@link BOOMR.plugins.PaintTiming} The PaintTiming plugin for chaining
+     * @memberof BOOMR.plugins.PaintTiming
+     */
+    init: function() {
+      // skip initialization if not supported
+      if (!this.is_supported()) {
+        impl.complete = true;
+        impl.initialized = true;
+      }
 
-	//
-	// Exports
-	//
-	BOOMR.plugins.PaintTiming = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * This plugin does not have any configuration.
-		 *
-		 * @returns {@link BOOMR.plugins.PaintTiming} The PaintTiming plugin for chaining
-		 * @memberof BOOMR.plugins.PaintTiming
-		 */
-		init: function() {
-			// skip initialization if not supported
-			if (!this.is_supported()) {
-				impl.complete = true;
-				impl.initialized = true;
-			}
+      // If we haven't added PaintTiming data and the page is currently
+      // hidden, don't add anything to the beacon as the paint might
+      // happen only when the visitor makes the document visible.
+      if (!impl.complete && BOOMR.visibilityState() === "hidden") {
+        BOOMR.addVar("pt.hid", 1, true);
 
-			// If we haven't added PaintTiming data and the page is currently
-			// hidden, don't add anything to the beacon as the paint might
-			// happen only when the visitor makes the document visible.
-			if (!impl.complete && BOOMR.visibilityState() === "hidden") {
-				BOOMR.addVar("pt.hid", 1, true);
+        impl.complete = true;
+      }
 
-				impl.complete = true;
-			}
+      if (!impl.initialized) {
+        // we'll add data to the beacon on whichever happens first
+        BOOMR.subscribe("page_ready", impl.done, "load", impl);
+        BOOMR.subscribe("xhr_load", impl.done, "xhr", impl);
+        BOOMR.subscribe("before_unload", impl.done, null, impl);
 
-			if (!impl.initialized) {
-				// we'll add data to the beacon on whichever happens first
-				BOOMR.subscribe("page_ready", impl.done, "load", impl);
-				BOOMR.subscribe("xhr_load", impl.done, "xhr", impl);
-				BOOMR.subscribe("before_unload", impl.done, null, impl);
+        // create a PO for LCP
+        if (typeof BOOMR.window.PerformanceObserver === "function" &&
+            typeof window.LargestContentfulPaint === "function") {
+          impl.observer = new BOOMR.window.PerformanceObserver(impl.onObserver);
+          impl.observer.observe({ type: "largest-contentful-paint", buffered: true });
+        }
 
-				// create a PO for LCP
-				if (typeof BOOMR.window.PerformanceObserver === "function" &&
-				    typeof window.LargestContentfulPaint === "function") {
-					impl.observer = new BOOMR.window.PerformanceObserver(impl.onObserver);
-					impl.observer.observe({ type: "largest-contentful-paint", buffered: true });
-				}
+        impl.initialized = true;
+      }
 
-				impl.initialized = true;
-			}
+      return this;
+    },
 
-			return this;
-		},
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.PaintTiming
+     */
+    is_complete: function() {
+      return true;
+    },
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.PaintTiming
-		 */
-		is_complete: function() {
-			return true;
-		},
+    /**
+     * Whether or not this plugin is enabled and PaintTiming is supported.
+     *
+     * @returns {boolean} `true` if PaintTiming plugin is enabled and supported.
+     * @memberof BOOMR.plugins.PaintTiming
+     */
+    is_enabled: function() {
+      return impl.initialized && this.is_supported();
+    },
 
-		/**
-		 * Whether or not this plugin is enabled and PaintTiming is supported.
-		 *
-		 * @returns {boolean} `true` if PaintTiming plugin is enabled and supported.
-		 * @memberof BOOMR.plugins.PaintTiming
-		 */
-		is_enabled: function() {
-			return impl.initialized && this.is_supported();
-		},
+    /**
+     * Whether or not PaintTiming is supported in this browser.
+     *
+     * @returns {boolean} `true` if PaintTiming is supported.
+     * @memberof BOOMR.plugins.PaintTiming
+     */
+    is_supported: function() {
+      var p;
 
-		/**
-		 * Whether or not PaintTiming is supported in this browser.
-		 *
-		 * @returns {boolean} `true` if PaintTiming is supported.
-		 * @memberof BOOMR.plugins.PaintTiming
-		 */
-		is_supported: function() {
-			var p;
+      if (impl.supported !== null) {
+        return impl.supported;
+      }
 
-			if (impl.supported !== null) {
-				return impl.supported;
-			}
+      // check for getEntriesByType and the entry type existing
+      var p = BOOMR.getPerformance();
 
-			// check for getEntriesByType and the entry type existing
-			var p = BOOMR.getPerformance();
-			impl.supported = p &&
-				typeof window.PerformancePaintTiming !== "undefined" &&
-				typeof p.getEntriesByType === "function";
+      impl.supported = p &&
+        typeof window.PerformancePaintTiming !== "undefined" &&
+        typeof p.getEntriesByType === "function";
 
-			return impl.supported;
-		},
+      return impl.supported;
+    },
 
-		/**
-		 * Gets the PaintTiming timestamp for the specified name
-		 *
-		 * @param {string} timingName PaintTiming name
-		 *
-		 * @returns {DOMHighResTimestamp} Timestamp
-		 * @memberof BOOMR.plugins.PaintTiming
-		 */
-		getTimingFor: function(timingName) {
-			var p, paintTimings, i;
+    /**
+     * Gets the PaintTiming timestamp for the specified name
+     *
+     * @param {string} timingName PaintTiming name
+     *
+     * @returns {DOMHighResTimestamp} Timestamp
+     * @memberof BOOMR.plugins.PaintTiming
+     */
+    getTimingFor: function(timingName) {
+      var p, paintTimings, i;
 
-			// look in our cache first
-			if (impl.timingCache[timingName]) {
-				return impl.timingCache[timingName];
-			}
+      // look in our cache first
+      if (impl.timingCache[timingName]) {
+        return impl.timingCache[timingName];
+      }
 
-			// skip if not supported
-			if (!this.is_supported()) {
-				return;
-			}
+      // skip if not supported
+      if (!this.is_supported()) {
+        return;
+      }
 
-			// need to get the window.performance interface
-			var p = BOOMR.getPerformance();
-			if (!p || typeof p.getEntriesByType !== "function") {
-				return;
-			}
+      // need to get the window.performance interface
+      var p = BOOMR.getPerformance();
 
-			// get all Paint Timings
-			paintTimings = p.getEntriesByType("paint");
+      if (!p || typeof p.getEntriesByType !== "function") {
+        return;
+      }
 
-			if (paintTimings && paintTimings.length) {
-				for (i = 0; i < paintTimings.length; i++) {
-					if (paintTimings[i].name === timingName) {
-						// cache the value since it'll never change
-						impl.timingCache[timingName] = paintTimings[i].startTime;
+      // get all Paint Timings
+      paintTimings = p.getEntriesByType("paint");
 
-						return impl.timingCache[timingName];
-					}
-				}
-			}
-		},
+      if (paintTimings && paintTimings.length) {
+        for (i = 0; i < paintTimings.length; i++) {
+          if (paintTimings[i].name === timingName) {
+            // cache the value since it'll never change
+            impl.timingCache[timingName] = paintTimings[i].startTime;
 
-		/* BEGIN_DEBUG */
-		/**
-		 * Get the history of timings for the specified metric
-		 */
-		getHistoryFor: function(timingName) {
-			return impl.timingHistory[timingName] || [];
-		},
-		/* END_DEBUG */
+            return impl.timingCache[timingName];
+          }
+        }
+      }
+    },
 
-		// external metrics
-		metrics: impl.externalMetrics
-	};
+    /* BEGIN_DEBUG */
+    /**
+     * Get the history of timings for the specified metric
+     */
+    getHistoryFor: function(timingName) {
+      return impl.timingHistory[timingName] || [];
+    },
+    /* END_DEBUG */
 
+    // external metrics
+    metrics: impl.externalMetrics
+  };
 }());

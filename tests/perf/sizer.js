@@ -27,29 +27,29 @@ const buildPluginsPath = path.join(buildPath, "plugins");
  * @param {object} metrics Metrics recording location
  */
 async function run(metrics) {
-	metrics.size = {};
+  metrics.size = {};
 
-	return new Promise(async function(resolve, reject) {
-		// Boomerang.js sizes
-		metrics.size.boomerang = {};
-		metrics.size.boomerang.debug = await getSize(path.join(buildPath, "boomerang-1.0.0-debug.js"));
-		metrics.size.boomerang.min = await getSize(path.join(buildPath, "boomerang-1.0.0.min.js"));
-		metrics.size.boomerang.min_gz = await getSize(path.join(buildPath, "boomerang-1.0.0.min.js.gz"));
+  return new Promise(async function(resolve, reject) {
+    // Boomerang.js sizes
+    metrics.size.boomerang = {};
+    metrics.size.boomerang.debug = await getSize(path.join(buildPath, "boomerang-1.0.0-debug.js"));
+    metrics.size.boomerang.min = await getSize(path.join(buildPath, "boomerang-1.0.0.min.js"));
+    metrics.size.boomerang.min_gz = await getSize(path.join(buildPath, "boomerang-1.0.0.min.js.gz"));
 
-		// Plugin sizes
-		let plugins = (await readdir(buildPluginsPath)).filter(fileName => fileName.match(/\.js$/));
+    // Plugin sizes
+    let plugins = (await readdir(buildPluginsPath)).filter(fileName => fileName.match(/\.js$/));
 
-		metrics.size.plugins = {};
-		metrics.size.plugins.count = plugins.length;
+    metrics.size.plugins = {};
+    metrics.size.plugins.count = plugins.length;
 
-		for (let i = 0; i < plugins.length; i++) {
-			const plugin = plugins[i];
+    for (let i = 0; i < plugins.length; i++) {
+      const plugin = plugins[i];
 
-			metrics.size.plugins[plugin.replace(".min.js", "")] = await getSize(path.join(buildPluginsPath, plugin));
-		}
+      metrics.size.plugins[plugin.replace(".min.js", "")] = await getSize(path.join(buildPluginsPath, plugin));
+    }
 
-		resolve();
-	});
+    resolve();
+  });
 }
 
 /**
@@ -60,11 +60,11 @@ async function run(metrics) {
  * @returns {number} File size (bytes)
  */
 async function getSize(filePath) {
-	return new Promise(async function(resolve, reject) {
-		const fileStats = await stat(filePath);
+  return new Promise(async function(resolve, reject) {
+    const fileStats = await stat(filePath);
 
-		resolve(fileStats.size);
-	});
+    resolve(fileStats.size);
+  });
 }
 
 //

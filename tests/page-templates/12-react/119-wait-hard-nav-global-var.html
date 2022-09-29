@@ -13,7 +13,7 @@ window.spaWaitCompleteTimes = [];
 
 // define a variable after 5 seconds
 setTimeout(function() {
-	window.globalVar = true;
+  window.globalVar = true;
 }, 5000);
 </script>
 
@@ -23,37 +23,37 @@ setTimeout(function() {
 <script src="119-wait-hard-nav-global-var.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	History: {
-		enabled: true,
-		auto: true,
-		routeChangeWaitFilter: function() {
-			var myGlobalVar;
+  testAfterOnBeacon: true,
+  History: {
+    enabled: true,
+    auto: true,
+    routeChangeWaitFilter: function() {
+      var myGlobalVar;
 
-			if (window.Object && typeof Object.defineProperty === "function") {
-				Object.defineProperty(window, "globalVar", {
-					get: function() {
-						return myGlobalVar;
-					},
-					set: function(v) {
-						if (typeof myGlobalVar === "undefined") {
-							BOOMR.plugins.SPA.wait_complete();
-						}
+      if (window.Object && typeof Object.defineProperty === "function") {
+        Object.defineProperty(window, "globalVar", {
+          get: function() {
+            return myGlobalVar;
+          },
+          set: function(v) {
+            if (typeof myGlobalVar === "undefined") {
+              BOOMR.plugins.SPA.wait_complete();
+            }
 
-						myGlobalVar = v;
-					}
-				});
-			}
+            myGlobalVar = v;
+          }
+        });
+      }
 
-			return true;
-		},
-		routeChangeWaitFilterHardNavs: true
-	},
-	Errors: {
-		enabled: false
-	},
-	instrument_xhr: true,
-	autorun: false
+      return true;
+    },
+    routeChangeWaitFilterHardNavs: true
+  },
+  Errors: {
+    enabled: false
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <!-- start the app after config so that boomerang catches all requests and makes the test results the same as the other apps -->

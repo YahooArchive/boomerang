@@ -2,7 +2,7 @@
 <script>
 /*eslint-disable no-unused-vars*/
 window.BOOMR_CONSENT_CONFIG = {
-	enabled: true
+  enabled: true
 };
 </script>
 <%= consentInlinePlugin %>
@@ -10,22 +10,22 @@ window.BOOMR_CONSENT_CONFIG = {
 <script src="13-opt-out-no-cookies-after-init-reload.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	site_domain: document.domain,
-	testAfterOnBeacon: false,
-	onBoomerangLoaded: function() {
-		BOOMR.subscribe("page_ready", function() {
-			BOOMR_OPT_OUT();
+  site_domain: document.domain,
+  testAfterOnBeacon: false,
+  onBoomerangLoaded: function() {
+    BOOMR.subscribe("page_ready", function() {
+      BOOMR_OPT_OUT();
 
-			setTimeout(function() {
-				// Re-init Boomerang
-				BOOMR.init();
+      setTimeout(function() {
+        // Re-init Boomerang
+        BOOMR.init();
 
-				setTimeout(function() {
-					BOOMR_test.runTests();
-				}, 500);
-			}, 100);
-		});
-	}
+        setTimeout(function() {
+          BOOMR_test.runTests();
+        }, 500);
+      }, 100);
+    });
+  }
 });
 </script>
 <%= footer %>

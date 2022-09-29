@@ -2,8 +2,9 @@
 <script>
 // Setting window.performance.now to a bogus function
 window.performance.now = function() {
-	return 0;
+  return 0;
 };
+
 window.performance.now.isCustom = true;
 </script>
 <%= boomerangScript %>
@@ -11,7 +12,7 @@ window.performance.now.isCustom = true;
 
 <script type="text/javascript">
 BOOMR_test.init({
-	testAfterOnBeacon: 1,
-	autorun: true
+  testAfterOnBeacon: 1,
+  autorun: true
 });
 </script>

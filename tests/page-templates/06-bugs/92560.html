@@ -6,30 +6,31 @@ IE doesn't return a leading slash (/) on anchor.pathname, XHR exclude list was n
 <%= boomerangScript %>
 <script>
 BOOMR_test.init({
-	instrument_xhr: true,
-	testAfterOnBeacon: 1,
-	AutoXHR: {
-		xhrRequireChanges: false
-	},
-	afterFirstBeacon:
-		function() {
-			if (!BOOMR.plugins.AutoXHR) {
-				return;
-			}
+  instrument_xhr: true,
+  testAfterOnBeacon: 1,
+  AutoXHR: {
+    xhrRequireChanges: false
+  },
+  afterFirstBeacon:
+    function() {
+      if (!BOOMR.plugins.AutoXHR) {
+        return;
+      }
 
-			BOOMR.xhr_excludes["/pages/06-bugs/support/script2.js"] = true;
+      BOOMR.xhr_excludes["/pages/06-bugs/support/script2.js"] = true;
 
-			var xhr;
-			xhr = new XMLHttpRequest();
-			xhr.open("GET", "support/script1.js");
-			xhr.send(null);
+      var xhr;
 
-			setTimeout(function(){
-				xhr = new XMLHttpRequest();
-				xhr.open("GET", "support/script2.js");
-				xhr.send(null);
-			}, 100);
-		}
+      xhr = new XMLHttpRequest();
+      xhr.open("GET", "support/script1.js");
+      xhr.send(null);
+
+      setTimeout(function(){
+        xhr = new XMLHttpRequest();
+        xhr.open("GET", "support/script2.js");
+        xhr.send(null);
+      }, 100);
+    }
 });
 </script>
 <%= footer %>

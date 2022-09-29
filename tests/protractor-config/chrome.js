@@ -6,7 +6,7 @@ var config = base.config;
 // List of Chromium capabilities http://chromedriver.chromium.org/capabilities
 // List of Chrome cmd line args https://peter.sh/experiments/chromium-command-line-switches/
 var capabilities = {
-	browserName: "chrome"
+  browserName: "chrome"
 };
 
 // capabilities in this file will take precedence

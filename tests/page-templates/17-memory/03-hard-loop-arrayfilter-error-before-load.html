@@ -6,16 +6,16 @@
 <img src="/assets/img.jpg" />
 <img src="/assets/img.jpg" />
 <picture>
-	<source media="(max-width: 766px)" srcset="/assets/img.jpg?source-in-picture1">
-	<img alt="gg" src="/assets/img.jpg?img-in-picture1">
+  <source media="(max-width: 766px)" srcset="/assets/img.jpg?source-in-picture1">
+  <img alt="gg" src="/assets/img.jpg?img-in-picture1">
 </picture>
 <picture>
-	<source media="(max-width: 766px)" srcset="/assets/img.jpg?source-in-picture2">
-	<img alt="gg" src="/assets/img.jpg?img-in-picture2">
+  <source media="(max-width: 766px)" srcset="/assets/img.jpg?source-in-picture2">
+  <img alt="gg" src="/assets/img.jpg?img-in-picture2">
 </picture>
 <picture>
-	<source media="(max-width: 766px)" srcset="/assets/img.jpg?source-in-picture3">
-	<img alt="gg" src="/assets/img.jpg?img-in-picture3">
+  <source media="(max-width: 766px)" srcset="/assets/img.jpg?source-in-picture3">
+  <img alt="gg" src="/assets/img.jpg?img-in-picture3">
 </picture>
 <!-- delay the page by 2 seconds so several errors can fire -->
 <img src="/delay?delay=2000&amp;file=/assets/img.jpg" style="width: 100px" />
@@ -23,32 +23,32 @@
 
 <script>
 Object.defineProperty(HTMLImageElement.prototype, "currentSrc", {
-	get: function() {
-		// We force a JS error that will be later triggered by the Memory plugin
-		var a = b;
+  get: function() {
+    // We force a JS error that will be later triggered by the Memory plugin
+    var a = b;
 
-		return (!this.src && !this.srcset) ? "" : this.pfCurrentSrc || "";
-	},
-	enumerable: true,
-	configurable: true
+    return (!this.src && !this.srcset) ? "" : this.pfCurrentSrc || "";
+  },
+  enumerable: true,
+  configurable: true
 });
 
 BOOMR_test.init({
-	testAfterOnBeacon: !BOOMR.plugins.Errors ? 1 : 2,
-	"BW": { "enabled": false },
-	"RT": { "session_exp": 1800 },
-	"Errors": {
-		"enabled": true,
-		"maxErrors": 10,
-		"sendAfterOnload": true,
-		"sendInterval": 5000
-	},
-	afterFirstBeacon: function() {
-		// create an error after onload
-		setTimeout(function() {
-			BOOMR.addError("Force error beacon", "BOOMRtest");
-		}, 1000);
-	}
+  testAfterOnBeacon: !BOOMR.plugins.Errors ? 1 : 2,
+  "BW": { "enabled": false },
+  "RT": { "session_exp": 1800 },
+  "Errors": {
+    "enabled": true,
+    "maxErrors": 10,
+    "sendAfterOnload": true,
+    "sendInterval": 5000
+  },
+  afterFirstBeacon: function() {
+    // create an error after onload
+    setTimeout(function() {
+      BOOMR.addError("Force error beacon", "BOOMRtest");
+    }, 1000);
+  }
 });
 </script>
 <%= footer %>

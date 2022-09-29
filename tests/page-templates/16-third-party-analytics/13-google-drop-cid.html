@@ -6,25 +6,25 @@
 BOOMR_test.clearCookies();
 
 if (window.location.href.indexOf("utm_source") === -1) {
-	window.location.href += "?utm_source=source&utm_medium=medium&utm_term=term&utm_content=content&utm_campaign=campaign";
+  window.location.href += "?utm_source=source&utm_medium=medium&utm_term=term&utm_content=content&utm_campaign=campaign";
 }
 
 // polyfill for google analytics
 window.ga = function(cb) {
-	cb(
-		{
-			get: function() {
-				return "XXXXXXXXXX.YYYYYYYYYY";
-			}
-		}
-	);
+  cb(
+    {
+      get: function() {
+        return "XXXXXXXXXX.YYYYYYYYYY";
+      }
+    }
+  );
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	TPAnalytics: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  TPAnalytics: {
+    enabled: true
+  }
 });
 </script>
 <%= footer %>

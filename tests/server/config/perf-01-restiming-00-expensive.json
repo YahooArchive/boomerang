@@ -1,9 +1,9 @@
 {
-	"h.t": {{H_T}},
-	"h.cr": "{{H_CR}}",
-	"h.d": "{{DOMAIN}}",
-	"ResourceTiming": {
-		"enabled": true,
-		"splitAtPath": true
-	}
+  "h.t": {{H_T}},
+  "h.cr": "{{H_CR}}",
+  "h.d": "{{DOMAIN}}",
+  "ResourceTiming": {
+    "enabled": true,
+    "splitAtPath": true
+  }
 }

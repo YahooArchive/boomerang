@@ -3,30 +3,33 @@
 <%= boomerangScript %>
 <script>
 BOOMR_test.init({
-	instrument_xhr: true,
-	testAfterOnBeacon: (BOOMR.plugins.AutoXHR) ? 2 : 1,
-	afterFirstBeacon:
-		function() {
-			if (!BOOMR.plugins.AutoXHR) {
-				return;
-			}
+  instrument_xhr: true,
+  testAfterOnBeacon: (BOOMR.plugins.AutoXHR) ? 2 : 1,
+  afterFirstBeacon:
+    function() {
+      if (!BOOMR.plugins.AutoXHR) {
+        return;
+      }
 
-			// first, start an XHR to trigger AutoXHR
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState !== 4) {
-					return;
-				}
+      // first, start an XHR to trigger AutoXHR
+      var xhr = new XMLHttpRequest();
 
-				// next, add a 2-second LINK tag that should get tracked
-				var linkTag = document.createElement("LINK");
-				linkTag.rel = "stylesheet";
-				linkTag.href = "/delay?delay=2000&file=/assets/blank.js?rnd=" + Math.random();
-				document.body.appendChild(linkTag);
-			};
-			xhr.send(null);
-		}
+      xhr.open("GET", "/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) {
+          return;
+        }
+
+        // next, add a 2-second LINK tag that should get tracked
+        var linkTag = document.createElement("LINK");
+
+        linkTag.rel = "stylesheet";
+        linkTag.href = "/delay?delay=2000&file=/assets/blank.js?rnd=" + Math.random();
+        document.body.appendChild(linkTag);
+      };
+
+      xhr.send(null);
+    }
 });
 </script>
 <%= footer %>

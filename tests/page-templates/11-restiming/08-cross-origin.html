@@ -5,10 +5,10 @@
 <img src="/assets/img.jpg?beforeiframe" />
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	ResourceTiming: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  ResourceTiming: {
+    enabled: true
+  }
 });
 </script>
 
@@ -17,6 +17,7 @@ BOOMR_test.init({
 <script>
 var host = "<%= secondaryServer %>";
 var port = (parseInt(window.location.port) || 4002);
+
 window.crossOriginHost = host;
 document.getElementById("cross-origin").src = "//" + host + ":" + port + "/pages/11-restiming/support/iframe.html?cross-origin";
 </script>

@@ -5,39 +5,39 @@
 
 <script>
 BOOMR_test.init({
-	AutoXHR: {
-		spaStartFromClick: true
-	},
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
-	History: {
-		enabled: true,
-		auto: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  AutoXHR: {
+    spaStartFromClick: true
+  },
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
+  History: {
+    enabled: true,
+    auto: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		// 1. click
-		// 2. wait 500ms
-		// 2. click <- beacon 1
-		// 2. wait 30ms
-		// 3. XHR (2000ms)
-		// 4. oncomplete, add IMG to DOM (2000ms)
-		BOOMR_test.fireMouseEvent("mouseup");
+    // 1. click
+    // 2. wait 500ms
+    // 2. click <- beacon 1
+    // 2. wait 30ms
+    // 3. XHR (2000ms)
+    // 4. oncomplete, add IMG to DOM (2000ms)
+    BOOMR_test.fireMouseEvent("mouseup");
 
-		setTimeout(function() {
-			BOOMR_test.fireMouseEvent("mouseup");
+    setTimeout(function() {
+      BOOMR_test.fireMouseEvent("mouseup");
 
-			setTimeout(function() {
-				BOOMR_test.xhrDelayed("xhr1", 2000, function() {
-					BOOMR_test.imgIntoDomDelayed("img1", 2000);
-				});
-			}, 30);
-		}, 500);
-	}
+      setTimeout(function() {
+        BOOMR_test.xhrDelayed("xhr1", 2000, function() {
+          BOOMR_test.imgIntoDomDelayed("img1", 2000);
+        });
+      }, 30);
+    }, 500);
+  }
 });
 </script>
 <%= footer %>

@@ -31,190 +31,201 @@
  * @class BOOMR.plugins.IPv6
  */
 (function() {
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	if (BOOMR.plugins.IPv6) {
-		return;
-	}
+  if (BOOMR.plugins.IPv6) {
+    return;
+  }
 
-	/*
-	 * Algorithm:
-	 *
-	 * 1. Try to load a sizeless image from an IPv6 host
-	 *   - onerror, flag no IPv6 connect support and end
-	 *   - onload, measure load time
-	 * 2. Try to load a sizeless image from a hostname that resolves to an IPv6 address
-	 *   - onerror, flag no IPv6 DNS resolver and end
-	 *   - onload, measure load time
-	 */
-	var impl = {
-		complete: false,
-		ipv6_url: "",
-		host_url: "",
-		timeout: 1200,
+  /*
+   * Algorithm:
+   *
+   * 1. Try to load a sizeless image from an IPv6 host
+   *   - onerror, flag no IPv6 connect support and end
+   *   - onload, measure load time
+   * 2. Try to load a sizeless image from a hostname that resolves to an IPv6 address
+   *   - onerror, flag no IPv6 DNS resolver and end
+   *   - onload, measure load time
+   */
+  var impl = {
+    complete: false,
+    ipv6_url: "",
+    host_url: "",
+    timeout: 1200,
 
-		timers: {
-			ipv6: { start: null, end: null },
-			host: { start: null, end: null }
-		},
+    timers: {
+      ipv6: { start: null, end: null },
+      host: { start: null, end: null }
+    },
 
-		start: function() {
-			this.load_img("ipv6", "host");
-		},
+    start: function() {
+      this.load_img("ipv6", "host");
+    },
 
-		load_img: function() {
-			var img,
-			    rnd = "?t=" + BOOMR.utils.generateId(10),
-			    timer = 0, error = null,
-			    that = this,
-			    which = Array.prototype.shift.call(arguments),
-			    a = arguments;
+    load_img: function() {
+      var img,
+          rnd = "?t=" + BOOMR.utils.generateId(10),
+          timer = 0,
+          error = null,
+          that = this,
+          which = Array.prototype.shift.call(arguments),
+          a = arguments;
 
-			// Terminate if we've reached end of test list
-			if (!which || !this.timers.hasOwnProperty(which)) {
-				this.done();
-				return false;
-			}
+      // Terminate if we've reached end of test list
+      if (!which || !this.timers.hasOwnProperty(which)) {
+        this.done();
 
-			// Skip if URL wasn't set for this test
-			if (!this[which + "_url"]) {
-				return this.load_img.apply(this, a);
-			}
+        return false;
+      }
 
-			img = new Image();
+      // Skip if URL wasn't set for this test
+      if (!this[which + "_url"]) {
+        return this.load_img.apply(this, a);
+      }
 
-			img.onload = function() {
-				that.timers[which].end = new Date().getTime();
-				clearTimeout(timer);
-				img.onload = img.onerror = null;
-				img = null;
+      img = new Image();
 
-				that.load_img.apply(that, a);
-				that = a = null;
-			};
+      img.onload = function() {
+        that.timers[which].end = new Date().getTime();
 
-			error = function() {
-				that.timers[which].supported = false;
-				clearTimeout(timer);
-				img.onload = img.onerror = null;
-				img = null;
+        clearTimeout(timer);
 
-				that.done();
-				that = a = null;
-			};
+        img.onload = img.onerror = null;
+        img = null;
 
-			img.onerror = error;
-			timer = setTimeout(error, this.timeout);
-			this.timers[which].start = new Date().getTime();
-			img.src = this[which + "_url"] + rnd;
+        that.load_img.apply(that, a);
+        that = a = null;
+      };
 
-			return true;
-		},
+      error = function() {
+        that.timers[which].supported = false;
 
-		done: function() {
-			if (this.complete) {
-				return;
-			}
+        clearTimeout(timer);
 
-			BOOMR.removeVar("ipv6_latency", "ipv6_lookup");
-			if (this.timers.ipv6.end !== null) {
-				BOOMR.addVar("ipv6_latency", this.timers.ipv6.end - this.timers.ipv6.start);
-			}
-			else {
-				BOOMR.addVar("ipv6_latency", "NA");
-			}
+        img.onload = img.onerror = null;
+        img = null;
 
-			if (this.timers.host.end !== null) {
-				BOOMR.addVar("ipv6_lookup", this.timers.host.end - this.timers.host.start);
-			}
-			else {
-				BOOMR.addVar("ipv6_lookup", "NA");
-			}
+        that.done();
+        that = a = null;
+      };
 
-			this.complete = true;
-			BOOMR.sendBeacon();
-		},
+      img.onerror = error;
 
-		skip: function() {
-			// it's possible that we didn't start, so sendBeacon never
-			// gets called.  Let's set our complete state and call sendBeacon.
-			// This happens if onunload fires before onload
+      timer = setTimeout(error, this.timeout);
 
-			if (!this.complete) {
-				this.complete = true;
-				BOOMR.sendBeacon();
-			}
+      this.timers[which].start = new Date().getTime();
+      img.src = this[which + "_url"] + rnd;
 
-			return this;
-		}
-	};
+      return true;
+    },
 
-	BOOMR.plugins.IPv6 = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * @param {object} config Configuration
-		 * @param {string} config.IPv6.ipv6_url An image URL referenced by its IPv6 address,
-		 * eg, http://fe80::1/image-i.png.
-		 *
-		 * If not specified, the test will abort.
-		 * @param {string} [config.IPv6.host_url] An image URL on an IPv6 only host referenced
-		 * by its DNS hostname.
-		 *
-		 * The hostname should not resolve to an IPv4 address.
-		 *
-		 * If not specified, the host test will be skipped.
-		 * @param {string} [config.IPv6.timeout] The time, in milliseconds, that boomerang should
-		 * wait for a network response before giving up and assuming that the request failed.
-		 *
-		 * The default is 1200ms.
-		 *
-		 * @returns {@link BOOMR.plugins.IPv6} The IPv6 plugin for chaining
-		 * @memberof BOOMR.plugins.IPv6
-		 */
-		init: function(config) {
-			BOOMR.utils.pluginConfig(impl, config, "IPv6", ["ipv6_url", "host_url", "timeout"]);
+    done: function() {
+      if (this.complete) {
+        return;
+      }
 
-			if (config && config.wait) {
-				return this;
-			}
+      BOOMR.removeVar("ipv6_latency", "ipv6_lookup");
 
-			if (!impl.ipv6_url) {
-				BOOMR.warn("IPv6.ipv6_url is not set.  Cannot run IPv6 test.", "ipv6");
-				impl.complete = true;  // set to true so that is_complete doesn't
-				                       // block other plugins
-				return this;
-			}
+      if (this.timers.ipv6.end !== null) {
+        BOOMR.addVar("ipv6_latency", this.timers.ipv6.end - this.timers.ipv6.start);
+      }
+      else {
+        BOOMR.addVar("ipv6_latency", "NA");
+      }
 
-			if (!impl.host_url) {
-				BOOMR.warn("IPv6.host_url is not set.  Will skip hostname test.", "ipv6");
-			}
+      if (this.timers.host.end !== null) {
+        BOOMR.addVar("ipv6_lookup", this.timers.host.end - this.timers.host.start);
+      }
+      else {
+        BOOMR.addVar("ipv6_lookup", "NA");
+      }
 
-			// make sure that test images use the same protocol as the host page
-			if (BOOMR.window.location.protocol === "https:") {
-				impl.complete = true;
-				return this;
-			}
+      this.complete = true;
+      BOOMR.sendBeacon();
+    },
 
-			impl.ipv6_url = impl.ipv6_url.replace(/^https:/, "http:");
-			impl.host_url = impl.host_url.replace(/^https:/, "http:");
+    skip: function() {
+      // it's possible that we didn't start, so sendBeacon never
+      // gets called.  Let's set our complete state and call sendBeacon.
+      // This happens if onunload fires before onload
+      if (!this.complete) {
+        this.complete = true;
+        BOOMR.sendBeacon();
+      }
 
-			BOOMR.subscribe("page_ready", impl.start, null, impl);
-			BOOMR.subscribe("before_unload", impl.skip, null, impl);
+      return this;
+    }
+  };
 
-			return this;
-		},
+  BOOMR.plugins.IPv6 = {
+    /**
+     * Initializes the plugin.
+     *
+     * @param {object} config Configuration
+     * @param {string} config.IPv6.ipv6_url An image URL referenced by its IPv6 address,
+     * eg, http://fe80::1/image-i.png.
+     *
+     * If not specified, the test will abort.
+     * @param {string} [config.IPv6.host_url] An image URL on an IPv6 only host referenced
+     * by its DNS hostname.
+     *
+     * The hostname should not resolve to an IPv4 address.
+     *
+     * If not specified, the host test will be skipped.
+     * @param {string} [config.IPv6.timeout] The time, in milliseconds, that boomerang should
+     * wait for a network response before giving up and assuming that the request failed.
+     *
+     * The default is 1200ms.
+     *
+     * @returns {@link BOOMR.plugins.IPv6} The IPv6 plugin for chaining
+     * @memberof BOOMR.plugins.IPv6
+     */
+    init: function(config) {
+      BOOMR.utils.pluginConfig(impl, config, "IPv6", ["ipv6_url", "host_url", "timeout"]);
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.IPv6
-		 */
-		is_complete: function() {
-			return impl.complete;
-		}
-	};
+      if (config && config.wait) {
+        return this;
+      }
 
+      if (!impl.ipv6_url) {
+        BOOMR.warn("IPv6.ipv6_url is not set.  Cannot run IPv6 test.", "ipv6");
+
+        // set to true so that is_complete doesn't
+        impl.complete = true;
+
+        // block other plugins
+        return this;
+      }
+
+      if (!impl.host_url) {
+        BOOMR.warn("IPv6.host_url is not set.  Will skip hostname test.", "ipv6");
+      }
+
+      // make sure that test images use the same protocol as the host page
+      if (BOOMR.window.location.protocol === "https:") {
+        impl.complete = true;
+
+        return this;
+      }
+
+      impl.ipv6_url = impl.ipv6_url.replace(/^https:/, "http:");
+      impl.host_url = impl.host_url.replace(/^https:/, "http:");
+
+      BOOMR.subscribe("page_ready", impl.start, null, impl);
+      BOOMR.subscribe("before_unload", impl.skip, null, impl);
+
+      return this;
+    },
+
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.IPv6
+     */
+    is_complete: function() {
+      return impl.complete;
+    }
+  };
 }());

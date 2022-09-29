@@ -7,9 +7,9 @@
 <script src="support/app.js"></script>
 
 <script type="text/x-handlebars">
-	<div class="container">
-		{{outlet}}
-	</div>
+  <div class="container">
+    {{outlet}}
+  </div>
 </script>
 
 <script>
@@ -22,34 +22,38 @@ window.imgs = [];
 <script>
 /*eslint-disable no-unused-vars*/
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
-		//
-		// Send a XHRs, and insert an image after it comes back
-		//
-		setTimeout(function(){
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/delay?delay=2000&file=/pages/08-ember/support/widget.json&id=1&rnd=" + Math.random(), true);
-			xhr.onreadystatechange = function() {
-				// fire another XHR
-				if (xhr.readyState === 4) {
-					var img = document.createElement("img");
-					img.src = "/delay?delay=2000&file=/pages/08-ember/support/img.jpg&rnd=" + Math.random();
-					document.body.appendChild(img);
-				}
-			};
-			xhr.send(null);
-		}, 0);
-	},
-	History: {
-		enabled: true,
-		monitorHistory: false
-	},
-	instrument_xhr: false,
-	autorun: false
+  testAfterOnBeacon: true,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
+
+    //
+    // Send a XHRs, and insert an image after it comes back
+    //
+    setTimeout(function(){
+      var xhr = new XMLHttpRequest();
+
+      xhr.open("GET", "/delay?delay=2000&file=/pages/08-ember/support/widget.json&id=1&rnd=" + Math.random(), true);
+      xhr.onreadystatechange = function() {
+        // fire another XHR
+        if (xhr.readyState === 4) {
+          var img = document.createElement("img");
+
+          img.src = "/delay?delay=2000&file=/pages/08-ember/support/img.jpg&rnd=" + Math.random();
+          document.body.appendChild(img);
+        }
+      };
+
+      xhr.send(null);
+    }, 0);
+  },
+  History: {
+    enabled: true,
+    monitorHistory: false
+  },
+  instrument_xhr: false,
+  autorun: false
 });
 </script>
 <%= footer %>

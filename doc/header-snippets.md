@@ -23,7 +23,6 @@ Minified:
 <script>%minified_errors_snippet%</script>
 ```
 
-
 ## Frame Rate (for {@link BOOMR.plugins.Continuity})
 
 The {@link BOOMR.plugins.Continuity} plugin measures performance and user experience metrics beyond just the

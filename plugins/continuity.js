@@ -256,10 +256,10 @@
  * Layout Shift (CLS) score.
  *
  * The Cumulative Layout Shift (CLS) score approximates the severity of visual layout changes by monitoring
- * how DOM nodes shift during the user experience.  A CLS of `0` indicates a stable view where no DOM nodes shifted.  Each
- * time an unexpected layout shifts occur, the CLS increases.  CLS is represented in decimal form, with a value of `0.1`
- * indicating a fraction of the screen's elements were affected.  CLS values can be larger than `1.0` if the
- * layout shifts multiple times.
+ * how DOM nodes shift during the user experience.  A CLS of `0` indicates a stable view where no DOM nodes shifted.
+ * Each time an unexpected layout shifts occur, the CLS increases.  CLS is represented in decimal form, with a
+ * value of `0.1` indicating a fraction of the screen's elements were affected.  CLS values can be larger than
+ * `1.0` if the layout shifts multiple times.
  *
  * See [web.dev/cls](https://web.dev/cls/) for a more detailed explanation.
  *
@@ -271,8 +271,8 @@
  * The top layout shift value is included on the beacon as `c.cls.tops`, and the corresponding Pseudo-CSS selector
  * of the first source of the top layout shift is included on the beacon as `c.cls.topid`.
  *
- * Like `c.cls`, `c.cls.tops`, `c.cls.d`, and `c.cls.topid` reset each beacon. `c.cls.tops`, `c.cls.d`, and `c.cls.topid`
- * also undergo compression and jsUrl serialization before being added to the beacon.
+ * Like `c.cls`, `c.cls.tops`, `c.cls.d`, and `c.cls.topid` reset each beacon. `c.cls.tops`, `c.cls.d`, and
+ * `c.cls.topid` also undergo compression and jsUrl serialization before being added to the beacon.
  *
  * This option is on by default, and can be disabled via the
  * {@link BOOMR.plugins.Continuity.init `monitorLayoutShifts`} config option.
@@ -715,7 +715,8 @@
  * * `c.cls`: Cumulative Layout Shift score (since last beacon) (Base-10 fraction)
  * * `c.cls.d`: Cumulative Layout Shift data (since last beacon)
  * * `c.cls.tops`: Top Layout Shift score within CLS (since last beacon)
- * * `c.cls.topid`: Pseudo-CSS selector of the first source corresponding to the Top Layout Shift score (since last beacon)
+ * * `c.cls.topid`: Pseudo-CSS selector of the first source corresponding to the Top Layout Shift score
+ *   (since last beacon)
  * * `c.e`: Continuity Epoch timestamp (when everything started measuring) (Base-36)
  * * `c.f.d`: Frame Rate duration (how long it has been measuring) (milliseconds) (Base-10)
  * * `c.f.l`: Number of Long Frames (>= 50ms) (Base-10)
@@ -763,4070 +764,4176 @@
  * @class BOOMR.plugins.Continuity
  */
 (function() {
-	var impl;
-
-	BOOMR = window.BOOMR || {};
-
-	BOOMR.plugins = BOOMR.plugins || {};
-
-	if (BOOMR.plugins.Continuity) {
-		return;
-	}
-
-	//
-	// Constants available to all Continuity classes
-	//
-	/**
-	 * Timeline collection interval
-	 */
-	var COLLECTION_INTERVAL = 100;
-
-	/**
-	 * Maximum length (ms) that events will be recorded, if not
-	 * a SPA.
-	 */
-	var DEFAULT_AFTER_ONLOAD_MAX_LENGTH = 60000;
-
-	/**
-	 * Time to Interactive polling period (after onload, how often we'll
-	 * check to see if TTI fired yet)
-	 */
-	var TIME_TO_INTERACTIVE_WAIT_POLL_PERIOD = 500;
-
-	/**
-	 * Compression Modes
-	 */
-
-	/**
-	 * Most numbers are expected to be 0-63, though larger numbers are
-	 * allowed.
-	 */
-	var COMPRESS_MODE_SMALL_NUMBERS = 0;
-
-	/**
-	 * Most numbers are expected to be larger than 63.
-	 */
-	var COMPRESS_MODE_LARGE_NUMBERS = 1;
-
-	/**
-	 * Numbers are from 0 to 100
-	 */
-	var COMPRESS_MODE_PERCENT = 2;
-
-	/**
-	 * Log types
-	 */
-	var LOG_TYPE_SCROLL = 0;
-	var LOG_TYPE_CLICK = 1;
-	var LOG_TYPE_MOUSE = 2;
-	var LOG_TYPE_KEY = 3;
-	var LOG_TYPE_VIS = 4;
-	var LOG_TYPE_ORIENTATION = 5;
-
-	/**
-	 * Base64 number encoding
-	 */
-	var BASE64_NUMBER = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_";
-
-	/**
-	 * Large number delimiter (.)
-	 *
-	 * For COMPRESS_MODE_SMALL_NUMBERS, numbers larger than 63 are wrapped in this
-	 * character.
-	 */
-	var LARGE_NUMBER_WRAP = ".";
-
-	/**
-	 * Listener Options args with Passive and Capture set to true
-	 */
-	var listenerOpts = {passive: true, capture: true};
-
-	// Performance object
-	var p = BOOMR.getPerformance();
-
-	// Metrics that will be exported
-	var externalMetrics = {};
-
-	/**
-	 * Epoch - when to base all relative times from.
-	 *
-	 * If the browser supports NavigationTiming, this is navigationStart.
-	 *
-	 * If not, just use 'now'.
-	 */
-	var epoch = p && p.timing && p.timing.navigationStart ?
-		p.timing.navigationStart : BOOMR.now();
-
-	/**
-	 * Debug logging
-	 *
-	 * @param {string} msg Message
-	 */
-	function debug(msg) {
-		BOOMR.debug(msg, "Continuity");
-	}
-
-	/**
-	 * Compress JSON to a string for a URL parameter in the best way possible.
-	 *
-	 * If BOOMR.utils.Compression.jsUrl, or UserTimingCompression is available (which has JSURL),
-	 * use that.  The data will start with the character `~`.
-	 *
-	 * Otherwise, use JSON.stringify.  The data will start with the character `{`.
-	 *
-	 * @param {object} obj Data
-	 *
-	 * @returns {string} Compressed data
-	 */
-	function compressJson(data) {
-		var jsUrlFn = (BOOMR.utils.Compression && BOOMR.utils.Compression.jsUrl) ||
-			(window.UserTimingCompression && window.UserTimingCompression.jsUrl) ||
-			(BOOMR.window.UserTimingCompression && BOOMR.window.UserTimingCompression.jsUrl);
-
-		if (jsUrlFn) {
-			return jsUrlFn(data);
-		}
-		else if (window.JSON) {
-			return JSON.stringify(data);
-		}
-		else {
-			// JSON isn't available
-			return "";
-		}
-	}
-
-	/**
-	 * Gets a compressed bucket log.
-	 *
-	 * Each bucket is represented by a single character (the value of the
-	 * bucket base 64), unless:
-	 *
-	 * 1. There are 4 or more duplicates in a row. Then the format is:
-	 *   *[count of dupes]*[number base 64]
-	 * 2. The value is greater than 63, then the format is:
-	 *   _[number base 36]_
-	 *
-	 * @param {number} type Compression type
-	 * @param {boolean} backfill Backfill
-	 * @param {object} dataSet Data
-	 * @param {number} sinceBucket Lowest bucket
-	 * @param {number} endBucket Highest bucket
-	 *
-	 * @returns {string} Compressed log
-	 */
-	function compressBucketLog(type, backfill, dataSet, sinceBucket, endBucket) {
-		var out = "", val = 0, i, j, dupes, valStr, nextVal, wroteSomething;
-
-		if (!dataSet) {
-			return "";
-		}
-
-		// if we know there's no data, return an empty string
-		if (dataSet.length === 0) {
-			return "";
-		}
-
-		if (backfill) {
-			if (typeof dataSet[sinceBucket] === "undefined") {
-				dataSet[sinceBucket] = 0;
-			}
-
-			// pre-fill buckets
-			for (i = sinceBucket + 1; i <= endBucket; i++) {
-				if (typeof dataSet[i] === "undefined") {
-					dataSet[i] = dataSet[i - 1];
-				}
-			}
-		}
-
-		for (i = sinceBucket; i <= endBucket; i++) {
-			val = (typeof dataSet[i] === "number" && !isNaN(dataSet[i])) ?
-			    dataSet[i] : 0;
-
-			//
-			// Compression modes
-			//
-			if (type === COMPRESS_MODE_SMALL_NUMBERS) {
-				// Small numbers can be max 63 for our single-digit encoding
-				if (val <= 63) {
-					valStr = BASE64_NUMBER.charAt(val);
-				}
-				else {
-					// large numbers get wrapped in .s
-					valStr = LARGE_NUMBER_WRAP + val.toString(36) + LARGE_NUMBER_WRAP;
-				}
-			}
-			else if (type === COMPRESS_MODE_LARGE_NUMBERS) {
-				// large numbers just get Base36 encoding by default
-				valStr = val.toString(36);
-			}
-			else if (type === COMPRESS_MODE_PERCENT) {
-				//
-				// Percentage characters take two digits always, with
-				// 100 = __
-				//
-				if (val < 99) {
-					// 0-pad
-					valStr = val <= 9 ? ("0" + Math.max(val, 0)) : val;
-				}
-				else {
-					// 100 or higher
-					valStr = "__";
-				}
-			}
-
-			// compress sequences of the same number 4 or more times
-			if ((i + 3) <= endBucket &&
-			    (dataSet[i + 1] === val || (val === 0 && dataSet[i + 1] === undefined)) &&
-			    (dataSet[i + 2] === val || (val === 0 && dataSet[i + 2] === undefined)) &&
-			    (dataSet[i + 3] === val || (val === 0 && dataSet[i + 3] === undefined))) {
-				dupes = 1;
-
-				// loop until we're past the end bucket or we find a non-dupe
-				while (i < endBucket) {
-					if (dataSet[i + 1] === val || (val === 0 && dataSet[i + 1] === undefined)) {
-						dupes++;
-					}
-					else {
-						break;
-					}
-
-					i++;
-				}
-
-				nextVal = "*" + dupes.toString(36) + "*" + valStr;
-			}
-			else {
-				nextVal = valStr;
-			}
-
-			// add this value if it isn't just 0s at the end
-			if (val !== 0 || i !== endBucket) {
-				//
-				// Small numbers fit into a single character (or are delimited
-				// by _s), so can just be appended to each other.
-				//
-				// Percentage always takes two characters.
-				//
-				if (type === COMPRESS_MODE_LARGE_NUMBERS) {
-					//
-					// Large numbers need to be separated by commas
-					//
-					if (wroteSomething) {
-						out += ",";
-					}
-				}
-
-				wroteSomething = true;
-				out += nextVal;
-			}
-		}
-
-		return wroteSomething ? (type.toString() + out) : "";
-	}
-
-	/* BEGIN_DEBUG */
-	/**
-	 * Decompresses a compressed bucket log.
-	 *
-	 * See {@link compressBucketLog} for details
-	 *
-	 * @param {string} data Data
-	 * @param {number} [minBucket] Minimum bucket
-	 *
-	 * @returns {object} Decompressed log
-	 */
-	function decompressBucketLog(data, minBucket) {
-		var out = [], i, j, idx = minBucket || 0, endChar, repeat, num, type;
-
-		if (!data || data.length === 0) {
-			return [];
-		}
-
-		// strip the type out
-		type = parseInt(data.charAt(0), 10);
-		data = data.substring(1);
-
-		// decompress string
-		repeat = 1;
-
-		for (i = 0; i < data.length; i++) {
-			if (data.charAt(i) === "*") {
-				// this is a repeating number
-
-				// move past the "*"
-				i++;
-
-				// up to the next * is the repeating count (base 36)
-				endChar = data.indexOf("*", i);
-				repeat = parseInt(data.substring(i, endChar), 36);
-
-				// after is the number
-				i = endChar;
-				continue;
-			}
-			else if (data.charAt(i) === LARGE_NUMBER_WRAP) {
-				// this is a number larger than 63
-
-				// move past the wrap character
-				i++;
-
-				// up to the next wrap character is the number (base 36)
-				endChar = data.indexOf(LARGE_NUMBER_WRAP, i);
-				num = parseInt(data.substring(i, endChar), 36);
-
-				// move to this end char
-				i = endChar;
-			}
-			else {
-				if (type === COMPRESS_MODE_SMALL_NUMBERS) {
-					// this digit is a number from 0 to 63
-					num = decompressBucketLogNumber(data.charAt(i));
-				}
-				else if (type === COMPRESS_MODE_LARGE_NUMBERS) {
-					// look for this digit to end at a comma
-
-					endChar = data.indexOf(",", i);
-
-					if (endChar !== -1) {
-						// another index exists later, read up to that
-						num = parseInt(data.substring(i, endChar), 36);
-
-						// move to this end char
-						i = endChar;
-					}
-					else {
-						// this is the last number
-						num = parseInt(data.substring(i), 36);
-
-						// we're done
-						i = data.length;
-					}
-				}
-				else if (type === COMPRESS_MODE_PERCENT) {
-					// check if this is 100
-					if (data.substr(i, 2) === "__") {
-						num = 100;
-					}
-					else {
-						num = parseInt(data.substr(i, 2), 10);
-					}
-
-					// take two characters
-					i++;
-				}
-			}
-
-			out[idx] = num;
-			for (j = 1; j < repeat; j++) {
-				idx++;
-				out[idx] = num;
-			}
-
-			idx++;
-			repeat = 1;
-		}
-
-		return out;
-	}
-
-	/**
-	 * Decompresses a bucket log Base64 number (0 - 63)
-	 *
-	 * @param {string} input Character
-	 *
-	 * @returns {number} Base64 number
-	 */
-	function decompressBucketLogNumber(input) {
-		if (!input || !input.charCodeAt) {
-			return 0;
-		}
-
-		// convert to ASCII character code
-		var chr = input.charCodeAt(0);
-
-		if (chr >= 48 && chr <= 57) {
-			// 0 - 9
-			return chr - 48;
-		}
-		else if (chr >= 97 && chr <= 122) {
-			// a - z
-			return (chr - 97) + 10;
-		}
-		else if (chr >= 65 && chr <= 90) {
-			// A - Z
-			return (chr - 65) + 36;
-		}
-		else if (chr === 95) {
-			// -
-			return 62;
-		}
-		else if (chr === 45) {
-			// _
-			return 63;
-		}
-		else {
-			// unknown
-			return 0;
-		}
-	}
-
-	/**
-	 * Decompresses the log into events
-	 *
-	 * @param {string} data Compressed log
-	 *
-	 * @returns {object} Decompressed log
-	 */
-	function decompressLog(data) {
-		var val = "", i, j, eventData, events, out = [], evt;
-
-		// each event is separate by a |
-		events = data.split("|");
-
-		for (i = 0; i < events.length; i++) {
-			eventData = events[i].split(",");
-
-			evt = {
-				type: parseInt(eventData[0].charAt(0), 10),
-				time: parseInt(eventData[0].substring(1), 36)
-			};
-
-			// add all attributes
-			for (j = 1; j < eventData.length; j++) {
-				evt[eventData[j].charAt(0)] = eventData[j].substring(1);
-			}
-
-			out.push(evt);
-		}
-
-		return out;
-	}
-	/* END_DEBUG */
-
-	/**
-	 * Timeline data
-	 *
-	 * Responsible for:
-	 *
-	 * * Keeping track of counts of events that happen over time (in
-	 *   COLLECTION_INTERVAL intervals).
-	 * * Keeps a log of raw events.
-	 * * Calculates Time to Interactive (TTI) and Visually Ready.
-	 */
-	var Timeline = function(startTime) {
-		//
-		// Constants
-		//
-		/**
-		 * Number of "idle" intervals (of COLLECTION_INTERVAL ms) before
-		 * Time to Interactive is called.
-		 *
-		 * 5 * 100 = 500ms (of no long tasks > 50ms and FPS >= 20)
-		 */
-		var TIME_TO_INTERACTIVE_IDLE_INTERVALS = 5;
-
-		/**
-		 * For Time to Interactive, minimum FPS.
-		 *
-		 * ~20 FPS or max ~50ms blocked
-		 */
-		var TIME_TO_INTERACTIVE_MIN_FPS = 20;
-
-		/**
-		 * For Time to Interactive, minimum FPS per COLLECTION_INTERVAL.
-		 */
-		var TIME_TO_INTERACTIVE_MIN_FPS_PER_INTERVAL =
-			TIME_TO_INTERACTIVE_MIN_FPS / (1000 / COLLECTION_INTERVAL);
-
-		/**
-		 * For Time to Interactive, max Page Busy (if LongTasks aren't supported)
-		 *
-		 * ~50%
-		 */
-		var TIME_TO_INTERACTIVE_MAX_PAGE_BUSY = 50;
-
-		//
-		// Local Members
-		//
-
-		// timeline data
-		var data = {};
-
-		// timeline data options
-		var dataOptions = {};
-
-		// timeline log
-		var dataLog = [];
-
-		// time-to-interactive timestamp
-		var tti = 0;
-
-		// visually ready timestamp
-		var visuallyReady = 0;
-
-		// hero images timestamp
-		var heroImagesReady = 0;
-
-		// whether or not to add Visually Ready to the next beacon
-		var addVisuallyReadyToBeacon = true;
-
-		// check for pre-Boomerang FPS log
-		if (BOOMR.fpsLog && BOOMR.fpsLog.length) {
-			// start at the first frame instead of now
-			startTime = BOOMR.fpsLog[0] + epoch;
-
-			// NOTE: FrameRateMonitor will remove fpsLog
-		}
-
-		//
-		// Functions
-		//
-		/**
-		 * Registers a monitor
-		 *
-		 * @param {string} type Type
-		 * @param {number} [compressMode] Compression mode
-		 * @param {boolean} [backfillLast] Whether or not to backfill missing entries
-		 * with the most recent value.
-		 */
-		function register(type, compressMode, backfillLast) {
-			if (!data[type]) {
-				data[type] = [];
-			}
-
-			dataOptions[type] = {
-				compressMode: compressMode ? compressMode : COMPRESS_MODE_SMALL_NUMBERS,
-				backfillLast: backfillLast
-			};
-		}
-
-		/**
-		 * Gets the current time bucket
-		 *
-		 * @returns {number} Current time bucket
-		 */
-		function getTimeBucket() {
-			return Math.floor((BOOMR.now() - startTime) / COLLECTION_INTERVAL);
-		}
-
-		/**
-		 * Sets data for the specified type.
-		 *
-		 * The type should be registered first via {@link register}.
-		 *
-		 * @param {string} type Type
-		 * @param {number} [value] Value
-		 * @param {number} [bucket] Time bucket
-		 */
-		function set(type, value, bucket) {
-			if (typeof bucket === "undefined") {
-				bucket = getTimeBucket();
-			}
-
-			if (!data[type]) {
-				return;
-			}
-
-			data[type][bucket] = value;
-		}
-
-		/**
-		 * Increments data for the specified type
-		 *
-		 * The type should be registered first via {@link register}.
-		 *
-		 * @param {string} type Type
-		 * @param {number} [value] Value
-		 * @param {number} [bucket] Time bucket
-		 */
-		function increment(type, value, bucket) {
-			if (typeof bucket === "undefined") {
-				bucket = getTimeBucket();
-			}
-
-			if (typeof value === "undefined") {
-				value = 1;
-			}
-
-			if (!data[type]) {
-				return;
-			}
-
-			if (!data[type][bucket]) {
-				data[type][bucket] = 0;
-			}
-
-			data[type][bucket] += value;
-		}
-
-		/**
-		 * Log an event
-		 *
-		 * @param {string} type Type
-		 * @param {number} [bucket] Time bucket
-		 * @param {array} [val] Event data
-		 */
-		function log(type, bucket, val) {
-			if (typeof bucket === "undefined") {
-				bucket = getTimeBucket();
-			}
-
-			dataLog.push({
-				type: type,
-				time: bucket,
-				val: val
-			});
-
-			// trim to logMaxEntries
-			if (dataLog.length > impl.logMaxEntries) {
-				Array.prototype.splice.call(
-					dataLog,
-					0,
-					(dataLog.length - impl.logMaxEntries)
-				);
-			}
-		}
-
-		/**
-		 * Gets stats for a type since the specified start time.
-		 *
-		 * @param {string} type Type
-		 * @param {number} since Start time
-		 *
-		 * @returns {object} Stats for the type
-		 */
-		function getStats(type, since) {
-			var count = 0,
-			    total = 0,
-			    min = Infinity,
-			    max = 0,
-			    val,
-			    sinceBucket = Math.floor((since - startTime) / COLLECTION_INTERVAL);
-
-			if (!data[type]) {
-				return 0;
-			}
-
-			for (var bucket in data[type]) {
-				bucket = parseInt(bucket, 10);
-
-				if (bucket >= sinceBucket) {
-					if (data[type].hasOwnProperty(bucket)) {
-						val = data[type][bucket];
-
-						// calculate count, total and minimum
-						count++;
-						total += val;
-
-						min = Math.min(min, val);
-						max = Math.max(max, val);
-					}
-				}
-			}
-
-			// return the stats
-			return {
-				total: total,
-				count: count,
-				min: min,
-				max: max
-			};
-		}
-
-		/**
-		 * Given a CSS selector, determine the load time of any IMGs matching
-		 * that selector and/or IMGs underneath it.
-		 *
-		 * @param {string} selector CSS selector
-		 *
-		 * @returns {number} Last image load time
-		 */
-		function determineImageLoadTime(selector) {
-			var combinedSelector, elements, latestTs = 0, i, j, src, entries, a;
-
-			// check to see if we have querySelectorAll available
-			if (!BOOMR.window ||
-			    !BOOMR.window.document ||
-			    typeof BOOMR.window.document.querySelectorAll !== "function") {
-				// can't use querySelectorAll
-				return 0;
-			}
-
-			// check to see if we have ResourceTiming available
-			if (!p ||
-			    typeof p.getEntriesByType !== "function") {
-				// can't use ResourceTiming
-				return 0;
-			}
-
-			// find any images matching this selector or underneath this selector
-			combinedSelector = selector + ", " + selector + " * img, " + selector + " * image";
-
-			// use QSA to find all matching
-			elements = BOOMR.window.document.querySelectorAll(combinedSelector);
-			if (elements && elements.length) {
-				for (i = 0; i < elements.length; i++) {
-					src = elements[i].currentSrc ||
-						elements[i].src ||
-						(typeof elements[i].getAttribute === "function" && elements[i].getAttribute("xlink:href"));
-
-					// if src if not defined, look for it in css background image
-					if (!src) {
-						if (typeof BOOMR.window.getComputedStyle === "function") {
-							var bgStyle = BOOMR.window.getComputedStyle(elements[i]) &&
-								BOOMR.window.getComputedStyle(elements[i]).getPropertyValue("background");
-							if (bgStyle) {
-								var bgImgUrl = bgStyle.match(/url\(["']?([^"']*)["']?\)/);
-								if (bgImgUrl && bgImgUrl.length > 0) {
-									// get the canonical URL if needed
-									a = a || document.createElement("a");
-									a.href = bgImgUrl[1];
-
-									src = a.href;
-								}
-							}
-						}
-					}
-
-					if (src) {
-						entries = p.getEntriesByName(src);
-						if (entries && entries.length) {
-							for (j = 0; j < entries.length; j++) {
-								latestTs = Math.max(latestTs, entries[j].responseEnd);
-							}
-						}
-					}
-				}
-			}
-
-			return latestTs ? Math.floor(latestTs + epoch) : 0;
-		}
-
-		/**
-		 * Determine Visually Ready time.  This is the last of:
-		 * 1. Largest Contentful Paint (if available)
-		 * 2. First Contentful Paint (if available)
-		 * 3. First Paint (if available)
-		 * 4. domContentLoadedEventEnd
-		 * 5. Hero Images are loaded (if configured)
-		 * 6. Framework Ready (if configured)
-		 *
-		 * @returns {number|undefined} Timestamp, if everything is ready, or
-		 *    `undefined` if not
-		 */
-		function determineVisuallyReady() {
-			var latestTs = 0;
-
-			// start with Framework Ready (if configured)
-			if (impl.ttiWaitForFrameworkReady) {
-				if (!impl.frameworkReady) {
-					return;
-				}
-
-				latestTs = impl.frameworkReady;
-			}
-
-			// use Largest/First Contentful Paint (if available) or
-			if (BOOMR.plugins.PaintTiming &&
-			    BOOMR.plugins.PaintTiming.is_supported() &&
-			    p &&
-			    p.timeOrigin) {
-				var fp = BOOMR.plugins.PaintTiming.getTimingFor("largest-contentful-paint");
-
-				if (!fp) {
-					fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");
-				}
-
-				if (!fp) {
-					// or get First Paint directly from PaintTiming
-					fp = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
-				}
-
-				if (fp) {
-					latestTs = Math.max(latestTs, Math.round(fp + p.timeOrigin));
-				}
-			}
-			else if (p && p.timing && p.timing.msFirstPaint) {
-				// use IE's First Paint (if available) or
-				latestTs = Math.max(latestTs, p.timing.msFirstPaint);
-			}
-			else if (BOOMR.window &&
-			    BOOMR.window.chrome &&
-			    typeof BOOMR.window.chrome.loadTimes === "function") {
-				// use Chrome's firstPaintTime (if available)
-				var loadTimes = BOOMR.window.chrome.loadTimes();
-				if (loadTimes && loadTimes.firstPaintTime) {
-					latestTs = Math.max(latestTs, loadTimes.firstPaintTime * 1000);
-				}
-			}
-
-			// Use domContentLoadedEventEnd (if available)
-			if (p && p.timing && p.timing.domContentLoadedEventEnd) {
-				latestTs = Math.max(latestTs, p.timing.domContentLoadedEventEnd);
-			}
-
-			// look up any Hero Images (if configured)
-			if (impl.ttiWaitForHeroImages) {
-				heroImagesReady = determineImageLoadTime(impl.ttiWaitForHeroImages);
-
-				if (heroImagesReady) {
-					latestTs = Math.max(latestTs, heroImagesReady);
-				}
-			}
-
-			return latestTs;
-		}
-
-		/**
-		 * Adds the compressed data log to the beacon
-		 */
-		function addCompressedLogToBeacon() {
-			var val = "";
-
-			for (var i = 0; i < dataLog.length; i++) {
-				var evt = dataLog[i];
-
-				if (i !== 0) {
-					// add a separator between events
-					val += "|";
-				}
-
-				// add the type
-				val += evt.type;
-
-				// add the time: offset from epoch, base36
-				val += Math.round(evt.time - epoch).toString(36);
-
-				// add each parameter
-				for (var param in evt.val) {
-					if (evt.val.hasOwnProperty(param)) {
-						val += "," + param;
-
-						if (typeof evt.val[param] === "number") {
-							// base36
-							val += evt.val[param].toString(36);
-						}
-						else {
-							val += evt.val[param];
-						}
-					}
-				}
-			}
-
-			if (val !== "") {
-				impl.addToBeacon("c.l", val);
-			}
-		}
-
-		/**
-		 * Gets the bucket log for our data
-		 *
-		 * @param {string} type Type
-		 * @param {number} sinceBucket Lowest bucket
-		 *
-		 * @returns {string} Compressed log of our data
-		 */
-		function getCompressedBucketLogFor(type, since) {
-			return compressBucketLog(
-				dataOptions[type].compressMode,
-				dataOptions[type].backfillLast,
-				data[type],
-				since !== 0 ? Math.floor((since - startTime) / COLLECTION_INTERVAL) : 0,
-				getTimeBucket());
-		}
-
-		/**
-		 * Adds the timeline to the beacon compressed.
-		 *
-		 * @param {number} [since] Since timestamp
-		 */
-		function addCompressedTimelineToBeacon(since) {
-			var type, compressedLog;
-
-			for (type in data) {
-				if (data.hasOwnProperty((type))) {
-					// get the compressed data
-					compressedLog = getCompressedBucketLogFor(type, since);
-
-					// add to the beacon
-					if (compressedLog !== "") {
-						impl.addToBeacon("c.t." + type, compressedLog);
-					}
-				}
-			}
-		}
-
-		/**
-		 * Analyzes metrics such as Time To Interactive
-		 *
-		 * @param {number} timeOfLastBeacon Time we last sent a beacon
-		 */
-		function analyze(timeOfLastBeacon) {
-			var endBucket = getTimeBucket(),
-			    j = 0,
-			    idleIntervals = 0;
-
-			// add log
-			if (impl.sendLog && typeof timeOfLastBeacon !== "undefined") {
-				addCompressedLogToBeacon();
-			}
-
-			// add timeline
-			if (impl.sendTimeline && typeof timeOfLastBeacon !== "undefined") {
-				addCompressedTimelineToBeacon(timeOfLastBeacon);
-			}
-
-			if (tti) {
-				return;
-			}
-
-			// need to get Visually Ready first
-			if (!visuallyReady) {
-				visuallyReady = determineVisuallyReady();
-				if (!visuallyReady) {
-					return;
-				}
-			}
-
-			if (addVisuallyReadyToBeacon) {
-				// add Visually Ready to the beacon
-				impl.addToBeacon("c.tti.vr", externalMetrics.timeToVisuallyReady());
-
-				// add Framework Ready to the beacon
-				impl.addToBeacon("c.tti.fr", externalMetrics.timeToFrameworkReady());
-
-				// add Framework Ready to the beacon
-				impl.addToBeacon("c.tti.hi", externalMetrics.timeToHeroImagesReady());
-
-				// only add to the first beacon
-				addVisuallyReadyToBeacon = false;
-			}
-
-			// Calculate TTI
-			if (!data.longtask && !data.fps && !data.busy) {
-				// can't calculate TTI
-				return;
-			}
-
-			// determine the first bucket we'd use
-			var startBucket = Math.floor((visuallyReady - startTime) / COLLECTION_INTERVAL);
-
-			for (j = startBucket; j <= endBucket; j++) {
-				if (data.longtask && data.longtask[j]) {
-					// had a long task during this interval
-					idleIntervals = 0;
-					continue;
-				}
-
-				if (data.fps && (!data.fps[j] || data.fps[j] < TIME_TO_INTERACTIVE_MIN_FPS_PER_INTERVAL)) {
-					// No FPS or less than 20 FPS during this interval
-					idleIntervals = 0;
-					continue;
-				}
-
-				if (data.busy && (data.busy[j] > TIME_TO_INTERACTIVE_MAX_PAGE_BUSY)) {
-					// Too busy
-					idleIntervals = 0;
-					continue;
-				}
-
-				if (data.interdly && data.interdly[j]) {
-					// a delayed interaction happened
-					idleIntervals = 0;
-					continue;
-				}
-
-				// this was an idle interval
-				idleIntervals++;
-
-				// if we've found enough idle intervals, mark TTI as the beginning
-				// of this idle period
-				if (idleIntervals >= TIME_TO_INTERACTIVE_IDLE_INTERVALS) {
-					tti = startTime + ((j - TIME_TO_INTERACTIVE_IDLE_INTERVALS) * COLLECTION_INTERVAL);
-
-					// ensure we don't set TTI before TTVR
-					tti = Math.max(tti, visuallyReady);
-					break;
-				}
-			}
-
-			// we were able to calculate a TTI
-			if (tti > 0) {
-				impl.addToBeacon("c.tti", externalMetrics.timeToInteractive());
-			}
-		}
-
-		//
-		// External metrics
-		//
-
-		/**
-		 * Time to Interactive
-		 */
-		externalMetrics.timeToInteractive = function() {
-			if (tti) {
-				// milliseconds since nav start
-				return tti - epoch;
-			}
-
-			// no data
-			return;
-		};
-
-		/**
-		 * Time to Visually Ready
-		 */
-		externalMetrics.timeToVisuallyReady = function() {
-			if (visuallyReady) {
-				// milliseconds since nav start
-				return visuallyReady - epoch;
-			}
-
-			// no data
-			return;
-		};
-
-		/**
-		 * Time to Hero Images Ready
-		 */
-		externalMetrics.timeToHeroImagesReady = function() {
-			if (impl.ttiWaitForHeroImages && heroImagesReady) {
-				return heroImagesReady - epoch;
-			}
-
-			// not configured or not set
-			return;
-		};
-
-		/**
-		 * Time to Framework Ready
-		 */
-		externalMetrics.timeToFrameworkReady = function() {
-			if (impl.ttiWaitForFrameworkReady && impl.frameworkReady) {
-				return impl.frameworkReady - epoch;
-			}
-
-			// not configured or not set
-			return;
-		};
-
-		externalMetrics.log = function() {
-			return dataLog;
-		};
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			data = {};
-			dataLog = [];
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			// clear the buckets
-			for (var type in data) {
-				if (data.hasOwnProperty(type)) {
-					data[type] = [];
-				}
-			}
-
-			// reset the data log
-			dataLog = [];
-
-			// only add Visually Ready to the first beacon if available
-			addVisuallyReadyToBeacon = false;
-		}
-
-		return {
-			register: register,
-			set: set,
-			log: log,
-			increment: increment,
-			getTimeBucket: getTimeBucket,
-			getStats: getStats,
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Compress top score by limiting to 3 digits of precision
-	 *
-	 * @param {float} score CLS value
-	 *
-	 * @returns {float} Compressed CLS score
-	 */
-	function compressClsScore(score) {
-		return parseFloat(score.toFixed(3));
-	}
-
-	/* BEGIN_DEBUG */
-	/**
-	 * Decompress top score
-	 *
-	 * @param {string} score Compressed CLS score
-	 *
-	 * @returns {float} Decompressed CLS score
-	 */
-	function decompressClsScore(score) {
-		return parseFloat(score);
-	}
-	/* END_DEBUG */
-
-	/**
-	 * Compress CLS Sources by:
-	 *
-	 * * Shortening dictionary key names
-	 *     * value -> v, startTime -> t, sources -> s, selector -> s, previousRect -> p
-	 * * Replacing currentRect with a deltaRect, d, of only the changes in x, y, width (w), or height (h)
-	 * * Converting the value and start time to base36, scaling the value up to do so
-	 * * Shortening previousRect and deltaRect key names
-	 *     * width -> w, height -> h
-	 * * Converting all previousRect and deltaRect values to base36
-	 * * jsURL string compression
-	 *
-	 * @param {object} clsSources Dictionary holding cls Sources info
-	 *
-	 * @returns {string|undefined} Seralized and compressed CLS sources, or undefined if there were no CLS sources
-	 */
-	function compressClsSources(clsSources) {
-		if (!clsSources || !clsSources.length) {
-			return undefined;
-		}
-
-		var compressedSources = [];
-
-		// iterate through each layout shift and its respective data
-		for (var shift = 0; shift < clsSources.length; shift++) {
-			var newClsSource = {};
-
-			// scale up and convert value to base36
-			newClsSource.v = Math.round(clsSources[shift].value * 1000).toString(36);
-
-			// convert startTime to base36
-			newClsSource.t = clsSources[shift].startTime.toString(36);
-
-			// CLS sources
-			newClsSource.s = [];
-
-			var sources = clsSources[shift].sources;
-
-			// iterate through list of sources of this specific layout shift
-			for (var i = 0; i < sources.length; i++) {
-				var newSource = {};
-
-				newSource.s = sources[i].selector;
-
-				// convert all the previousRect ints to base36
-				var prevRect = sources[i].previousRect;
-				var currRect = sources[i].currentRect;
-
-				newSource.p = {
-					x: prevRect.x.toString(36),
-					y: prevRect.y.toString(36),
-					w: prevRect.width.toString(36),
-					h: prevRect.height.toString(36)
-				};
-
-				// only store changes from previous to currect rect as key 'd'
-				newSource.d = {};
-				if (currRect.x - prevRect.x !== 0) {
-					newSource.d.x = (currRect.x - prevRect.x).toString(36);
-				}
-
-				if (currRect.y - prevRect.y !== 0) {
-					newSource.d.y = (currRect.y - prevRect.y).toString(36);
-				}
-
-				if (currRect.width - prevRect.width !== 0) {
-					newSource.d.w = (currRect.width - prevRect.width).toString(36);
-				}
-
-				if (currRect.height - prevRect.height !== 0) {
-					newSource.d.h = (currRect.height - prevRect.height).toString(36);
-				}
-
-				// add newSource object to serSources list for this entry of compressedSources
-				newClsSource.s.push(newSource);
-			}
-
-			// store serSources under 's' in newClsSource object,
-			// then push this object to compressedSources
-			compressedSources.push(newClsSource);
-		}
-
-		return BOOMR.utils.serializeForUrl(compressedSources);
-	}
-
-	/* BEGIN_DEBUG */
-	/**
-	 * Decompress CLS Sources by:
-	 * * de-jsURL-compressing
-	 * * Lengthening dictionary key names
-	 *     * v -> value, t -> startTime, s -> sources, s -> selector,  p -> previousRect
-	 * * Replacing deltaRect with the currentRect
-	 * * Converting the value and start time to base10, scaling down value
-	 * * Lengthening previousRect and currentRect key names
-	 *     * w -> width, h -> height
-	 * * Converting all previousRect and currentRect values to base10
-	 *
-	 * @param {string} compressedSources Compressed clsSources object
-	 *
-	 * @returns {object} Decompressed clsSources object
-	 */
-	function decompressClsSources(compressedSources) {
-		var clsSources = [];
-
-		// deserialize compressedSources string to object
-		compressedSources = BOOMR.utils.deserializeForUrl(compressedSources);
-
-		// iterate through compressed layout shift entries and decompress each
-		for (var shift = 0; shift < compressedSources.length; shift++) {
-			var newClsSource = {};
-
-			// parse to base10 and downscale value
-			newClsSource.value = parseInt(compressedSources[shift].v, 36) / 1000.0;
-
-			// convert startTime to base10
-			newClsSource.startTime = parseInt(compressedSources[shift].t, 36);
-
-			var serSources = compressedSources[shift].s;
-			var sources = [];
-
-			// iterate through individual sources of this layout shift
-			// and add decompressed version to sources list
-			for (var i = 0; i < serSources.length; i++) {
-				var newSource = {};
-				var prevRect = serSources[i].p;
-
-				newSource.selector = serSources[i].s;
-
-				// decompress previousRect int values by parsing back to base10
-				newSource.previousRect = {
-					x: parseInt(prevRect.x, 36),
-					y: parseInt(prevRect.y, 36),
-					width: parseInt(prevRect.w, 36),
-					height: parseInt(prevRect.h, 36)
-				};
-
-				var deltaRect = serSources[i].d;
-
-				// recreate currentRect from prevRect and delta values,
-				// if no delta value then current = prev for that key
-				newSource.currentRect = {};
-				newSource.currentRect.x = deltaRect.x ?
-					newSource.previousRect.x + parseInt(deltaRect.x, 36) :
-					newSource.previousRect.x;
-
-				newSource.currentRect.y = deltaRect.y ?
-					newSource.previousRect.y + parseInt(deltaRect.y, 36) :
-					newSource.previousRect.y;
-
-				newSource.currentRect.width = deltaRect.w ?
-					newSource.previousRect.width + parseInt(deltaRect.w, 36) :
-					newSource.previousRect.width;
-
-				newSource.currentRect.height = deltaRect.h ?
-					newSource.previousRect.height + parseInt(deltaRect.h, 36) :
-					newSource.previousRect.height;
-
-				sources.push(newSource);
-			}
-
-			newClsSource.sources = sources;
-			clsSources.push(newClsSource);
-		}
-
-		return clsSources;
-	}
-	/* END_DEBUG */
-
-	/**
-	 * Monitors Layout Shift events
-	 */
-	var LayoutShiftMonitor = function(w) {
-		if (!w.PerformanceObserver || !w.LayoutShift) {
-			return;
-		}
-
-		// whether or not we're enabled
-		var enabled = true;
-
-		// CumulativeLayoutShift score
-		var clsScore = 0;
-
-		// CumulativeLayoutShift corresponding sources and info
-		var clsSources = [];
-
-		// Top layout shift score within CLS
-		var topScore = 0;
-
-		// Pseudo-CSS Selector of first source corresponding to topScore
-		var topID;
-
-		// PerformanceObserver
-		var perfObserver = new w.PerformanceObserver(onLayoutShiftObserver);
-
-		try {
-			perfObserver.observe({type: "layout-shift", buffered: true});
-		}
-		catch (e) {
-			// layout-shift not supported
-			return;
-		}
-
-		function onLayoutShiftObserver(list) {
-			// Entries format: [{value: ..., sources: [...], startTime: ...}]
-			if (!enabled) {
-				return;
-			}
-
-			var entries = list.getEntries();
-			var firstSelector = "";
-
-			// iterate through each layout shift that occurrs
-			for (var i = 0; i < entries.length; i++) {
-				// only account for layout shifts that don't have recent input
-				if (entries[i].hadRecentInput) {
-					continue;
-				}
-
-				// add layout shift value to overall CLS
-				clsScore += entries[i].value;
-
-				var newClsSource = {};
-
-				// record layout shift value rounded to three decimals
-				newClsSource.value = parseFloat(entries[i].value.toFixed(3));
-
-				// record start time as an int
-				newClsSource.startTime = Math.round(entries[i].startTime);
-
-				var sources = entries[i].sources;
-				var sourceList = [];
-
-				// create list of sources for this layout shift
-				for (var s = 0; s < sources.length; s++) {
-					// store each source as a dictionary of corresponding info, beginning with its Pseudo-CSS selector
-					var newSource = {
-						selector: BOOMR.utils.makeSelector(sources[s].node)
-					};
-
-					// keep track of first source per layout shift
-					if (s === 0) {
-						firstSelector = newSource.selector;
-					}
-
-					// keep track of previous and current rectangle data as separate dictionaries of x, y, width, and height info
-					var prevRect = sources[s].previousRect;
-					newSource.previousRect = {
-						x: prevRect.x,
-						y: prevRect.y,
-						width: prevRect.width,
-						height: prevRect.height
-					};
-
-					var currRect = sources[s].currentRect;
-					newSource.currentRect = {
-						x: currRect.x,
-						y: currRect.y,
-						width: currRect.width,
-						height: currRect.height
-					};
-
-					// add this newSource object to sourceList
-					sourceList.push(newSource);
-				}
-
-				newClsSource.sources = sourceList;
-				clsSources.push(newClsSource);
-
-				// update highest layout shift value and Pseudo-CSS selector of
-				// first source corresponding to it when needed
-				if (entries[i].value > topScore) {
-					topScore = entries[i].value;
-					topID = firstSelector;
-				}
-			}
-
-			// round topScore to three decimals
-			topScore = parseFloat(topScore.toFixed(3));
-		}
-
-		/**
-		 * Record Cumulative Layout Shift score, sources, top shift, and top ID on beacon
-		 */
-		function analyze(startTime) {
-			// add compressed data to beacon
-			impl.addToBeacon("c.cls", compressClsScore(externalMetrics.clsScore()));
-			impl.addToBeacon("c.cls.d", compressClsSources(externalMetrics.clsSources()));
-			impl.addToBeacon("c.cls.tops", compressClsScore(externalMetrics.topScore()));
-			impl.addToBeacon("c.cls.topid", externalMetrics.topID());
-		}
-
-		function clearClsScore() {
-			clsScore = 0;
-		}
-
-		function clearClsSources() {
-			clsSources = [];
-		}
-
-		function clearTopScore() {
-			topScore = 0;
-		}
-
-		function clearTopID() {
-			topID = undefined;
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			enabled = false;
-
-			perfObserver.disconnect();
-
-			clearClsScore();
-			clearClsSources();
-			clearTopScore();
-			clearTopID();
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			clearClsScore();
-			clearClsSources();
-			clearTopScore();
-			clearTopID();
-		}
-
-		/**
-		 * Cumulative Layout Shift Score
-		 */
-		externalMetrics.clsScore = function() {
-			return clsScore;
-		};
-
-		/**
-		 * Cumulative Layout Shift Sources
-		 */
-		externalMetrics.clsSources = function() {
-			return clsSources;
-		};
-
-		/**
-		 * Top Layout Shift Score
-		 */
-		externalMetrics.topScore = function() {
-			return topScore;
-		};
-
-		/**
-		 * Top Layout Shift ID
-		 */
-		externalMetrics.topID = function() {
-			return topID;
-		};
-
-		return {
-			clearClsScore: clearClsScore,
-			clearClsSources: clearClsSources,
-			clearTopScore: clearTopScore,
-			clearTopID: clearTopID,
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-
-
-	/**
-	 * Monitors LongTasks
-	 */
-	var LongTaskMonitor = function(w, t) {
-		if (!w.PerformanceObserver || !w.PerformanceLongTaskTiming) {
-			return;
-		}
-
-		//
-		// Constants
-		//
-		/**
-		 * LongTask attribution types
-		 */
-		var ATTRIBUTION_TYPES = {
-			"unknown": 0,
-			"self": 1,
-			"same-origin-ancestor": 2,
-			"same-origin-descendant": 3,
-			"same-origin": 4,
-			"cross-origin-ancestor": 5,
-			"cross-origin-descendant": 6,
-			"cross-origin-unreachable": 7,
-			"multiple-contexts": 8
-		};
-
-		/**
-		 * LongTask culprit attribution names
-		 */
-		var CULPRIT_ATTRIBUTION_NAMES = {
-			"unknown": 0,
-			"script": 1,
-			"layout": 2
-		};
-
-		/**
-		 * LongTask culprit types
-		 */
-		var CULPRIT_TYPES = {
-			"unknown": 0,
-			"iframe": 1,
-			"embed": 2,
-			"object": 3
-		};
-
-		//
-		// Local Members
-		//
-
-		// PerformanceObserver
-		var perfObserver = new w.PerformanceObserver(onPerformanceObserver);
-
-		try {
-			perfObserver.observe({ entryTypes: ["longtask"] });
-		}
-		catch (e) {
-			// longtask not supported
-			return;
-		}
-
-		// register this type
-		t.register("longtask", COMPRESS_MODE_SMALL_NUMBERS);
-
-		// Long Tasks array
-		var longTasks = [];
-
-		// whether or not we're enabled
-		var enabled = true;
-
-		// total time of long tasks
-		var longTasksTime = 0;
-
-		/**
-		 * Callback for the PerformanceObserver
-		 */
-		function onPerformanceObserver(list) {
-			var entries, i;
-
-			if (!enabled) {
-				return;
-			}
-
-			// just capture all of the data for now, we'll analyze at the beacon
-			entries = list.getEntries();
-			Array.prototype.push.apply(longTasks, entries);
-
-			// add total time and count of long tasks
-			for (i = 0; i < entries.length; i++) {
-				longTasksTime += entries[i].duration;
-			}
-
-			// add to the timeline
-			t.increment("longtask", entries.length);
-		}
-
-		/**
-		 * Gets the current list of tasks
-		 *
-		 * @returns {PerformanceEntry[]} Tasks
-		 */
-		function getTasks() {
-			return longTasks;
-		}
-
-		/**
-		 * Clears the Long Tasks
-		 */
-		function clearTasks() {
-			longTasks = [];
-
-			longTasksTime = 0;
-		}
-
-		/**
-		 * Analyzes LongTasks
-		 */
-		function analyze(startTime) {
-			var i, j, task, obj, objs = [], attrs = [], attr;
-
-			if (longTasks.length === 0) {
-				return;
-			}
-
-			for (i = 0; i < longTasks.length; i++) {
-				task = longTasks[i];
-
-				// compress the object a bit
-				obj = {
-					s: Math.round(task.startTime).toString(36),
-					d: Math.ceil(task.duration).toString(36),
-					n: ATTRIBUTION_TYPES[task.name] ? ATTRIBUTION_TYPES[task.name] : 0
-				};
-
-				attrs = [];
-
-				for (j = 0; j < task.attribution.length; j++) {
-					attr = task.attribution[j];
-
-					// skip script/iframe with no attribution
-					if (attr.name === "script" &&
-					    attr.containerType === "iframe" &&
-					    !attr.containerName &&
-						!attr.containerId && !attr.containerSrc) {
-						continue;
-					}
-
-					// only use containerName if not the same as containerId
-					var containerName = attr.containerName ? attr.containerName : undefined;
-					var containerId = attr.containerId ? attr.containerId : undefined;
-					if (containerName === containerId) {
-						containerName = undefined;
-					}
-
-					// only use containerSrc if containerId is undefined
-					var containerSrc = containerId === undefined ? attr.containerSrc : undefined;
-
-					attrs.push({
-						a: CULPRIT_ATTRIBUTION_NAMES[attr.name] ? CULPRIT_ATTRIBUTION_NAMES[attr.name] : 0,
-						t: CULPRIT_TYPES[attr.containerType] ? CULPRIT_TYPES[attr.containerType] : 0,
-						n: containerName,
-						i: containerId,
-						s: containerSrc
-					});
-				}
-
-				if (attrs.length > 0) {
-					obj.a = attrs;
-				}
-
-				objs.push(obj);
-			}
-
-			// add data to beacon
-			impl.addToBeacon("c.lt.n", externalMetrics.longTasksCount(), true);
-			impl.addToBeacon("c.lt.tt", externalMetrics.longTasksTime());
-
-			impl.addToBeacon("c.lt", compressJson(objs));
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			enabled = false;
-
-			perfObserver.disconnect();
-
-			clearTasks();
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			clearTasks();
-		}
-
-		//
-		// External metrics
-		//
-
-		/**
-		 * Total time of LongTasks (ms)
-		 */
-		externalMetrics.longTasksTime = function() {
-			return longTasksTime;
-		};
-
-		/**
-		 * Number of LongTasks
-		 */
-		externalMetrics.longTasksCount = function() {
-			return longTasks.length;
-		};
-
-		return {
-			getTasks: getTasks,
-			clearTasks: clearTasks,
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitors Page Busy if LongTasks isn't supported
-	 */
-	var PageBusyMonitor = function(w, t) {
-		// register this type
-		t.register("busy", COMPRESS_MODE_PERCENT);
-
-		//
-		// Constants
-		//
-
-		/**
-		 * How frequently to poll (ms).
-		 *
-		 * IE and Edge clamp polling to the nearest 16ms.  With 32ms, we
-		 * will see approximately 3 polls per 100ms.
-		 */
-		var POLLING_INTERVAL = 32;
-
-		/**
-		 * How much deviation from the expected time to allow (ms)
-		 */
-		var ALLOWED_DEVIATION_MS = 4;
-
-		/**
-		 * How often to report on Page Busy (ms)
-		 */
-		var REPORT_INTERVAL = 100;
-
-		/**
-		 * How many polls there were per-report
-		 */
-		var POLLS_PER_REPORT =
-		    Math.floor(REPORT_INTERVAL / POLLING_INTERVAL);
-
-		/**
-		 * How many missed polls should we go backwards? (10 seconds worth)
-		 */
-		var MAX_MISSED_REPORTS = 100;
-
-		//
-		// Local Members
-		//
-
-		// last time we ran
-		var last = BOOMR.now();
-
-		// total callbacks
-		var total = 0;
-
-		// late callbacks
-		var late = 0;
-
-		// overall total and late callbacks (reset on beacon)
-		var overallTotal = 0;
-		var overallLate = 0;
-
-		// whether or not we're enabled
-		var enabled = true;
-
-		// intervals
-		var pollInterval = false;
-		var reportInterval = false;
-
-		/**
-		 * Polling interval
-		 */
-		function onPoll() {
-			var now = BOOMR.now();
-			var delta = now - last;
-			last = now;
-
-			// if we're more than 2x the polling interval
-			// + deviation, we missed at least one period completely
-			if (delta > ((POLLING_INTERVAL * 2) + ALLOWED_DEVIATION_MS)) {
-				var missedPolls = Math.floor((delta - POLLING_INTERVAL) / POLLING_INTERVAL);
-
-				total += missedPolls;
-				late += missedPolls;
-				delta -= (missedPolls * POLLING_INTERVAL);
-			}
-
-			// total intervals increased by one
-			total++;
-
-			// late intervals increased by one if we're more than the interval + deviation
-			if (delta > (POLLING_INTERVAL + ALLOWED_DEVIATION_MS)) {
-				late++;
-			}
-		}
-
-		/**
-		 * Each reporting interval, log page busy
-		 */
-		function onReport() {
-			var reportTime = t.getTimeBucket();
-			var curTime = reportTime;
-			var missedReports = 0;
-
-			if (total === 0) {
-				return;
-			}
-
-			// if we had more polls than we expect in each
-			// collection period (we allow one extra for wiggle room), we
-			// must not have been able to report, so assume those periods were 100%
-			while (total > (POLLS_PER_REPORT + 1) &&
-			       missedReports <= MAX_MISSED_REPORTS) {
-				t.set("busy", 100, --curTime);
-
-				// reset the period by one
-				total -= POLLS_PER_REPORT;
-				late   = Math.max(late - POLLS_PER_REPORT, 0);
-
-				// this was a busy period
-				overallTotal += POLLS_PER_REPORT;
-				overallLate += POLLS_PER_REPORT;
-
-				missedReports++;
-			}
-
-			// update the total stats
-			overallTotal += total;
-			overallLate += late;
-
-			t.set("busy", Math.ceil(late / total * 100), reportTime);
-
-			// reset stats
-			total = 0;
-			late = 0;
-		}
-
-		/**
-		 * Analyzes Page Busy
-		 */
-		function analyze(startTime) {
-			// add data to beacon
-			impl.addToBeacon("c.b", externalMetrics.pageBusy());
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			enabled = false;
-
-			if (pollInterval) {
-				clearInterval(pollInterval);
-				pollInterval = false;
-			}
-
-			if (reportInterval) {
-				clearInterval(reportInterval);
-				reportInterval = false;
-			}
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			overallTotal = 0;
-			overallLate = 0;
-		}
-
-		//
-		// External metrics
-		//
-
-		/**
-		 * Total Page Busy time
-		 */
-		externalMetrics.pageBusy = function() {
-			if (overallTotal === 0) {
-				return 0;
-			}
-
-			return Math.ceil(overallLate / overallTotal * 100);
-		};
-
-		//
-		// Setup
-		//
-		pollInterval = setInterval(onPoll, POLLING_INTERVAL);
-		reportInterval = setInterval(onReport, REPORT_INTERVAL);
-
-		return {
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitors framerate (FPS)
-	 */
-	var FrameRateMonitor = function(w, t) {
-		// register this type
-		t.register("fps", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Constants
-		//
-
-		// long frame maximum milliseconds
-		var LONG_FRAME_MAX = 50;
-
-		//
-		// Local Members
-		//
-
-		// total frames seen
-		var totalFrames = 0;
-
-		// long frames
-		var longFrames = 0;
-
-		// time we started monitoring
-		var frameStartTime;
-
-		// last frame we saw
-		var lastFrame;
-
-		// whether or not we're enabled
-		var enabled = true;
-
-		// check for pre-Boomerang FPS log
-		if (BOOMR.fpsLog && BOOMR.fpsLog.length) {
-			lastFrame = frameStartTime = BOOMR.fpsLog[0] + epoch;
-
-			// transition any FPS log events to our timeline
-			for (var i = 0; i < BOOMR.fpsLog.length; i++) {
-				var ts = epoch + BOOMR.fpsLog[i];
-
-				// update the frame count for this time interval
-				t.increment("fps", 1, Math.floor((ts - frameStartTime) / COLLECTION_INTERVAL));
-
-				// calculate how long this frame took
-				if (ts - lastFrame >= LONG_FRAME_MAX) {
-					longFrames++;
-				}
-
-				// last frame timestamp
-				lastFrame = ts;
-			}
-
-			totalFrames = BOOMR.fpsLog.length;
-
-			delete BOOMR.fpsLog;
-		}
-		else {
-			frameStartTime = BOOMR.now();
-		}
-
-		/**
-		 * requestAnimationFrame callback
-		 */
-		function frame(now) {
-			if (!enabled) {
-				return;
-			}
-
-			// calculate how long this frame took
-			if (now - lastFrame >= LONG_FRAME_MAX) {
-				longFrames++;
-			}
-
-			// last frame timestamp
-			lastFrame = now;
-
-			// keep track of total frames we've seen
-			totalFrames++;
-
-			// increment the FPS
-			t.increment("fps");
-
-			// request the next frame
-			w.requestAnimationFrame(frame);
-		}
-
-		/**
-		 * Analyzes FPS
-		 */
-		function analyze(startTime) {
-			impl.addToBeacon("c.f", externalMetrics.fps());
-			impl.addToBeacon("c.f.d", externalMetrics.fpsDuration());
-			impl.addToBeacon("c.f.m", externalMetrics.fpsMinimum());
-			impl.addToBeacon("c.f.l", externalMetrics.fpsLongFrames());
-			impl.addToBeacon("c.f.s", externalMetrics.fpsStart());
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			enabled = false;
-			frameStartTime = 0;
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			if (enabled) {
-				// restart to now
-				frameStartTime = BOOMR.now();
-			}
-
-			totalFrames = 0;
-			longFrames = 0;
-		}
-
-		// start the first frame
-		w.requestAnimationFrame(frame);
-
-		//
-		// External metrics
-		//
-
-		/**
-		 * Frame Rate since fpsStart
-		 */
-		externalMetrics.fps = function() {
-			var dur = externalMetrics.fpsDuration();
-			if (dur) {
-				return Math.floor(totalFrames / (dur / 1000));
-			}
-		};
-
-		/**
-		 * How long FPS was being tracked for
-		 */
-		externalMetrics.fpsDuration = function() {
-			if (frameStartTime) {
-				return BOOMR.now() - frameStartTime;
-			}
-		};
-
-		/**
-		 * Minimum FPS during the period
-		 */
-		externalMetrics.fpsMinimum = function() {
-			var dur = externalMetrics.fpsDuration();
-			if (dur) {
-				var min = t.getStats("fps", frameStartTime).min;
-				return min !== Infinity ? min : undefined;
-			}
-		};
-
-		/**
-		 * Number of long frames (over 18ms)
-		 */
-		externalMetrics.fpsLongFrames = function() {
-			return longFrames;
-		};
-
-		/**
-		 * When FPS tracking started (base 36)
-		 */
-		externalMetrics.fpsStart = function() {
-			return frameStartTime ? frameStartTime.toString(36) : 0;
-		};
-
-		return {
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitors scrolling
-	 */
-	var ScrollMonitor = function(w, t, i) {
-		if (!w || !w.document || !w.document.body || !w.document.documentElement) {
-			// something's wrong with the DOM, abort
-			return;
-		}
-
-		//
-		// Constants
-		//
-
-		// number of milliseconds between each distinct scroll
-		var DISTINCT_SCROLL_SECONDS = 2000;
-
-		// number of pixels to change before logging a scroll event
-		var MIN_SCROLL_Y_CHANGE_FOR_LOG = 20;
-
-		//
-		// Local Members
-		//
-
-		// last scroll Y
-		var lastY = 0;
-
-		// last scroll Y logged
-		var lastYLogged = 0;
-
-		// scroll % this period
-		var intervalScrollPct = 0;
-
-		// scroll % total
-		var totalScrollPct = 0;
-
-		// number of scroll events
-		var scrollCount = 0;
-
-		// total scroll pixels
-		var scrollPixels = 0;
-
-		// number of distinct scrolls (scroll which happened
-		// over DISTINCT_SCROLL_SECONDS seconds apart)
-		var distinctScrollCount = 0;
-
-		// last time we scrolled
-		var lastScroll = 0;
-
-		// collection interval id
-		var collectionInterval = false;
-
-		// body and html element
-		var body = w.document.body;
-		var html = w.document.documentElement;
-
-		// register this type
-		t.register("scroll", COMPRESS_MODE_SMALL_NUMBERS);
-		t.register("scrollpct", COMPRESS_MODE_PERCENT);
-
-		// height of the document
-		var documentHeight = Math.max(
-			body.scrollHeight,
-			body.offsetHeight,
-			html.clientHeight,
-			html.scrollHeight,
-			html.offsetHeight) - BOOMR.utils.windowHeight();
-
-		/**
-		 * Fired when a scroll event happens
-		 *
-		 * @param {Event} e Scroll event
-		 */
-		function onScroll(e) {
-			var now = BOOMR.now();
-
-			scrollCount++;
-
-			// see if this is a unique scroll
-			if (now - lastScroll > DISTINCT_SCROLL_SECONDS) {
-				distinctScrollCount++;
-			}
-
-			lastScroll = now;
-
-			// determine how many pixels were scrolled
-			var curY = Math.ceil(BOOMR.utils.scroll().y);
-			var diffY = Math.abs(lastY - curY);
-
-			scrollPixels += diffY;
-
-			// update the timeline
-			t.increment("scroll", diffY);
-
-			// only log the event if we're over the threshold
-			if (lastYLogged === 0 || Math.abs(lastYLogged - curY) > MIN_SCROLL_Y_CHANGE_FOR_LOG) {
-				// add to the log
-				t.log(LOG_TYPE_SCROLL, now, {
-					y: curY
-				});
-
-				lastYLogged = curY;
-			}
-
-			// We wont consider Scroll events as triggering an interaction
-
-			// calculate percentage of document scrolled
-			intervalScrollPct += Math.round(diffY / documentHeight * 100);
-			totalScrollPct += Math.round(diffY / documentHeight * 100);
-
-			lastY = curY;
-		}
-
-		/**
-		 * Reports on the number of scrolls seen
-		 */
-		function reportScroll() {
-			var pct = Math.min(intervalScrollPct, 100);
-
-			if (pct !== 0) {
-				t.set("scrollpct", pct);
-			}
-
-			// reset count
-			intervalScrollPct = 0;
-		}
-
-		/**
-		 * Analyzes Scrolling events
-		 */
-		function analyze(startTime) {
-			impl.addToBeacon("c.s", externalMetrics.scrollCount());
-			impl.addToBeacon("c.s.p", externalMetrics.scrollPct());
-			impl.addToBeacon("c.s.y", externalMetrics.scrollPixels());
-			impl.addToBeacon("c.s.d", externalMetrics.scrollDistinct());
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			if (collectionInterval) {
-				clearInterval(collectionInterval);
-
-				collectionInterval = false;
-			}
-
-			BOOMR.utils.removeListener(w, "scroll", onScroll);
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			totalScrollPct = 0;
-			scrollCount = 0;
-			scrollPixels = 0;
-			distinctScrollCount = 0;
-		}
-
-		//
-		// External metrics
-		//
-
-		/**
-		 * Percentage of the screen that was scrolled.
-		 *
-		 * All the way to the bottom = 100%
-		 */
-		externalMetrics.scrollPct = function() {
-			return totalScrollPct;
-		};
-
-		/**
-		 * Number of scrolls
-		 */
-		externalMetrics.scrollCount = function() {
-			return scrollCount;
-		};
-
-		/**
-		 * Number of scrolls (more than two seconds apart)
-		 */
-		externalMetrics.scrollDistinct = function() {
-			return distinctScrollCount;
-		};
-
-		/**
-		 * Number of pixels scrolled
-		 */
-		externalMetrics.scrollPixels = function() {
-			return scrollPixels;
-		};
-
-		// startup
-		BOOMR.utils.addListener(w, "scroll", onScroll, listenerOpts);
-
-		collectionInterval = setInterval(reportScroll, COLLECTION_INTERVAL);
-
-		return {
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitors mouse clicks
-	 */
-	var ClickMonitor = function(w, t, i) {
-		// register this type
-		t.register("click", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Constants
-		//
-
-		// number of pixels area for Rage Clicks
-		var PIXEL_AREA = 10;
-
-		// number of clicks in the same area to trigger a Rage Click
-		var RAGE_CLICK_THRESHOLD = 3;
-
-		//
-		// Local Members
-		//
-
-		// number of click events
-		var clickCount = 0;
-
-		// number of clicks in the same PIXEL_AREA area
-		var sameClicks = 0;
-
-		// number of Rage Clicks
-		var rageClicks = 0;
-
-		// last coordinates
-		var x = 0;
-		var y = 0;
-
-		// last click target
-		var lastTarget = null;
-
-		/**
-		 * Fired when a `click` event happens.
-		 *
-		 * @param {Event} e Event
-		 */
-		function onClick(e) {
-			var now = BOOMR.now();
-
-			var newX = e.clientX;
-			var newY = e.clientY;
-
-			// track total number of clicks
-			clickCount++;
-
-			// calculate number of pixels moved
-			var pixels = Math.round(
-				Math.sqrt(Math.pow(y - newY, 2) +
-				Math.pow(x - newX, 2)));
-
-			// track Rage Clicks
-			if (lastTarget === e.target || pixels <= PIXEL_AREA) {
-				sameClicks++;
-
-				if ((sameClicks + 1) >= RAGE_CLICK_THRESHOLD) {
-					rageClicks++;
-
-					// notify any listeners
-					BOOMR.fireEvent("rage_click", e);
-				}
-			}
-			else {
-				sameClicks = 0;
-			}
-
-			// track last click coordinates and element
-			x = newX;
-			y = newY;
-			lastTarget = e.target;
-
-			// update the timeline
-			t.increment("click");
-
-			// add to the log
-			t.log(LOG_TYPE_CLICK, now, {
-				x: newX,
-				y: newY
-			});
-
-			// Only count cancellable event for interactions.
-			if (e.cancelable) {
-				// update the interaction monitor
-				i.interact("click", now, e);
-			}
-		}
-
-		/**
-		 * Analyzes Click events
-		 */
-		function analyze(startTime) {
-			impl.addToBeacon("c.c", externalMetrics.clicksCount());
-			impl.addToBeacon("c.c.r", externalMetrics.clicksRage());
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			BOOMR.utils.removeListener(w.document, "click", onClick);
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			clickCount = 0;
-			sameClicks = 0;
-			rageClicks = 0;
-		}
-
-		//
-		// External metrics
-		//
-		externalMetrics.clicksCount = function() {
-			return clickCount;
-		};
-
-		externalMetrics.clicksRage = function() {
-			return rageClicks;
-		};
-
-		//
-		// Startup
-		//
-		BOOMR.utils.addListener(w.document, "click", onClick, listenerOpts);
-
-		return {
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitors keyboard events
-	 */
-	var KeyMonitor = function(w, t, i) {
-		// register this type
-		t.register("key", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Local members
-		//
-
-		// key presses
-		var keyCount = 0;
-
-		// esc key presses
-		var escKeyCount = 0;
-
-		/**
-		 * Fired on key down
-		 *
-		 * @param {Event} e keydown event
-		 */
-		function onKeyDown(e) {
-			var now = BOOMR.now();
-
-			keyCount++;
-
-			if (e.keyCode === 27) {
-				escKeyCount++;
-			}
-
-			// update the timeline
-			t.increment("key");
-
-			// add to the log (don't track the actual keys)
-			t.log(LOG_TYPE_KEY, now);
-
-			// Only count cancellable event for interactions.
-			if (e.cancelable) {
-				// update the interaction monitor
-				i.interact("key", now, e);
-			}
-		}
-
-		/**
-		 * Analyzes Key events
-		 */
-		function analyze(startTime) {
-			impl.addToBeacon("c.k", externalMetrics.keyCount());
-			impl.addToBeacon("c.k.e", externalMetrics.keyEscapes());
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			BOOMR.utils.removeListener(w.document, "keydown", onKeyDown);
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			keyCount = 0;
-			escKeyCount = 0;
-		}
-
-		//
-		// External metrics
-		//
-		externalMetrics.keyCount = function() {
-			return keyCount;
-		};
-
-		externalMetrics.keyEscapes = function() {
-			return escKeyCount;
-		};
-
-		// start
-		BOOMR.utils.addListener(w.document, "keydown", onKeyDown, listenerOpts);
-
-		return {
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitors mouse movement
-	 */
-	var MouseMonitor = function(w, t, i) {
-		// register the mouse movements and overall percentage moved
-		t.register("mouse", COMPRESS_MODE_SMALL_NUMBERS);
-		t.register("mousepct", COMPRESS_MODE_PERCENT);
-
-		//
-		// Constants
-		//
-
-		/**
-		 * Minimum number of pixels that change from last before logging
-		 */
-		var MIN_LOG_PIXEL_CHANGE = 10;
-
-		/**
-		 * Mouse log interval
-		 */
-		var REPORT_LOG_INTERVAL = 250;
-
-		//
-		// Local members
-		//
-
-		// last movement coordinates
-		var lastX = 0;
-		var lastY = 0;
-
-		// last reported X/Y
-		var lastLogX = 0;
-		var lastLogY = 0;
-
-		// mouse move screen percent this interval
-		var intervalMousePct = 0;
-
-		// total mouse move percent
-		var totalMousePct = 0;
-
-		// total mouse move pixels
-		var totalMousePixels = 0;
-
-		// interval ids
-		var reportMousePctInterval = false;
-		var reportMouseLogInterval = false;
-
-		// screen pixel count
-		var screenPixels = Math.round(Math.sqrt(
-			Math.pow(BOOMR.utils.windowHeight(), 2) +
-			Math.pow(BOOMR.utils.windowWidth(), 2)));
-
-		/**
-		 * Fired when a `mousemove` event happens.
-		 *
-		 * @param {Event} e Event
-		 */
-		function onMouseMove(e) {
-			var newX = e.clientX;
-			var newY = e.clientY;
-
-			// calculate number of pixels moved
-			var pixels = Math.round(Math.sqrt(Math.pow(lastY - newY, 2) +
-			                        Math.pow(lastX - newX, 2)));
-
-			// calculate percentage of screen moved (upper-left to lower-right = 100%)
-			var newPct = Math.round(pixels / screenPixels * 100);
-			intervalMousePct += newPct;
-			totalMousePct += newPct;
-			totalMousePixels += pixels;
-
-			lastX = newX;
-			lastY = newY;
-
-			// Note: don't mark a mouse movement as an interaction (i.interact)
-
-			t.increment("mouse", pixels);
-		}
-
-		/**
-		 * Reports on the mouse percentage change
-		 */
-		function reportMousePct() {
-			var pct = Math.min(intervalMousePct, 100);
-
-			if (pct !== 0) {
-				t.set("mousepct", pct);
-			}
-
-			// reset count
-			intervalMousePct = 0;
-		}
-
-		/**
-		 * Updates the log if the mouse has moved enough
-		 */
-		function reportMouseLog() {
-			// Only log if X,Y have changed and have changed over the specified
-			// minimum theshold.
-			if (lastLogX !== lastX ||
-			    lastLogY !== lastY) {
-				var pixels = Math.round(Math.sqrt(Math.pow(lastLogY - lastY, 2) +
-										Math.pow(lastLogX - lastX, 2)));
-
-				if (pixels >= MIN_LOG_PIXEL_CHANGE) {
-					// add to the log
-					t.log(LOG_TYPE_MOUSE, BOOMR.now(), {
-						x: lastX,
-						y: lastY
-					});
-
-					lastLogX = lastX;
-					lastLogY = lastY;
-				}
-			}
-		}
-
-		/**
-		 * Analyzes Mouse events
-		 */
-		function analyze(startTime) {
-			impl.addToBeacon("c.m.p", externalMetrics.mousePct());
-			impl.addToBeacon("c.m.n", externalMetrics.mousePixels());
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			if (reportMousePctInterval) {
-				clearInterval(reportMousePctInterval);
-
-				reportMousePctInterval = false;
-			}
-
-			if (reportMouseLogInterval) {
-				clearInterval(reportMouseLogInterval);
-
-				reportMouseLogInterval = false;
-			}
-
-			BOOMR.utils.removeListener(w.document, "mousemove", onMouseMove);
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			totalMousePct = 0;
-			totalMousePixels = 0;
-		}
-
-		//
-		// External metrics
-		//
-
-		/**
-		 * Percentage the mouse moved
-		 */
-		externalMetrics.mousePct = function() {
-			return totalMousePct;
-		};
-
-		/**
-		 * Pixels the mouse moved
-		 */
-		externalMetrics.mousePixels = function() {
-			return totalMousePixels;
-		};
-
-		reportMousePctInterval = setInterval(reportMousePct, COLLECTION_INTERVAL);
-		reportMouseLogInterval = setInterval(reportMouseLog, REPORT_LOG_INTERVAL);
-
-		// start
-		BOOMR.utils.addListener(w.document, "mousemove", onMouseMove, listenerOpts);
-
-		return {
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Interaction monitor
-	 */
-	var InteractionMonitor = function(w, t, afterOnloadMinWait) {
-		// register this type
-		t.register("inter", COMPRESS_MODE_SMALL_NUMBERS);
-		t.register("interdly", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Constants
-		//
-
-		/**
-		 * Interaction maximum delay (ms)
-		 */
-		var INTERACTION_MAX_DELAY = 50;
-
-		/**
-		 * How long after an interaction to wait before sending a beacon (ms).
-		 */
-		var INTERACTION_MIN_WAIT_FOR_BEACON = afterOnloadMinWait;
-
-		/**
-		 * Maximum amount of time after the first interaction before sending
-		 * a beacon (ms).
-		 */
-		var INTERACTION_MAX_WAIT_FOR_BEACON = 30000;
-
-		//
-		// Local Members
-		//
-
-		// Time of first interaction
-		var timeToFirstInteraction = 0;
-
-		// First Input Delay
-		var firstInputDelay = null;
-
-		// Interaction count
-		var interactions = 0;
-
-		// Interaction delay total
-		var interactionsDelay = 0;
-
-		// Delayed interactions
-		var delayedInteractions = 0;
-
-		// Delayed interaction time
-		var delayedInteractionTime = 0;
-
-		// whether or not we're enabled
-		var enabled = true;
-
-		// interaction beacon start time
-		var beaconStartTime = 0;
-
-		// interaction beacon end time
-		var beaconEndTime = 0;
-
-		// interaction beacon timers
-		var beaconMinTimeout = false;
-		var beaconMaxTimeout = false;
-
-		// whether or not a SPA nav is happening
-		var isSpaNav = false;
-
-		// whether we've sent TTFI and FID already
-		var sentTimers = false;
-
-		/**
-		 * Logs an interaction
-		 *
-		 * @param {string} type Interaction type
-		 * @param {number} now Time of callback
-		 * @param {Event} e Event
-		 */
-		function interact(type, now, e) {
-			var delay = 0;
-			var hrNow = BOOMR.hrNow();
-
-			now = now || BOOMR.now();
-
-			if (!enabled) {
-				return;
-			}
-
-			interactions++;
-
-			if (!timeToFirstInteraction) {
-				if (e && e.timeStamp) {
-					// e.timeStamp is DomHighRes timestamp, so convert to epoch based.
-					timeToFirstInteraction = e.timeStamp + epoch;
-				}
-				else {
-					timeToFirstInteraction = now;
-				}
-			}
-
-			// check for interaction delay.
-			// Don't use the event timeStamp in Safari if we were not loaded in the same window as the base page.
-			// The timeStamp's time origin will not be that of the base page and our timings will be skewed.
-			// See https://bugs.webkit.org/show_bug.cgi?id=200355
-			if (e && e.timeStamp && !(impl.isSafari && w !== window)) {
-				if (e.timeStamp > 1400000000000) {
-					delay = now - e.timeStamp;
-				}
-				else {
-					// if timeStamp is a DOMHighResTimeStamp, convert BOOMR.hrNow() to same
-					delay = hrNow - e.timeStamp;
-				}
-
-				interactionsDelay += delay;
-
-				// log first input delay
-				if (firstInputDelay === null) {
-					firstInputDelay = Math.ceil(delay);
-				}
-
-				// log as a delayed interaction
-				if (delay > INTERACTION_MAX_DELAY) {
-					t.increment("interdly");
-
-					delayedInteractions++;
-					delayedInteractionTime += delay;
-				}
-			}
-
-			// increment the FPS
-			t.increment("inter");
-
-			//
-			// If we're doing after-page-load monitoring, start a timer to report
-			// on this interaction.  We will wait up to INTERACTION_MIN_WAIT_FOR_BEACON
-			// ms before sending the beacon, sliding the window if there are
-			// more interactions, up to a max of INTERACTION_MAX_WAIT_FOR_BEACON ms.
-			//
-			if (!isSpaNav && impl.afterOnloadMonitoring) {
-				// mark now as the latest interaction
-				beaconEndTime = BOOMR.now();
-
-				if (!beaconStartTime) {
-					debug("Interaction detected, sending a beacon after " +
-						INTERACTION_MIN_WAIT_FOR_BEACON + " ms");
-
-					// first interaction for this beacon
-					beaconStartTime = beaconEndTime;
-
-					// set a timer for the max timeout
-					beaconMaxTimeout = setTimeout(sendInteractionBeacon,
-						INTERACTION_MAX_WAIT_FOR_BEACON);
-				}
-
-				// if there was a timer for the min timeout, clear it first
-				if (beaconMinTimeout) {
-					debug("Clearing previous interaction timeout");
-
-					clearTimeout(beaconMinTimeout);
-					beaconMinTimeout = false;
-				}
-
-				// set a timer for the min timeout
-				beaconMinTimeout = setTimeout(sendInteractionBeacon,
-					INTERACTION_MIN_WAIT_FOR_BEACON);
-			}
-		}
-
-		/**
-		 * Fired on spa_init
-		 */
-		function onSpaInit() {
-			// note we're in a SPA nav right now
-			isSpaNav = true;
-
-			// clear any interaction beacon timers
-			clearBeaconTimers();
-		}
-
-		/**
-		 * Clears interaction beacon timers.
-		 */
-		function clearBeaconTimers() {
-			if (beaconMinTimeout) {
-				clearTimeout(beaconMinTimeout);
-				beaconMinTimeout = false;
-			}
-
-			if (beaconMaxTimeout) {
-				clearTimeout(beaconMaxTimeout);
-				beaconMaxTimeout = false;
-			}
-		}
-
-		/**
-		 * Fired when an interaction beacon timed-out
-		 */
-		function sendInteractionBeacon() {
-			debug("Sending interaction beacon");
-
-			// Queue a beacon whenever there isn't another one ongoing
-			BOOMR.sendBeaconWhenReady(
-				{
-					// change this to an 'interaction' beacon
-					"rt.start": "manual",
-					"http.initiator": "interaction",
-
-					// when
-					"rt.tstart": beaconStartTime,
-					"rt.end": beaconEndTime
-				},
-				function() {
-					clearBeaconTimers();
-
-					// notify anyone listening for an interaction event
-					BOOMR.fireEvent("interaction");
-				},
-				impl);
-		}
-
-		/**
-		 * Analyzes Interactions
-		 */
-		function analyze(startTime) {
-			var fid;
-
-			impl.addToBeacon("c.i.dc", externalMetrics.interactionDelayed());
-			impl.addToBeacon("c.i.dt", externalMetrics.interactionDelayedTime());
-			impl.addToBeacon("c.i.a", externalMetrics.interactionAvgDelay());
-
-			// Only send FID and TTFI Timers once
-			if (!sentTimers) {
-				// defer to EventTiming's FID if available
-				if (BOOMR.plugins.EventTiming &&
-				    BOOMR.plugins.EventTiming.is_enabled()) {
-					fid = BOOMR.plugins.EventTiming.metrics.firstInputDelay();
-				}
-
-				if (!fid && firstInputDelay !== null) {
-					fid = externalMetrics.firstInputDelay();
-				}
-
-				if (typeof fid === "number") {
-					impl.addToBeacon("c.fid", Math.ceil(fid), true);
-
-					impl.addToBeacon("c.ttfi", BOOMR.plugins.EventTiming.metrics.timeToFirstInteraction() ||
-					    externalMetrics.timeToFirstInteraction());
-
-					sentTimers = true;
-				}
-			}
-		}
-
-		/**
-		 * Disables the monitor
-		 */
-		function stop() {
-			enabled = false;
-		}
-
-		/**
-		 * Resets on beacon
-		 */
-		function onBeacon() {
-			delayedInteractionTime = 0;
-			delayedInteractions = 0;
-			interactions = 0;
-			interactionsDelay = 0;
-
-			beaconStartTime = 0;
-			beaconEndTime = 0;
-
-			// no longer in a SPA nav
-			isSpaNav = false;
-
-			// if we had queued an interaction beacon, but something else is
-			// firing instead, use that data
-			clearBeaconTimers();
-		}
-
-		//
-		// External metrics
-		//
-		externalMetrics.interactionDelayed = function() {
-			return delayedInteractions;
-		};
-
-		externalMetrics.interactionDelayedTime = function() {
-			return Math.ceil(delayedInteractionTime);
-		};
-
-		externalMetrics.interactionAvgDelay = function() {
-			if (interactions > 0) {
-				return Math.ceil(interactionsDelay / interactions);
-			}
-		};
-
-		/**
-		 * ttfi relative to nav start
-		 */
-		externalMetrics.timeToFirstInteraction = function() {
-			if (timeToFirstInteraction) {
-				// milliseconds since nav start
-				return Math.floor(timeToFirstInteraction - epoch);
-			}
-
-			// no data
-			return;
-		};
-
-		externalMetrics.firstInputDelay = function() {
-			if (firstInputDelay !== null) {
-				return firstInputDelay;
-			}
-
-			// no data
-			return;
-		};
-
-		//
-		// Setup
-		//
-
-		// clear interaction beacon timer if a SPA is starting
-		BOOMR.subscribe("spa_init", onSpaInit, null, impl);
-
-		return {
-			interact: interact,
-			analyze: analyze,
-			stop: stop,
-			onBeacon: onBeacon
-		};
-	};
-
-	/**
-	 * Monitor pointerdown followed by pointerup interaction event for calculating FID
-	 */
-	var PointerDownMonitor = function(w, t, i) {
-		// we are not registering timeline events for pointerdown as these end up as click
-		// events which are already tracked for timelines.
-
-		var enabled = true;
-		var now, originalEvent;
-
-		function onPointerUp() {
-			if (!enabled) {
-				// Either stop() was called because of onBeacon event shutting things down
-				// or 'pointercancel' event resulted in stop() being called.
-				return;
-			}
-
-			// Update the interaction monitor
-			i.interact("pd", now, originalEvent);
-			now = null;
-			originalEvent = null;
-
-			BOOMR.utils.removeListener(window, "pointerup", onPointerUp);
-		}
-
-		function onPointerDown(e) {
-			// Only count cancelable event that should trigger behavior
-			// important to user
-			if (!enabled || !e.cancelable) {
-				return;
-			}
-
-			now = BOOMR.now();
-			originalEvent = e;
-
-			BOOMR.utils.addListener(window, "pointerup", onPointerUp, listenerOpts);
-		}
-
-		/**
-		 * Stop this monitor
-		 */
-		function stop() {
-			enabled = false;
-			BOOMR.utils.removeListener(window, "pointerdown", onPointerDown);
-			BOOMR.utils.removeListener(window, "pointerup", onPointerUp);
-			BOOMR.utils.removeListener(window, "pointercancel", stop);
-		}
-
-		BOOMR.utils.addListener(window, "pointerdown", onPointerDown, listenerOpts);
-		BOOMR.utils.addListener(window, "pointercancel", stop, listenerOpts);
-
-		return {
-			stop: stop
-		};
-	};
-
-	/**
-	 * Monitor mousedown Event
-	 */
-	var MouseDownMonitor = function(w, t, i) {
-		var enabled = true;
-
-		function onMouseDown(e) {
-			// Only count cancelable event that should trigger behavior
-			// important to user
-			if (!enabled || !e.cancelable) {
-				return;
-			}
-
-			var now = BOOMR.now();
-
-			// Update the interaction monitor
-			i.interact("md", now, e);
-		}
-
-		/**
-		 * Stop this monitor
-		 */
-		function stop() {
-			enabled = false;
-			BOOMR.utils.removeListener(window, "mousedown", onMouseDown);
-		}
-
-		BOOMR.utils.addListener(window, "mousedown", onMouseDown, listenerOpts);
-
-		return {
-			stop: stop
-		};
-	};
-
-	/**
-	 * Monitors TouchStart event
-	 */
-	var TouchStartMonitor = function(w, t, i) {
-		var enabled = true;
-
-		function onTouchStart(e) {
-			// Only count cancelable event that should trigger behavior
-			// important to user
-			if (!enabled || !e.cancelable) {
-				return;
-			}
-
-			var now = BOOMR.now();
-
-			// Update the interaction monitor
-			i.interact("ts", now, e);
-		}
-
-		/**
-		 * Stop this monitor
-		 */
-		function stop() {
-			enabled = false;
-			BOOMR.utils.removeListener(window, "touchstart", onTouchStart);
-		}
-
-		BOOMR.utils.addListener(window, "touchstart", onTouchStart, listenerOpts);
-
-		return {
-			stop: stop
-		};
-	};
-
-	/**
-	 * Monitors for visibility state changes
-	 */
-	var VisibilityMonitor = function(w, t, i) {
-		// register this type
-		t.register("vis", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Constants
-		//
-
-		/**
-		 * Maps visibilityState from a string to a number
-		 */
-		var VIS_MAP = {
-			"visible": 0,
-			"hidden": 1,
-			"prerender": 2,
-			"unloaded": 3
-		};
-
-		//
-		// Locals
-		//
-		var enabled = true;
-
-		BOOMR.subscribe("visibility_changed", function(e) {
-			var now = BOOMR.now();
-
-			if (!enabled) {
-				return;
-			}
-
-			// update the timeline
-			t.increment("vis");
-
-			// add to the log (don't track the actual keys)
-			t.log(LOG_TYPE_VIS, now, {
-				s: VIS_MAP[BOOMR.visibilityState()]
-			});
-			// Visibility change doesn't explicitly trigger an "interaction"
-		});
-
-		/**
-		 * Stops this monitor
-		 */
-		function stop() {
-			enabled = false;
-		}
-
-		return {
-			stop: stop
-		};
-	};
-
-	/**
-	 * Monitors for orientation changes
-	 */
-	var OrientationMonitor = function(w, t, i) {
-		// register this type
-		t.register("orn", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Locals
-		//
-		var enabled = true;
-
-		/**
-		 * Fired when the orientation changes
-		 *
-		 * @param {Event} e Event
-		 */
-		function onOrientationChange(e) {
-			var now = BOOMR.now(), angle = window.orientation;
-
-			if (!enabled) {
-				return;
-			}
-
-			// update the timeline
-			t.increment("orn");
-
-			var orientation = window.screen && (screen.orientation || screen.msOrientation || screen.mozOrientation || {});
-
-			// override with Screen Orientation API if available
-			if (orientation && typeof orientation.angle === "number") {
-				angle = screen.orientation.angle;
-			}
-
-			if (typeof angle === "number") {
-				// add to the log (don't track the actual keys)
-				t.log(LOG_TYPE_ORIENTATION, now, {
-					a: angle
-				});
-			}
-		}
-
-		/**
-		 * Stops this monitor
-		 */
-		function stop() {
-			enabled = false;
-
-			BOOMR.utils.removeListener(w, "orientationchange", onOrientationChange);
-		}
-
-		//
-		// Setup
-		//
-		BOOMR.utils.addListener(w, "orientationchange", onOrientationChange, listenerOpts);
-
-		return {
-			stop: stop
-		};
-	};
-
-	/**
-	 * Monitors for misc stats such as memory usage, battery level, etc.
-	 *
-	 * Note: Not reporting on ResourceTiming entries or Errors since those
-	 * will be captured by the respective plugins.
-	 */
-	var StatsMonitor = function(w, t) {
-		// register types
-		t.register("mem", COMPRESS_MODE_LARGE_NUMBERS, true);
-		t.register("bat", COMPRESS_MODE_PERCENT, true);
-		t.register("domsz", COMPRESS_MODE_LARGE_NUMBERS, true);
-		t.register("domln", COMPRESS_MODE_LARGE_NUMBERS, true);
-		t.register("mut", COMPRESS_MODE_SMALL_NUMBERS);
-
-		//
-		// Constants
-		//
-
-		/**
-		 * Report stats every second
-		 */
-		var REPORT_INTERVAL = 1000;
-
-		//
-		// Locals
-		//
-		var d = w.document;
-
-		/**
-		 * Whether or not we're enabled
-		 */
-		var enabled = true;
-
-		/**
-		 * Report interval ID
-		 */
-		var reportInterval = false;
-
-		/**
-		 * navigator.getBattery() object
-		 */
-		var battery = null;
-
-		/**
-		 * Number of mutations since last reset
-		 */
-		var mutationCount = 0;
-
-		/**
-		 * DOM length
-		 */
-		var domLength = 0;
-
-		/**
-		 * Live HTMLCollection of found elements
-		 *
-		 * Keep this live collection around as it's cheaper to call
-		 * .length on it over time than re-running getElementsByTagName()
-		 * each time
-		 */
-		var domAllNodes = d.getElementsByTagName("*");
-
-		/**
-		 * MutationObserver
-		 */
-		var observer;
-
-		/**
-		 * Fired on an interval to report stats such as memory usage
-		 */
-		function reportStats() {
-			//
-			// Memory
-			//
-			var mem = p &&
-			    p.memory &&
-			    p.memory.usedJSHeapSize;
-
-			if (mem) {
-				t.set("mem", mem);
-			}
-
-			//
-			// DOM sizes (bytes) and length (node count)
-			//
-			domLength = domAllNodes.length;
-
-			t.set("domsz", d.documentElement.innerHTML.length);
-			t.set("domln", domLength);
-
-			//
-			// DOM mutations
-			//
-			if (mutationCount > 0) {
-				// report as % of DOM size
-				var deltaPct = Math.min(Math.round(mutationCount / domLength * 100), 100);
-
-				t.set("mut", deltaPct);
-
-				mutationCount = 0;
-			}
-		}
-
-		/**
-		 * Fired when the battery level changes
-		 */
-		function onBatteryLevelChange() {
-			if (!enabled || !battery) {
-				return;
-			}
-
-			t.set("bat", battery.level);
-		}
-
-		/**
-		 * Fired on MutationObserver callback
-		 */
-		function onMutationObserver(mutations) {
-			mutations.forEach(function(mutation) {
-				// only listen for childList changes
-				if (mutation.type !== "childList") {
-					return true;
-				}
-
-				for (var i = 0; i < mutation.addedNodes.length; i++) {
-					var node = mutation.addedNodes[i];
-
-					// add mutations for this node and all sub-nodes
-					mutationCount++;
-					mutationCount += node.getElementsByTagName ?
-						node.getElementsByTagName("*").length : 0;
-				}
-			});
-			return true;
-		}
-
-		/**
-		 * Stops this monitor
-		 */
-		function stop() {
-			enabled = false;
-
-			// stop reporting on metrics
-			if (reportInterval) {
-				clearInterval(reportInterval);
-				reportInterval = false;
-			}
-
-			// disconnect MO
-			if (observer && observer.observer) {
-				observer.observer.disconnect();
-				observer = null;
-			}
-
-			// stop listening for battery info
-			if (battery && battery.onlevelchange) {
-				battery.onlevelchange = null;
-			}
-
-			domAllNodes = null;
-		}
-
-		//
-		// Setup
-		//
-
-		// misc stats
-		reportInterval = setInterval(reportStats, REPORT_INTERVAL);
-
-		// Battery
-		if (w.navigator && typeof w.navigator.getBattery === "function") {
-			w.navigator.getBattery().then(function(b) {
-				battery = b;
-
-				if (battery.onlevelchange) {
-					battery.onlevelchange = onBatteryLevelChange;
-				}
-			});
-		}
-
-		// MutationObserver
-		if (BOOMR.utils.isMutationObserverSupported()) {
-			// setup the observer
-			observer = BOOMR.utils.addObserver(
-				d,
-				{ childList: true, subtree: true },
-				null, // no timeout
-				onMutationObserver, // will always return true
-				null, // no callback data
-				this
-			);
-		}
-
-		return {
-			stop: stop
-		};
-	};
-
-	//
-	// Continuity implementation
-	//
-	impl = {
-		//
-		// Config
-		//
-		/**
-		 * Whether or not to monitor longTasks
-		 */
-		monitorLongTasks: true,
-
-		/**
-		 * Whether or not to monitor Page Busy
-		 */
-		monitorPageBusy: true,
-
-		/**
-		 * Whether or not to monitor FPS
-		 */
-		monitorFrameRate: true,
-
-		/**
-		 * Whether or not to monitor interactions
-		 */
-		monitorInteractions: true,
-
-		/**
-		 * Whether or not to monitor page stats
-		 */
-		monitorStats: false,
-
-		/**
-		 * Whether to monitor Layout Shifts
-		 */
-		monitorLayoutShifts: true,
-
-		/**
-		 * Whether to monitor for interactions after onload
-		 */
-		afterOnload: false,
-
-		/**
-		 * Max recording length after onload (if not a SPA) (ms)
-		 */
-		afterOnloadMaxLength: DEFAULT_AFTER_ONLOAD_MAX_LENGTH,
-
-		/**
-		 * Minium number of ms after an interaction to wait before sending
-		 * an interaction beacon
-		 */
-		afterOnloadMinWait: 5000,
-
-		/**
-		 * Number of milliseconds after onload to wait for TTI, or,
-		 * false if not configured.
-		 */
-		waitAfterOnload: false,
-
-		/**
-		 * Whether or not to wait for a call to
-		 * frameworkReady() before starting TTI calculations
-		 */
-		ttiWaitForFrameworkReady: false,
-
-		/**
-		 * If set, wait for the specified CSS selector of hero images to have
-		 * loaded before starting TTI calculations
-		 */
-		ttiWaitForHeroImages: false,
-
-		/**
-		 * Whether or not to send a detailed log of all events.
-		 */
-		sendLog: true,
-
-		/**
-		 * Whether or not to send a compressed timeline of events
-		 */
-		sendTimeline: true,
-
-		/**
-		 * Maximum number of long entries to keep
-		 */
-		logMaxEntries: 100,
-
-		//
-		// State
-		//
-		/**
-		 * Whether or not we're initialized
-		 */
-		initialized: false,
-
-		/**
-		 * Whether we're ready to send a beacon
-		 */
-		complete: false,
-
-		/**
-		 * Whether or not this is an SPA app
-		 */
-		isSpa: false,
-
-		/**
-		 * Whether Page Ready has fired or not
-		 */
-		firedPageReady: false,
-
-		/**
-		 * Whether or not we're currently monitoring for interactions
-		 * after the Page Load beacon
-		 */
-		afterOnloadMonitoring: false,
-
-		/**
-		 * Framework Ready time, if configured
-		 */
-		frameworkReady: null,
-
-		/**
-		 * Timeline
-		 */
-		timeline: null,
-
-		/**
-		 * TTI method used (highest accuracy):
-		 * * `lt` (LongTasks)
-		 * * `raf` (requestAnimationFrame)
-		 * * `b` (Page Busy polling)
-		 */
-		ttiMethod: null,
-
-		/**
-		 * LongTaskMonitor
-		 */
-		longTaskMonitor: null,
-
-		/**
-		 * PageBusyMonitor
-		 */
-		pageBusyMonitor: null,
-
-		/**
-		 * FrameRateMonitor
-		 */
-		frameRateMonitor: null,
-
-		/**
-		 * InteractionMonitor
-		 */
-		interactionMonitor: null,
-
-		/**
-		 * ScrollMonitor
-		 */
-		scrollMonitor: null,
-
-		/**
-		 * ClickMonitor
-		 */
-		clickMonitor: null,
-
-		/**
-		 * KeyMonitor
-		 */
-		keyMonitor: null,
-
-		/**
-		 * MouseMonitor
-		 */
-		mouseMonitor: null,
-
-		/**
-		 * VisibilityMonitor
-		 */
-		visibilityMonitor: null,
-
-		/**
-		 * OrientationMonitor
-		 */
-		orientationMonitor: null,
-
-		/**
-		 * TouchStartMonitor
-		 */
-		touchStartMonitor: null,
-
-		/**
-		 * MouseDownMonitor
-		 */
-		mouseDownMonitor: null,
-
-		/**
-		 * PointerDownMonitor
-		 */
-		pointerDownMonitor: null,
-
-		/**
-		 * StatsMonitor
-		 */
-		statsMonitor: null,
-
-		/**
-		* LayoutShiftMonitor
-		*/
-		layoutShiftMonitor: null,
-
-		/**
-		 * All possible monitors
-		 */
-		monitors: [
-			"timeline",
-			"longTaskMonitor",
-			"pageBusyMonitor",
-			"frameRateMonitor",
-			"scrollMonitor",
-			"keyMonitor",
-			"clickMonitor",
-			"mouseMonitor",
-			"interactionMonitor",
-			"visibilityMonitor",
-			"orientationMonitor",
-			"statsMonitor",
-			"layoutShiftMonitor",
-			"touchStartMonitor",
-			"mouseDownMonitor",
-			"pointerDownMonitor"
-		],
-
-		/**
-		 * When we last sent a beacon
-		 */
-		timeOfLastBeacon: 0,
-
-		/**
-		 * Whether or not we've added data to this beacon
-		 */
-		hasAddedDataToBeacon: false,
-
-		/*
-		 * Safari check, desktop and iOS
-		 */
-		 isSafari: (window && window.navigator && window.navigator.vendor && window.navigator.vendor.indexOf("Apple") !== -1),
-
-		//
-		// Callbacks
-		//
-		/**
-		 * Callback before the beacon is going to be sent
-		 */
-		onBeforeBeacon: function() {
-			impl.runAllAnalyzers();
-		},
-
-		/**
-		 * Runs all analyzers
-		 */
-		runAllAnalyzers: function() {
-			var i, mon;
-
-			if (impl.hasAddedDataToBeacon) {
-				// don't add data twice
-				return;
-			}
-
-			for (i = 0; i < impl.monitors.length; i++) {
-				mon = impl[impl.monitors[i]];
-
-				if (mon && typeof mon.analyze === "function") {
-					mon.analyze(impl.timeOfLastBeacon);
-				}
-			}
-
-			// add last time the data was reset, if ever
-			impl.addToBeacon("c.lb", impl.timeOfLastBeacon ? impl.timeOfLastBeacon.toString(36) : 0);
-
-			// keep track of when we last added data
-			impl.timeOfLastBeacon = BOOMR.now();
-
-			// note we've added data
-			impl.hasAddedDataToBeacon = true;
-		},
-
-		/**
-		 * Callback after the beacon is ready to send, so we can clear
-		 * our added vars and do other cleanup.
-		 */
-		onBeacon: function(edata) {
-			var i;
-
-			// Three types of beacons can go out before the Page Load beacon: Early Beacon, Custom Metric and Custom Timer.
-			// For those beacon types, we want to keep the vars for the next beacon.
-			if (edata &&
-				(
-					(typeof edata.early !== "undefined") ||
-					(edata["http.initiator"] && edata["http.initiator"].indexOf("api_custom_") === 0)
-				)) {
-
-				return;
-			}
-
-			// let any other monitors know that a beacon was sent
-			for (i = 0; i < impl.monitors.length; i++) {
-				var monitor = impl[impl.monitors[i]];
-
-				if (monitor) {
-					// disable ourselves if we're not doing anything after the first beacon
-					if (!impl.afterOnload) {
-						if (typeof monitor.stop === "function") {
-							monitor.stop();
-						}
-					}
-
-					// notify all plugins that there's been a beacon
-					if (typeof monitor.onBeacon === "function") {
-						monitor.onBeacon();
-					}
-				}
-			}
-
-			// we haven't added data any more
-			impl.hasAddedDataToBeacon = false;
-		},
-
-		/**
-		 * Callback when an XHR load happens
-		 *
-		 * @param {object} data XHR data
-		 */
-		onXhrLoad: function(data) {
-			// note this is an SPA for later
-			if (data && BOOMR.utils.inArray(data.initiator, BOOMR.constants.BEACON_TYPE_SPAS)) {
-				impl.isSpa = true;
-			}
-
-			if (data && data.initiator === "spa_hard") {
-				impl.onPageReady();
-			}
-		},
-
-		/**
-		 * Callback when the page is ready
-		 */
-		onPageReady: function() {
-			impl.firedPageReady = true;
-
-			//
-			// If we're monitoring interactions after onload, set a timer to
-			// disable them if configured
-			//
-			if (impl.afterOnload &&
-			    impl.monitorInteractions) {
-				impl.afterOnloadMonitoring = true;
-
-				// disable after the specified amount if not a SPA
-				if (!impl.isSpa && typeof impl.afterOnloadMaxLength === "number") {
-					setTimeout(function() {
-						impl.afterOnloadMonitoring = false;
-					}, impl.afterOnloadMaxLength);
-				}
-			}
-
-			if (impl.waitAfterOnload) {
-				var start = BOOMR.now();
-
-				setTimeout(function checkTti() {
-					// wait for up to the defined time after onload
-					if (BOOMR.now() - start > impl.waitAfterOnload) {
-						// couldn't calculate TTI, send the beacon anyways
-						impl.complete = true;
-						BOOMR.sendBeacon();
-					}
-					else {
-						// run the TTI calculation
-						impl.timeline.analyze();
-
-						// if we got something, mark as complete and send
-						if (externalMetrics.timeToInteractive()) {
-							impl.complete = true;
-							BOOMR.sendBeacon();
-						}
-						else {
-							// poll again
-							setTimeout(checkTti, TIME_TO_INTERACTIVE_WAIT_POLL_PERIOD);
-						}
-					}
-				}, TIME_TO_INTERACTIVE_WAIT_POLL_PERIOD);
-			}
-			else {
-				impl.complete = true;
-			}
-		},
-
-		//
-		// Misc
-		//
-		/**
-		 * Adds a variable to the beacon, tracking the names so we can
-		 * remove them later.
-		 *
-		 * @param {string} name Name
-		 * @param {string} val Value.  If 0 or undefined, the value is removed from the beacon.
-		 * @param {number} force Force adding the variable, even if 0
-		 */
-		addToBeacon: function(name, val, force) {
-			if ((val === 0 || typeof val === "undefined") && !force) {
-				BOOMR.removeVar(name);
-				return;
-			}
-
-			BOOMR.addVar(name, val, true);
-		}
-	};
-
-	//
-	// External Plugin
-	//
-	BOOMR.plugins.Continuity = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * @param {object} config Configuration
-		 * @param {boolean} [config.Continuity.monitorLongTasks=true] Whether or not to
-		 * monitor Long Tasks.
-		 * @param {boolean} [config.Continuity.monitorPageBusy=true] Whether or not to
-		 * monitor Page Busy.
-		 * @param {boolean} [config.Continuity.monitorFrameRate=true] Whether or not to
-		 * monitor Frame Rate.
-		 * @param {boolean} [config.Continuity.monitorInteractions=true] Whether or not to
-		 * monitor Interactions.
-		 * @param {boolean} [config.Continuity.monitorStats=true] Whether or not to
-		 * monitor Page Statistics.
-		 * @param {boolean} [config.Continuity.monitorLayoutShifts=true] Whether or not to
-		 * monitor Layout Shifts
-		 * @param {boolean} [config.Continuity.afterOnload=false] Whether or not to
-		 * monitor Long Tasks, Page Busy, Frame Rate, interactions and Page Statistics
-		 * after `onload` (up to `afterOnloadMaxLength`).
-		 * @param {number} [config.Continuity.afterOnloadMaxLength=60000] Maximum time
-		 * (milliseconds) after `onload` to monitor.
-		 * @param {boolean} [config.Continuity.afterOnloadMinWait=5000] Minimum
-		 * time after an interaction to wait for more interactions before batching
-		 * the interactions into a beacon.
-		 * @param {boolean|number} [config.Continuity.waitAfterOnload=false] If set
-		 * to a `number`, how long after `onload` to wait for Time to Interactive to
-		 * happen before sending a beacon (without TTI).
-		 * @param {boolean} [config.Continuity.ttiWaitForFrameworkReady=false] Whether
-		 * or not to wait for {@link BOOMR.plugins.Continuity.frameworkReady} before
-		 * Visually Ready (and thus Time to Interactive) can happen.
-		 * @param {boolean|string} [config.Continuity.ttiWaitForHeroImages=false] If
-		 * set to a `string`, the CSS selector will wait until the specified images
-		 * have been loaded before Visually Ready (and thus Time to Interactive) can happen.
-		 * @param {boolean} [config.Continuity.sendLog=true] Whether or not to
-		 * send the event log with each beacon.
-		 * @param {boolean} [config.Continuity.logMaxEntries=100] How many log
-		 * entries to keep.
-		 * @param {boolean} [config.Continuity.sendTimeline=true] Whether or not to
-		 * send the timeline with each beacon.
-		 *
-		 * @returns {@link BOOMR.plugins.Continuity} The Continuity plugin for chaining
-		 * @memberof BOOMR.plugins.Continuity
-		 */
-		init: function(config) {
-			BOOMR.utils.pluginConfig(impl, config, "Continuity",
-				["monitorLongTasks", "monitorPageBusy", "monitorFrameRate", "monitorInteractions",
-					"monitorStats", "afterOnload", "afterOnloadMaxLength", "afterOnloadMinWait",
-					"waitAfterOnload", "ttiWaitForFrameworkReady", "ttiWaitForHeroImages",
-					"sendLog", "logMaxEntries", "sendTimeline", "monitorLayoutShifts"]);
-
-			if (impl.initialized) {
-				return this;
-			}
-
-			impl.initialized = true;
-
-			// create the timeline
-			impl.timeline = new Timeline(BOOMR.now());
-
-			//
-			// Setup
-			//
-			if (BOOMR.window) {
-				//
-				// LongTasks
-				//
-				if (impl.monitorLongTasks &&
-				    BOOMR.window.PerformanceObserver &&
-				    BOOMR.window.PerformanceLongTaskTiming) {
-					impl.longTaskMonitor = new LongTaskMonitor(BOOMR.window, impl.timeline);
-
-					impl.ttiMethod = "lt";
-				}
-
-				//
-				// FPS
-				//
-				if (impl.monitorFrameRate &&
-				    typeof BOOMR.window.requestAnimationFrame === "function") {
-					impl.frameRateMonitor = new FrameRateMonitor(BOOMR.window, impl.timeline);
-
-					if (!impl.ttiMethod) {
-						impl.ttiMethod = "raf";
-					}
-				}
-
-				//
-				// Page Busy (if LongTasks aren't supported or aren't enabled)
-				//
-				if (impl.monitorPageBusy &&
-					BOOMR.window &&
-					(!BOOMR.window.PerformanceObserver || !BOOMR.window.PerformanceLongTaskTiming || !impl.monitorLongTasks) &&
-					// Don't use Page Busy for Firefox, as setInterval is de-prioritized during Page Load
-					// https://bugzilla.mozilla.org/show_bug.cgi?id=1270059
-					(BOOMR.window.navigator &&
-						(BOOMR.window.navigator.userAgentData || !BOOMR.window.navigator.userAgent.match(/Firefox\//)))) {
-					impl.pageBusyMonitor = new PageBusyMonitor(BOOMR.window, impl.timeline);
-
-					if (!impl.ttiMethod) {
-						impl.ttiMethod = "b";
-					}
-				}
-
-				//
-				// Interactions
-				//
-				if (impl.monitorInteractions) {
-					impl.interactionMonitor = new InteractionMonitor(BOOMR.window, impl.timeline, impl.afterOnloadMinWait);
-					impl.scrollMonitor = new ScrollMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.keyMonitor = new KeyMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.clickMonitor = new ClickMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.mouseMonitor = new MouseMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.visibilityMonitor = new VisibilityMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.orientationMonitor = new OrientationMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.touchStartMonitor = new TouchStartMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.mouseDownMonitor = new MouseDownMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-					impl.pointerDownMonitor = new PointerDownMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-				}
-
-				//
-				// Stats
-				//
-				if (impl.monitorStats) {
-					impl.statsMonitor = new StatsMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
-				}
-
-				if (impl.monitorLayoutShifts &&
-					BOOMR.window.PerformanceObserver) {
-					impl.layoutShiftMonitor = new LayoutShiftMonitor(BOOMR.window);
-
-				}
-			}
-
-			// add epoch and polling method to every beacon
-			BOOMR.addVar("c.e", epoch.toString(36));
-			BOOMR.addVar("c.tti.m", impl.ttiMethod);
-
-			// event handlers
-			BOOMR.subscribe("before_beacon", impl.onBeforeBeacon, null, impl);
-			BOOMR.subscribe("beacon", impl.onBeacon, null, impl);
-			BOOMR.subscribe("page_ready", impl.onPageReady, null, impl);
-			BOOMR.subscribe("xhr_load", impl.onXhrLoad, null, impl);
-
-			return this;
-		},
-
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.Continuity
-		 */
-		is_complete: function(vars) {
-			// allow error and early beacons to go through even if we're not complete
-			return impl.complete || (vars && (vars["http.initiator"] === "error" || typeof vars.early !== "undefined"));
-		},
-
-		/**
-		 * Signal that the framework is ready
-		 *
-		 * @memberof BOOMR.plugins.Continuity
-		 */
-		frameworkReady: function() {
-			impl.frameworkReady = BOOMR.now();
-		},
-
-		// external metrics
-		metrics: externalMetrics
-
-		/* BEGIN_DEBUG */,
-		compressBucketLog: compressBucketLog,
-		decompressBucketLog: decompressBucketLog,
-		decompressBucketLogNumber: decompressBucketLogNumber,
-		decompressLog: decompressLog,
-		determineTti: determineTti,
-		compressClsScore: compressClsScore,
-		decompressClsScore: decompressClsScore,
-		compressClsSources: compressClsSources,
-		decompressClsSources: decompressClsSources
-		/* END_DEBUG */
-	};
+  var impl;
+
+  BOOMR = window.BOOMR || {};
+
+  BOOMR.plugins = BOOMR.plugins || {};
+
+  if (BOOMR.plugins.Continuity) {
+    return;
+  }
+
+  //
+  // Constants available to all Continuity classes
+  //
+  /**
+   * Timeline collection interval
+   */
+  var COLLECTION_INTERVAL = 100;
+
+  /**
+   * Maximum length (ms) that events will be recorded, if not
+   * a SPA.
+   */
+  var DEFAULT_AFTER_ONLOAD_MAX_LENGTH = 60000;
+
+  /**
+   * Time to Interactive polling period (after onload, how often we'll
+   * check to see if TTI fired yet)
+   */
+  var TIME_TO_INTERACTIVE_WAIT_POLL_PERIOD = 500;
+
+  /**
+   * Compression Modes
+   */
+
+  /**
+   * Most numbers are expected to be 0-63, though larger numbers are
+   * allowed.
+   */
+  var COMPRESS_MODE_SMALL_NUMBERS = 0;
+
+  /**
+   * Most numbers are expected to be larger than 63.
+   */
+  var COMPRESS_MODE_LARGE_NUMBERS = 1;
+
+  /**
+   * Numbers are from 0 to 100
+   */
+  var COMPRESS_MODE_PERCENT = 2;
+
+  /**
+   * Log types
+   */
+  var LOG_TYPE_SCROLL = 0;
+  var LOG_TYPE_CLICK = 1;
+  var LOG_TYPE_MOUSE = 2;
+  var LOG_TYPE_KEY = 3;
+  var LOG_TYPE_VIS = 4;
+  var LOG_TYPE_ORIENTATION = 5;
+
+  /**
+   * Base64 number encoding
+   */
+  var BASE64_NUMBER = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_";
+
+  /**
+   * Large number delimiter (.)
+   *
+   * For COMPRESS_MODE_SMALL_NUMBERS, numbers larger than 63 are wrapped in this
+   * character.
+   */
+  var LARGE_NUMBER_WRAP = ".";
+
+  /**
+   * Listener Options args with Passive and Capture set to true
+   */
+  var listenerOpts = {passive: true, capture: true};
+
+  // Performance object
+  var p = BOOMR.getPerformance();
+
+  // Metrics that will be exported
+  var externalMetrics = {};
+
+  /**
+   * Epoch - when to base all relative times from.
+   *
+   * If the browser supports NavigationTiming, this is navigationStart.
+   *
+   * If not, just use 'now'.
+   */
+  var epoch = p && p.timing && p.timing.navigationStart ?
+    p.timing.navigationStart : BOOMR.now();
+
+  /**
+   * Debug logging
+   *
+   * @param {string} msg Message
+   */
+  function debug(msg) {
+    BOOMR.debug(msg, "Continuity");
+  }
+
+  /**
+   * Compress JSON to a string for a URL parameter in the best way possible.
+   *
+   * If BOOMR.utils.Compression.jsUrl, or UserTimingCompression is available (which has JSURL),
+   * use that.  The data will start with the character `~`.
+   *
+   * Otherwise, use JSON.stringify.  The data will start with the character `{`.
+   *
+   * @param {object} obj Data
+   *
+   * @returns {string} Compressed data
+   */
+  function compressJson(data) {
+    var jsUrlFn = (BOOMR.utils.Compression && BOOMR.utils.Compression.jsUrl) ||
+      (window.UserTimingCompression && window.UserTimingCompression.jsUrl) ||
+      (BOOMR.window.UserTimingCompression && BOOMR.window.UserTimingCompression.jsUrl);
+
+    if (jsUrlFn) {
+      return jsUrlFn(data);
+    }
+    else if (window.JSON) {
+      return JSON.stringify(data);
+    }
+    else {
+      // JSON isn't available
+      return "";
+    }
+  }
+
+  /**
+   * Gets a compressed bucket log.
+   *
+   * Each bucket is represented by a single character (the value of the
+   * bucket base 64), unless:
+   *
+   * 1. There are 4 or more duplicates in a row. Then the format is:
+   *   *[count of dupes]*[number base 64]
+   * 2. The value is greater than 63, then the format is:
+   *   _[number base 36]_
+   *
+   * @param {number} type Compression type
+   * @param {boolean} backfill Backfill
+   * @param {object} dataSet Data
+   * @param {number} sinceBucket Lowest bucket
+   * @param {number} endBucket Highest bucket
+   *
+   * @returns {string} Compressed log
+   */
+  function compressBucketLog(type, backfill, dataSet, sinceBucket, endBucket) {
+    var out = "",
+        val = 0,
+        i, j, dupes, valStr, nextVal, wroteSomething;
+
+    if (!dataSet) {
+      return "";
+    }
+
+    // if we know there's no data, return an empty string
+    if (dataSet.length === 0) {
+      return "";
+    }
+
+    if (backfill) {
+      if (typeof dataSet[sinceBucket] === "undefined") {
+        dataSet[sinceBucket] = 0;
+      }
+
+      // pre-fill buckets
+      for (i = sinceBucket + 1; i <= endBucket; i++) {
+        if (typeof dataSet[i] === "undefined") {
+          dataSet[i] = dataSet[i - 1];
+        }
+      }
+    }
+
+    for (i = sinceBucket; i <= endBucket; i++) {
+      val = (typeof dataSet[i] === "number" && !isNaN(dataSet[i])) ?
+        dataSet[i] : 0;
+
+      //
+      // Compression modes
+      //
+      if (type === COMPRESS_MODE_SMALL_NUMBERS) {
+        // Small numbers can be max 63 for our single-digit encoding
+        if (val <= 63) {
+          valStr = BASE64_NUMBER.charAt(val);
+        }
+        else {
+          // large numbers get wrapped in .s
+          valStr = LARGE_NUMBER_WRAP + val.toString(36) + LARGE_NUMBER_WRAP;
+        }
+      }
+      else if (type === COMPRESS_MODE_LARGE_NUMBERS) {
+        // large numbers just get Base36 encoding by default
+        valStr = val.toString(36);
+      }
+      else if (type === COMPRESS_MODE_PERCENT) {
+        //
+        // Percentage characters take two digits always, with
+        // 100 = __
+        //
+        if (val < 99) {
+          // 0-pad
+          valStr = val <= 9 ? ("0" + Math.max(val, 0)) : val;
+        }
+        else {
+          // 100 or higher
+          valStr = "__";
+        }
+      }
+
+      // compress sequences of the same number 4 or more times
+      if ((i + 3) <= endBucket &&
+          (dataSet[i + 1] === val || (val === 0 && dataSet[i + 1] === undefined)) &&
+          (dataSet[i + 2] === val || (val === 0 && dataSet[i + 2] === undefined)) &&
+          (dataSet[i + 3] === val || (val === 0 && dataSet[i + 3] === undefined))) {
+        dupes = 1;
+
+        // loop until we're past the end bucket or we find a non-dupe
+        while (i < endBucket) {
+          if (dataSet[i + 1] === val || (val === 0 && dataSet[i + 1] === undefined)) {
+            dupes++;
+          }
+          else {
+            break;
+          }
+
+          i++;
+        }
+
+        nextVal = "*" + dupes.toString(36) + "*" + valStr;
+      }
+      else {
+        nextVal = valStr;
+      }
+
+      // add this value if it isn't just 0s at the end
+      if (val !== 0 || i !== endBucket) {
+        //
+        // Small numbers fit into a single character (or are delimited
+        // by _s), so can just be appended to each other.
+        //
+        // Percentage always takes two characters.
+        //
+        if (type === COMPRESS_MODE_LARGE_NUMBERS) {
+          //
+          // Large numbers need to be separated by commas
+          //
+          if (wroteSomething) {
+            out += ",";
+          }
+        }
+
+        wroteSomething = true;
+        out += nextVal;
+      }
+    }
+
+    return wroteSomething ? (type.toString() + out) : "";
+  }
+
+  /* BEGIN_DEBUG */
+  /**
+   * Decompresses a compressed bucket log.
+   *
+   * See {@link compressBucketLog} for details
+   *
+   * @param {string} data Data
+   * @param {number} [minBucket] Minimum bucket
+   *
+   * @returns {object} Decompressed log
+   */
+  function decompressBucketLog(data, minBucket) {
+    var out = [],
+        i, j,
+        idx = minBucket || 0,
+        endChar, repeat, num, type;
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // strip the type out
+    type = parseInt(data.charAt(0), 10);
+    data = data.substring(1);
+
+    // decompress string
+    repeat = 1;
+
+    for (i = 0; i < data.length; i++) {
+      if (data.charAt(i) === "*") {
+        // this is a repeating number
+
+        // move past the "*"
+        i++;
+
+        // up to the next * is the repeating count (base 36)
+        endChar = data.indexOf("*", i);
+        repeat = parseInt(data.substring(i, endChar), 36);
+
+        // after is the number
+        i = endChar;
+        continue;
+      }
+      else if (data.charAt(i) === LARGE_NUMBER_WRAP) {
+        // this is a number larger than 63
+
+        // move past the wrap character
+        i++;
+
+        // up to the next wrap character is the number (base 36)
+        endChar = data.indexOf(LARGE_NUMBER_WRAP, i);
+        num = parseInt(data.substring(i, endChar), 36);
+
+        // move to this end char
+        i = endChar;
+      }
+      else {
+        if (type === COMPRESS_MODE_SMALL_NUMBERS) {
+          // this digit is a number from 0 to 63
+          num = decompressBucketLogNumber(data.charAt(i));
+        }
+        else if (type === COMPRESS_MODE_LARGE_NUMBERS) {
+          // look for this digit to end at a comma
+
+          endChar = data.indexOf(",", i);
+
+          if (endChar !== -1) {
+            // another index exists later, read up to that
+            num = parseInt(data.substring(i, endChar), 36);
+
+            // move to this end char
+            i = endChar;
+          }
+          else {
+            // this is the last number
+            num = parseInt(data.substring(i), 36);
+
+            // we're done
+            i = data.length;
+          }
+        }
+        else if (type === COMPRESS_MODE_PERCENT) {
+          // check if this is 100
+          if (data.substr(i, 2) === "__") {
+            num = 100;
+          }
+          else {
+            num = parseInt(data.substr(i, 2), 10);
+          }
+
+          // take two characters
+          i++;
+        }
+      }
+
+      out[idx] = num;
+      for (j = 1; j < repeat; j++) {
+        idx++;
+        out[idx] = num;
+      }
+
+      idx++;
+      repeat = 1;
+    }
+
+    return out;
+  }
+
+  /**
+   * Decompresses a bucket log Base64 number (0 - 63)
+   *
+   * @param {string} input Character
+   *
+   * @returns {number} Base64 number
+   */
+  function decompressBucketLogNumber(input) {
+    if (!input || !input.charCodeAt) {
+      return 0;
+    }
+
+    // convert to ASCII character code
+    var chr = input.charCodeAt(0);
+
+    if (chr >= 48 && chr <= 57) {
+      // 0 - 9
+      return chr - 48;
+    }
+    else if (chr >= 97 && chr <= 122) {
+      // a - z
+      return (chr - 97) + 10;
+    }
+    else if (chr >= 65 && chr <= 90) {
+      // A - Z
+      return (chr - 65) + 36;
+    }
+    else if (chr === 95) {
+      // -
+      return 62;
+    }
+    else if (chr === 45) {
+      // _
+      return 63;
+    }
+    else {
+      // unknown
+      return 0;
+    }
+  }
+
+  /**
+   * Decompresses the log into events
+   *
+   * @param {string} data Compressed log
+   *
+   * @returns {object} Decompressed log
+   */
+  function decompressLog(data) {
+    var val = "",
+        i, j, eventData, events,
+        out = [],
+        evt;
+
+    // each event is separate by a |
+    events = data.split("|");
+
+    for (i = 0; i < events.length; i++) {
+      eventData = events[i].split(",");
+
+      evt = {
+        type: parseInt(eventData[0].charAt(0), 10),
+        time: parseInt(eventData[0].substring(1), 36)
+      };
+
+      // add all attributes
+      for (j = 1; j < eventData.length; j++) {
+        evt[eventData[j].charAt(0)] = eventData[j].substring(1);
+      }
+
+      out.push(evt);
+    }
+
+    return out;
+  }
+  /* END_DEBUG */
+
+  //
+  // Constants
+  //
+  /**
+   * Number of "idle" intervals (of COLLECTION_INTERVAL ms) before
+   * Time to Interactive is called.
+   *
+   * 5 * 100 = 500ms (of no long tasks > 50ms and FPS >= 20)
+   */
+  var TIME_TO_INTERACTIVE_IDLE_INTERVALS = 5;
+
+  /**
+   * For Time to Interactive, minimum FPS.
+   *
+   * ~20 FPS or max ~50ms blocked
+   */
+  var TIME_TO_INTERACTIVE_MIN_FPS = 20;
+
+  /**
+   * For Time to Interactive, minimum FPS per COLLECTION_INTERVAL.
+   */
+  var TIME_TO_INTERACTIVE_MIN_FPS_PER_INTERVAL =
+    TIME_TO_INTERACTIVE_MIN_FPS / (1000 / COLLECTION_INTERVAL);
+
+  /**
+   * For Time to Interactive, max Page Busy (if LongTasks aren't supported)
+   *
+   * ~50%
+   */
+  var TIME_TO_INTERACTIVE_MAX_PAGE_BUSY = 50;
+
+  /**
+   * Determines TTI based on input timestamps, buckets and data
+   *
+   * @param {number} startTime Start time
+   * @param {number} visuallyReady Visually Ready time
+   * @param {number} startBucket Start bucket
+   * @param {number} endBucket End bucket
+   * @param {number} idleIntervals Idle intervals to start with
+   * @param {object} data Long Task, FPS, Busy and Interaction Data buckets
+   */
+  function determineTti(startTime, visuallyReady, startBucket, endBucket, idleIntervals, data) {
+    var tti = 0,
+        lastBucketVisited = startBucket,
+        haveSeenBusyData = false;
+
+    for (var j = startBucket; j <= endBucket; j++) {
+      lastBucketVisited = j;
+
+      if (data.longtask && data.longtask[j]) {
+        // had a long task during this interval
+        idleIntervals = 0;
+        continue;
+      }
+
+      if (data.fps && (!data.fps[j] || data.fps[j] < TIME_TO_INTERACTIVE_MIN_FPS_PER_INTERVAL)) {
+        // No FPS or less than 20 FPS during this interval
+        idleIntervals = 0;
+        continue;
+      }
+
+      if (data.busy) {
+        // Page Busy monitor is activated
+
+        if (haveSeenBusyData && typeof data.busy[j] === "undefined") {
+          // We saw previous Busy data, but no Busy data filled in for this bucket yet!
+          // Break and try again later.
+          // This could happen if the PageBusyMonitor timer hasn't fired for this bucket yet.
+          lastBucketVisited--;
+          break;
+        }
+        else if (!haveSeenBusyData && typeof data.busy[j] !== "undefined") {
+          haveSeenBusyData = true;
+        }
+
+        if (data.busy[j] > TIME_TO_INTERACTIVE_MAX_PAGE_BUSY) {
+          // Too busy
+          idleIntervals = 0;
+          continue;
+        }
+      }
+
+      if (data.interdly && data.interdly[j]) {
+        // a delayed interaction happened
+        idleIntervals = 0;
+        continue;
+      }
+
+      // this was an idle interval
+      idleIntervals++;
+
+      // if we've found enough idle intervals, mark TTI as the beginning
+      // of this idle period
+      if (idleIntervals >= TIME_TO_INTERACTIVE_IDLE_INTERVALS) {
+        tti = startTime + ((j + 1 - TIME_TO_INTERACTIVE_IDLE_INTERVALS) * COLLECTION_INTERVAL);
+
+        // ensure we don't set TTI before TTVR
+        tti = Math.max(tti, visuallyReady);
+        break;
+      }
+    }
+
+    return {
+      tti: tti,
+      idleIntervals: idleIntervals,
+      lastBucketVisited: lastBucketVisited
+    };
+  }
+
+  /**
+   * Timeline data
+   *
+   * Responsible for:
+   *
+   * * Keeping track of counts of events that happen over time (in
+   *   COLLECTION_INTERVAL intervals).
+   * * Keeps a log of raw events.
+   * * Calculates Time to Interactive (TTI) and Visually Ready.
+   */
+  var Timeline = function(startTime) {
+    //
+    // Local Members
+    //
+
+    // timeline data
+    var data = {};
+
+    // timeline data options
+    var dataOptions = {};
+
+    // timeline log
+    var dataLog = [];
+
+    // time-to-interactive timestamp
+    var tti = 0;
+
+    // visually ready timestamp
+    var visuallyReady = 0;
+
+    // hero images timestamp
+    var heroImagesReady = 0;
+
+    // whether or not to add Visually Ready to the next beacon
+    var addVisuallyReadyToBeacon = true;
+
+    // last bucket that was analyzed for TTI
+    var lastBucketVisited = false;
+
+    // number of idle intervals up to lastBucketVisited
+    var idleIntervals = 0;
+
+    // check for pre-Boomerang FPS log
+    if (BOOMR.fpsLog && BOOMR.fpsLog.length) {
+      // start at the first frame instead of now
+      startTime = BOOMR.fpsLog[0] + epoch;
+
+      // NOTE: FrameRateMonitor will remove fpsLog
+    }
+
+    //
+    // Functions
+    //
+    /**
+     * Registers a monitor
+     *
+     * @param {string} type Type
+     * @param {number} [compressMode] Compression mode
+     * @param {boolean} [backfillLast] Whether or not to backfill missing entries
+     * with the most recent value.
+     */
+    function register(type, compressMode, backfillLast) {
+      if (!data[type]) {
+        data[type] = [];
+      }
+
+      dataOptions[type] = {
+        compressMode: compressMode ? compressMode : COMPRESS_MODE_SMALL_NUMBERS,
+        backfillLast: backfillLast
+      };
+    }
+
+    /**
+     * Gets the current time bucket
+     *
+     * @returns {number} Current time bucket
+     */
+    function getTimeBucket() {
+      return Math.floor((BOOMR.now() - startTime) / COLLECTION_INTERVAL);
+    }
+
+    /**
+     * Sets data for the specified type.
+     *
+     * The type should be registered first via {@link register}.
+     *
+     * @param {string} type Type
+     * @param {number} [value] Value
+     * @param {number} [bucket] Time bucket
+     */
+    function set(type, value, bucket) {
+      if (typeof bucket === "undefined") {
+        bucket = getTimeBucket();
+      }
+
+      if (!data[type]) {
+        return;
+      }
+
+      data[type][bucket] = value;
+    }
+
+    /**
+     * Increments data for the specified type
+     *
+     * The type should be registered first via {@link register}.
+     *
+     * @param {string} type Type
+     * @param {number} [value] Value
+     * @param {number} [bucket] Time bucket
+     */
+    function increment(type, value, bucket) {
+      if (typeof bucket === "undefined") {
+        bucket = getTimeBucket();
+      }
+
+      if (typeof value === "undefined") {
+        value = 1;
+      }
+
+      if (!data[type]) {
+        return;
+      }
+
+      if (!data[type][bucket]) {
+        data[type][bucket] = 0;
+      }
+
+      data[type][bucket] += value;
+    }
+
+    /**
+     * Log an event
+     *
+     * @param {string} type Type
+     * @param {number} [bucket] Time bucket
+     * @param {array} [val] Event data
+     */
+    function log(type, bucket, val) {
+      if (typeof bucket === "undefined") {
+        bucket = getTimeBucket();
+      }
+
+      dataLog.push({
+        type: type,
+        time: bucket,
+        val: val
+      });
+
+      // trim to logMaxEntries
+      if (dataLog.length > impl.logMaxEntries) {
+        Array.prototype.splice.call(
+          dataLog,
+          0,
+          (dataLog.length - impl.logMaxEntries)
+        );
+      }
+    }
+
+    /**
+     * Gets stats for a type since the specified start time.
+     *
+     * @param {string} type Type
+     * @param {number} since Start time
+     *
+     * @returns {object} Stats for the type
+     */
+    function getStats(type, since) {
+      var count = 0,
+          total = 0,
+          min = Infinity,
+          max = 0,
+          val,
+          sinceBucket = Math.floor((since - startTime) / COLLECTION_INTERVAL);
+
+      if (!data[type]) {
+        return 0;
+      }
+
+      for (var bucket in data[type]) {
+        bucket = parseInt(bucket, 10);
+
+        if (bucket >= sinceBucket) {
+          if (data[type].hasOwnProperty(bucket)) {
+            val = data[type][bucket];
+
+            // calculate count, total and minimum
+            count++;
+            total += val;
+
+            min = Math.min(min, val);
+            max = Math.max(max, val);
+          }
+        }
+      }
+
+      // return the stats
+      return {
+        total: total,
+        count: count,
+        min: min,
+        max: max
+      };
+    }
+
+    /**
+     * Given a CSS selector, determine the load time of any IMGs matching
+     * that selector and/or IMGs underneath it.
+     *
+     * @param {string} selector CSS selector
+     *
+     * @returns {number} Last image load time
+     */
+    function determineImageLoadTime(selector) {
+      var combinedSelector, elements,
+          latestTs = 0,
+          i, j, src, entries, a;
+
+      // check to see if we have querySelectorAll available
+      if (!BOOMR.window ||
+          !BOOMR.window.document ||
+          typeof BOOMR.window.document.querySelectorAll !== "function") {
+        // can't use querySelectorAll
+        return 0;
+      }
+
+      // check to see if we have ResourceTiming available
+      if (!p ||
+          typeof p.getEntriesByType !== "function") {
+        // can't use ResourceTiming
+        return 0;
+      }
+
+      // find any images matching this selector or underneath this selector
+      combinedSelector = selector + ", " + selector + " * img, " + selector + " * image";
+
+      // use QSA to find all matching
+      elements = BOOMR.window.document.querySelectorAll(combinedSelector);
+
+      if (elements && elements.length) {
+        for (i = 0; i < elements.length; i++) {
+          src = elements[i].currentSrc ||
+            elements[i].src ||
+            (typeof elements[i].getAttribute === "function" && elements[i].getAttribute("xlink:href"));
+
+          // if src if not defined, look for it in css background image
+          if (!src) {
+            if (typeof BOOMR.window.getComputedStyle === "function") {
+              var bgStyle = BOOMR.window.getComputedStyle(elements[i]) &&
+                BOOMR.window.getComputedStyle(elements[i]).getPropertyValue("background");
+
+              if (bgStyle) {
+                var bgImgUrl = bgStyle.match(/url\(["']?([^"']*)["']?\)/);
+
+                if (bgImgUrl && bgImgUrl.length > 0) {
+                  // get the canonical URL if needed
+                  a = a || document.createElement("a");
+                  a.href = bgImgUrl[1];
+
+                  src = a.href;
+                }
+              }
+            }
+          }
+
+          if (src) {
+            entries = p.getEntriesByName(src);
+
+            if (entries && entries.length) {
+              for (j = 0; j < entries.length; j++) {
+                latestTs = Math.max(latestTs, entries[j].responseEnd);
+              }
+            }
+          }
+        }
+      }
+
+      return latestTs ? Math.floor(latestTs + epoch) : 0;
+    }
+
+    /**
+     * Determine Visually Ready time.  This is the last of:
+     * 1. Largest Contentful Paint (if available)
+     * 2. First Contentful Paint (if available)
+     * 3. First Paint (if available)
+     * 4. domContentLoadedEventEnd
+     * 5. Hero Images are loaded (if configured)
+     * 6. Framework Ready (if configured)
+     *
+     * @returns {number|undefined} Timestamp, if everything is ready, or
+     *    `undefined` if not
+     */
+    function determineVisuallyReady() {
+      var latestTs = 0;
+
+      // start with Framework Ready (if configured)
+      if (impl.ttiWaitForFrameworkReady) {
+        if (!impl.frameworkReady) {
+          return;
+        }
+
+        latestTs = impl.frameworkReady;
+      }
+
+      // use Largest/First Contentful Paint (if available) or
+      if (BOOMR.plugins.PaintTiming &&
+          BOOMR.plugins.PaintTiming.is_supported() &&
+          p &&
+          p.timeOrigin) {
+        var fp = BOOMR.plugins.PaintTiming.getTimingFor("largest-contentful-paint");
+
+        if (!fp) {
+          fp = BOOMR.plugins.PaintTiming.getTimingFor("first-contentful-paint");
+        }
+
+        if (!fp) {
+          // or get First Paint directly from PaintTiming
+          fp = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
+        }
+
+        if (fp) {
+          latestTs = Math.max(latestTs, Math.round(fp + p.timeOrigin));
+        }
+      }
+      else if (p && p.timing && p.timing.msFirstPaint) {
+        // use IE's First Paint (if available) or
+        latestTs = Math.max(latestTs, p.timing.msFirstPaint);
+      }
+      else if (BOOMR.window &&
+          BOOMR.window.chrome &&
+          typeof BOOMR.window.chrome.loadTimes === "function") {
+        // use Chrome's firstPaintTime (if available)
+        var loadTimes = BOOMR.window.chrome.loadTimes();
+
+        if (loadTimes && loadTimes.firstPaintTime) {
+          latestTs = Math.max(latestTs, loadTimes.firstPaintTime * 1000);
+        }
+      }
+
+      // Use domContentLoadedEventEnd (if available)
+      if (p && p.timing && p.timing.domContentLoadedEventEnd) {
+        latestTs = Math.max(latestTs, p.timing.domContentLoadedEventEnd);
+      }
+
+      // look up any Hero Images (if configured)
+      if (impl.ttiWaitForHeroImages) {
+        heroImagesReady = determineImageLoadTime(impl.ttiWaitForHeroImages);
+
+        if (heroImagesReady) {
+          latestTs = Math.max(latestTs, heroImagesReady);
+        }
+      }
+
+      return latestTs;
+    }
+
+    /**
+     * Adds the compressed data log to the beacon
+     */
+    function addCompressedLogToBeacon() {
+      var val = "";
+
+      for (var i = 0; i < dataLog.length; i++) {
+        var evt = dataLog[i];
+
+        if (i !== 0) {
+          // add a separator between events
+          val += "|";
+        }
+
+        // add the type
+        val += evt.type;
+
+        // add the time: offset from epoch, base36
+        val += Math.round(evt.time - epoch).toString(36);
+
+        // add each parameter
+        for (var param in evt.val) {
+          if (evt.val.hasOwnProperty(param)) {
+            val += "," + param;
+
+            if (typeof evt.val[param] === "number") {
+              // base36
+              val += evt.val[param].toString(36);
+            }
+            else {
+              val += evt.val[param];
+            }
+          }
+        }
+      }
+
+      if (val !== "") {
+        impl.addToBeacon("c.l", val);
+      }
+    }
+
+    /**
+     * Gets the bucket log for our data
+     *
+     * @param {string} type Type
+     * @param {number} sinceBucket Lowest bucket
+     *
+     * @returns {string} Compressed log of our data
+     */
+    function getCompressedBucketLogFor(type, since) {
+      return compressBucketLog(
+        dataOptions[type].compressMode,
+        dataOptions[type].backfillLast,
+        data[type],
+        since !== 0 ? Math.floor((since - startTime) / COLLECTION_INTERVAL) : 0,
+        getTimeBucket());
+    }
+
+    /**
+     * Adds the timeline to the beacon compressed.
+     *
+     * @param {number} [since] Since timestamp
+     */
+    function addCompressedTimelineToBeacon(since) {
+      var type, compressedLog;
+
+      for (type in data) {
+        if (data.hasOwnProperty((type))) {
+          // get the compressed data
+          compressedLog = getCompressedBucketLogFor(type, since);
+
+          // add to the beacon
+          if (compressedLog !== "") {
+            impl.addToBeacon("c.t." + type, compressedLog);
+          }
+        }
+      }
+    }
+
+    /**
+     * Analyzes metrics such as Time To Interactive
+     *
+     * @param {number} timeOfLastBeacon Time we last sent a beacon
+     */
+    function analyze(timeOfLastBeacon) {
+      var endBucket = getTimeBucket();
+
+      // add log
+      if (impl.sendLog && typeof timeOfLastBeacon !== "undefined") {
+        addCompressedLogToBeacon();
+      }
+
+      // add timeline
+      if (impl.sendTimeline && typeof timeOfLastBeacon !== "undefined") {
+        addCompressedTimelineToBeacon(timeOfLastBeacon);
+      }
+
+      if (tti) {
+        return;
+      }
+
+      // need to get Visually Ready first
+      if (!visuallyReady) {
+        visuallyReady = determineVisuallyReady();
+
+        if (!visuallyReady) {
+          return;
+        }
+      }
+
+      if (addVisuallyReadyToBeacon) {
+        // add Visually Ready to the beacon
+        impl.addToBeacon("c.tti.vr", externalMetrics.timeToVisuallyReady());
+
+        // add Framework Ready to the beacon
+        impl.addToBeacon("c.tti.fr", externalMetrics.timeToFrameworkReady());
+
+        // add Framework Ready to the beacon
+        impl.addToBeacon("c.tti.hi", externalMetrics.timeToHeroImagesReady());
+
+        // only add to the first beacon
+        addVisuallyReadyToBeacon = false;
+      }
+
+      // Calculate TTI
+      if (!data.longtask && !data.fps && !data.busy) {
+        // can't calculate TTI
+        return;
+      }
+
+      // determine the first bucket we'd use
+      var startBucket;
+
+      if (lastBucketVisited === false) {
+        // haven't gone over any buckets yet
+        startBucket = Math.max(Math.floor((visuallyReady - startTime) / COLLECTION_INTERVAL), 0);
+      }
+      else {
+        // already looked at some buckets, continue with the next one
+        startBucket = lastBucketVisited + 1;
+      }
+
+      // calculate TTI
+      var results = determineTti(startTime, visuallyReady, startBucket, endBucket, idleIntervals, data);
+
+      if (results) {
+        // save results for next time
+        idleIntervals = results.idleIntervals;
+        lastBucketVisited = results.lastBucketVisited;
+
+        // we were able to calculate a TTI
+        if (results.tti > 0) {
+          tti = results.tti;
+
+          impl.addToBeacon("c.tti", externalMetrics.timeToInteractive());
+        }
+      }
+    }
+
+    //
+    // External metrics
+    //
+
+    /**
+     * Time to Interactive
+     */
+    externalMetrics.timeToInteractive = function() {
+      if (tti) {
+        // milliseconds since nav start
+        return tti - epoch;
+      }
+
+      // no data
+      return;
+    };
+
+    /**
+     * Time to Visually Ready
+     */
+    externalMetrics.timeToVisuallyReady = function() {
+      if (visuallyReady) {
+        // milliseconds since nav start
+        return visuallyReady - epoch;
+      }
+
+      // no data
+      return;
+    };
+
+    /**
+     * Time to Hero Images Ready
+     */
+    externalMetrics.timeToHeroImagesReady = function() {
+      if (impl.ttiWaitForHeroImages && heroImagesReady) {
+        return heroImagesReady - epoch;
+      }
+
+      // not configured or not set
+      return;
+    };
+
+    /**
+     * Time to Framework Ready
+     */
+    externalMetrics.timeToFrameworkReady = function() {
+      if (impl.ttiWaitForFrameworkReady && impl.frameworkReady) {
+        return impl.frameworkReady - epoch;
+      }
+
+      // not configured or not set
+      return;
+    };
+
+    externalMetrics.log = function() {
+      return dataLog;
+    };
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      data = {};
+      dataLog = [];
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      // clear the buckets
+      for (var type in data) {
+        if (data.hasOwnProperty(type)) {
+          if (!tti && lastBucketVisited !== false) {
+            // if we haven't calculated tti yet, keep enough data around so we can continue trying the calc
+            var oldData = data[type];
+            var newData = new Array(lastBucketVisited + 1);
+
+            data[type] = newData.concat(oldData.slice(lastBucketVisited + 1));
+          }
+          else {
+            // start fresh
+            data[type] = [];
+          }
+        }
+      }
+
+      // reset the data log
+      dataLog = [];
+
+      // only add Visually Ready to the first beacon if available
+      addVisuallyReadyToBeacon = false;
+    }
+
+    return {
+      register: register,
+      set: set,
+      log: log,
+      increment: increment,
+      getTimeBucket: getTimeBucket,
+      getStats: getStats,
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Compress top score by limiting to 3 digits of precision
+   *
+   * @param {float} score CLS value
+   *
+   * @returns {float} Compressed CLS score
+   */
+  function compressClsScore(score) {
+    return parseFloat(score.toFixed(3));
+  }
+
+  /* BEGIN_DEBUG */
+  /**
+   * Decompress top score
+   *
+   * @param {string} score Compressed CLS score
+   *
+   * @returns {float} Decompressed CLS score
+   */
+  function decompressClsScore(score) {
+    return parseFloat(score);
+  }
+  /* END_DEBUG */
+
+  /**
+   * Compress CLS Sources by:
+   *
+   * * Shortening dictionary key names
+   *     * value -> v, startTime -> t, sources -> s, selector -> s, previousRect -> p
+   * * Replacing currentRect with a deltaRect, d, of only the changes in x, y, width (w), or height (h)
+   * * Converting the value and start time to base36, scaling the value up to do so
+   * * Shortening previousRect and deltaRect key names
+   *     * width -> w, height -> h
+   * * Converting all previousRect and deltaRect values to base36
+   * * jsURL string compression
+   *
+   * @param {object} clsSources Dictionary holding cls Sources info
+   *
+   * @returns {string|undefined} Seralized and compressed CLS sources, or undefined if there were no CLS sources
+   */
+  function compressClsSources(clsSources) {
+    if (!clsSources || !clsSources.length) {
+      return undefined;
+    }
+
+    var compressedSources = [];
+
+    // iterate through each layout shift and its respective data
+    for (var shift = 0; shift < clsSources.length; shift++) {
+      var newClsSource = {};
+
+      // scale up and convert value to base36
+      newClsSource.v = Math.round(clsSources[shift].value * 1000).toString(36);
+
+      // convert startTime to base36
+      newClsSource.t = clsSources[shift].startTime.toString(36);
+
+      // CLS sources
+      newClsSource.s = [];
+
+      var sources = clsSources[shift].sources;
+
+      // iterate through list of sources of this specific layout shift
+      for (var i = 0; i < sources.length; i++) {
+        var newSource = {};
+
+        newSource.s = sources[i].selector;
+
+        // convert all the previousRect ints to base36
+        var prevRect = sources[i].previousRect;
+        var currRect = sources[i].currentRect;
+
+        newSource.p = {
+          x: prevRect.x.toString(36),
+          y: prevRect.y.toString(36),
+          w: prevRect.width.toString(36),
+          h: prevRect.height.toString(36)
+        };
+
+        // only store changes from previous to currect rect as key 'd'
+        newSource.d = {};
+
+        if (currRect.x - prevRect.x !== 0) {
+          newSource.d.x = (currRect.x - prevRect.x).toString(36);
+        }
+
+        if (currRect.y - prevRect.y !== 0) {
+          newSource.d.y = (currRect.y - prevRect.y).toString(36);
+        }
+
+        if (currRect.width - prevRect.width !== 0) {
+          newSource.d.w = (currRect.width - prevRect.width).toString(36);
+        }
+
+        if (currRect.height - prevRect.height !== 0) {
+          newSource.d.h = (currRect.height - prevRect.height).toString(36);
+        }
+
+        // add newSource object to serSources list for this entry of compressedSources
+        newClsSource.s.push(newSource);
+      }
+
+      // store serSources under 's' in newClsSource object,
+      // then push this object to compressedSources
+      compressedSources.push(newClsSource);
+    }
+
+    return BOOMR.utils.serializeForUrl(compressedSources);
+  }
+
+  /* BEGIN_DEBUG */
+  /**
+   * Decompress CLS Sources by:
+   * * de-jsURL-compressing
+   * * Lengthening dictionary key names
+   *     * v -> value, t -> startTime, s -> sources, s -> selector,  p -> previousRect
+   * * Replacing deltaRect with the currentRect
+   * * Converting the value and start time to base10, scaling down value
+   * * Lengthening previousRect and currentRect key names
+   *     * w -> width, h -> height
+   * * Converting all previousRect and currentRect values to base10
+   *
+   * @param {string} compressedSources Compressed clsSources object
+   *
+   * @returns {object} Decompressed clsSources object
+   */
+  function decompressClsSources(compressedSources) {
+    var clsSources = [];
+
+    // deserialize compressedSources string to object
+    compressedSources = BOOMR.utils.deserializeForUrl(compressedSources);
+
+    // iterate through compressed layout shift entries and decompress each
+    for (var shift = 0; shift < compressedSources.length; shift++) {
+      var newClsSource = {};
+
+      // parse to base10 and downscale value
+      newClsSource.value = parseInt(compressedSources[shift].v, 36) / 1000.0;
+
+      // convert startTime to base10
+      newClsSource.startTime = parseInt(compressedSources[shift].t, 36);
+
+      var serSources = compressedSources[shift].s;
+      var sources = [];
+
+      // iterate through individual sources of this layout shift
+      // and add decompressed version to sources list
+      for (var i = 0; i < serSources.length; i++) {
+        var newSource = {};
+        var prevRect = serSources[i].p;
+
+        newSource.selector = serSources[i].s;
+
+        // decompress previousRect int values by parsing back to base10
+        newSource.previousRect = {
+          x: parseInt(prevRect.x, 36),
+          y: parseInt(prevRect.y, 36),
+          width: parseInt(prevRect.w, 36),
+          height: parseInt(prevRect.h, 36)
+        };
+
+        var deltaRect = serSources[i].d;
+
+        // recreate currentRect from prevRect and delta values,
+        // if no delta value then current = prev for that key
+        newSource.currentRect = {};
+        newSource.currentRect.x = deltaRect.x ?
+          newSource.previousRect.x + parseInt(deltaRect.x, 36) :
+          newSource.previousRect.x;
+
+        newSource.currentRect.y = deltaRect.y ?
+          newSource.previousRect.y + parseInt(deltaRect.y, 36) :
+          newSource.previousRect.y;
+
+        newSource.currentRect.width = deltaRect.w ?
+          newSource.previousRect.width + parseInt(deltaRect.w, 36) :
+          newSource.previousRect.width;
+
+        newSource.currentRect.height = deltaRect.h ?
+          newSource.previousRect.height + parseInt(deltaRect.h, 36) :
+          newSource.previousRect.height;
+
+        sources.push(newSource);
+      }
+
+      newClsSource.sources = sources;
+      clsSources.push(newClsSource);
+    }
+
+    return clsSources;
+  }
+  /* END_DEBUG */
+
+  /**
+   * Monitors Layout Shift events
+   */
+  var LayoutShiftMonitor = function(w) {
+    if (!w.PerformanceObserver || !w.LayoutShift) {
+      return;
+    }
+
+    // whether or not we're enabled
+    var enabled = true;
+
+    // CumulativeLayoutShift score
+    var clsScore = 0;
+
+    // CumulativeLayoutShift corresponding sources and info
+    var clsSources = [];
+
+    // Top layout shift score within CLS
+    var topScore = 0;
+
+    // Pseudo-CSS Selector of first source corresponding to topScore
+    var topID;
+
+    // PerformanceObserver
+    var perfObserver = new w.PerformanceObserver(onLayoutShiftObserver);
+
+    try {
+      perfObserver.observe({type: "layout-shift", buffered: true});
+    }
+    catch (e) {
+      // layout-shift not supported
+      return;
+    }
+
+    function onLayoutShiftObserver(list) {
+      // Entries format: [{value: ..., sources: [...], startTime: ...}]
+      if (!enabled) {
+        return;
+      }
+
+      var entries = list.getEntries();
+      var firstSelector = "";
+
+      // iterate through each layout shift that occurrs
+      for (var i = 0; i < entries.length; i++) {
+        // only account for layout shifts that don't have recent input
+        if (entries[i].hadRecentInput) {
+          continue;
+        }
+
+        // add layout shift value to overall CLS
+        clsScore += entries[i].value;
+
+        var newClsSource = {};
+
+        // record layout shift value rounded to three decimals
+        newClsSource.value = parseFloat(entries[i].value.toFixed(3));
+
+        // record start time as an int
+        newClsSource.startTime = Math.round(entries[i].startTime);
+
+        var sources = entries[i].sources;
+        var sourceList = [];
+
+        // create list of sources for this layout shift
+        for (var s = 0; s < sources.length; s++) {
+          // store each source as a dictionary of corresponding info, beginning with its Pseudo-CSS selector
+          var newSource = {
+            selector: BOOMR.utils.makeSelector(sources[s].node)
+          };
+
+          // keep track of first source per layout shift
+          if (s === 0) {
+            firstSelector = newSource.selector;
+          }
+
+          // keep track of previous and current rectangle data as separate dictionaries of x, y, width, and height info
+          var prevRect = sources[s].previousRect;
+
+          newSource.previousRect = {
+            x: prevRect.x,
+            y: prevRect.y,
+            width: prevRect.width,
+            height: prevRect.height
+          };
+
+          var currRect = sources[s].currentRect;
+
+          newSource.currentRect = {
+            x: currRect.x,
+            y: currRect.y,
+            width: currRect.width,
+            height: currRect.height
+          };
+
+          // add this newSource object to sourceList
+          sourceList.push(newSource);
+        }
+
+        newClsSource.sources = sourceList;
+        clsSources.push(newClsSource);
+
+        // update highest layout shift value and Pseudo-CSS selector of
+        // first source corresponding to it when needed
+        if (entries[i].value > topScore) {
+          topScore = entries[i].value;
+          topID = firstSelector;
+        }
+      }
+
+      // round topScore to three decimals
+      topScore = parseFloat(topScore.toFixed(3));
+    }
+
+    /**
+     * Record Cumulative Layout Shift score, sources, top shift, and top ID on beacon
+     */
+    function analyze(startTime) {
+      // add compressed data to beacon
+      impl.addToBeacon("c.cls", compressClsScore(externalMetrics.clsScore()));
+      impl.addToBeacon("c.cls.d", compressClsSources(externalMetrics.clsSources()));
+      impl.addToBeacon("c.cls.tops", compressClsScore(externalMetrics.topScore()));
+      impl.addToBeacon("c.cls.topid", externalMetrics.topID());
+    }
+
+    function clearClsScore() {
+      clsScore = 0;
+    }
+
+    function clearClsSources() {
+      clsSources = [];
+    }
+
+    function clearTopScore() {
+      topScore = 0;
+    }
+
+    function clearTopID() {
+      topID = undefined;
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      enabled = false;
+
+      perfObserver.disconnect();
+
+      clearClsScore();
+      clearClsSources();
+      clearTopScore();
+      clearTopID();
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      clearClsScore();
+      clearClsSources();
+      clearTopScore();
+      clearTopID();
+    }
+
+    /**
+     * Cumulative Layout Shift Score
+     */
+    externalMetrics.clsScore = function() {
+      return clsScore;
+    };
+
+    /**
+     * Cumulative Layout Shift Sources
+     */
+    externalMetrics.clsSources = function() {
+      return clsSources;
+    };
+
+    /**
+     * Top Layout Shift Score
+     */
+    externalMetrics.topScore = function() {
+      return topScore;
+    };
+
+    /**
+     * Top Layout Shift ID
+     */
+    externalMetrics.topID = function() {
+      return topID;
+    };
+
+    return {
+      clearClsScore: clearClsScore,
+      clearClsSources: clearClsSources,
+      clearTopScore: clearTopScore,
+      clearTopID: clearTopID,
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors LongTasks
+   */
+  var LongTaskMonitor = function(w, t) {
+    if (!w.PerformanceObserver || !w.PerformanceLongTaskTiming) {
+      return;
+    }
+
+    //
+    // Constants
+    //
+    /**
+     * LongTask attribution types
+     */
+    var ATTRIBUTION_TYPES = {
+      "unknown": 0,
+      "self": 1,
+      "same-origin-ancestor": 2,
+      "same-origin-descendant": 3,
+      "same-origin": 4,
+      "cross-origin-ancestor": 5,
+      "cross-origin-descendant": 6,
+      "cross-origin-unreachable": 7,
+      "multiple-contexts": 8
+    };
+
+    /**
+     * LongTask culprit attribution names
+     */
+    var CULPRIT_ATTRIBUTION_NAMES = {
+      "unknown": 0,
+      "script": 1,
+      "layout": 2
+    };
+
+    /**
+     * LongTask culprit types
+     */
+    var CULPRIT_TYPES = {
+      "unknown": 0,
+      "iframe": 1,
+      "embed": 2,
+      "object": 3
+    };
+
+    //
+    // Local Members
+    //
+
+    // PerformanceObserver
+    var perfObserver = new w.PerformanceObserver(onPerformanceObserver);
+
+    try {
+      perfObserver.observe({ entryTypes: ["longtask"] });
+    }
+    catch (e) {
+      // longtask not supported
+      return;
+    }
+
+    // register this type
+    t.register("longtask", COMPRESS_MODE_SMALL_NUMBERS);
+
+    // Long Tasks array
+    var longTasks = [];
+
+    // whether or not we're enabled
+    var enabled = true;
+
+    // total time of long tasks
+    var longTasksTime = 0;
+
+    /**
+     * Callback for the PerformanceObserver
+     */
+    function onPerformanceObserver(list) {
+      var entries, i;
+
+      if (!enabled) {
+        return;
+      }
+
+      // just capture all of the data for now, we'll analyze at the beacon
+      entries = list.getEntries();
+      Array.prototype.push.apply(longTasks, entries);
+
+      // add total time and count of long tasks
+      for (i = 0; i < entries.length; i++) {
+        longTasksTime += entries[i].duration;
+      }
+
+      // add to the timeline
+      t.increment("longtask", entries.length);
+    }
+
+    /**
+     * Gets the current list of tasks
+     *
+     * @returns {PerformanceEntry[]} Tasks
+     */
+    function getTasks() {
+      return longTasks;
+    }
+
+    /**
+     * Clears the Long Tasks
+     */
+    function clearTasks() {
+      longTasks = [];
+
+      longTasksTime = 0;
+    }
+
+    /**
+     * Analyzes LongTasks
+     */
+    function analyze(startTime) {
+      var i, j, task, obj,
+          objs = [],
+          attrs = [],
+          attr;
+
+      if (longTasks.length === 0) {
+        return;
+      }
+
+      for (i = 0; i < longTasks.length; i++) {
+        task = longTasks[i];
+
+        // compress the object a bit
+        obj = {
+          s: Math.round(task.startTime).toString(36),
+          d: Math.ceil(task.duration).toString(36),
+          n: ATTRIBUTION_TYPES[task.name] ? ATTRIBUTION_TYPES[task.name] : 0
+        };
+
+        attrs = [];
+
+        for (j = 0; j < task.attribution.length; j++) {
+          attr = task.attribution[j];
+
+          // skip script/iframe with no attribution
+          if (attr.name === "script" &&
+              attr.containerType === "iframe" &&
+              !attr.containerName &&
+            !attr.containerId && !attr.containerSrc) {
+            continue;
+          }
+
+          // only use containerName if not the same as containerId
+          var containerName = attr.containerName ? attr.containerName : undefined;
+          var containerId = attr.containerId ? attr.containerId : undefined;
+
+          if (containerName === containerId) {
+            containerName = undefined;
+          }
+
+          // only use containerSrc if containerId is undefined
+          var containerSrc = containerId === undefined ? attr.containerSrc : undefined;
+
+          attrs.push({
+            a: CULPRIT_ATTRIBUTION_NAMES[attr.name] ? CULPRIT_ATTRIBUTION_NAMES[attr.name] : 0,
+            t: CULPRIT_TYPES[attr.containerType] ? CULPRIT_TYPES[attr.containerType] : 0,
+            n: containerName,
+            i: containerId,
+            s: containerSrc
+          });
+        }
+
+        if (attrs.length > 0) {
+          obj.a = attrs;
+        }
+
+        objs.push(obj);
+      }
+
+      // add data to beacon
+      impl.addToBeacon("c.lt.n", externalMetrics.longTasksCount(), true);
+      impl.addToBeacon("c.lt.tt", externalMetrics.longTasksTime());
+
+      impl.addToBeacon("c.lt", compressJson(objs));
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      enabled = false;
+
+      perfObserver.disconnect();
+
+      clearTasks();
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      clearTasks();
+    }
+
+    //
+    // External metrics
+    //
+
+    /**
+     * Total time of LongTasks (ms)
+     */
+    externalMetrics.longTasksTime = function() {
+      return longTasksTime;
+    };
+
+    /**
+     * Number of LongTasks
+     */
+    externalMetrics.longTasksCount = function() {
+      return longTasks.length;
+    };
+
+    return {
+      getTasks: getTasks,
+      clearTasks: clearTasks,
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors Page Busy if LongTasks isn't supported
+   */
+  var PageBusyMonitor = function(w, t) {
+    // register this type
+    t.register("busy", COMPRESS_MODE_PERCENT);
+
+    //
+    // Constants
+    //
+
+    /**
+     * How frequently to poll (ms).
+     *
+     * IE and Edge clamp polling to the nearest 16ms.  With 32ms, we
+     * will see approximately 3 polls per 100ms.
+     */
+    var POLLING_INTERVAL = 32;
+
+    /**
+     * How much deviation from the expected time to allow (ms)
+     */
+    var ALLOWED_DEVIATION_MS = 4;
+
+    /**
+     * How often to report on Page Busy (ms)
+     */
+    var REPORT_INTERVAL = 100;
+
+    /**
+     * How many polls there were per-report
+     */
+    var POLLS_PER_REPORT =
+        Math.floor(REPORT_INTERVAL / POLLING_INTERVAL);
+
+    /**
+     * How many missed polls should we go backwards? (10 seconds worth)
+     */
+    var MAX_MISSED_REPORTS = 100;
+
+    //
+    // Local Members
+    //
+
+    // last time we ran
+    var last = BOOMR.now();
+
+    // total callbacks
+    var total = 0;
+
+    // late callbacks
+    var late = 0;
+
+    // overall total and late callbacks (reset on beacon)
+    var overallTotal = 0;
+    var overallLate = 0;
+
+    // whether or not we're enabled
+    var enabled = true;
+
+    // intervals
+    var pollInterval = false;
+    var reportInterval = false;
+
+    /**
+     * Polling interval
+     */
+    function onPoll() {
+      var now = BOOMR.now();
+      var delta = now - last;
+
+      last = now;
+
+      // if we're more than 2x the polling interval
+      // + deviation, we missed at least one period completely
+      if (delta > ((POLLING_INTERVAL * 2) + ALLOWED_DEVIATION_MS)) {
+        var missedPolls = Math.floor((delta - POLLING_INTERVAL) / POLLING_INTERVAL);
+
+        total += missedPolls;
+        late += missedPolls;
+        delta -= (missedPolls * POLLING_INTERVAL);
+      }
+
+      // total intervals increased by one
+      total++;
+
+      // late intervals increased by one if we're more than the interval + deviation
+      if (delta > (POLLING_INTERVAL + ALLOWED_DEVIATION_MS)) {
+        late++;
+      }
+    }
+
+    /**
+     * Each reporting interval, log page busy
+     */
+    function onReport() {
+      var reportTime = t.getTimeBucket();
+      var curTime = reportTime;
+      var missedReports = 0;
+
+      if (total === 0) {
+        return;
+      }
+
+      // if we had more polls than we expect in each
+      // collection period (we allow one extra for wiggle room), we
+      // must not have been able to report, so assume those periods were 100%
+      while (total > (POLLS_PER_REPORT + 1) &&
+             missedReports <= MAX_MISSED_REPORTS) {
+        t.set("busy", 100, --curTime);
+
+        // reset the period by one
+        total -= POLLS_PER_REPORT;
+        late   = Math.max(late - POLLS_PER_REPORT, 0);
+
+        // this was a busy period
+        overallTotal += POLLS_PER_REPORT;
+        overallLate += POLLS_PER_REPORT;
+
+        missedReports++;
+      }
+
+      // update the total stats
+      overallTotal += total;
+      overallLate += late;
+
+      t.set("busy", Math.ceil(late / total * 100), reportTime);
+
+      // reset stats
+      total = 0;
+      late = 0;
+    }
+
+    /**
+     * Analyzes Page Busy
+     */
+    function analyze(startTime) {
+      // add data to beacon
+      impl.addToBeacon("c.b", externalMetrics.pageBusy());
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      enabled = false;
+
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = false;
+      }
+
+      if (reportInterval) {
+        clearInterval(reportInterval);
+        reportInterval = false;
+      }
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      overallTotal = 0;
+      overallLate = 0;
+    }
+
+    //
+    // External metrics
+    //
+
+    /**
+     * Total Page Busy time
+     */
+    externalMetrics.pageBusy = function() {
+      if (overallTotal === 0) {
+        return 0;
+      }
+
+      return Math.ceil(overallLate / overallTotal * 100);
+    };
+
+    //
+    // Setup
+    //
+    pollInterval = setInterval(onPoll, POLLING_INTERVAL);
+    reportInterval = setInterval(onReport, REPORT_INTERVAL);
+
+    return {
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors framerate (FPS)
+   */
+  var FrameRateMonitor = function(w, t) {
+    // register this type
+    t.register("fps", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Constants
+    //
+
+    // long frame maximum milliseconds
+    var LONG_FRAME_MAX = 50;
+
+    //
+    // Local Members
+    //
+
+    // total frames seen
+    var totalFrames = 0;
+
+    // long frames
+    var longFrames = 0;
+
+    // time we started monitoring
+    var frameStartTime;
+
+    // last frame we saw
+    var lastFrame;
+
+    // whether or not we're enabled
+    var enabled = true;
+
+    // check for pre-Boomerang FPS log
+    if (BOOMR.fpsLog && BOOMR.fpsLog.length) {
+      lastFrame = frameStartTime = BOOMR.fpsLog[0] + epoch;
+
+      // transition any FPS log events to our timeline
+      for (var i = 0; i < BOOMR.fpsLog.length; i++) {
+        var ts = epoch + BOOMR.fpsLog[i];
+
+        // update the frame count for this time interval
+        t.increment("fps", 1, Math.floor((ts - frameStartTime) / COLLECTION_INTERVAL));
+
+        // calculate how long this frame took
+        if (ts - lastFrame >= LONG_FRAME_MAX) {
+          longFrames++;
+        }
+
+        // last frame timestamp
+        lastFrame = ts;
+      }
+
+      totalFrames = BOOMR.fpsLog.length;
+
+      delete BOOMR.fpsLog;
+    }
+    else {
+      frameStartTime = BOOMR.now();
+    }
+
+    /**
+     * requestAnimationFrame callback
+     */
+    function frame(now) {
+      if (!enabled) {
+        return;
+      }
+
+      // calculate how long this frame took
+      if (now - lastFrame >= LONG_FRAME_MAX) {
+        longFrames++;
+      }
+
+      // last frame timestamp
+      lastFrame = now;
+
+      // keep track of total frames we've seen
+      totalFrames++;
+
+      // increment the FPS
+      t.increment("fps");
+
+      // request the next frame
+      w.requestAnimationFrame(frame);
+    }
+
+    /**
+     * Analyzes FPS
+     */
+    function analyze(startTime) {
+      impl.addToBeacon("c.f", externalMetrics.fps());
+      impl.addToBeacon("c.f.d", externalMetrics.fpsDuration());
+      impl.addToBeacon("c.f.m", externalMetrics.fpsMinimum());
+      impl.addToBeacon("c.f.l", externalMetrics.fpsLongFrames());
+      impl.addToBeacon("c.f.s", externalMetrics.fpsStart());
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      enabled = false;
+      frameStartTime = 0;
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      if (enabled) {
+        // restart to now
+        frameStartTime = BOOMR.now();
+      }
+
+      totalFrames = 0;
+      longFrames = 0;
+    }
+
+    // start the first frame
+    w.requestAnimationFrame(frame);
+
+    //
+    // External metrics
+    //
+
+    /**
+     * Frame Rate since fpsStart
+     */
+    externalMetrics.fps = function() {
+      var dur = externalMetrics.fpsDuration();
+
+      if (dur) {
+        return Math.floor(totalFrames / (dur / 1000));
+      }
+    };
+
+    /**
+     * How long FPS was being tracked for
+     */
+    externalMetrics.fpsDuration = function() {
+      if (frameStartTime) {
+        return BOOMR.now() - frameStartTime;
+      }
+    };
+
+    /**
+     * Minimum FPS during the period
+     */
+    externalMetrics.fpsMinimum = function() {
+      var dur = externalMetrics.fpsDuration();
+
+      if (dur) {
+        var min = t.getStats("fps", frameStartTime).min;
+
+        return min !== Infinity ? min : undefined;
+      }
+    };
+
+    /**
+     * Number of long frames (over 18ms)
+     */
+    externalMetrics.fpsLongFrames = function() {
+      return longFrames;
+    };
+
+    /**
+     * When FPS tracking started (base 36)
+     */
+    externalMetrics.fpsStart = function() {
+      return frameStartTime ? frameStartTime.toString(36) : 0;
+    };
+
+    return {
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors scrolling
+   */
+  var ScrollMonitor = function(w, t, i) {
+    if (!w || !w.document || !w.document.body || !w.document.documentElement) {
+      // something's wrong with the DOM, abort
+      return;
+    }
+
+    //
+    // Constants
+    //
+
+    // number of milliseconds between each distinct scroll
+    var DISTINCT_SCROLL_SECONDS = 2000;
+
+    // number of pixels to change before logging a scroll event
+    var MIN_SCROLL_Y_CHANGE_FOR_LOG = 20;
+
+    //
+    // Local Members
+    //
+
+    // last scroll Y
+    var lastY = 0;
+
+    // last scroll Y logged
+    var lastYLogged = 0;
+
+    // scroll % this period
+    var intervalScrollPct = 0;
+
+    // scroll % total
+    var totalScrollPct = 0;
+
+    // number of scroll events
+    var scrollCount = 0;
+
+    // total scroll pixels
+    var scrollPixels = 0;
+
+    // number of distinct scrolls (scroll which happened
+    // over DISTINCT_SCROLL_SECONDS seconds apart)
+    var distinctScrollCount = 0;
+
+    // last time we scrolled
+    var lastScroll = 0;
+
+    // collection interval id
+    var collectionInterval = false;
+
+    // body and html element
+    var body = w.document.body;
+    var html = w.document.documentElement;
+
+    // register this type
+    t.register("scroll", COMPRESS_MODE_SMALL_NUMBERS);
+    t.register("scrollpct", COMPRESS_MODE_PERCENT);
+
+    // height of the document
+    var documentHeight = Math.max(
+      body.scrollHeight,
+      body.offsetHeight,
+      html.clientHeight,
+      html.scrollHeight,
+      html.offsetHeight) - BOOMR.utils.windowHeight();
+
+    /**
+     * Fired when a scroll event happens
+     *
+     * @param {Event} e Scroll event
+     */
+    function onScroll(e) {
+      var now = BOOMR.now();
+
+      scrollCount++;
+
+      // see if this is a unique scroll
+      if (now - lastScroll > DISTINCT_SCROLL_SECONDS) {
+        distinctScrollCount++;
+      }
+
+      lastScroll = now;
+
+      // determine how many pixels were scrolled
+      var curY = Math.ceil(BOOMR.utils.scroll().y);
+      var diffY = Math.abs(lastY - curY);
+
+      scrollPixels += diffY;
+
+      // update the timeline
+      t.increment("scroll", diffY);
+
+      // only log the event if we're over the threshold
+      if (lastYLogged === 0 || Math.abs(lastYLogged - curY) > MIN_SCROLL_Y_CHANGE_FOR_LOG) {
+        // add to the log
+        t.log(LOG_TYPE_SCROLL, now, {
+          y: curY
+        });
+
+        lastYLogged = curY;
+      }
+
+      // We wont consider Scroll events as triggering an interaction
+
+      // calculate percentage of document scrolled
+      intervalScrollPct += Math.round(diffY / documentHeight * 100);
+      totalScrollPct += Math.round(diffY / documentHeight * 100);
+
+      lastY = curY;
+    }
+
+    /**
+     * Reports on the number of scrolls seen
+     */
+    function reportScroll() {
+      var pct = Math.min(intervalScrollPct, 100);
+
+      if (pct !== 0) {
+        t.set("scrollpct", pct);
+      }
+
+      // reset count
+      intervalScrollPct = 0;
+    }
+
+    /**
+     * Analyzes Scrolling events
+     */
+    function analyze(startTime) {
+      impl.addToBeacon("c.s", externalMetrics.scrollCount());
+      impl.addToBeacon("c.s.p", externalMetrics.scrollPct());
+      impl.addToBeacon("c.s.y", externalMetrics.scrollPixels());
+      impl.addToBeacon("c.s.d", externalMetrics.scrollDistinct());
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      if (collectionInterval) {
+        clearInterval(collectionInterval);
+
+        collectionInterval = false;
+      }
+
+      BOOMR.utils.removeListener(w, "scroll", onScroll);
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      totalScrollPct = 0;
+      scrollCount = 0;
+      scrollPixels = 0;
+      distinctScrollCount = 0;
+    }
+
+    //
+    // External metrics
+    //
+
+    /**
+     * Percentage of the screen that was scrolled.
+     *
+     * All the way to the bottom = 100%
+     */
+    externalMetrics.scrollPct = function() {
+      return totalScrollPct;
+    };
+
+    /**
+     * Number of scrolls
+     */
+    externalMetrics.scrollCount = function() {
+      return scrollCount;
+    };
+
+    /**
+     * Number of scrolls (more than two seconds apart)
+     */
+    externalMetrics.scrollDistinct = function() {
+      return distinctScrollCount;
+    };
+
+    /**
+     * Number of pixels scrolled
+     */
+    externalMetrics.scrollPixels = function() {
+      return scrollPixels;
+    };
+
+    // startup
+    BOOMR.utils.addListener(w, "scroll", onScroll, listenerOpts);
+
+    collectionInterval = setInterval(reportScroll, COLLECTION_INTERVAL);
+
+    return {
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors mouse clicks
+   */
+  var ClickMonitor = function(w, t, i) {
+    // register this type
+    t.register("click", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Constants
+    //
+
+    // number of pixels area for Rage Clicks
+    var PIXEL_AREA = 10;
+
+    // number of clicks in the same area to trigger a Rage Click
+    var RAGE_CLICK_THRESHOLD = 3;
+
+    //
+    // Local Members
+    //
+
+    // number of click events
+    var clickCount = 0;
+
+    // number of clicks in the same PIXEL_AREA area
+    var sameClicks = 0;
+
+    // number of Rage Clicks
+    var rageClicks = 0;
+
+    // last coordinates
+    var x = 0;
+    var y = 0;
+
+    // last click target
+    var lastTarget = null;
+
+    /**
+     * Fired when a `click` event happens.
+     *
+     * @param {Event} e Event
+     */
+    function onClick(e) {
+      var now = BOOMR.now();
+
+      var newX = e.clientX;
+      var newY = e.clientY;
+
+      // track total number of clicks
+      clickCount++;
+
+      // calculate number of pixels moved
+      var pixels = Math.round(
+        Math.sqrt(Math.pow(y - newY, 2) +
+        Math.pow(x - newX, 2)));
+
+      // track Rage Clicks
+      if (lastTarget === e.target || pixels <= PIXEL_AREA) {
+        sameClicks++;
+
+        if ((sameClicks + 1) >= RAGE_CLICK_THRESHOLD) {
+          rageClicks++;
+
+          // notify any listeners
+          BOOMR.fireEvent("rage_click", e);
+        }
+      }
+      else {
+        sameClicks = 0;
+      }
+
+      // track last click coordinates and element
+      x = newX;
+      y = newY;
+      lastTarget = e.target;
+
+      // update the timeline
+      t.increment("click");
+
+      // add to the log
+      t.log(LOG_TYPE_CLICK, now, {
+        x: newX,
+        y: newY
+      });
+
+      // Only count cancellable event for interactions.
+      if (e.cancelable) {
+        // update the interaction monitor
+        i.interact("click", now, e);
+      }
+    }
+
+    /**
+     * Analyzes Click events
+     */
+    function analyze(startTime) {
+      impl.addToBeacon("c.c", externalMetrics.clicksCount());
+      impl.addToBeacon("c.c.r", externalMetrics.clicksRage());
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      BOOMR.utils.removeListener(w.document, "click", onClick);
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      clickCount = 0;
+      sameClicks = 0;
+      rageClicks = 0;
+    }
+
+    //
+    // External metrics
+    //
+    externalMetrics.clicksCount = function() {
+      return clickCount;
+    };
+
+    externalMetrics.clicksRage = function() {
+      return rageClicks;
+    };
+
+    //
+    // Startup
+    //
+    BOOMR.utils.addListener(w.document, "click", onClick, listenerOpts);
+
+    return {
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors keyboard events
+   */
+  var KeyMonitor = function(w, t, i) {
+    // register this type
+    t.register("key", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Local members
+    //
+
+    // key presses
+    var keyCount = 0;
+
+    // esc key presses
+    var escKeyCount = 0;
+
+    /**
+     * Fired on key down
+     *
+     * @param {Event} e keydown event
+     */
+    function onKeyDown(e) {
+      var now = BOOMR.now();
+
+      keyCount++;
+
+      if (e.keyCode === 27) {
+        escKeyCount++;
+      }
+
+      // update the timeline
+      t.increment("key");
+
+      // add to the log (don't track the actual keys)
+      t.log(LOG_TYPE_KEY, now);
+
+      // Only count cancellable event for interactions.
+      if (e.cancelable) {
+        // update the interaction monitor
+        i.interact("key", now, e);
+      }
+    }
+
+    /**
+     * Analyzes Key events
+     */
+    function analyze(startTime) {
+      impl.addToBeacon("c.k", externalMetrics.keyCount());
+      impl.addToBeacon("c.k.e", externalMetrics.keyEscapes());
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      BOOMR.utils.removeListener(w.document, "keydown", onKeyDown);
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      keyCount = 0;
+      escKeyCount = 0;
+    }
+
+    //
+    // External metrics
+    //
+    externalMetrics.keyCount = function() {
+      return keyCount;
+    };
+
+    externalMetrics.keyEscapes = function() {
+      return escKeyCount;
+    };
+
+    // start
+    BOOMR.utils.addListener(w.document, "keydown", onKeyDown, listenerOpts);
+
+    return {
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitors mouse movement
+   */
+  var MouseMonitor = function(w, t, i) {
+    // register the mouse movements and overall percentage moved
+    t.register("mouse", COMPRESS_MODE_SMALL_NUMBERS);
+    t.register("mousepct", COMPRESS_MODE_PERCENT);
+
+    //
+    // Constants
+    //
+
+    /**
+     * Minimum number of pixels that change from last before logging
+     */
+    var MIN_LOG_PIXEL_CHANGE = 10;
+
+    /**
+     * Mouse log interval
+     */
+    var REPORT_LOG_INTERVAL = 250;
+
+    //
+    // Local members
+    //
+
+    // last movement coordinates
+    var lastX = 0;
+    var lastY = 0;
+
+    // last reported X/Y
+    var lastLogX = 0;
+    var lastLogY = 0;
+
+    // mouse move screen percent this interval
+    var intervalMousePct = 0;
+
+    // total mouse move percent
+    var totalMousePct = 0;
+
+    // total mouse move pixels
+    var totalMousePixels = 0;
+
+    // interval ids
+    var reportMousePctInterval = false;
+    var reportMouseLogInterval = false;
+
+    // screen pixel count
+    var screenPixels = Math.round(Math.sqrt(
+      Math.pow(BOOMR.utils.windowHeight(), 2) +
+      Math.pow(BOOMR.utils.windowWidth(), 2)));
+
+    /**
+     * Fired when a `mousemove` event happens.
+     *
+     * @param {Event} e Event
+     */
+    function onMouseMove(e) {
+      var newX = e.clientX;
+      var newY = e.clientY;
+
+      // calculate number of pixels moved
+      var pixels = Math.round(Math.sqrt(Math.pow(lastY - newY, 2) +
+                              Math.pow(lastX - newX, 2)));
+
+      // calculate percentage of screen moved (upper-left to lower-right = 100%)
+      var newPct = Math.round(pixels / screenPixels * 100);
+
+      intervalMousePct += newPct;
+      totalMousePct += newPct;
+      totalMousePixels += pixels;
+
+      lastX = newX;
+      lastY = newY;
+
+      // Note: don't mark a mouse movement as an interaction (i.interact)
+
+      t.increment("mouse", pixels);
+    }
+
+    /**
+     * Reports on the mouse percentage change
+     */
+    function reportMousePct() {
+      var pct = Math.min(intervalMousePct, 100);
+
+      if (pct !== 0) {
+        t.set("mousepct", pct);
+      }
+
+      // reset count
+      intervalMousePct = 0;
+    }
+
+    /**
+     * Updates the log if the mouse has moved enough
+     */
+    function reportMouseLog() {
+      // Only log if X,Y have changed and have changed over the specified
+      // minimum theshold.
+      if (lastLogX !== lastX ||
+          lastLogY !== lastY) {
+        var pixels = Math.round(Math.sqrt(Math.pow(lastLogY - lastY, 2) +
+                     Math.pow(lastLogX - lastX, 2)));
+
+        if (pixels >= MIN_LOG_PIXEL_CHANGE) {
+          // add to the log
+          t.log(LOG_TYPE_MOUSE, BOOMR.now(), {
+            x: lastX,
+            y: lastY
+          });
+
+          lastLogX = lastX;
+          lastLogY = lastY;
+        }
+      }
+    }
+
+    /**
+     * Analyzes Mouse events
+     */
+    function analyze(startTime) {
+      impl.addToBeacon("c.m.p", externalMetrics.mousePct());
+      impl.addToBeacon("c.m.n", externalMetrics.mousePixels());
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      if (reportMousePctInterval) {
+        clearInterval(reportMousePctInterval);
+
+        reportMousePctInterval = false;
+      }
+
+      if (reportMouseLogInterval) {
+        clearInterval(reportMouseLogInterval);
+
+        reportMouseLogInterval = false;
+      }
+
+      BOOMR.utils.removeListener(w.document, "mousemove", onMouseMove);
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      totalMousePct = 0;
+      totalMousePixels = 0;
+    }
+
+    //
+    // External metrics
+    //
+
+    /**
+     * Percentage the mouse moved
+     */
+    externalMetrics.mousePct = function() {
+      return totalMousePct;
+    };
+
+    /**
+     * Pixels the mouse moved
+     */
+    externalMetrics.mousePixels = function() {
+      return totalMousePixels;
+    };
+
+    reportMousePctInterval = setInterval(reportMousePct, COLLECTION_INTERVAL);
+    reportMouseLogInterval = setInterval(reportMouseLog, REPORT_LOG_INTERVAL);
+
+    // start
+    BOOMR.utils.addListener(w.document, "mousemove", onMouseMove, listenerOpts);
+
+    return {
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Interaction monitor
+   */
+  var InteractionMonitor = function(w, t, afterOnloadMinWait) {
+    // register this type
+    t.register("inter", COMPRESS_MODE_SMALL_NUMBERS);
+    t.register("interdly", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Constants
+    //
+
+    /**
+     * Interaction maximum delay (ms)
+     */
+    var INTERACTION_MAX_DELAY = 50;
+
+    /**
+     * How long after an interaction to wait before sending a beacon (ms).
+     */
+    var INTERACTION_MIN_WAIT_FOR_BEACON = afterOnloadMinWait;
+
+    /**
+     * Maximum amount of time after the first interaction before sending
+     * a beacon (ms).
+     */
+    var INTERACTION_MAX_WAIT_FOR_BEACON = 30000;
+
+    //
+    // Local Members
+    //
+
+    // Time of first interaction
+    var timeToFirstInteraction = 0;
+
+    // First Input Delay
+    var firstInputDelay = null;
+
+    // Interaction count
+    var interactions = 0;
+
+    // Interaction delay total
+    var interactionsDelay = 0;
+
+    // Delayed interactions
+    var delayedInteractions = 0;
+
+    // Delayed interaction time
+    var delayedInteractionTime = 0;
+
+    // whether or not we're enabled
+    var enabled = true;
+
+    // interaction beacon start time
+    var beaconStartTime = 0;
+
+    // interaction beacon end time
+    var beaconEndTime = 0;
+
+    // interaction beacon timers
+    var beaconMinTimeout = false;
+    var beaconMaxTimeout = false;
+
+    // whether or not a SPA nav is happening
+    var isSpaNav = false;
+
+    // whether we've sent TTFI and FID already
+    var sentTimers = false;
+
+    /**
+     * Logs an interaction
+     *
+     * @param {string} type Interaction type
+     * @param {number} now Time of callback
+     * @param {Event} e Event
+     */
+    function interact(type, now, e) {
+      var delay = 0;
+      var hrNow = BOOMR.hrNow();
+
+      now = now || BOOMR.now();
+
+      if (!enabled) {
+        return;
+      }
+
+      interactions++;
+
+      if (!timeToFirstInteraction) {
+        if (e && e.timeStamp) {
+          // e.timeStamp is DomHighRes timestamp, so convert to epoch based.
+          timeToFirstInteraction = e.timeStamp + epoch;
+        }
+        else {
+          timeToFirstInteraction = now;
+        }
+      }
+
+      // check for interaction delay.
+      // Don't use the event timeStamp in Safari if we were not loaded in the same window as the base page.
+      // The timeStamp's time origin will not be that of the base page and our timings will be skewed.
+      // See https://bugs.webkit.org/show_bug.cgi?id=200355
+      if (e && e.timeStamp && !(impl.isSafari && w !== window)) {
+        if (e.timeStamp > 1400000000000) {
+          delay = now - e.timeStamp;
+        }
+        else {
+          // if timeStamp is a DOMHighResTimeStamp, convert BOOMR.hrNow() to same
+          delay = hrNow - e.timeStamp;
+        }
+
+        interactionsDelay += delay;
+
+        // log first input delay
+        if (firstInputDelay === null) {
+          firstInputDelay = Math.ceil(delay);
+        }
+
+        // log as a delayed interaction
+        if (delay > INTERACTION_MAX_DELAY) {
+          t.increment("interdly");
+
+          delayedInteractions++;
+          delayedInteractionTime += delay;
+        }
+      }
+
+      // increment the FPS
+      t.increment("inter");
+
+      //
+      // If we're doing after-page-load monitoring, start a timer to report
+      // on this interaction.  We will wait up to INTERACTION_MIN_WAIT_FOR_BEACON
+      // ms before sending the beacon, sliding the window if there are
+      // more interactions, up to a max of INTERACTION_MAX_WAIT_FOR_BEACON ms.
+      //
+      if (!isSpaNav && impl.afterOnloadMonitoring) {
+        // mark now as the latest interaction
+        beaconEndTime = BOOMR.now();
+
+        if (!beaconStartTime) {
+          debug("Interaction detected, sending a beacon after " +
+            INTERACTION_MIN_WAIT_FOR_BEACON + " ms");
+
+          // first interaction for this beacon
+          beaconStartTime = beaconEndTime;
+
+          // set a timer for the max timeout
+          beaconMaxTimeout = setTimeout(sendInteractionBeacon,
+            INTERACTION_MAX_WAIT_FOR_BEACON);
+        }
+
+        // if there was a timer for the min timeout, clear it first
+        if (beaconMinTimeout) {
+          debug("Clearing previous interaction timeout");
+
+          clearTimeout(beaconMinTimeout);
+          beaconMinTimeout = false;
+        }
+
+        // set a timer for the min timeout
+        beaconMinTimeout = setTimeout(sendInteractionBeacon,
+          INTERACTION_MIN_WAIT_FOR_BEACON);
+      }
+    }
+
+    /**
+     * Fired on spa_init
+     */
+    function onSpaInit() {
+      // note we're in a SPA nav right now
+      isSpaNav = true;
+
+      // clear any interaction beacon timers
+      clearBeaconTimers();
+    }
+
+    /**
+     * Clears interaction beacon timers.
+     */
+    function clearBeaconTimers() {
+      if (beaconMinTimeout) {
+        clearTimeout(beaconMinTimeout);
+        beaconMinTimeout = false;
+      }
+
+      if (beaconMaxTimeout) {
+        clearTimeout(beaconMaxTimeout);
+        beaconMaxTimeout = false;
+      }
+    }
+
+    /**
+     * Fired when an interaction beacon timed-out
+     */
+    function sendInteractionBeacon() {
+      debug("Sending interaction beacon");
+
+      // Queue a beacon whenever there isn't another one ongoing
+      BOOMR.sendBeaconWhenReady(
+        {
+          // change this to an 'interaction' beacon
+          "rt.start": "manual",
+          "http.initiator": "interaction",
+
+          // when
+          "rt.tstart": beaconStartTime,
+          "rt.end": beaconEndTime
+        },
+        function() {
+          clearBeaconTimers();
+
+          // notify anyone listening for an interaction event
+          BOOMR.fireEvent("interaction");
+        },
+        impl);
+    }
+
+    /**
+     * Analyzes Interactions
+     */
+    function analyze(startTime) {
+      var fid;
+
+      impl.addToBeacon("c.i.dc", externalMetrics.interactionDelayed());
+      impl.addToBeacon("c.i.dt", externalMetrics.interactionDelayedTime());
+      impl.addToBeacon("c.i.a", externalMetrics.interactionAvgDelay());
+
+      // Only send FID and TTFI Timers once
+      if (!sentTimers) {
+        // defer to EventTiming's FID if available
+        if (BOOMR.plugins.EventTiming &&
+            BOOMR.plugins.EventTiming.is_enabled()) {
+          fid = BOOMR.plugins.EventTiming.metrics.firstInputDelay();
+        }
+
+        if (!fid && firstInputDelay !== null) {
+          fid = externalMetrics.firstInputDelay();
+        }
+
+        if (typeof fid === "number") {
+          impl.addToBeacon("c.fid", Math.ceil(fid), true);
+
+          impl.addToBeacon("c.ttfi", BOOMR.plugins.EventTiming.metrics.timeToFirstInteraction() ||
+              externalMetrics.timeToFirstInteraction());
+
+          sentTimers = true;
+        }
+      }
+    }
+
+    /**
+     * Disables the monitor
+     */
+    function stop() {
+      enabled = false;
+    }
+
+    /**
+     * Resets on beacon
+     */
+    function onBeacon() {
+      delayedInteractionTime = 0;
+      delayedInteractions = 0;
+      interactions = 0;
+      interactionsDelay = 0;
+
+      beaconStartTime = 0;
+      beaconEndTime = 0;
+
+      // no longer in a SPA nav
+      isSpaNav = false;
+
+      // if we had queued an interaction beacon, but something else is
+      // firing instead, use that data
+      clearBeaconTimers();
+    }
+
+    //
+    // External metrics
+    //
+    externalMetrics.interactionDelayed = function() {
+      return delayedInteractions;
+    };
+
+    externalMetrics.interactionDelayedTime = function() {
+      return Math.ceil(delayedInteractionTime);
+    };
+
+    externalMetrics.interactionAvgDelay = function() {
+      if (interactions > 0) {
+        return Math.ceil(interactionsDelay / interactions);
+      }
+    };
+
+    /**
+     * ttfi relative to nav start
+     */
+    externalMetrics.timeToFirstInteraction = function() {
+      if (timeToFirstInteraction) {
+        // milliseconds since nav start
+        return Math.floor(timeToFirstInteraction - epoch);
+      }
+
+      // no data
+      return;
+    };
+
+    externalMetrics.firstInputDelay = function() {
+      if (firstInputDelay !== null) {
+        return firstInputDelay;
+      }
+
+      // no data
+      return;
+    };
+
+    //
+    // Setup
+    //
+
+    // clear interaction beacon timer if a SPA is starting
+    BOOMR.subscribe("spa_init", onSpaInit, null, impl);
+
+    return {
+      interact: interact,
+      analyze: analyze,
+      stop: stop,
+      onBeacon: onBeacon
+    };
+  };
+
+  /**
+   * Monitor pointerdown followed by pointerup interaction event for calculating FID
+   */
+  var PointerDownMonitor = function(w, t, i) {
+    // we are not registering timeline events for pointerdown as these end up as click
+    // events which are already tracked for timelines.
+
+    var enabled = true;
+    var now, originalEvent;
+
+    function onPointerUp() {
+      if (!enabled) {
+        // Either stop() was called because of onBeacon event shutting things down
+        // or 'pointercancel' event resulted in stop() being called.
+        return;
+      }
+
+      // Update the interaction monitor
+      i.interact("pd", now, originalEvent);
+      now = null;
+      originalEvent = null;
+
+      BOOMR.utils.removeListener(window, "pointerup", onPointerUp);
+    }
+
+    function onPointerDown(e) {
+      // Only count cancelable event that should trigger behavior
+      // important to user
+      if (!enabled || !e.cancelable) {
+        return;
+      }
+
+      now = BOOMR.now();
+      originalEvent = e;
+
+      BOOMR.utils.addListener(window, "pointerup", onPointerUp, listenerOpts);
+    }
+
+    /**
+     * Stop this monitor
+     */
+    function stop() {
+      enabled = false;
+      BOOMR.utils.removeListener(window, "pointerdown", onPointerDown);
+      BOOMR.utils.removeListener(window, "pointerup", onPointerUp);
+      BOOMR.utils.removeListener(window, "pointercancel", stop);
+    }
+
+    BOOMR.utils.addListener(window, "pointerdown", onPointerDown, listenerOpts);
+    BOOMR.utils.addListener(window, "pointercancel", stop, listenerOpts);
+
+    return {
+      stop: stop
+    };
+  };
+
+  /**
+   * Monitor mousedown Event
+   */
+  var MouseDownMonitor = function(w, t, i) {
+    var enabled = true;
+
+    function onMouseDown(e) {
+      // Only count cancelable event that should trigger behavior
+      // important to user
+      if (!enabled || !e.cancelable) {
+        return;
+      }
+
+      var now = BOOMR.now();
+
+      // Update the interaction monitor
+      i.interact("md", now, e);
+    }
+
+    /**
+     * Stop this monitor
+     */
+    function stop() {
+      enabled = false;
+      BOOMR.utils.removeListener(window, "mousedown", onMouseDown);
+    }
+
+    BOOMR.utils.addListener(window, "mousedown", onMouseDown, listenerOpts);
+
+    return {
+      stop: stop
+    };
+  };
+
+  /**
+   * Monitors TouchStart event
+   */
+  var TouchStartMonitor = function(w, t, i) {
+    var enabled = true;
+
+    function onTouchStart(e) {
+      // Only count cancelable event that should trigger behavior
+      // important to user
+      if (!enabled || !e.cancelable) {
+        return;
+      }
+
+      var now = BOOMR.now();
+
+      // Update the interaction monitor
+      i.interact("ts", now, e);
+    }
+
+    /**
+     * Stop this monitor
+     */
+    function stop() {
+      enabled = false;
+      BOOMR.utils.removeListener(window, "touchstart", onTouchStart);
+    }
+
+    BOOMR.utils.addListener(window, "touchstart", onTouchStart, listenerOpts);
+
+    return {
+      stop: stop
+    };
+  };
+
+  /**
+   * Monitors for visibility state changes
+   */
+  var VisibilityMonitor = function(w, t, i) {
+    // register this type
+    t.register("vis", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Constants
+    //
+
+    /**
+     * Maps visibilityState from a string to a number
+     */
+    var VIS_MAP = {
+      "visible": 0,
+      "hidden": 1,
+      "prerender": 2,
+      "unloaded": 3
+    };
+
+    //
+    // Locals
+    //
+    var enabled = true;
+
+    BOOMR.subscribe("visibility_changed", function(e) {
+      var now = BOOMR.now();
+
+      if (!enabled) {
+        return;
+      }
+
+      // update the timeline
+      t.increment("vis");
+
+      // add to the log (don't track the actual keys)
+      t.log(LOG_TYPE_VIS, now, {
+        s: VIS_MAP[BOOMR.visibilityState()]
+      });
+      // Visibility change doesn't explicitly trigger an "interaction"
+    });
+
+    /**
+     * Stops this monitor
+     */
+    function stop() {
+      enabled = false;
+    }
+
+    return {
+      stop: stop
+    };
+  };
+
+  /**
+   * Monitors for orientation changes
+   */
+  var OrientationMonitor = function(w, t, i) {
+    // register this type
+    t.register("orn", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Locals
+    //
+    var enabled = true;
+
+    /**
+     * Fired when the orientation changes
+     *
+     * @param {Event} e Event
+     */
+    function onOrientationChange(e) {
+      var now = BOOMR.now(),
+          angle = window.orientation;
+
+      if (!enabled) {
+        return;
+      }
+
+      // update the timeline
+      t.increment("orn");
+
+      var orientation = window.screen && (screen.orientation || screen.msOrientation || screen.mozOrientation || {});
+
+      // override with Screen Orientation API if available
+      if (orientation && typeof orientation.angle === "number") {
+        angle = screen.orientation.angle;
+      }
+
+      if (typeof angle === "number") {
+        // add to the log (don't track the actual keys)
+        t.log(LOG_TYPE_ORIENTATION, now, {
+          a: angle
+        });
+      }
+    }
+
+    /**
+     * Stops this monitor
+     */
+    function stop() {
+      enabled = false;
+
+      BOOMR.utils.removeListener(w, "orientationchange", onOrientationChange);
+    }
+
+    //
+    // Setup
+    //
+    BOOMR.utils.addListener(w, "orientationchange", onOrientationChange, listenerOpts);
+
+    return {
+      stop: stop
+    };
+  };
+
+  /**
+   * Monitors for misc stats such as memory usage, battery level, etc.
+   *
+   * Note: Not reporting on ResourceTiming entries or Errors since those
+   * will be captured by the respective plugins.
+   */
+  var StatsMonitor = function(w, t) {
+    // register types
+    t.register("mem", COMPRESS_MODE_LARGE_NUMBERS, true);
+    t.register("bat", COMPRESS_MODE_PERCENT, true);
+    t.register("domsz", COMPRESS_MODE_LARGE_NUMBERS, true);
+    t.register("domln", COMPRESS_MODE_LARGE_NUMBERS, true);
+    t.register("mut", COMPRESS_MODE_SMALL_NUMBERS);
+
+    //
+    // Constants
+    //
+
+    /**
+     * Report stats every second
+     */
+    var REPORT_INTERVAL = 1000;
+
+    //
+    // Locals
+    //
+    var d = w.document;
+
+    /**
+     * Whether or not we're enabled
+     */
+    var enabled = true;
+
+    /**
+     * Report interval ID
+     */
+    var reportInterval = false;
+
+    /**
+     * navigator.getBattery() object
+     */
+    var battery = null;
+
+    /**
+     * Number of mutations since last reset
+     */
+    var mutationCount = 0;
+
+    /**
+     * DOM length
+     */
+    var domLength = 0;
+
+    /**
+     * Live HTMLCollection of found elements
+     *
+     * Keep this live collection around as it's cheaper to call
+     * .length on it over time than re-running getElementsByTagName()
+     * each time
+     */
+    var domAllNodes = d.getElementsByTagName("*");
+
+    /**
+     * MutationObserver
+     */
+    var observer;
+
+    /**
+     * Fired on an interval to report stats such as memory usage
+     */
+    function reportStats() {
+      //
+      // Memory
+      //
+      var mem = p &&
+          p.memory &&
+          p.memory.usedJSHeapSize;
+
+      if (mem) {
+        t.set("mem", mem);
+      }
+
+      //
+      // DOM sizes (bytes) and length (node count)
+      //
+      domLength = domAllNodes.length;
+
+      t.set("domsz", d.documentElement.innerHTML.length);
+      t.set("domln", domLength);
+
+      //
+      // DOM mutations
+      //
+      if (mutationCount > 0) {
+        // report as % of DOM size
+        var deltaPct = Math.min(Math.round(mutationCount / domLength * 100), 100);
+
+        t.set("mut", deltaPct);
+
+        mutationCount = 0;
+      }
+    }
+
+    /**
+     * Fired when the battery level changes
+     */
+    function onBatteryLevelChange() {
+      if (!enabled || !battery) {
+        return;
+      }
+
+      t.set("bat", battery.level);
+    }
+
+    /**
+     * Fired on MutationObserver callback
+     */
+    function onMutationObserver(mutations) {
+      mutations.forEach(function(mutation) {
+        // only listen for childList changes
+        if (mutation.type !== "childList") {
+          return true;
+        }
+
+        for (var i = 0; i < mutation.addedNodes.length; i++) {
+          var node = mutation.addedNodes[i];
+
+          // add mutations for this node and all sub-nodes
+          mutationCount++;
+          mutationCount += node.getElementsByTagName ?
+            node.getElementsByTagName("*").length : 0;
+        }
+      });
+
+      return true;
+    }
+
+    /**
+     * Stops this monitor
+     */
+    function stop() {
+      enabled = false;
+
+      // stop reporting on metrics
+      if (reportInterval) {
+        clearInterval(reportInterval);
+        reportInterval = false;
+      }
+
+      // disconnect MO
+      if (observer && observer.observer) {
+        observer.observer.disconnect();
+        observer = null;
+      }
+
+      // stop listening for battery info
+      if (battery && battery.onlevelchange) {
+        battery.onlevelchange = null;
+      }
+
+      domAllNodes = null;
+    }
+
+    //
+    // Setup
+    //
+
+    // misc stats
+    reportInterval = setInterval(reportStats, REPORT_INTERVAL);
+
+    // Battery
+    if (w.navigator && typeof w.navigator.getBattery === "function") {
+      w.navigator.getBattery().then(function(b) {
+        battery = b;
+
+        if (battery.onlevelchange) {
+          battery.onlevelchange = onBatteryLevelChange;
+        }
+      });
+    }
+
+    // MutationObserver
+    if (BOOMR.utils.isMutationObserverSupported()) {
+      // setup the observer
+      observer = BOOMR.utils.addObserver(
+        d,
+        { childList: true, subtree: true },
+        // no timeout
+        null,
+        // will always return true
+        onMutationObserver,
+        // no callback data
+        null,
+        this
+      );
+    }
+
+    return {
+      stop: stop
+    };
+  };
+
+  //
+  // Continuity implementation
+  //
+  impl = {
+    //
+    // Config
+    //
+    /**
+     * Whether or not to monitor longTasks
+     */
+    monitorLongTasks: true,
+
+    /**
+     * Whether or not to monitor Page Busy
+     */
+    monitorPageBusy: true,
+
+    /**
+     * Whether or not to monitor FPS
+     */
+    monitorFrameRate: true,
+
+    /**
+     * Whether or not to monitor interactions
+     */
+    monitorInteractions: true,
+
+    /**
+     * Whether or not to monitor page stats
+     */
+    monitorStats: false,
+
+    /**
+     * Whether to monitor Layout Shifts
+     */
+    monitorLayoutShifts: true,
+
+    /**
+     * Whether to monitor for interactions after onload
+     */
+    afterOnload: false,
+
+    /**
+     * Max recording length after onload (if not a SPA) (ms)
+     */
+    afterOnloadMaxLength: DEFAULT_AFTER_ONLOAD_MAX_LENGTH,
+
+    /**
+     * Minium number of ms after an interaction to wait before sending
+     * an interaction beacon
+     */
+    afterOnloadMinWait: 5000,
+
+    /**
+     * Number of milliseconds after onload to wait for TTI, or,
+     * false if not configured.
+     */
+    waitAfterOnload: false,
+
+    /**
+     * Whether or not to wait for a call to
+     * frameworkReady() before starting TTI calculations
+     */
+    ttiWaitForFrameworkReady: false,
+
+    /**
+     * If set, wait for the specified CSS selector of hero images to have
+     * loaded before starting TTI calculations
+     */
+    ttiWaitForHeroImages: false,
+
+    /**
+     * Whether or not to send a detailed log of all events.
+     */
+    sendLog: true,
+
+    /**
+     * Whether or not to send a compressed timeline of events
+     */
+    sendTimeline: true,
+
+    /**
+     * Maximum number of long entries to keep
+     */
+    logMaxEntries: 100,
+
+    //
+    // State
+    //
+    /**
+     * Whether or not we're initialized
+     */
+    initialized: false,
+
+    /**
+     * Whether we're ready to send a beacon
+     */
+    complete: false,
+
+    /**
+     * Whether or not this is an SPA app
+     */
+    isSpa: false,
+
+    /**
+     * Whether Page Ready has fired or not
+     */
+    firedPageReady: false,
+
+    /**
+     * Whether or not we're currently monitoring for interactions
+     * after the Page Load beacon
+     */
+    afterOnloadMonitoring: false,
+
+    /**
+     * Framework Ready time, if configured
+     */
+    frameworkReady: null,
+
+    /**
+     * Timeline
+     */
+    timeline: null,
+
+    /**
+     * TTI method used (highest accuracy):
+     * * `lt` (LongTasks)
+     * * `raf` (requestAnimationFrame)
+     * * `b` (Page Busy polling)
+     */
+    ttiMethod: null,
+
+    /**
+     * LongTaskMonitor
+     */
+    longTaskMonitor: null,
+
+    /**
+     * PageBusyMonitor
+     */
+    pageBusyMonitor: null,
+
+    /**
+     * FrameRateMonitor
+     */
+    frameRateMonitor: null,
+
+    /**
+     * InteractionMonitor
+     */
+    interactionMonitor: null,
+
+    /**
+     * ScrollMonitor
+     */
+    scrollMonitor: null,
+
+    /**
+     * ClickMonitor
+     */
+    clickMonitor: null,
+
+    /**
+     * KeyMonitor
+     */
+    keyMonitor: null,
+
+    /**
+     * MouseMonitor
+     */
+    mouseMonitor: null,
+
+    /**
+     * VisibilityMonitor
+     */
+    visibilityMonitor: null,
+
+    /**
+     * OrientationMonitor
+     */
+    orientationMonitor: null,
+
+    /**
+     * TouchStartMonitor
+     */
+    touchStartMonitor: null,
+
+    /**
+     * MouseDownMonitor
+     */
+    mouseDownMonitor: null,
+
+    /**
+     * PointerDownMonitor
+     */
+    pointerDownMonitor: null,
+
+    /**
+     * StatsMonitor
+     */
+    statsMonitor: null,
+
+    /**
+    * LayoutShiftMonitor
+    */
+    layoutShiftMonitor: null,
+
+    /**
+     * All possible monitors
+     */
+    monitors: [
+      "timeline",
+      "longTaskMonitor",
+      "pageBusyMonitor",
+      "frameRateMonitor",
+      "scrollMonitor",
+      "keyMonitor",
+      "clickMonitor",
+      "mouseMonitor",
+      "interactionMonitor",
+      "visibilityMonitor",
+      "orientationMonitor",
+      "statsMonitor",
+      "layoutShiftMonitor",
+      "touchStartMonitor",
+      "mouseDownMonitor",
+      "pointerDownMonitor"
+    ],
+
+    /**
+     * When we last sent a beacon
+     */
+    timeOfLastBeacon: 0,
+
+    /**
+     * Whether or not we've added data to this beacon
+     */
+    hasAddedDataToBeacon: false,
+
+    /*
+     * Safari check, desktop and iOS
+     */
+    isSafari: (window &&
+      window.navigator &&
+      window.navigator.vendor &&
+      window.navigator.vendor.indexOf("Apple") !== -1),
+
+    //
+    // Callbacks
+    //
+    /**
+     * Callback before the beacon is going to be sent
+     */
+    onBeforeBeacon: function() {
+      impl.runAllAnalyzers();
+    },
+
+    /**
+     * Runs all analyzers
+     */
+    runAllAnalyzers: function() {
+      var i, mon;
+
+      if (impl.hasAddedDataToBeacon) {
+        // don't add data twice
+        return;
+      }
+
+      for (i = 0; i < impl.monitors.length; i++) {
+        mon = impl[impl.monitors[i]];
+
+        if (mon && typeof mon.analyze === "function") {
+          mon.analyze(impl.timeOfLastBeacon);
+        }
+      }
+
+      // add last time the data was reset, if ever
+      impl.addToBeacon("c.lb", impl.timeOfLastBeacon ? impl.timeOfLastBeacon.toString(36) : 0);
+
+      // keep track of when we last added data
+      impl.timeOfLastBeacon = BOOMR.now();
+
+      // note we've added data
+      impl.hasAddedDataToBeacon = true;
+    },
+
+    /**
+     * Callback after the beacon is ready to send, so we can clear
+     * our added vars and do other cleanup.
+     */
+    onBeacon: function(edata) {
+      var i;
+
+      // Three types of beacons can go out before the Page Load beacon: Early Beacon, Custom Metric and Custom Timer.
+      // For those beacon types, we want to keep the vars for the next beacon.
+      if (edata &&
+        (
+          (typeof edata.early !== "undefined") ||
+          (edata["http.initiator"] && edata["http.initiator"].indexOf("api_custom_") === 0)
+        )) {
+        return;
+      }
+
+      // let any other monitors know that a beacon was sent
+      for (i = 0; i < impl.monitors.length; i++) {
+        var monitor = impl[impl.monitors[i]];
+
+        if (monitor) {
+          // disable ourselves if we're not doing anything after the first beacon
+          if (!impl.afterOnload) {
+            if (typeof monitor.stop === "function") {
+              monitor.stop();
+            }
+          }
+
+          // notify all plugins that there's been a beacon
+          if (typeof monitor.onBeacon === "function") {
+            monitor.onBeacon();
+          }
+        }
+      }
+
+      // we haven't added data any more
+      impl.hasAddedDataToBeacon = false;
+    },
+
+    /**
+     * Callback when an XHR load happens
+     *
+     * @param {object} data XHR data
+     */
+    onXhrLoad: function(data) {
+      // note this is an SPA for later
+      if (data && BOOMR.utils.inArray(data.initiator, BOOMR.constants.BEACON_TYPE_SPAS)) {
+        impl.isSpa = true;
+      }
+
+      if (data && data.initiator === "spa_hard") {
+        impl.onPageReady();
+      }
+    },
+
+    /**
+     * Callback when the page is ready
+     */
+    onPageReady: function() {
+      impl.firedPageReady = true;
+
+      //
+      // If we're monitoring interactions after onload, set a timer to
+      // disable them if configured
+      //
+      if (impl.afterOnload &&
+          impl.monitorInteractions) {
+        impl.afterOnloadMonitoring = true;
+
+        // disable after the specified amount if not a SPA
+        if (!impl.isSpa && typeof impl.afterOnloadMaxLength === "number") {
+          setTimeout(function() {
+            impl.afterOnloadMonitoring = false;
+          }, impl.afterOnloadMaxLength);
+        }
+      }
+
+      if (impl.waitAfterOnload) {
+        var start = BOOMR.now();
+
+        setTimeout(function checkTti() {
+          // wait for up to the defined time after onload
+          if (BOOMR.now() - start > impl.waitAfterOnload) {
+            // couldn't calculate TTI, send the beacon anyways
+            impl.complete = true;
+            BOOMR.sendBeacon();
+          }
+          else {
+            // run the TTI calculation
+            impl.timeline.analyze();
+
+            // if we got something, mark as complete and send
+            if (externalMetrics.timeToInteractive()) {
+              impl.complete = true;
+              BOOMR.sendBeacon();
+            }
+            else {
+              // poll again
+              setTimeout(checkTti, TIME_TO_INTERACTIVE_WAIT_POLL_PERIOD);
+            }
+          }
+        }, TIME_TO_INTERACTIVE_WAIT_POLL_PERIOD);
+      }
+      else {
+        impl.complete = true;
+      }
+    },
+
+    //
+    // Misc
+    //
+    /**
+     * Adds a variable to the beacon, tracking the names so we can
+     * remove them later.
+     *
+     * @param {string} name Name
+     * @param {string} val Value.  If 0 or undefined, the value is removed from the beacon.
+     * @param {number} force Force adding the variable, even if 0
+     */
+    addToBeacon: function(name, val, force) {
+      if ((val === 0 || typeof val === "undefined") && !force) {
+        BOOMR.removeVar(name);
+
+        return;
+      }
+
+      BOOMR.addVar(name, val, true);
+    }
+  };
+
+  //
+  // External Plugin
+  //
+  BOOMR.plugins.Continuity = {
+    /**
+     * Initializes the plugin.
+     *
+     * @param {object} config Configuration
+     * @param {boolean} [config.Continuity.monitorLongTasks=true] Whether or not to
+     * monitor Long Tasks.
+     * @param {boolean} [config.Continuity.monitorPageBusy=true] Whether or not to
+     * monitor Page Busy.
+     * @param {boolean} [config.Continuity.monitorFrameRate=true] Whether or not to
+     * monitor Frame Rate.
+     * @param {boolean} [config.Continuity.monitorInteractions=true] Whether or not to
+     * monitor Interactions.
+     * @param {boolean} [config.Continuity.monitorStats=true] Whether or not to
+     * monitor Page Statistics.
+     * @param {boolean} [config.Continuity.monitorLayoutShifts=true] Whether or not to
+     * monitor Layout Shifts
+     * @param {boolean} [config.Continuity.afterOnload=false] Whether or not to
+     * monitor Long Tasks, Page Busy, Frame Rate, interactions and Page Statistics
+     * after `onload` (up to `afterOnloadMaxLength`).
+     * @param {number} [config.Continuity.afterOnloadMaxLength=60000] Maximum time
+     * (milliseconds) after `onload` to monitor.
+     * @param {boolean} [config.Continuity.afterOnloadMinWait=5000] Minimum
+     * time after an interaction to wait for more interactions before batching
+     * the interactions into a beacon.
+     * @param {boolean|number} [config.Continuity.waitAfterOnload=false] If set
+     * to a `number`, how long after `onload` to wait for Time to Interactive to
+     * happen before sending a beacon (without TTI).
+     * @param {boolean} [config.Continuity.ttiWaitForFrameworkReady=false] Whether
+     * or not to wait for {@link BOOMR.plugins.Continuity.frameworkReady} before
+     * Visually Ready (and thus Time to Interactive) can happen.
+     * @param {boolean|string} [config.Continuity.ttiWaitForHeroImages=false] If
+     * set to a `string`, the CSS selector will wait until the specified images
+     * have been loaded before Visually Ready (and thus Time to Interactive) can happen.
+     * @param {boolean} [config.Continuity.sendLog=true] Whether or not to
+     * send the event log with each beacon.
+     * @param {boolean} [config.Continuity.logMaxEntries=100] How many log
+     * entries to keep.
+     * @param {boolean} [config.Continuity.sendTimeline=true] Whether or not to
+     * send the timeline with each beacon.
+     *
+     * @returns {@link BOOMR.plugins.Continuity} The Continuity plugin for chaining
+     * @memberof BOOMR.plugins.Continuity
+     */
+    init: function(config) {
+      BOOMR.utils.pluginConfig(impl, config, "Continuity",
+        ["monitorLongTasks", "monitorPageBusy", "monitorFrameRate", "monitorInteractions",
+          "monitorStats", "afterOnload", "afterOnloadMaxLength", "afterOnloadMinWait",
+          "waitAfterOnload", "ttiWaitForFrameworkReady", "ttiWaitForHeroImages",
+          "sendLog", "logMaxEntries", "sendTimeline", "monitorLayoutShifts"]);
+
+      if (impl.initialized) {
+        return this;
+      }
+
+      impl.initialized = true;
+
+      // create the timeline
+      impl.timeline = new Timeline(BOOMR.now());
+
+      //
+      // Setup
+      //
+      if (BOOMR.window) {
+        //
+        // LongTasks
+        //
+        if (impl.monitorLongTasks &&
+            BOOMR.window.PerformanceObserver &&
+            BOOMR.window.PerformanceLongTaskTiming) {
+          impl.longTaskMonitor = new LongTaskMonitor(BOOMR.window, impl.timeline);
+
+          impl.ttiMethod = "lt";
+        }
+
+        //
+        // FPS
+        //
+        if (impl.monitorFrameRate &&
+            typeof BOOMR.window.requestAnimationFrame === "function") {
+          impl.frameRateMonitor = new FrameRateMonitor(BOOMR.window, impl.timeline);
+
+          if (!impl.ttiMethod) {
+            impl.ttiMethod = "raf";
+          }
+        }
+
+        //
+        // Page Busy (if LongTasks aren't supported or aren't enabled)
+        //
+        if (impl.monitorPageBusy &&
+          BOOMR.window &&
+          (!BOOMR.window.PerformanceObserver || !BOOMR.window.PerformanceLongTaskTiming || !impl.monitorLongTasks) &&
+          // Don't use Page Busy for Firefox, as setInterval is de-prioritized during Page Load
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1270059
+          (BOOMR.window.navigator &&
+            (BOOMR.window.navigator.userAgentData || !BOOMR.window.navigator.userAgent.match(/Firefox\//)))) {
+          impl.pageBusyMonitor = new PageBusyMonitor(BOOMR.window, impl.timeline);
+
+          if (!impl.ttiMethod) {
+            impl.ttiMethod = "b";
+          }
+        }
+
+        //
+        // Interactions
+        //
+        if (impl.monitorInteractions) {
+          impl.interactionMonitor = new InteractionMonitor(BOOMR.window, impl.timeline, impl.afterOnloadMinWait);
+          impl.scrollMonitor = new ScrollMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.keyMonitor = new KeyMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.clickMonitor = new ClickMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.mouseMonitor = new MouseMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.visibilityMonitor = new VisibilityMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.orientationMonitor = new OrientationMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.touchStartMonitor = new TouchStartMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.mouseDownMonitor = new MouseDownMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+          impl.pointerDownMonitor = new PointerDownMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+        }
+
+        //
+        // Stats
+        //
+        if (impl.monitorStats) {
+          impl.statsMonitor = new StatsMonitor(BOOMR.window, impl.timeline, impl.interactionMonitor);
+        }
+
+        if (impl.monitorLayoutShifts &&
+          BOOMR.window.PerformanceObserver) {
+          impl.layoutShiftMonitor = new LayoutShiftMonitor(BOOMR.window);
+        }
+      }
+
+      // add epoch and polling method to every beacon
+      BOOMR.addVar("c.e", epoch.toString(36));
+      BOOMR.addVar("c.tti.m", impl.ttiMethod);
+
+      // event handlers
+      BOOMR.subscribe("before_beacon", impl.onBeforeBeacon, null, impl);
+      BOOMR.subscribe("beacon", impl.onBeacon, null, impl);
+      BOOMR.subscribe("page_ready", impl.onPageReady, null, impl);
+      BOOMR.subscribe("xhr_load", impl.onXhrLoad, null, impl);
+
+      return this;
+    },
+
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.Continuity
+     */
+    is_complete: function(vars) {
+      // allow error and early beacons to go through even if we're not complete
+      return impl.complete || (vars && (vars["http.initiator"] === "error" || typeof vars.early !== "undefined"));
+    },
+
+    /**
+     * Signal that the framework is ready
+     *
+     * @memberof BOOMR.plugins.Continuity
+     */
+    frameworkReady: function() {
+      impl.frameworkReady = BOOMR.now();
+    },
+
+    // external metrics
+    metrics: externalMetrics
+
+    /* BEGIN_DEBUG */,
+    compressBucketLog: compressBucketLog,
+    decompressBucketLog: decompressBucketLog,
+    decompressBucketLogNumber: decompressBucketLogNumber,
+    decompressLog: decompressLog,
+    determineTti: determineTti,
+    compressClsScore: compressClsScore,
+    decompressClsScore: decompressClsScore,
+    compressClsSources: compressClsSources,
+    decompressClsSources: decompressClsSources
+    /* END_DEBUG */
+  };
 }());

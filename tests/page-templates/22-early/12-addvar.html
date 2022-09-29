@@ -5,9 +5,9 @@ checks that early beacons don't clear addVars flagged with `singleBeacon=true`
 <script>
 // Force navigation to TYPE_NAVIGATE
 if (window.performance) {
-	window.performance.__defineGetter__("navigation", function() {
-		return {type: 0, redirectCount: 0};
-	});
+  window.performance.__defineGetter__("navigation", function() {
+    return {type: 0, redirectCount: 0};
+  });
 }
 </script>
 <%= boomerangSnippet %>
@@ -18,24 +18,23 @@ if (window.performance) {
 window.BOOMR_mq = window.BOOMR_mq || [];
 
 window.BOOMR_mq.push(
-	["addVar", "multi", "a"],
-	["addVar", "single", "b", true]
+  ["addVar", "multi", "a"],
+  ["addVar", "single", "b", true]
 );
 
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	Early: {
-		enabled: true
-	},
-	onBoomerangLoaded: function() {
-		setTimeout(function() {
-			BOOMR.addVar("multi2", "c");
-			BOOMR.addVar("single2", "d");
-			BOOMR.responseEnd("foo");
-		}, 3000);
-	}
+  testAfterOnBeacon: 3,
+  Early: {
+    enabled: true
+  },
+  onBoomerangLoaded: function() {
+    setTimeout(function() {
+      BOOMR.addVar("multi2", "c");
+      BOOMR.addVar("single2", "d");
+      BOOMR.responseEnd("foo");
+    }, 3000);
+  }
 });
-
 
 </script>
 <img src="/delay?delay=2000&amp;file=/assets/img.jpg" style="width: 100px" />

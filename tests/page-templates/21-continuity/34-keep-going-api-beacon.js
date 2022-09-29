@@ -2,60 +2,61 @@
 /*global BOOMR_test,assert*/
 
 describe("e2e/21-continuity/34-keep-going-api-beacon", function() {
-	var tf = BOOMR.plugins.TestFramework;
-	var t = BOOMR_test;
+  var tf = BOOMR.plugins.TestFramework;
+  var t = BOOMR_test;
 
-	it("Should have sent two beacons", function(done) {
-		this.timeout(15000);
+  it("Should have sent two beacons", function(done) {
+    this.timeout(15000);
 
-		t.ensureBeaconCount(done, 2);
-	});
+    t.ensureBeaconCount(done, 2);
+  });
 
-	it("Should have set the Visually Ready to First Paint or domContentLoadedEventEnd (c.tti.vr)", function() {
-		var b = tf.lastBeacon();
+  it("Should have set the Visually Ready to First Paint or domContentLoadedEventEnd (c.tti.vr)", function() {
+    var b = tf.lastBeacon();
 
-		var vr = t.getFirstOrContentfulPaint();
-		var p = window.performance;
+    var vr = t.getFirstOrContentfulPaint();
+    var p = window.performance;
 
-		// domContentLoadedEventEnd
-		if (p && p.timing && p.timing.domContentLoadedEventEnd) {
-			vr = Math.max(vr, p.timing.domContentLoadedEventEnd);
-		}
+    // domContentLoadedEventEnd
+    if (p && p.timing && p.timing.domContentLoadedEventEnd) {
+      vr = Math.max(vr, p.timing.domContentLoadedEventEnd);
+    }
 
-		if (vr) {
-			var st = parseInt(b["rt.tstart"], 10);
+    if (vr) {
+      var st = parseInt(b["rt.tstart"], 10);
 
-			assert.isDefined(b["c.tti.vr"]);
-			assert.closeTo(parseInt(b["c.tti.vr"], 10), vr - st, 20);
-		}
-	});
+      assert.isDefined(b["c.tti.vr"]);
+      assert.closeTo(parseInt(b["c.tti.vr"], 10), vr - st, 20);
+    }
+  });
 
-	it("Should have set the Time to Interactive (c.tti)", function() {
-		var b = tf.lastBeacon();
+  it("Should have set the Time to Interactive (c.tti)", function() {
+    var b = tf.lastBeacon();
 
-		if (t.isNavigationTimingSupported()) {
-			var p = window.performance;
+    if (t.isNavigationTimingSupported()) {
+      var p = window.performance;
 
-			assert.isDefined(b["c.tti"]);
+      assert.isDefined(b["c.tti"]);
 
-			var tti = parseInt(b["c.tti"], 10);
-			assert.operator(tti, ">=", p.timing.domContentLoadedEventEnd - p.timing.navigationStart);
-		}
-	});
+      var tti = parseInt(b["c.tti"], 10);
 
-	it("Should have set the Time to Interactive Method (c.tti.m)", function() {
-		var b = tf.lastBeacon();
+      assert.operator(tti, ">=", p.timing.domContentLoadedEventEnd - p.timing.navigationStart);
+    }
+  });
 
-		assert.isDefined(b["c.tti.m"]);
+  it("Should have set the Time to Interactive Method (c.tti.m)", function() {
+    var b = tf.lastBeacon();
 
-		if (window.PerformanceLongTaskTiming) {
-			assert.equal(b["c.tti.m"], "lt");
-		}
-		else if (window.requestAnimationFrame) {
-			assert.equal(b["c.tti.m"], "raf");
-		}
-		else {
-			assert.equal(b["c.tti.m"], "b");
-		}
-	});
+    assert.isDefined(b["c.tti.m"]);
+
+    if (window.PerformanceLongTaskTiming) {
+      assert.equal(b["c.tti.m"], "lt");
+    }
+    else if (window.requestAnimationFrame) {
+      assert.equal(b["c.tti.m"], "raf");
+    }
+    else {
+      assert.equal(b["c.tti.m"], "b");
+    }
+  });
 });

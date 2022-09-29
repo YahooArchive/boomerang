@@ -16,8 +16,9 @@ window.nav_routes = ["/widgets/1", "/"];
 
 // filter out the 2nd home nav
 var navs = 0;
+
 window.history_route_filter = function() {
-	return (++navs) <= 1;
+  return (++navs) <= 1;
 };
 </script>
 
@@ -32,29 +33,33 @@ window.history_route_filter = function() {
 // React will cause 2 XHRs for the 2nd home nav, filter one of them out using
 // an excludeFilter so that the test template doesn't need special handling
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	History: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	AutoXHR: {
-		xhrRequireChanges: false,
-		excludeFilters: [{
-			cb: function(anchor) {
-				var url = anchor.href, result;
-				if (url && typeof url === "string") {
-					result = url.match(/support\/home\.html/g);
-					if (result && result.length > 0) {
-						return true;
-					}
-				}
-				return false;
-			},
-			ctx: null,
-			name: "24-route-filter"
-		}]
-	}
+  testAfterOnBeacon: 3,
+  History: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  AutoXHR: {
+    xhrRequireChanges: false,
+    excludeFilters: [{
+      cb: function(anchor) {
+        var url = anchor.href,
+            result;
+
+        if (url && typeof url === "string") {
+          result = url.match(/support\/home\.html/g);
+
+          if (result && result.length > 0) {
+            return true;
+          }
+        }
+
+        return false;
+      },
+      ctx: null,
+      name: "24-route-filter"
+    }]
+  }
 });
 </script>
 <%= footer %>

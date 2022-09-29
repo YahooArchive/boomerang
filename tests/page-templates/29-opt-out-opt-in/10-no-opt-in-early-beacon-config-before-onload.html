@@ -2,8 +2,8 @@
 <script>
 /*eslint-disable no-unused-vars*/
 window.BOOMR_CONSENT_CONFIG = {
-	enabled: true,
-	optInRequired: true
+  enabled: true,
+  optInRequired: true
 };
 </script>
 <%= consentInlinePlugin %>
@@ -16,9 +16,9 @@ window.localStorage.removeItem("_boomr_" + "LOGN");
 
 // Force navigation to TYPE_NAVIGATE
 if (window.performance) {
-	window.performance.__defineGetter__("navigation", function() {
-		return {type: 0, redirectCount: 0};
-	});
+  window.performance.__defineGetter__("navigation", function() {
+    return {type: 0, redirectCount: 0};
+  });
 }
 </script>
 <%= boomerangSnippet %>
@@ -28,20 +28,20 @@ if (window.performance) {
 
 // simulate delayed config
 setTimeout(function() {
-	BOOMR_test.init({
-		site_domain: document.domain,
-		testAfterOnBeacon: false,
-		Early: {
-			enabled: true
-		},
-		onBoomerangLoaded: function() {
-			BOOMR.subscribe("page_ready", function() {
-				setTimeout(function() {
-					BOOMR_test.runTests();
-				}, 400);
-			});
-		}
-	});
+  BOOMR_test.init({
+    site_domain: document.domain,
+    testAfterOnBeacon: false,
+    Early: {
+      enabled: true
+    },
+    onBoomerangLoaded: function() {
+      BOOMR.subscribe("page_ready", function() {
+        setTimeout(function() {
+          BOOMR_test.runTests();
+        }, 400);
+      });
+    }
+  });
 }, 200);
 
 </script>

@@ -5,21 +5,22 @@
 <script>
 var testFrame = document.getElementById("testFrame");
 var testFrameDoc = testFrame.contentWindow.document;
+
 testFrameDoc.open();
 testFrameDoc.write("\x3cscript\x3efuncInIframe \x3d function(event) { console.log(\x22hello from iframe\x22); }\x3c/script\x3e");
 testFrameDoc.close();
 
 BOOMR_test.init({
-	testAfterOnBeacon: 1,
-	Errors: {
-		enabled: true,
-		monitorTimeout: true,
-		sendAfterOnload: true,
+  testAfterOnBeacon: 1,
+  Errors: {
+    enabled: true,
+    monitorTimeout: true,
+    sendAfterOnload: true,
 
-		// turn off global so it doesn't get in the way
-		monitorGlobal: false,
-		monitorEvents: false
-	}
+    // turn off global so it doesn't get in the way
+    monitorGlobal: false,
+    monitorEvents: false
+  }
 });
 
 // by the time the setTimout callback is called the iframe would have been freed

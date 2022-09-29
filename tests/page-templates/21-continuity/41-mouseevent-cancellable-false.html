@@ -8,31 +8,31 @@
 <img src="/assets/img.jpg?5" id="img-5" width="200" height="10000" />
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true
+  }
 });
 
 try {
-	var ev1 = new MouseEvent("click", {
-		"view": window,
-		"bubbles": true,
-		"cancelable": false,
-		"clientX": 100,
-		"clientY": 100
-	});
+  var ev1 = new MouseEvent("click", {
+    "view": window,
+    "bubbles": true,
+    "cancelable": false,
+    "clientX": 100,
+    "clientY": 100
+  });
 
-	var ev2 = new MouseEvent("click", {
-		"view": window,
-		"bubbles": true,
-		"cancelable": false,
-		"clientX": 200,
-		"clientY": 200
-	});
+  var ev2 = new MouseEvent("click", {
+    "view": window,
+    "bubbles": true,
+    "cancelable": false,
+    "clientX": 200,
+    "clientY": 200
+  });
 }
 catch (e) {
-	window.cannotCreateMouseEvent = true;
+  window.cannotCreateMouseEvent = true;
 }
 
 // click on an area 3x to trigger a rage click

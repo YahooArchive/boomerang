@@ -3,16 +3,16 @@
 <script src="07-onnonpageload.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
-	afterFirstBeacon: function() {
-		// fake an unload event
-		BOOMR.fireEvent("page_unload", {
-			type: "unload"
-		});
-	},
-	Memory: {
-		onNonPageLoad: true
-	}
+  testAfterOnBeacon: 2,
+  afterFirstBeacon: function() {
+    // fake an unload event
+    BOOMR.fireEvent("page_unload", {
+      type: "unload"
+    });
+  },
+  Memory: {
+    onNonPageLoad: true
+  }
 });
 </script>
 <%= footer %>

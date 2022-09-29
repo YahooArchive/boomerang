@@ -4,20 +4,21 @@
 <script src="13-interaction.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true
+  }
 });
 
 try {
-	// the event timestamp is set when the object is created
-	var ev = document.createEvent("Event");
-	ev.initEvent("keydown", true, true);
-	ev.keyCode = 27;
+  // the event timestamp is set when the object is created
+  var ev = document.createEvent("Event");
+
+  ev.initEvent("keydown", true, true);
+  ev.keyCode = 27;
 }
 catch (e) {
-	window.cannotCreateMouseEvent = true;
+  window.cannotCreateMouseEvent = true;
 }
 
 // click
@@ -28,9 +29,9 @@ BOOMR_test.busy(20);
 document.dispatchEvent(ev);
 
 setTimeout(function() {
-	// click key again
-	document.dispatchEvent(ev);
-	document.dispatchEvent(ev);
+  // click key again
+  document.dispatchEvent(ev);
+  document.dispatchEvent(ev);
 }, 250);
 </script>
 <img src="/delay?delay=3000&amp;file=assets/img.jpg" width="200" height="10000" />

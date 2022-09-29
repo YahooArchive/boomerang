@@ -7,8 +7,8 @@
 <script src="support/app.js"></script>
 <div id="output"></div>
 <div ng-app="app">
-	<div ng-view>
-	</div>
+  <div ng-view>
+  </div>
 </div>
 <script src="/test-templates/spa/17-wait.js" type="text/javascript"></script>
 <script src="17-wait.js" type="text/javascript"></script>
@@ -28,10 +28,10 @@ window.angular_nav_routes = ["/widgets/1", "/widgets/2", "17-wait.html"];
 
 // how long we should wait for each route
 var routeWaits = [
-	// spa_hard isn't filtered
-	5000,
-	1,
-	0
+  // spa_hard isn't filtered
+  5000,
+  1,
+  0
 ];
 
 // we'll put the end timestamps of each route in here so we can validate against beacons
@@ -42,31 +42,31 @@ var routeNumber = 0;
 
 // callback for each route
 window.angular_route_wait = function() {
-	if (routeWaits[routeNumber]) {
-		setTimeout(function() {
-			window.spaWaitCompleteTimes.push(BOOMR.now());
+  if (routeWaits[routeNumber]) {
+    setTimeout(function() {
+      window.spaWaitCompleteTimes.push(BOOMR.now());
 
-			// call complete 5 seconds afterward route start
-			BOOMR.plugins.SPA.wait_complete();
-		}, routeWaits[routeNumber]);
+      // call complete 5 seconds afterward route start
+      BOOMR.plugins.SPA.wait_complete();
+    }, routeWaits[routeNumber]);
 
-		routeNumber++;
+    routeNumber++;
 
-		return true;
-	}
-	else {
-		// not waiting for this route
-		return false;
-	}
+    return true;
+  }
+  else {
+    // not waiting for this route
+    return false;
+  }
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <%= footer %>

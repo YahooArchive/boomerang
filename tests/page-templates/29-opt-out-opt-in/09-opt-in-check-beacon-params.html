@@ -2,8 +2,8 @@
 <script>
 /*eslint-disable no-unused-vars*/
 window.BOOMR_CONSENT_CONFIG = {
-	enabled: true,
-	optInRequired: true
+  enabled: true,
+  optInRequired: true
 };
 </script>
 <%= consentInlinePlugin %>
@@ -12,12 +12,12 @@ window.BOOMR_CONSENT_CONFIG = {
 <script>
 BOOMR_OPT_IN();
 BOOMR_test.init({
-	site_domain: document.domain,
-	testAfterOnBeacon: 2,
-	afterFirstBeacon: function() {
-		// fire a beacon
-		BOOMR.responseEnd("foo");
-	}
+  site_domain: document.domain,
+  testAfterOnBeacon: 2,
+  afterFirstBeacon: function() {
+    // fire a beacon
+    BOOMR.responseEnd("foo");
+  }
 });
 </script>
 <%= footer %>

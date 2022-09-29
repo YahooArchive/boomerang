@@ -72,241 +72,251 @@
  * @class BOOMR.plugins.UserTiming
  */
 (function() {
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	if (BOOMR.plugins.UserTiming) {
-		return;
-	}
+  if (BOOMR.plugins.UserTiming) {
+    return;
+  }
 
-	var impl = {
-		// Whether or not this plugin is complete.
-		complete: false,
+  var impl = {
+    // Whether or not this plugin is complete.
+    complete: false,
 
-		// Whether or not this plugin is initialized
-		initialized: false,
+    // Whether or not this plugin is initialized
+    initialized: false,
 
-		// Whether or not UserTiming is supported by this browser
-		supported: false,
+    // Whether or not UserTiming is supported by this browser
+    supported: false,
 
-		// Options
-		options: {"from": 0, "window": BOOMR.window},
+    // Options
+    options: {"from": 0, "window": BOOMR.window},
 
-		/*
-		 * Gets the user timings, filters out those that have already been sent.
-		 * Calls the UserTimingCompression library to get the compressed UserTiming
-		 * data that occurred since the last call.
-		 *
-		 * @returns {string} UserTiming data
-		 */
-		getUserTiming: function() {
-			var entries = this.findUserTimingForFrame(impl.options.window);
+    /*
+     * Gets the user timings, filters out those that have already been sent.
+     * Calls the UserTimingCompression library to get the compressed UserTiming
+     * data that occurred since the last call.
+     *
+     * @returns {string} UserTiming data
+     */
+    getUserTiming: function() {
+      var entries = this.findUserTimingForFrame(impl.options.window);
 
-			// 'from' minimum time
-			if (impl.options.from) {
-				entries = entries.filter(function(e) {
-					return e.startTime + e.duration >= impl.options.from;
-				});
-			}
+      // 'from' minimum time
+      if (impl.options.from) {
+        entries = entries.filter(function(e) {
+          return e.startTime + e.duration >= impl.options.from;
+        });
+      }
 
-			var utc = window.UserTimingCompression || BOOMR.window.UserTimingCompression;
+      var utc = window.UserTimingCompression || BOOMR.window.UserTimingCompression;
 
-			if (typeof utc === "undefined") {
-				if (entries.length === 0) {
-					return null;
-				}
-				else {
-					var res = {};
-					for (var i = 0, l = entries.length; i < l; i++) {
-						var entry = entries[i];
-						res[entry.entryType] = res[entry.entryType] || {};
-						if (entry.entryType === "mark") {
-							res[entry.entryType][entry.name] = entry.startTime;
-						}
-						else if (entry.entryType === "measure") {
-							res[entry.entryType][entry.name] = entry.duration;
-						}
-					}
-					return JSON.stringify(res);
-				}
-			}
-			else {
-				var timings, res;
-				timings = utc.compressUserTiming(entries);
-				return utc.compressForUri(timings);
-			}
-		},
+      if (typeof utc === "undefined") {
+        if (entries.length === 0) {
+          return null;
+        }
+        else {
+          var res = {};
 
-		/**
-		 * Callback for `before_beacon` boomerang event.
-		 *
-		 * Adds the `usertiming` param to the beacon.
-		 */
-		addEntriesToBeacon: function(vars) {
-			var r, now = BOOMR.hrNow();
+          for (var i = 0, l = entries.length; i < l; i++) {
+            var entry = entries[i];
 
-			// Add entries to all beacon types except early beacons
-			if (this.complete || (vars && typeof vars.early !== "undefined")) {
-				return;
-			}
+            res[entry.entryType] = res[entry.entryType] || {};
 
-			r = this.getUserTiming();
-			if (r) {
-				BOOMR.addVar("usertiming", r, true);
-			}
+            if (entry.entryType === "mark") {
+              res[entry.entryType][entry.name] = entry.startTime;
+            }
+            else if (entry.entryType === "measure") {
+              res[entry.entryType][entry.name] = entry.duration;
+            }
+          }
 
-			this.options.from = now;
+          return JSON.stringify(res);
+        }
+      }
+      else {
+        var timings, res;
 
-			this.complete = true;
-		},
+        timings = utc.compressUserTiming(entries);
 
-		/**
-		 * Gets all of the UserTiming entries for a frame
+        return utc.compressForUri(timings);
+      }
+    },
 
-		 * @param {object} frame Window or frame DOM object
-		 *
-		 * @returns {PerformanceEntry[]} UserTiming entries
-		 */
-		findUserTimingForFrame: function(frame) {
-			var entries;
+    /**
+     * Callback for `before_beacon` boomerang event.
+     *
+     * Adds the `usertiming` param to the beacon.
+     */
+    addEntriesToBeacon: function(vars) {
+      var r,
+          now = BOOMR.hrNow();
 
-			if (!frame) {
-				return [];
-			}
+      // Add entries to all beacon types except early beacons
+      if (this.complete || (vars && typeof vars.early !== "undefined")) {
+        return;
+      }
 
-			try {
-				// Try to access location.href first to trigger any Cross-Origin
-				// warnings.  There's also a bug in Chrome ~48 that might cause
-				// the browser to crash if accessing X-O frame.performance.
-				// https://code.google.com/p/chromium/issues/detail?id=585871
-				// This variable is not otherwise used.
-				/* eslint-disable no-unused-vars */
-				var frameLoc = frame.location && frame.location.href;
-				/* eslint-enable no-unused-vars */
+      r = this.getUserTiming();
 
-				if (!("performance" in frame) ||
-					!frame.performance ||
-					!frame.performance.getEntriesByType) {
-					return entries;
-				}
+      if (r) {
+        BOOMR.addVar("usertiming", r, true);
+      }
 
-				// gather marks and measures for this frame
-				// TODO do we need to offset startTime?
-				entries = frame.performance.getEntriesByType("mark");
-				entries = entries.concat(frame.performance.getEntriesByType("measure"));
-			}
-			catch (e) {
-				return entries;
-			}
+      this.options.from = now;
 
-			return entries;
-		},
+      this.complete = true;
+    },
 
-		/**
-		 * Callback for `beacon` boomerang event.
-		 *
-		 * Clears the `usertiming` beacon param.
-		 */
-		clearMetrics: function(vars) {
-			this.complete = false;
-		},
+    /**
+     * Gets all of the UserTiming entries for a frame
 
-		/**
-		 * Subscribe to boomerang events that will handle the `usertiming`
-		 * beacon param.
-		 */
-		subscribe: function() {
-			BOOMR.subscribe("before_beacon", this.addEntriesToBeacon, null, this);
-			BOOMR.subscribe("beacon", this.clearMetrics, null, this);
-		},
+     * @param {object} frame Window or frame DOM object
+     *
+     * @returns {PerformanceEntry[]} UserTiming entries
+     */
+    findUserTimingForFrame: function(frame) {
+      var entries;
 
-		/**
-		 * Callback for boomerang page_ready event.
-		 *
-		 * At page_ready, all javascript should be loaded. We'll call `checkSupport`
-		 * again to see if a polyfill for UserTiming is available.
-		 */
-		pageReady: function() {
-			if (this.checkSupport()) {
-				this.subscribe();
-			}
-		},
+      if (!frame) {
+        return [];
+      }
 
-		/**
-		 * Checks if the browser supports the UserTiming API and that the
-		 * UserTimingCompression library is available.
-		 *
-		 * @returns {boolean} true if supported, false if not
-		 */
-		checkSupport: function() {
-			if (this.supported) {
-				return true;
-			}
+      try {
+        // Try to access location.href first to trigger any Cross-Origin
+        // warnings.  There's also a bug in Chrome ~48 that might cause
+        // the browser to crash if accessing X-O frame.performance.
+        // https://code.google.com/p/chromium/issues/detail?id=585871
+        // This variable is not otherwise used.
+        /* eslint-disable no-unused-vars */
+        var frameLoc = frame.location && frame.location.href;
+        /* eslint-enable no-unused-vars */
 
-			var p = BOOMR.getPerformance();
+        if (!("performance" in frame) ||
+          !frame.performance ||
+          !frame.performance.getEntriesByType) {
+          return entries;
+        }
 
-			// Check that we have getEntriesByType
-			if (p && typeof p.getEntriesByType === "function") {
-				var marks = p.getEntriesByType("mark");
-				var measures = p.getEntriesByType("measure");
+        // gather marks and measures for this frame
+        // TODO do we need to offset startTime?
+        entries = frame.performance.getEntriesByType("mark");
+        entries = entries.concat(frame.performance.getEntriesByType("measure"));
+      }
+      catch (e) {
+        return entries;
+      }
 
-				// Check that the results of getEntriesByType for marks and measures are Arrays
-				// Some polyfill libraries may incorrectly implement this
-				if (BOOMR.utils.isArray(marks) && BOOMR.utils.isArray(measures)) {
-					BOOMR.info("Client supports UserTiming API", "usertiming");
-					this.supported = true;
-					return true;
-				}
-			}
+      return entries;
+    },
 
-			return false;
-		}
-	};
+    /**
+     * Callback for `beacon` boomerang event.
+     *
+     * Clears the `usertiming` beacon param.
+     */
+    clearMetrics: function(vars) {
+      this.complete = false;
+    },
 
-	BOOMR.plugins.UserTiming = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * @returns {@link BOOMR.plugins.UserTiming} The UserTiming plugin for chaining
-		 * @memberof BOOMR.plugins.UserTiming
-		 */
-		init: function(config) {
-			if (impl.initialized) {
-				return this;
-			}
+    /**
+     * Subscribe to boomerang events that will handle the `usertiming`
+     * beacon param.
+     */
+    subscribe: function() {
+      BOOMR.subscribe("before_beacon", this.addEntriesToBeacon, null, this);
+      BOOMR.subscribe("beacon", this.clearMetrics, null, this);
+    },
 
-			if (impl.checkSupport()) {
-				impl.subscribe();
-			}
-			else {
-				// UserTiming isn't supported by the browser or the UserTimingCompression
-				// library isn't loaded. Let's check again when the page is
-				// ready to see if a polyfill was loaded.
-				BOOMR.subscribe("page_ready", impl.pageReady, null, impl);
-			}
+    /**
+     * Callback for boomerang page_ready event.
+     *
+     * At page_ready, all javascript should be loaded. We'll call `checkSupport`
+     * again to see if a polyfill for UserTiming is available.
+     */
+    pageReady: function() {
+      if (this.checkSupport()) {
+        this.subscribe();
+      }
+    },
 
-			impl.initialized = true;
-			return this;
-		},
+    /**
+     * Checks if the browser supports the UserTiming API and that the
+     * UserTimingCompression library is available.
+     *
+     * @returns {boolean} true if supported, false if not
+     */
+    checkSupport: function() {
+      if (this.supported) {
+        return true;
+      }
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.UserTiming
-		 */
-		is_complete: function() {
-			return true;
-		},
+      var p = BOOMR.getPerformance();
 
-		/**
-		 * Whether or not UserTiming is supported in this browser.
-		 *
-		 * @returns {boolean} `true` if UserTiming is supported.
-		 * @memberof BOOMR.plugins.UserTiming
-		 */
-		is_supported: function() {
-			return impl.initialized && impl.supported;
-		}
-	};
+      // Check that we have getEntriesByType
+      if (p && typeof p.getEntriesByType === "function") {
+        var marks = p.getEntriesByType("mark");
+        var measures = p.getEntriesByType("measure");
+
+        // Check that the results of getEntriesByType for marks and measures are Arrays
+        // Some polyfill libraries may incorrectly implement this
+        if (BOOMR.utils.isArray(marks) && BOOMR.utils.isArray(measures)) {
+          BOOMR.info("Client supports UserTiming API", "usertiming");
+          this.supported = true;
+
+          return true;
+        }
+      }
+
+      return false;
+    }
+  };
+
+  BOOMR.plugins.UserTiming = {
+    /**
+     * Initializes the plugin.
+     *
+     * @returns {@link BOOMR.plugins.UserTiming} The UserTiming plugin for chaining
+     * @memberof BOOMR.plugins.UserTiming
+     */
+    init: function(config) {
+      if (impl.initialized) {
+        return this;
+      }
+
+      if (impl.checkSupport()) {
+        impl.subscribe();
+      }
+      else {
+        // UserTiming isn't supported by the browser or the UserTimingCompression
+        // library isn't loaded. Let's check again when the page is
+        // ready to see if a polyfill was loaded.
+        BOOMR.subscribe("page_ready", impl.pageReady, null, impl);
+      }
+
+      impl.initialized = true;
+
+      return this;
+    },
+
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.UserTiming
+     */
+    is_complete: function() {
+      return true;
+    },
+
+    /**
+     * Whether or not UserTiming is supported in this browser.
+     *
+     * @returns {boolean} `true` if UserTiming is supported.
+     * @memberof BOOMR.plugins.UserTiming
+     */
+    is_supported: function() {
+      return impl.initialized && impl.supported;
+    }
+  };
 }());

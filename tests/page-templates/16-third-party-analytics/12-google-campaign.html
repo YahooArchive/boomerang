@@ -6,16 +6,16 @@
 BOOMR_test.clearCookies();
 
 if (window.location.href.indexOf("utm_source") === -1) {
-	window.location.href += "?utm_source=source&utm_medium=medium&utm_term=term&utm_content=content&utm_campaign=campaign";
+  window.location.href += "?utm_source=source&utm_medium=medium&utm_term=term&utm_content=content&utm_campaign=campaign";
 }
 else {
-	BOOMR_test.init({
-		testAfterOnBeacon: true,
-		TPAnalytics: {
-			enabled: true,
-			clientids: true
-		}
-	});
+  BOOMR_test.init({
+    testAfterOnBeacon: true,
+    TPAnalytics: {
+      enabled: true,
+      clientids: true
+    }
+  });
 }
 </script>
 <%= footer %>

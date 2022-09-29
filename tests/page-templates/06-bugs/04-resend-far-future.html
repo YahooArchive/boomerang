@@ -7,23 +7,23 @@ responseEnd happening in the far future
 <script>
 // Patch getPerformance to return our buggy data instead
 BOOMR.getPerformance = function() {
-	var data = BOOMR_test.getPerformanceCopy();
+  var data = BOOMR_test.getPerformanceCopy();
 
-	if (!data) {
-		return data;
-	}
+  if (!data) {
+    return data;
+  }
 
-	// response end is in year 2065
-	data.timing.responseEnd = 2997993600000;
+  // response end is in year 2065
+  data.timing.responseEnd = 2997993600000;
 
-	return data;
+  return data;
 };
 
 // reset timings so the above ones take effect
 BOOMR.plugins.RT.resetTimings();
 
 BOOMR_test.init({
-	testAfterOnBeacon: true
+  testAfterOnBeacon: true
 });
 </script>
 <%= footer %>

@@ -7,7 +7,7 @@
 <script>
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 </script>
 <div ng-view></div>
@@ -17,18 +17,19 @@ document.addEventListener("DOMContentLoaded", function() {
 window.angular_imgs = [3000];
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: true,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 
 if (BOOMR.plugins.AutoXHR) {
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "support/widgets.json");
-	xhr.send(null);
+  var xhr = new XMLHttpRequest();
+
+  xhr.open("GET", "support/widgets.json");
+  xhr.send(null);
 }
 
 </script>

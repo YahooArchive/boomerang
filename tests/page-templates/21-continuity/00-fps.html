@@ -6,18 +6,18 @@
 <script>
 // wait so that rAF gets called at least once
 setTimeout(function() {
-	// loop for 300ms to trigger a long frame
-	BOOMR_test.busy(300);
+  // loop for 300ms to trigger a long frame
+  BOOMR_test.busy(300);
 
-	// wait so that the rAF gets called at least once after busy
-	setTimeout(function() {
-		BOOMR_test.init({
-			testAfterOnBeacon: true,
-			Continuity: {
-				enabled: true
-			}
-		});
-	}, 100);
+  // wait so that the rAF gets called at least once after busy
+  setTimeout(function() {
+    BOOMR_test.init({
+      testAfterOnBeacon: true,
+      Continuity: {
+        enabled: true
+      }
+    });
+  }, 100);
 }, 100);
 </script>
 <%= footer %>

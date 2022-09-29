@@ -2,18 +2,18 @@
 <script>
 // polyfill / overwrite PO for testing
 window.PerformanceObserver = function(callback) {
-	window.POs = window.POs || {};
+  window.POs = window.POs || {};
 
-	return {
-		entryTypes: undefined,
-		observe: function(config) {
-			this.type = config.type;
-			window.POs[this.type] = this;
-		},
-		trigger: function(data) {
-			callback(data);
-		}
-	};
+  return {
+    entryTypes: undefined,
+    observe: function(config) {
+      this.type = config.type;
+      window.POs[this.type] = this;
+    },
+    trigger: function(data) {
+      callback(data);
+    }
+  };
 };
 
 // polyfill EventTiming
@@ -23,92 +23,93 @@ window.PerformanceEventTiming = {};
 <script src="00-basic.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	EventTiming: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  EventTiming: {
+    enabled: true
+  }
 });
 
 // trigger some events
 window.POs["first-input"].trigger({
-	getEntries: function() {
-		return [{
-			entryType: "first-input",
-			startTime: 100,
-			duration: 900,
-			processingStart: 150,
-			processingEnd: 1000,
-			cancelable: false,
-			interactionId: 10
-		}];
-	}
+  getEntries: function() {
+    return [{
+      entryType: "first-input",
+      startTime: 100,
+      duration: 900,
+      processingStart: 150,
+      processingEnd: 1000,
+      cancelable: false,
+      interactionId: 10
+    }];
+  }
 });
 
 window.EVENT_TYPES = {
-	"click": 0,
-	"dblclick": 1,
-	"mousedown": 2,
-	"mouseup": 3,
-	"mousemove": 4,
-	"touchstart": 5,
-	"touchend": 6,
-	"touchmove": 7,
-	"keydown": 8,
-	"keyup": 9,
-	"keypress": 10,
-	"wheel": 11,
-	"pointerdown": 12,
-	"pointerup": 13,
-	"pointermove": 14,
-	"compositionstart": 17,
-	"compositionupdate": 18,
-	"compositionend": 19,
-	"contextmenu": 20,
-	"pointerover": 21,
-	"mouseover": 22,
-	"pointerenter": 23,
-	"auxclick": 24,
-	"beforeinput": 25,
-	"dragend": 26,
-	"dragenter": 27,
-	"dragleave": 28,
-	"dragover": 29,
-	"dragstart": 30,
-	"drop": 31,
-	"gotpointercapture": 32,
-	"input": 33,
-	"lostpointercapture": 34,
-	"mouseenter": 35,
-	"mouseleave": 36,
-	"mouseout": 37,
-	"pointercancel": 38,
-	"pointerleave": 39,
-	"pointerout": 40,
-	"touchcancel": 41
+  "click": 0,
+  "dblclick": 1,
+  "mousedown": 2,
+  "mouseup": 3,
+  "mousemove": 4,
+  "touchstart": 5,
+  "touchend": 6,
+  "touchmove": 7,
+  "keydown": 8,
+  "keyup": 9,
+  "keypress": 10,
+  "wheel": 11,
+  "pointerdown": 12,
+  "pointerup": 13,
+  "pointermove": 14,
+  "compositionstart": 17,
+  "compositionupdate": 18,
+  "compositionend": 19,
+  "contextmenu": 20,
+  "pointerover": 21,
+  "mouseover": 22,
+  "pointerenter": 23,
+  "auxclick": 24,
+  "beforeinput": 25,
+  "dragend": 26,
+  "dragenter": 27,
+  "dragleave": 28,
+  "dragover": 29,
+  "dragstart": 30,
+  "drop": 31,
+  "gotpointercapture": 32,
+  "input": 33,
+  "lostpointercapture": 34,
+  "mouseenter": 35,
+  "mouseleave": 36,
+  "mouseout": 37,
+  "pointercancel": 38,
+  "pointerleave": 39,
+  "pointerout": 40,
+  "touchcancel": 41
 };
 
 window.POs.event.trigger({
-	getEntries: function() {
-		var events = [];
+  getEntries: function() {
+    var events = [];
 
-		// add one of each event
-		var i = 0;
-		for (var eventName in window.EVENT_TYPES) {
-			i++;
-			events.push({
-				name: eventName,
-				entryType: "event",
-				startTime: 1000 + i,
-				duration: 50 + i,
-				processingStart: 1000 + i,
-				processingEnd: 1050 + i,
-				cancelable: false,
-				interactionId: 100 + i
-			});
-		}
+    // add one of each event
+    var i = 0;
 
-		return events;
-	}
+    for (var eventName in window.EVENT_TYPES) {
+      i++;
+      events.push({
+        name: eventName,
+        entryType: "event",
+        startTime: 1000 + i,
+        duration: 50 + i,
+        processingStart: 1000 + i,
+        processingEnd: 1050 + i,
+        cancelable: false,
+        interactionId: 100 + i
+      });
+    }
+
+    return events;
+  }
 });
 </script>
 <img src="/delay?delay=5000&file=/assets/img.jpg" />

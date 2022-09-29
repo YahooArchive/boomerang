@@ -12,25 +12,27 @@
 <script>
 
 function OnImageLoaded(img) {
-	window.heroImagesLoaded = BOOMR.now();
-	// do another 500ms of work
-	BOOMR_test.busy(500);
-	// time to interactive should be around this timestamp
-	window.timeToInteractive = BOOMR.now();
+  window.heroImagesLoaded = BOOMR.now();
+  // do another 500ms of work
+  BOOMR_test.busy(500);
+  // time to interactive should be around this timestamp
+  window.timeToInteractive = BOOMR.now();
 }
 
 var img = new Image();
+
 img.onload = function() {
-	OnImageLoaded(this);
+  OnImageLoaded(this);
 };
+
 img.src = "/delay?delay=2000&file=assets/img.jpg";
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true,
-		ttiWaitForHeroImages: ".hero-image"
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true,
+    ttiWaitForHeroImages: ".hero-image"
+  }
 });
 </script>
 <%= footer %>

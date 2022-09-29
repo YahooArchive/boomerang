@@ -7,22 +7,23 @@
 var mutInterval;
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true,
-		monitorStats: true
-	},
-	afterFirstBeacon: function() {
-		clearInterval(mutInterval);
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true,
+    monitorStats: true
+  },
+  afterFirstBeacon: function() {
+    clearInterval(mutInterval);
+  }
 });
 </script>
 <script>
 // make consistent DOM mutations
 mutInterval = setInterval(function() {
-	var d = document.createElement("div");
-	d.innerHTML = "test";
-	document.getElementById("out").appendChild(d);
+  var d = document.createElement("div");
+
+  d.innerHTML = "test";
+  document.getElementById("out").appendChild(d);
 }, 100);
 </script>
 <%= footer %>

@@ -11,15 +11,15 @@ window.backbone_imgs = [1000];
 window.backbone_nav_routes = ["widgets/1", "19-autoxhr-during-nav-alwayssendxhr.html"];
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 8 : 1,
-	Backbone: {
-		enabled: true
-	},
-	AutoXHR: {
-		alwaysSendXhr: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 8 : 1,
+  Backbone: {
+    enabled: true
+  },
+  AutoXHR: {
+    alwaysSendXhr: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <script src="support/app.js"></script>

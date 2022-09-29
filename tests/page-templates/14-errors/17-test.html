@@ -4,39 +4,39 @@
 <script src="../../vendor/json3/lib/json3.js"></script>
 <script>
 function errorFunction() {
-	a.foo = 1;
+  a.foo = 1;
 }
 
 function goodFunction(propName, value) {
-	value = value || 2;
-	propName = propName || "result";
+  value = value || 2;
+  propName = propName || "result";
 
-	// set the property
-	this[propName] = value;
+  // set the property
+  this[propName] = value;
 
-	return value;
+  return value;
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Errors: {
-		enabled: true,
+  testAfterOnBeacon: true,
+  Errors: {
+    enabled: true,
 
-		// turn off global monitor
-		monitorGlobal: false
-	}
+    // turn off global monitor
+    monitorGlobal: false
+  }
 });
 
 try {
-	BOOMR.plugins.Errors.test(errorFunction);
+  BOOMR.plugins.Errors.test(errorFunction);
 }
 catch (e) {
-	// exception should have been thrown
-	window.errorFunctionThrown = e;
+  // exception should have been thrown
+  window.errorFunctionThrown = e;
 }
 
 window.foo = {
-	result: false
+  result: false
 };
 
 // simple function with a return value

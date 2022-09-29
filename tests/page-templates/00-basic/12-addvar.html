@@ -5,19 +5,19 @@
 
 // disable sendBeacon so we can look at the URL's parameters
 if (window.navigator) {
-	window.navigator.sendBeacon = null;
+  window.navigator.sendBeacon = null;
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	afterFirstBeacon: function() {
-		// fire two beacons
-		BOOMR.responseEnd("foo");
+  testAfterOnBeacon: 3,
+  afterFirstBeacon: function() {
+    // fire two beacons
+    BOOMR.responseEnd("foo");
 
-		setTimeout(function() {
-			BOOMR.responseEnd("foo2");
-		}, 1000);
-	}
+    setTimeout(function() {
+      BOOMR.responseEnd("foo2");
+    }, 1000);
+  }
 });
 
 // test different variables types
@@ -44,8 +44,8 @@ BOOMR.removeVar("var12");
 
 // multiple sets
 BOOMR.addVar({
-	var13: 1,
-	var14: 2
+  var13: 1,
+  var14: 2
 });
 
 // remove a non-existent var

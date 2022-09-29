@@ -11,21 +11,21 @@
 <script src="17-tti-hero-images.js" type="text/javascript"></script>
 <script>
 function lastHeroImageLoad() {
-	window.heroImagesLoaded = BOOMR.now();
+  window.heroImagesLoaded = BOOMR.now();
 
-	// do another 500ms of work
-	BOOMR_test.busy(500);
+  // do another 500ms of work
+  BOOMR_test.busy(500);
 
-	// time to interactive should be around this timestamp
-	window.timeToInteractive = BOOMR.now();
+  // time to interactive should be around this timestamp
+  window.timeToInteractive = BOOMR.now();
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true,
-		ttiWaitForHeroImages: ".hero-image"
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true,
+    ttiWaitForHeroImages: ".hero-image"
+  }
 });
 </script>
 <%= footer %>

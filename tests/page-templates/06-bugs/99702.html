@@ -8,20 +8,20 @@
 //
 window.timestamp = new Date().getTime();
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
-	onBoomerangLoaded: function() {
-		setTimeout(function() {
-			BOOMR.responseEnd({
-				url: "http://foo.com",
-				timing: {
-					loadEventEnd: window.timestamp + 1000,
-					// Note for XHRs (which this is faking), we use responseEnd as responseStart in
-					// our calculation, so set it to be "after" loadEventEnd to trigger this condition
-					responseEnd: window.timestamp + 2000
-				}
-			});
-		}, 1000);
-	}
+  testAfterOnBeacon: 2,
+  onBoomerangLoaded: function() {
+    setTimeout(function() {
+      BOOMR.responseEnd({
+        url: "http://foo.com",
+        timing: {
+          loadEventEnd: window.timestamp + 1000,
+          // Note for XHRs (which this is faking), we use responseEnd as responseStart in
+          // our calculation, so set it to be "after" loadEventEnd to trigger this condition
+          responseEnd: window.timestamp + 2000
+        }
+      });
+    }, 1000);
+  }
 });
 </script>
 <%= footer %>

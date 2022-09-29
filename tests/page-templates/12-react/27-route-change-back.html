@@ -19,26 +19,28 @@ window.nav_routes = ["/widgets/1"];
 
 <script>
 var beaconNum = 0;
-BOOMR.subscribe("beacon", function() {
-	if (!BOOMR.plugins.AutoXHR) {
-		return;
-	}
 
-	beaconNum++;
-	if (beaconNum === 2) {
-		setTimeout(function() {
-			window.history.back();
-		}, 200);
-	}
+BOOMR.subscribe("beacon", function() {
+  if (!BOOMR.plugins.AutoXHR) {
+    return;
+  }
+
+  beaconNum++;
+
+  if (beaconNum === 2) {
+    setTimeout(function() {
+      window.history.back();
+    }, 200);
+  }
 });
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
-	History: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
+  History: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <script src="support/app.js"></script>

@@ -4,39 +4,39 @@
 
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
-	History: {
-		enabled: true,
-		auto: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
+  History: {
+    enabled: true,
+    auto: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		// pretend another library has loaded and wrapped XHR
-		window.orig_XHR = window.XMLHttpRequest;
-		window.XMLHttpRequest = function() {
-			// increment call count
-			window.XMLHttpRequest_called = window.XMLHttpRequest_called || 0;
-			window.XMLHttpRequest_called++;
+    // pretend another library has loaded and wrapped XHR
+    window.orig_XHR = window.XMLHttpRequest;
+    window.XMLHttpRequest = function() {
+      // increment call count
+      window.XMLHttpRequest_called = window.XMLHttpRequest_called || 0;
+      window.XMLHttpRequest_called++;
 
-			return new window.orig_XHR();
-		};
+      return new window.orig_XHR();
+    };
 
-		// fake BOOMR.init() happening again
-		BOOMR.init();
+    // fake BOOMR.init() happening again
+    BOOMR.init();
 
-		// trigger a pretend route change
-		BOOMR.plugins.SPA.route_change();
+    // trigger a pretend route change
+    BOOMR.plugins.SPA.route_change();
 
-		// Trigger an XHR
-		BOOMR_test.xhrDelayed("xhr1", 100, function() {
-			window.XMLHttpRequest_called_complete = true;
-		});
-	}
+    // Trigger an XHR
+    BOOMR_test.xhrDelayed("xhr1", 100, function() {
+      window.XMLHttpRequest_called_complete = true;
+    });
+  }
 });
 </script>
 <%= footer %>

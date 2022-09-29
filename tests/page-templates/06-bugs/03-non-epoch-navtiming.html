@@ -8,33 +8,33 @@ https://bugs.webkit.org/show_bug.cgi?id=168057
 <script>
 // Patch getPerformance to return our buggy data instead
 BOOMR.getPerformance = function() {
-	var data = BOOMR_test.getPerformanceCopy();
+  var data = BOOMR_test.getPerformanceCopy();
 
-	if (!data) {
-		return data;
-	}
+  if (!data) {
+    return data;
+  }
 
-	// change other timestamps to 0-based
-	data.timing.fetchStart = 0;
-	data.timing.domainLookupStart = 1;
-	data.timing.domainLookupEnd = 2;
-	data.timing.connectStart = 3;
-	data.timing.connectEnd = 4;
-	data.timing.requestStart = 5;
-	data.timing.responseStart = 6;
+  // change other timestamps to 0-based
+  data.timing.fetchStart = 0;
+  data.timing.domainLookupStart = 1;
+  data.timing.domainLookupEnd = 2;
+  data.timing.connectStart = 3;
+  data.timing.connectEnd = 4;
+  data.timing.requestStart = 5;
+  data.timing.responseStart = 6;
 
-	// these ones seem to be 0 still
-	data.timing.responseEnd = 0;
-	data.timing.loadEventStart = 0;
+  // these ones seem to be 0 still
+  data.timing.responseEnd = 0;
+  data.timing.loadEventStart = 0;
 
-	return data;
+  return data;
 };
 
 // reset timings so the above ones take effect
 BOOMR.plugins.RT.resetTimings();
 
 BOOMR_test.init({
-	testAfterOnBeacon: true
+  testAfterOnBeacon: true
 });
 </script>
 <%= footer %>

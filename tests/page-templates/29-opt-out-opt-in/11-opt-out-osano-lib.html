@@ -5,40 +5,40 @@
 <script>
 // Setup Osano Cookie popup
 function onCookieConsentChange(consent) {
-	if (consent === "deny") {
-		BOOMR_OPT_OUT();
-	}
+  if (consent === "deny") {
+    BOOMR_OPT_OUT();
+  }
 }
 
 window.addEventListener("load", function() {
-	window.cookieconsent.initialise({
-		"type": "opt-out",
-		"content": {
-			"href": "https://www.example.com/policies/"
-		},
-		onInitialise: onCookieConsentChange,
-		onStatusChange: onCookieConsentChange,
-		onRevokeChoice: onCookieConsentChange
-	});
+  window.cookieconsent.initialise({
+    "type": "opt-out",
+    "content": {
+      "href": "https://www.example.com/policies/"
+    },
+    onInitialise: onCookieConsentChange,
+    onStatusChange: onCookieConsentChange,
+    onRevokeChoice: onCookieConsentChange
+  });
 });
 </script>
 <script>
 /*eslint-disable no-unused-vars*/
 window.BOOMR_CONSENT_CONFIG = {
-	enabled: true
+  enabled: true
 };
 </script>
 
 <script>
 try {
-	var clickEvent = new MouseEvent("click", {
-		"view": window,
-		"bubbles": true,
-		"cancelable": true
-	});
+  var clickEvent = new MouseEvent("click", {
+    "view": window,
+    "bubbles": true,
+    "cancelable": true
+  });
 }
 catch (e) {
-	window.cannotCreateMouseEvent = true;
+  window.cannotCreateMouseEvent = true;
 }
 </script>
 <%= consentInlinePlugin %>
@@ -46,19 +46,19 @@ catch (e) {
 <script src="11-opt-out-osano-lib.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	site_domain: document.domain,
-	testAfterOnBeacon: false,
-	onBoomerangLoaded: function() {
-		BOOMR.subscribe("page_ready", function() {
-			setTimeout(function() {
-				document.getElementsByClassName("cc-deny")[0].dispatchEvent(clickEvent);
+  site_domain: document.domain,
+  testAfterOnBeacon: false,
+  onBoomerangLoaded: function() {
+    BOOMR.subscribe("page_ready", function() {
+      setTimeout(function() {
+        document.getElementsByClassName("cc-deny")[0].dispatchEvent(clickEvent);
 
-				setTimeout(function() {
-					BOOMR_test.runTests();
-				}, 500);
-			}, 300);
-		});
-	}
+        setTimeout(function() {
+          BOOMR_test.runTests();
+        }, 500);
+      }, 300);
+    });
+  }
 });
 </script>
 <%= footer %>

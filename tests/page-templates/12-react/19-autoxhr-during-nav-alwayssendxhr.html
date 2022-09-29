@@ -20,40 +20,41 @@ window.nav_routes = ["/widgets/1", "/"];
 // and timing may-or-may-not re-send a hashchange navigation to /# or /#_?.  We want to avoid
 // those minor route changes affecting these tests, so are skipping those in the routeFilter()
 var allowAnyFurtherRoutes = false;
+
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 8 : 1,
-	History: {
-		enabled: true,
-		auto: true,
-		routeFilter: function() {
-			if (allowAnyFurtherRoutes) {
-				// all future routes are allowed
-				return true;
-			}
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 8 : 1,
+  History: {
+    enabled: true,
+    auto: true,
+    routeFilter: function() {
+      if (allowAnyFurtherRoutes) {
+        // all future routes are allowed
+        return true;
+      }
 
-			if (arguments[2] && arguments[2].match(/19-autoxhr-during-nav-alwayssendxhr.html#\/$/)) {
-				// skip the first "fake" nav to index page "/#"
-				return false;
-			}
+      if (arguments[2] && arguments[2].match(/19-autoxhr-during-nav-alwayssendxhr.html#\/$/)) {
+        // skip the first "fake" nav to index page "/#"
+        return false;
+      }
 
-			if (arguments[2] && arguments[2].match(/19-autoxhr-during-nav-alwayssendxhr.html#\/\?_/)) {
-				// skip the first "fake" nav to index page "/#_/"
-				return false;
-			}
+      if (arguments[2] && arguments[2].match(/19-autoxhr-during-nav-alwayssendxhr.html#\/\?_/)) {
+        // skip the first "fake" nav to index page "/#_/"
+        return false;
+      }
 
-			if (arguments[2] && arguments[2].match(/\/widgets\//)) {
-				// once we've hit /widgets/, it and all future routes are OK to track
-				allowAnyFurtherRoutes = true;
-			}
+      if (arguments[2] && arguments[2].match(/\/widgets\//)) {
+        // once we've hit /widgets/, it and all future routes are OK to track
+        allowAnyFurtherRoutes = true;
+      }
 
-			return true;
-		}
-	},
-	AutoXHR: {
-		alwaysSendXhr: true
-	},
-	instrument_xhr: true,
-	autorun: false
+      return true;
+    }
+  },
+  AutoXHR: {
+    alwaysSendXhr: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <script src="support/app.js"></script>

@@ -3,19 +3,20 @@
 <%= boomerangSnippet %>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 1,  // is AutoXHR is available, we'll have 2 beacons
-	AutoXHR: {
-		alwaysSendXhr: true
-	},
-	ResourceTiming: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	onBoomerangLoaded: function() {
-		var xhr = new XMLHttpRequest();
-		xhr.open("GET", "support/script200.js");
-		xhr.send(null);
-	}
+  testAfterOnBeacon: 1,  // is AutoXHR is available, we'll have 2 beacons
+  AutoXHR: {
+    alwaysSendXhr: true
+  },
+  ResourceTiming: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  onBoomerangLoaded: function() {
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("GET", "support/script200.js");
+    xhr.send(null);
+  }
 });
 
 </script>

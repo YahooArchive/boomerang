@@ -20,47 +20,48 @@ Number.isInteger([1]);       // false
 */
 
 describe("BOOMR.utils.isInteger()", function() {
-	var assert = chai.assert;
+  var assert = chai.assert;
 
-	// Blow away the original isInteger method to exercise the polyfill
-	// in BOOMR.utils.isInteger().
-	var origIsInteger = Number.isInteger;
-	Number.isInteger = undefined;
+  // Blow away the original isInteger method to exercise the polyfill
+  // in BOOMR.utils.isInteger().
+  var origIsInteger = Number.isInteger;
 
-	it("Should not have access to the native Number.isInteger function", function() {
-		assert.isUndefined(Number.isInteger);
-	});
+  Number.isInteger = undefined;
 
-	it("Should return false when input is not an integer", function(){
-		assert.isUndefined(Number.isInteger);
-		assert.isFalse(BOOMR.utils.isInteger("-123"));
-		assert.isFalse(BOOMR.utils.isInteger("123"));
-		assert.isFalse(BOOMR.utils.isInteger("stringvalue"));
-		assert.isFalse(BOOMR.utils.isInteger(0.1));
-		assert.isFalse(BOOMR.utils.isInteger(Math.PI));
-		assert.isFalse(BOOMR.utils.isInteger(NaN));
-		assert.isFalse(BOOMR.utils.isInteger(Infinity));
-		assert.isFalse(BOOMR.utils.isInteger(-Infinity));
-		assert.isFalse(BOOMR.utils.isInteger(true));
-		assert.isFalse(BOOMR.utils.isInteger(false));
-		assert.isFalse(BOOMR.utils.isInteger([1]));
-	});
+  it("Should not have access to the native Number.isInteger function", function() {
+    assert.isUndefined(Number.isInteger);
+  });
 
-	it("Should return true when input is an integer", function() {
-		assert.isUndefined(Number.isInteger);
-		assert.isTrue(BOOMR.utils.isInteger(1));
-		assert.isTrue(BOOMR.utils.isInteger(0));
-		assert.isTrue(BOOMR.utils.isInteger(-100000));
-		assert.isTrue(BOOMR.utils.isInteger(99999999999999999999999));
-	});
+  it("Should return false when input is not an integer", function(){
+    assert.isUndefined(Number.isInteger);
+    assert.isFalse(BOOMR.utils.isInteger("-123"));
+    assert.isFalse(BOOMR.utils.isInteger("123"));
+    assert.isFalse(BOOMR.utils.isInteger("stringvalue"));
+    assert.isFalse(BOOMR.utils.isInteger(0.1));
+    assert.isFalse(BOOMR.utils.isInteger(Math.PI));
+    assert.isFalse(BOOMR.utils.isInteger(NaN));
+    assert.isFalse(BOOMR.utils.isInteger(Infinity));
+    assert.isFalse(BOOMR.utils.isInteger(-Infinity));
+    assert.isFalse(BOOMR.utils.isInteger(true));
+    assert.isFalse(BOOMR.utils.isInteger(false));
+    assert.isFalse(BOOMR.utils.isInteger([1]));
+  });
 
-	it("Should have restored accesss to the native Number.isInteger function", function() {
-		if (typeof origIsInteger !== "undefined") {
-			Number.isInteger = origIsInteger;
-			assert.isDefined(Number.isInteger);
-		}
-		else {
-			this.skip();
-		}
-	});
+  it("Should return true when input is an integer", function() {
+    assert.isUndefined(Number.isInteger);
+    assert.isTrue(BOOMR.utils.isInteger(1));
+    assert.isTrue(BOOMR.utils.isInteger(0));
+    assert.isTrue(BOOMR.utils.isInteger(-100000));
+    assert.isTrue(BOOMR.utils.isInteger(99999999999999999999999));
+  });
+
+  it("Should have restored accesss to the native Number.isInteger function", function() {
+    if (typeof origIsInteger !== "undefined") {
+      Number.isInteger = origIsInteger;
+      assert.isDefined(Number.isInteger);
+    }
+    else {
+      this.skip();
+    }
+  });
 });

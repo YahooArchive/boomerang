@@ -30,26 +30,26 @@ window.disableBoomerangHook = true;
 // regardless of the monitorReplaceState option.
 // This call should be ignored by the History plugin
 if (window.history && typeof history.replaceState === "function") {
-	BOOMR.subscribe("spa_init", function() {
-		setTimeout(function() {
-			// change the url
-			history.replaceState(history.state, document.title, window.location.pathname + "/");
-		}, 500);
-	}, null, null, true);
+  BOOMR.subscribe("spa_init", function() {
+    setTimeout(function() {
+      // change the url
+      history.replaceState(history.state, document.title, window.location.pathname + "/");
+    }, 500);
+  }, null, null, true);
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	History: {
-		enabled: true,
-		auto: true,
-		monitorReplaceState: false
-	},
-	Errors: {
-		enabled: false
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 3,
+  History: {
+    enabled: true,
+    auto: true,
+    monitorReplaceState: false
+  },
+  Errors: {
+    enabled: false
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <%= footer %>

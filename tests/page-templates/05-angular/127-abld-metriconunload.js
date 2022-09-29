@@ -2,43 +2,43 @@
 /*global BOOMR_test*/
 
 describe("e2e/05-angular/127-abld-metriconunload", function() {
-	var tf = BOOMR.plugins.TestFramework;
-	var t = BOOMR_test;
+  var tf = BOOMR.plugins.TestFramework;
+  var t = BOOMR_test;
 
-	it("Should pass basic beacon validation", function(done) {
-		t.validateBeaconWasSent(done);
-	});
+  it("Should pass basic beacon validation", function(done) {
+    t.validateBeaconWasSent(done);
+  });
 
-	it("Should have sent three beacons", function() {
-		assert.equal(tf.beacons.length, 3);
-	});
+  it("Should have sent three beacons", function() {
+    assert.equal(tf.beacons.length, 3);
+  });
 
-	it("Should have sent the first beacon with rt.quit and rt.abld (if MutationObserver and NavigationTiming are supported)", function() {
-		if (t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
-			var b = tf.beacons[0];
+  it("Should have sent the first beacon with rt.quit and rt.abld (if MutationObserver and NavigationTiming are supported)", function() {
+    if (t.isMutationObserverSupported() && typeof BOOMR.plugins.RT.navigationStart() !== "undefined") {
+      var b = tf.beacons[0];
 
-			assert.equal(b["rt.quit"], "");
-			assert.equal(b["rt.abld"], "");
-		}
-	});
+      assert.equal(b["rt.quit"], "");
+      assert.equal(b["rt.abld"], "");
+    }
+  });
 
-	it("Should have DOM count data on unload, as the onNonPageLoad is set", function() {
-		var b = tf.beacons[0];
+  it("Should have DOM count data on unload, as the onNonPageLoad is set", function() {
+    var b = tf.beacons[0];
 
-		assert.isDefined(b["dom.ln"]);
-		assert.isDefined(b["dom.img"]);
-		assert.isDefined(b["dom.script"]);
-		assert.isDefined(b["dom.iframe"]);
-		assert.isDefined(b["dom.link"]);
-	});
+    assert.isDefined(b["dom.ln"]);
+    assert.isDefined(b["dom.img"]);
+    assert.isDefined(b["dom.script"]);
+    assert.isDefined(b["dom.iframe"]);
+    assert.isDefined(b["dom.link"]);
+  });
 
-	it("Should have ResourceTiming data (restiming) (if supported)", function() {
-		if (!t.isResourceTimingSupported()) {
-			this.skip();
-		}
+  it("Should have ResourceTiming data (restiming) (if supported)", function() {
+    if (!t.isResourceTimingSupported()) {
+      this.skip();
+    }
 
-		var b = tf.beacons[0];
+    var b = tf.beacons[0];
 
-		assert.isDefined(b.restiming);
-	});
+    assert.isDefined(b.restiming);
+  });
 });

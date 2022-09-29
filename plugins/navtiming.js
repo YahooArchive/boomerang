@@ -81,383 +81,400 @@
  * @class BOOMR.plugins.NavigationTiming
  */
 (function() {
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	if (BOOMR.plugins.NavigationTiming) {
-		return;
-	}
+  if (BOOMR.plugins.NavigationTiming) {
+    return;
+  }
 
-	/**
-	 * Calculates a NavigationTiming timestamp for the beacon, in milliseconds
-	 * since the Unix Epoch.
-	 *
-	 * The offset should be 0 if using a timestamp from performance.timing (which
-	 * are already in milliseconds since Unix Epoch), or the value of navigationStart
-	 * if using getEntriesByType("navigation") (which are DOMHighResTimestamps).
-	 *
-	 * The number is stripped of any decimals.
-	 *
-	 * @param {number} offset navigationStart offset (0 if using NavTiming1)
-	 * @param {number} val DOMHighResTimestamp
-	 * @param {boolean} forceIfZero Force the offset even if the value is zero
-	 *
-	 * @returns {number} Timestamp for beacon
-	 */
-	function calcNavTimingTimestamp(offset, val, forceIfZero) {
-		if (typeof val !== "number" || val === 0) {
-			// if the timestamp is 0 and forceIfZero is set,
-			// return the offset so the timestamp is still on the beacon
-			if (val === 0 && forceIfZero) {
-				return Math.floor(offset || 0);
-			}
+  /**
+   * Calculates a NavigationTiming timestamp for the beacon, in milliseconds
+   * since the Unix Epoch.
+   *
+   * The offset should be 0 if using a timestamp from performance.timing (which
+   * are already in milliseconds since Unix Epoch), or the value of navigationStart
+   * if using getEntriesByType("navigation") (which are DOMHighResTimestamps).
+   *
+   * The number is stripped of any decimals.
+   *
+   * @param {number} offset navigationStart offset (0 if using NavTiming1)
+   * @param {number} val DOMHighResTimestamp
+   * @param {boolean} forceIfZero Force the offset even if the value is zero
+   *
+   * @returns {number} Timestamp for beacon
+   */
+  function calcNavTimingTimestamp(offset, val, forceIfZero) {
+    if (typeof val !== "number" || val === 0) {
+      // if the timestamp is 0 and forceIfZero is set,
+      // return the offset so the timestamp is still on the beacon
+      if (val === 0 && forceIfZero) {
+        return Math.floor(offset || 0);
+      }
 
-			return undefined;
-		}
+      return undefined;
+    }
 
-		return Math.floor((offset || 0) + val);
-	}
+    return Math.floor((offset || 0) + val);
+  }
 
-	// A private object to encapsulate all your implementation details
-	var impl = {
-		complete: false,
-		fullySent: false,
-		sendBeacon: function() {
-			this.complete = true;
-			BOOMR.sendBeacon();
-		},
-		xhr_done: function(edata) {
-			var p;
+  // A private object to encapsulate all your implementation details
+  var impl = {
+    complete: false,
+    fullySent: false,
+    sendBeacon: function() {
+      this.complete = true;
+      BOOMR.sendBeacon();
+    },
+    xhr_done: function(edata) {
+      var p;
 
-			if (edata && edata.initiator === "spa_hard") {
-				// Single Page App - Hard refresh: Send page's NavigationTiming data, if
-				// available.
-				impl.done(edata);
-				return;
-			}
-			else if (edata && edata.initiator === "spa") {
-				// Single Page App - Soft refresh: The original hard navigation is no longer
-				// relevant for this soft refresh, nor is the "URL" for this page, so don't
-				// add NavigationTiming or ResourceTiming metrics.
-				impl.sendBeacon();
-				return;
-			}
+      if (edata && edata.initiator === "spa_hard") {
+        // Single Page App - Hard refresh: Send page's NavigationTiming data, if
+        // available.
+        impl.done(edata);
 
-			var w = BOOMR.window, res, data = {}, k;
+        return;
+      }
+      else if (edata && edata.initiator === "spa") {
+        // Single Page App - Soft refresh: The original hard navigation is no longer
+        // relevant for this soft refresh, nor is the "URL" for this page, so don't
+        // add NavigationTiming or ResourceTiming metrics.
+        impl.sendBeacon();
 
-			if (!edata) {
-				return;
-			}
+        return;
+      }
 
-			if (edata.data) {
-				edata = edata.data;
-			}
+      var w = BOOMR.window,
+          res,
+          data = {},
+          k;
 
-			p = BOOMR.getPerformance();
+      if (!edata) {
+        return;
+      }
 
-			// if we previously saved the correct ResourceTiming entry, use it
-			if (p && edata.restiming) {
-				data = {
-					nt_red_st: edata.restiming.redirectStart,
-					nt_red_end: edata.restiming.redirectEnd,
-					nt_fet_st: edata.restiming.fetchStart,
-					nt_dns_st: edata.restiming.domainLookupStart,
-					nt_dns_end: edata.restiming.domainLookupEnd,
-					nt_con_st: edata.restiming.connectStart,
-					nt_con_end: edata.restiming.connectEnd,
-					nt_req_st: edata.restiming.requestStart,
-					nt_res_st: edata.restiming.responseStart,
-					nt_res_end: edata.restiming.responseEnd
-				};
+      if (edata.data) {
+        edata = edata.data;
+      }
 
-				if (edata.restiming.secureConnectionStart) {
-					// secureConnectionStart is OPTIONAL in the spec
-					data.nt_ssl_st = edata.restiming.secureConnectionStart;
-				}
+      p = BOOMR.getPerformance();
 
-				for (k in data) {
-					if (data.hasOwnProperty(k) && data[k]) {
-						data[k] += p.timing.navigationStart;
+      // if we previously saved the correct ResourceTiming entry, use it
+      if (p && edata.restiming) {
+        data = {
+          nt_red_st: edata.restiming.redirectStart,
+          nt_red_end: edata.restiming.redirectEnd,
+          nt_fet_st: edata.restiming.fetchStart,
+          nt_dns_st: edata.restiming.domainLookupStart,
+          nt_dns_end: edata.restiming.domainLookupEnd,
+          nt_con_st: edata.restiming.connectStart,
+          nt_con_end: edata.restiming.connectEnd,
+          nt_req_st: edata.restiming.requestStart,
+          nt_res_st: edata.restiming.responseStart,
+          nt_res_end: edata.restiming.responseEnd
+        };
 
-						// don't need to send microseconds
-						data[k] = Math.floor(data[k]);
-					}
-				}
-			}
+        if (edata.restiming.secureConnectionStart) {
+          // secureConnectionStart is OPTIONAL in the spec
+          data.nt_ssl_st = edata.restiming.secureConnectionStart;
+        }
 
-			if (edata.timing) {
-				res = edata.timing;
-				if (!data.nt_req_st) {
-					// requestStart will be 0 if Timing-Allow-Origin header isn't set on the xhr response
-					data.nt_req_st = res.requestStart;
-				}
-				if (!data.nt_res_st) {
-					// responseStart will be 0 if Timing-Allow-Origin header isn't set on the xhr response
-					data.nt_res_st = res.responseStart;
-				}
-				if (!data.nt_res_end) {
-					data.nt_res_end = res.responseEnd;
-				}
-				data.nt_domint = res.domInteractive;
-				data.nt_domcomp = res.domComplete;
-				data.nt_load_st = res.loadEventEnd;
-				data.nt_load_end = res.loadEventEnd;
-			}
+        for (k in data) {
+          if (data.hasOwnProperty(k) && data[k]) {
+            data[k] += p.timing.navigationStart;
 
-			for (k in data) {
-				if (data.hasOwnProperty(k) && !data[k]) {
-					delete data[k];
-				}
-			}
+            // don't need to send microseconds
+            data[k] = Math.floor(data[k]);
+          }
+        }
+      }
 
-			BOOMR.addVar(data, undefined, true);
+      if (edata.timing) {
+        res = edata.timing;
 
-			impl.sendBeacon();
-		},
+        if (!data.nt_req_st) {
+          // requestStart will be 0 if Timing-Allow-Origin header isn't set on the xhr response
+          data.nt_req_st = res.requestStart;
+        }
 
-		done: function() {
-			var w = BOOMR.window, p, pn, chromeTimes, pt, data = {}, offset = 0, i,
-			    paintTiming, paintTimingSupported = false, k;
+        if (!data.nt_res_st) {
+          // responseStart will be 0 if Timing-Allow-Origin header isn't set on the xhr response
+          data.nt_res_st = res.responseStart;
+        }
 
-			if (this.complete) {
-				return this;
-			}
+        if (!data.nt_res_end) {
+          data.nt_res_end = res.responseEnd;
+        }
 
-			p = BOOMR.getPerformance();
+        data.nt_domint = res.domInteractive;
+        data.nt_domcomp = res.domComplete;
+        data.nt_load_st = res.loadEventEnd;
+        data.nt_load_end = res.loadEventEnd;
+      }
 
-			if (p) {
-				if (typeof p.getEntriesByType === "function") {
-					pt = p.getEntriesByType("navigation");
-					if (pt && pt.length) {
-						BOOMR.info("This user agent supports NavigationTiming2", "nt");
+      for (k in data) {
+        if (data.hasOwnProperty(k) && !data[k]) {
+          delete data[k];
+        }
+      }
 
-						pt = pt[0];
+      BOOMR.addVar(data, undefined, true);
 
-						// ensure DOMHighResTimestamps are added to navigationStart
-						offset = p.timing ? p.timing.navigationStart : 0;
-					}
-					else {
-						pt = undefined;
-					}
-				}
+      impl.sendBeacon();
+    },
 
-				if (!pt && p.timing) {
-					BOOMR.info("This user agent supports NavigationTiming", "nt");
-					pt = p.timing;
-				}
+    done: function() {
+      var w = BOOMR.window,
+          p, pn, chromeTimes, pt,
+          data = {},
+          offset = 0,
+          i,
+          paintTiming,
+          paintTimingSupported = false,
+          k;
 
-				if (pt) {
-					data = {
-						// start is `navigationStart` on .timing, `startTime` is always 0 on timeline entry
-						nt_nav_st: p.timing ? p.timing.navigationStart : 0,
+      if (this.complete) {
+        return this;
+      }
 
-						// all other entries have the same name on .timing vs timeline entry
-						nt_red_st: calcNavTimingTimestamp(offset, pt.redirectStart),
-						nt_red_end: calcNavTimingTimestamp(offset, pt.redirectEnd),
-						nt_fet_st: calcNavTimingTimestamp(offset, pt.fetchStart, true),
-						nt_dns_st: calcNavTimingTimestamp(offset, pt.domainLookupStart, true),
-						nt_dns_end: calcNavTimingTimestamp(offset, pt.domainLookupEnd, true),
-						nt_con_st: calcNavTimingTimestamp(offset, pt.connectStart, true),
-						nt_con_end: calcNavTimingTimestamp(offset, pt.connectEnd, true),
-						nt_req_st: calcNavTimingTimestamp(offset, pt.requestStart),
-						nt_res_st: calcNavTimingTimestamp(offset, pt.responseStart),
-						nt_res_end: calcNavTimingTimestamp(offset, pt.responseEnd),
-						nt_domloading: calcNavTimingTimestamp(offset, pt.domLoading),
-						nt_domint: calcNavTimingTimestamp(offset, pt.domInteractive),
-						nt_domcontloaded_st: calcNavTimingTimestamp(offset, pt.domContentLoadedEventStart),
-						nt_domcontloaded_end: calcNavTimingTimestamp(offset, pt.domContentLoadedEventEnd),
-						nt_domcomp: calcNavTimingTimestamp(offset, pt.domComplete),
-						nt_load_st: calcNavTimingTimestamp(offset, pt.loadEventStart),
-						nt_load_end: calcNavTimingTimestamp(offset, pt.loadEventEnd),
-						nt_unload_st: calcNavTimingTimestamp(offset, pt.unloadEventStart),
-						nt_unload_end: calcNavTimingTimestamp(offset, pt.unloadEventEnd)
-					};
+      p = BOOMR.getPerformance();
 
-					// domLoading doesn't exist on NavigationTiming2, so fetch it
-					// from performance.timing if available.
-					if (!data.nt_domloading && p && p.timing && p.timing.domLoading) {
-						// value on performance.timing will be in Unix Epoch milliseconds
-						data.nt_domloading = p.timing.domLoading;
-					}
+      if (p) {
+        if (typeof p.getEntriesByType === "function") {
+          pt = p.getEntriesByType("navigation");
 
-					if (pt.secureConnectionStart) {
-						// secureConnectionStart is OPTIONAL in the spec
-						data.nt_ssl_st = calcNavTimingTimestamp(offset, pt.secureConnectionStart);
-					}
+          if (pt && pt.length) {
+            BOOMR.info("This user agent supports NavigationTiming2", "nt");
 
-					if (p.timing && p.timing.msFirstPaint) {
-						// msFirstPaint is IE9+ http://msdn.microsoft.com/en-us/library/ff974719
-						// and is in Unix Epoch format
-						data.nt_first_paint = p.timing.msFirstPaint;
-					}
+            pt = pt[0];
 
-					if (pt.workerStart) {
-						// ServiceWorker time
-						data.nt_worker_start = calcNavTimingTimestamp(offset, pt.workerStart);
-					}
+            // ensure DOMHighResTimestamps are added to navigationStart
+            offset = p.timing ? p.timing.navigationStart : 0;
+          }
+          else {
+            pt = undefined;
+          }
+        }
 
-					// Need to check both decodedSize and transferSize as
-					// transferSize is 0 for cached responses and
-					// decodedSize is 0 for empty responses (eg: beacons, 204s, etc.)
-					if (pt.decodedBodySize || pt.transferSize) {
-						data.nt_enc_size = pt.encodedBodySize;
-						data.nt_dec_size = pt.decodedBodySize;
-						data.nt_trn_size = pt.transferSize;
-					}
+        if (!pt && p.timing) {
+          BOOMR.info("This user agent supports NavigationTiming", "nt");
+          pt = p.timing;
+        }
 
-					if (pt.nextHopProtocol) {
-						data.nt_protocol = pt.nextHopProtocol;
-					}
-				}
+        if (pt) {
+          data = {
+            // start is `navigationStart` on .timing, `startTime` is always 0 on timeline entry
+            nt_nav_st: p.timing ? p.timing.navigationStart : 0,
 
-				//
-				// Get First Paint from Paint Timing API
-				// https://www.w3.org/TR/paint-timing/
-				//
-				if (!data.nt_first_paint && BOOMR.plugins.PaintTiming) {
-					paintTimingSupported = BOOMR.plugins.PaintTiming.is_supported();
+            // all other entries have the same name on .timing vs timeline entry
+            nt_red_st: calcNavTimingTimestamp(offset, pt.redirectStart),
+            nt_red_end: calcNavTimingTimestamp(offset, pt.redirectEnd),
+            nt_fet_st: calcNavTimingTimestamp(offset, pt.fetchStart, true),
+            nt_dns_st: calcNavTimingTimestamp(offset, pt.domainLookupStart, true),
+            nt_dns_end: calcNavTimingTimestamp(offset, pt.domainLookupEnd, true),
+            nt_con_st: calcNavTimingTimestamp(offset, pt.connectStart, true),
+            nt_con_end: calcNavTimingTimestamp(offset, pt.connectEnd, true),
+            nt_req_st: calcNavTimingTimestamp(offset, pt.requestStart),
+            nt_res_st: calcNavTimingTimestamp(offset, pt.responseStart),
+            nt_res_end: calcNavTimingTimestamp(offset, pt.responseEnd),
+            nt_domloading: calcNavTimingTimestamp(offset, pt.domLoading),
+            nt_domint: calcNavTimingTimestamp(offset, pt.domInteractive),
+            nt_domcontloaded_st: calcNavTimingTimestamp(offset, pt.domContentLoadedEventStart),
+            nt_domcontloaded_end: calcNavTimingTimestamp(offset, pt.domContentLoadedEventEnd),
+            nt_domcomp: calcNavTimingTimestamp(offset, pt.domComplete),
+            nt_load_st: calcNavTimingTimestamp(offset, pt.loadEventStart),
+            nt_load_end: calcNavTimingTimestamp(offset, pt.loadEventEnd),
+            nt_unload_st: calcNavTimingTimestamp(offset, pt.unloadEventStart),
+            nt_unload_end: calcNavTimingTimestamp(offset, pt.unloadEventEnd)
+          };
 
-					paintTiming = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
+          // domLoading doesn't exist on NavigationTiming2, so fetch it
+          // from performance.timing if available.
+          if (!data.nt_domloading && p && p.timing && p.timing.domLoading) {
+            // value on performance.timing will be in Unix Epoch milliseconds
+            data.nt_domloading = p.timing.domLoading;
+          }
 
-					if (paintTiming) {
-						data.nt_first_paint = calcNavTimingTimestamp(offset, paintTiming);
-					}
-				}
+          if (pt.secureConnectionStart) {
+            // secureConnectionStart is OPTIONAL in the spec
+            data.nt_ssl_st = calcNavTimingTimestamp(offset, pt.secureConnectionStart);
+          }
 
-				//
-				// Chrome provides window.chrome.loadTimes(), but this is deprecated
-				// in Chrome 64+ and will be removed at some point.  The data it
-				// provides may be available in more modern performance APIs:
-				//
-				// * .connectionInfo (nt_cinf): Navigation Timing 2 nextHopProtocol
-				// * .wasFetchedViaSpdy (nt_spdy): Could be calculated via above,
-				//       so we don't need to add if it's not available directly
-				// * .firstPaintTime (nt_first_paint): Paint Timing's first-paint
-				//
-				// If we've already queried that data, don't also query
-				// loadTimes() as it will generate a console warning.
-				//
-				if ((!data.nt_protocol || !data.nt_first_paint) &&
-				    (!pt || pt.nextHopProtocol !== "") &&
-				    !paintTimingSupported &&
-				    w.chrome &&
-				    typeof w.chrome.loadTimes === "function") {
-					chromeTimes = w.chrome.loadTimes();
-					if (chromeTimes) {
-						data.nt_spdy = (chromeTimes.wasFetchedViaSpdy ? 1 : 0);
-						data.nt_cinf = chromeTimes.connectionInfo;
+          if (p.timing && p.timing.msFirstPaint) {
+            // msFirstPaint is IE9+ http://msdn.microsoft.com/en-us/library/ff974719
+            // and is in Unix Epoch format
+            data.nt_first_paint = p.timing.msFirstPaint;
+          }
 
-						// Chrome firstPaintTime is in seconds.microseconds, so
-						// we need to multiply it by 1000 to be consistent with
-						// msFirstPaint and other NavigationTiming timestamps that
-						// are in milliseconds.microseconds.
-						if (typeof chromeTimes.firstPaintTime === "number" && chromeTimes.firstPaintTime !== 0) {
-							data.nt_first_paint = Math.round(chromeTimes.firstPaintTime * 1000);
-						}
-					}
-				}
+          if (pt.workerStart) {
+            // ServiceWorker time
+            data.nt_worker_start = calcNavTimingTimestamp(offset, pt.workerStart);
+          }
 
-				//
-				// Navigation Type and Redirect Count
-				//
-				if (p.navigation) {
-					pn = p.navigation;
+          // Need to check both decodedSize and transferSize as
+          // transferSize is 0 for cached responses and
+          // decodedSize is 0 for empty responses (eg: beacons, 204s, etc.)
+          if (pt.decodedBodySize || pt.transferSize) {
+            data.nt_enc_size = pt.encodedBodySize;
+            data.nt_dec_size = pt.decodedBodySize;
+            data.nt_trn_size = pt.transferSize;
+          }
 
-					data.nt_red_cnt  = pn.redirectCount;
-					data.nt_nav_type = pn.type;
-				}
+          if (pt.nextHopProtocol) {
+            data.nt_protocol = pt.nextHopProtocol;
+          }
+        }
 
-				// Remove any properties that are undefined
-				for (k in data) {
-					if (data.hasOwnProperty(k) && data[k] === undefined) {
-						delete data[k];
-					}
-				}
+        //
+        // Get First Paint from Paint Timing API
+        // https://www.w3.org/TR/paint-timing/
+        //
+        if (!data.nt_first_paint && BOOMR.plugins.PaintTiming) {
+          paintTimingSupported = BOOMR.plugins.PaintTiming.is_supported();
 
-				BOOMR.addVar(data, undefined, true);
+          paintTiming = BOOMR.plugins.PaintTiming.getTimingFor("first-paint");
 
-				//
-				// Basic browser bug detection for known cases where NavigationTiming
-				// timestamps might not be trusted.
-				//
-				if (pt && (
-				    (pt.requestStart && pt.navigationStart && pt.requestStart < pt.navigationStart) ||
-				    (pt.responseStart && pt.navigationStart && pt.responseStart < pt.navigationStart) ||
-				    (pt.responseStart && pt.fetchStart && pt.responseStart < pt.fetchStart) ||
-				    (pt.navigationStart && pt.fetchStart < pt.navigationStart) ||
-				    (pt.responseEnd && pt.responseEnd > BOOMR.now() + 8.64e+7)
-				)) {
-					BOOMR.addVar("nt_bad", 1, true);
-				}
+          if (paintTiming) {
+            data.nt_first_paint = calcNavTimingTimestamp(offset, paintTiming);
+          }
+        }
 
-				if (data.nt_load_end > 0) {
-					this.fullySent = true;
-				}
-			}
+        //
+        // Chrome provides window.chrome.loadTimes(), but this is deprecated
+        // in Chrome 64+ and will be removed at some point.  The data it
+        // provides may be available in more modern performance APIs:
+        //
+        // * .connectionInfo (nt_cinf): Navigation Timing 2 nextHopProtocol
+        // * .wasFetchedViaSpdy (nt_spdy): Could be calculated via above,
+        //       so we don't need to add if it's not available directly
+        // * .firstPaintTime (nt_first_paint): Paint Timing's first-paint
+        //
+        // If we've already queried that data, don't also query
+        // loadTimes() as it will generate a console warning.
+        //
+        if ((!data.nt_protocol || !data.nt_first_paint) &&
+            (!pt || pt.nextHopProtocol !== "") &&
+            !paintTimingSupported &&
+            w.chrome &&
+            typeof w.chrome.loadTimes === "function") {
+          chromeTimes = w.chrome.loadTimes();
 
-			impl.sendBeacon();
-		},
+          if (chromeTimes) {
+            data.nt_spdy = (chromeTimes.wasFetchedViaSpdy ? 1 : 0);
+            data.nt_cinf = chromeTimes.connectionInfo;
 
-		clear: function(edata) {
-			// Allow the data to go out on both an Early beacon and the regular Page Load beacon,
-			// but after that, if we ever sent the full data, we're complete for all times.
-			this.complete = !(edata && edata.early) && this.fullySent;
-		},
+            // Chrome firstPaintTime is in seconds.microseconds, so
+            // we need to multiply it by 1000 to be consistent with
+            // msFirstPaint and other NavigationTiming timestamps that
+            // are in milliseconds.microseconds.
+            if (typeof chromeTimes.firstPaintTime === "number" && chromeTimes.firstPaintTime !== 0) {
+              data.nt_first_paint = Math.round(chromeTimes.firstPaintTime * 1000);
+            }
+          }
+        }
 
-		prerenderToVisible: function() {
-			// ensure we add our data to the beacon even if we had added it
-			// during prerender (in case another beacon went out in between)
-			this.complete = false;
+        //
+        // Navigation Type and Redirect Count
+        //
+        if (p.navigation) {
+          pn = p.navigation;
 
-			// add our data to the beacon
-			this.done();
-		},
+          data.nt_red_cnt  = pn.redirectCount;
+          data.nt_nav_type = pn.type;
+        }
 
-		onBeforeEarlyBeacon: function(edata) {
-			// Add our data to the early beacon
-			if (!edata /* dom_loaded */ ||
-			    typeof edata.initiator === "undefined" /* onconfig */ ||
-			    edata.initiator === "spa_hard") {
-				this.done();
-			}
-		}
-	};
+        // Remove any properties that are undefined
+        for (k in data) {
+          if (data.hasOwnProperty(k) && data[k] === undefined) {
+            delete data[k];
+          }
+        }
 
-	//
-	// Exports
-	//
-	BOOMR.plugins.NavigationTiming = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * This plugin does not have any configuration.
-		 * @returns {@link BOOMR.plugins.NavigationTiming} The NavigationTiming plugin for chaining
-		 * @memberof BOOMR.plugins.NavigationTiming
-		 */
-		init: function() {
-			if (!impl.initialized) {
-				// we'll fire on whichever happens first
-				BOOMR.subscribe("page_ready", impl.done, null, impl);
-				BOOMR.subscribe("prerender_to_visible", impl.prerenderToVisible, null, impl);
-				BOOMR.subscribe("before_early_beacon", impl.onBeforeEarlyBeacon, null, impl);
-				BOOMR.subscribe("xhr_load", impl.xhr_done, null, impl);
-				BOOMR.subscribe("before_unload", impl.done, null, impl);
-				BOOMR.subscribe("beacon", impl.clear, null, impl);
+        BOOMR.addVar(data, undefined, true);
 
-				impl.initialized = true;
-			}
-			return this;
-		},
+        //
+        // Basic browser bug detection for known cases where NavigationTiming
+        // timestamps might not be trusted.
+        //
+        if (pt && (
+          (pt.requestStart && pt.navigationStart && pt.requestStart < pt.navigationStart) ||
+          (pt.responseStart && pt.navigationStart && pt.responseStart < pt.navigationStart) ||
+          (pt.responseStart && pt.fetchStart && pt.responseStart < pt.fetchStart) ||
+          (pt.navigationStart && pt.fetchStart < pt.navigationStart) ||
+          (pt.responseEnd && pt.responseEnd > BOOMR.now() + 8.64e+7)
+        )) {
+          BOOMR.addVar("nt_bad", 1, true);
+        }
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.NavigationTiming
-		 */
-		is_complete: function() {
-			return true;
-		}
-	};
+        if (data.nt_load_end > 0) {
+          this.fullySent = true;
+        }
+      }
 
+      impl.sendBeacon();
+    },
+
+    clear: function(edata) {
+      // Allow the data to go out on both an Early beacon and the regular Page Load beacon,
+      // but after that, if we ever sent the full data, we're complete for all times.
+      this.complete = !(edata && edata.early) && this.fullySent;
+    },
+
+    prerenderToVisible: function() {
+      // ensure we add our data to the beacon even if we had added it
+      // during prerender (in case another beacon went out in between)
+      this.complete = false;
+
+      // add our data to the beacon
+      this.done();
+    },
+
+    onBeforeEarlyBeacon: function(edata) {
+      // Add our data to the early beacon
+      if (!edata ||
+          typeof edata.initiator === "undefined" ||
+          edata.initiator === "spa_hard") {
+        this.done();
+      }
+    }
+  };
+
+  //
+  // Exports
+  //
+  BOOMR.plugins.NavigationTiming = {
+    /**
+     * Initializes the plugin.
+     *
+     * This plugin does not have any configuration.
+     * @returns {@link BOOMR.plugins.NavigationTiming} The NavigationTiming plugin for chaining
+     * @memberof BOOMR.plugins.NavigationTiming
+     */
+    init: function() {
+      if (!impl.initialized) {
+        // we'll fire on whichever happens first
+        BOOMR.subscribe("page_ready", impl.done, null, impl);
+        BOOMR.subscribe("prerender_to_visible", impl.prerenderToVisible, null, impl);
+        BOOMR.subscribe("before_early_beacon", impl.onBeforeEarlyBeacon, null, impl);
+        BOOMR.subscribe("xhr_load", impl.xhr_done, null, impl);
+        BOOMR.subscribe("before_unload", impl.done, null, impl);
+        BOOMR.subscribe("beacon", impl.clear, null, impl);
+
+        impl.initialized = true;
+      }
+
+      return this;
+    },
+
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.NavigationTiming
+     */
+    is_complete: function() {
+      return true;
+    }
+  };
 }());

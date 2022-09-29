@@ -27,7 +27,7 @@ We identified 3 common scenarios how Boomerang could be loaded to comply with th
 * **Opt-out from Boomerang**: By default Boomerang is loaded on the page and sends performance data. Boomerang will be disabled and the Boomerang cookies will be deleted if a visitor opts-out from Boomerang through Cookie Consent popup.
 
 |                              | Before opt-out | After opt-out           |
-|------------------------------|----------------|-------------------------|
+|:-----------------------------|:---------------|:------------------------|
 | Boomerang Loaded             | Yes            | Yes                     |
 | Beacons Sent                 | Yes            | No                      |
 | RT Cookie exists             | Yes            | No                      |
@@ -37,7 +37,7 @@ We identified 3 common scenarios how Boomerang could be loaded to comply with th
 * **Opt-in to Boomerang (Boomerang loaded before opt-in)**: By default Boomerang is loaded on the page and does **NOT** send performance data. Performance data will be sent after a visitor opts-in to Boomerang through a Cookie Consent popup.
 
 |                              | Before opt-in | After opt-in           |
-|------------------------------|---------------|------------------------|
+|:-----------------------------|:--------------|:-----------------------|
 | Boomerang Loaded             | Yes           | Yes                    |
 | Beacons Sent                 | No            | Yes                    |
 | RT Cookie exists             | Yes           | Yes                    |
@@ -48,7 +48,7 @@ We identified 3 common scenarios how Boomerang could be loaded to comply with th
 * **Opt-in to Boomerang (Boomerang loaded after opt-in)**: Boomerang will be loaded and performance data sent after only after a visitor opts-in to Boomerang through the Cookie Consent popup.
 
 |                     | Before opt-in | After opt-in |
-|---------------------|---------------|--------------|
+|:--------------------|:--------------|:-------------|
 | Boomerang Loaded    | No            | Yes          |
 | Beacons Sent        | No            | Yes          |
 | RT Cookie exists    | No            | Yes          |
@@ -62,7 +62,7 @@ We identified 3 common scenarios how Boomerang could be loaded to comply with th
 List of cookies created and used by Boomerang:
 
 | Name            | <div style="width:120px">Expires</div> | <div style="width:120px">Type</div> | Description                                                                                                                                                                                    |
-|-----------------|----------------------------------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|:----------------|:---------------------------------------|:------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `RT`            | 7 days                                 | First-party                         | Doesn't contain personal information but it contains various pieces of information about the visitor's session, such as number of visited pages, session start time, last visited url and etc. |
 | `BA`            | 7 days                                 | First-party                         | Used by Bandwidth Boomerang plugin. Doesn't contain personal information.                                                                                                                      |
 | `BOOMR_CONSENT` | 1 year                                 | First-party                         | Contains information about visitor's choice for opt-out or opt-in.                                                                                                                             |
@@ -75,7 +75,7 @@ For mPulse customers, in some instances Boomerang will persist data in Browser's
 List of local storage keys used by Boomerang:
 
 | Key                     | <div style="width:120px">Plugin</div> | Description                                                                                                             |
-|-------------------------|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+|:------------------------|:--------------------------------------|:------------------------------------------------------------------------------------------------------------------------|
 | `_boomr_LOGN`           | LOGN                                  | Persists Boomerang JSON configuration. Helps for faster Boomerang initialization. Doesn't contain personal information. |
 | `_boomr_akamaiXhrRetry` | Akamai                                | Persists a flag that instructs the Akamai plugin when to perform requests. Doesn't contain personal information.        |
 
@@ -99,7 +99,7 @@ In case we would like to allow website visitors to opt-out from Boomerang we mus
 ```html
 <script>
 window.BOOMR_CONSENT_CONFIG = {
-     enabled: true
+  enabled: true
 };
 </script>
 ```
@@ -121,8 +121,8 @@ When we would like to not send Beacon data until visitor opts-in to Boomerang we
 ```html
 <script>
 window.BOOMR_CONSENT_CONFIG = {
-     enabled: true,
-     optInRequired: true
+  enabled: true,
+  optInRequired: true
 };
 </script>
 ```
@@ -146,15 +146,16 @@ The example below doesn't include the full loader snippet source code but you ca
 ```html
 <script>
 var BOOMERANG_LOADER_SNIPPET_WRAPPER = function() {
-     (function() {
-          // Boomerang Loader Snippet  
-          if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
-               return;
-          }
-          // ...
-          // ...
-          // ...
-     })();
+(function() {
+  // Boomerang Loader Snippet  
+  if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
+    return;
+  }
+
+  // ...
+  // ...
+  // ...
+})();
 }
 </script>
 ```
@@ -163,7 +164,7 @@ Usually Cookie Consent popup libraries provide callback functions that help us t
 ```html
 <script>
 function onOptIn() {
-     BOOMERANG_LOADER_SNIPPET_WRAPPER();
+  BOOMERANG_LOADER_SNIPPET_WRAPPER();
 }
 </script>
 ```
@@ -179,21 +180,21 @@ We prepared Boomerang opt-out and opt-in examples with the popular open source p
 ```javascript
 // Setup Osano Cookie popup
 function onCookieConsentChange(consent) {
-	if (consent === "deny") {
-		window.BOOMR_OPT_OUT();
-	}
+  if (consent === "deny") {
+    window.BOOMR_OPT_OUT();
+  }
 }
 
 window.addEventListener("load", function() {
-	window.cookieconsent.initialise({
-		"type": "opt-out",
-		"content": {
-			"href": "https://www.example.com/policies/"
-		},
-		onInitialise: onCookieConsentChange,
-		onStatusChange: onCookieConsentChange,
-		onRevokeChoice: onCookieConsentChange
-	});
+  window.cookieconsent.initialise({
+    "type": "opt-out",
+    "content": {
+      "href": "https://www.example.com/policies/"
+    },
+    onInitialise: onCookieConsentChange,
+    onStatusChange: onCookieConsentChange,
+    onRevokeChoice: onCookieConsentChange
+  });
 });
 ```
 
@@ -203,20 +204,20 @@ window.addEventListener("load", function() {
 ```javascript
 // Setup Osano Cookie popup
 function onCookieConsentChange(consent) {
-	if (consent === "allow") {
-		window.BOOMR_OPT_IN();
-	}
+  if (consent === "allow") {
+    window.BOOMR_OPT_IN();
+  }
 }
 
 window.addEventListener("load", function() {
-	window.cookieconsent.initialise({
-		"type": "opt-in",
-		"content": {
-			"href": "https://www.example.com/policies/"
-		},
-		onInitialise: onCookieConsentChange,
-		onStatusChange: onCookieConsentChange,
-		onRevokeChoice: onCookieConsentChange
-	});
+  window.cookieconsent.initialise({
+    "type": "opt-in",
+    "content": {
+      "href": "https://www.example.com/policies/"
+    },
+    onInitialise: onCookieConsentChange,
+    onStatusChange: onCookieConsentChange,
+    onRevokeChoice: onCookieConsentChange
+  });
 });
 ```

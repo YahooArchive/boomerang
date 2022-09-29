@@ -7,7 +7,7 @@
 <script>
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 </script>
 <div ng-view></div>
@@ -17,13 +17,13 @@ document.addEventListener("DOMContentLoaded", function() {
 window.angular_imgs = [3000];
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	Continuity: { enabled: true }
+  testAfterOnBeacon: true,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  Continuity: { enabled: true }
 });
 </script>
 <%= footer %>

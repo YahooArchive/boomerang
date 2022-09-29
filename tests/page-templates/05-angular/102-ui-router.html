@@ -16,17 +16,17 @@ window.angular_nav_routes = ["/widgets/1", "102-ui-router.html"];
 <script src="102-ui-router.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 3,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 </script>
 <%= footer %>

@@ -8,66 +8,66 @@
 <img src="/assets/img.jpg?5" id="img-5" width="200" height="10000" />
 <script>
 try {
-	var ev1 = new MouseEvent("click", {
-		"view": window,
-		"bubbles": true,
-		"cancelable": true,
-		"clientX": 100,
-		"clientY": 100
-	});
+  var ev1 = new MouseEvent("click", {
+    "view": window,
+    "bubbles": true,
+    "cancelable": true,
+    "clientX": 100,
+    "clientY": 100
+  });
 
-	var ev2 = new MouseEvent("click", {
-		"view": window,
-		"bubbles": true,
-		"cancelable": true,
-		"clientX": 200,
-		"clientY": 200
-	});
+  var ev2 = new MouseEvent("click", {
+    "view": window,
+    "bubbles": true,
+    "cancelable": true,
+    "clientX": 200,
+    "clientY": 200
+  });
 }
 catch (e) {
-	window.cannotCreateMouseEvent = true;
+  window.cannotCreateMouseEvent = true;
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: window.cannotCreateMouseEvent ? 1 : 3,
-	Continuity: {
-		enabled: true,
-		afterOnload: true
-	},
-	afterFirstBeacon: function() {
-		if (window.cannotCreateMouseEvent) {
-			return;
-		}
+  testAfterOnBeacon: window.cannotCreateMouseEvent ? 1 : 3,
+  Continuity: {
+    enabled: true,
+    afterOnload: true
+  },
+  afterFirstBeacon: function() {
+    if (window.cannotCreateMouseEvent) {
+      return;
+    }
 
-		setTimeout(function() {
-			var st = BOOMR.requestStart("test");
+    setTimeout(function() {
+      var st = BOOMR.requestStart("test");
 
-			// click on an area 3x to trigger a rage click
-			document.getElementById("img-1").dispatchEvent(ev1);
-			document.getElementById("img-1").dispatchEvent(ev1);
-			document.getElementById("img-1").dispatchEvent(ev1);
+      // click on an area 3x to trigger a rage click
+      document.getElementById("img-1").dispatchEvent(ev1);
+      document.getElementById("img-1").dispatchEvent(ev1);
+      document.getElementById("img-1").dispatchEvent(ev1);
 
-			// click somewhere else 3x to trigger a rage click
-			document.getElementById("img-2").dispatchEvent(ev2);
-			document.getElementById("img-2").dispatchEvent(ev2);
-			document.getElementById("img-2").dispatchEvent(ev2);
+      // click somewhere else 3x to trigger a rage click
+      document.getElementById("img-2").dispatchEvent(ev2);
+      document.getElementById("img-2").dispatchEvent(ev2);
+      document.getElementById("img-2").dispatchEvent(ev2);
 
-			// click somewhere twice, then elsewhere, then the same spot - no rage click
-			document.getElementById("img-1").dispatchEvent(ev1);
-			document.getElementById("img-1").dispatchEvent(ev1);
-			document.getElementById("img-2").dispatchEvent(ev2);
-			document.getElementById("img-1").dispatchEvent(ev1);
+      // click somewhere twice, then elsewhere, then the same spot - no rage click
+      document.getElementById("img-1").dispatchEvent(ev1);
+      document.getElementById("img-1").dispatchEvent(ev1);
+      document.getElementById("img-2").dispatchEvent(ev2);
+      document.getElementById("img-1").dispatchEvent(ev1);
 
-			st.loaded();
+      st.loaded();
 
-			// do a third beacon, which shouldn't have TTFI or FID on it
-			st = BOOMR.requestStart("test2");
+      // do a third beacon, which shouldn't have TTFI or FID on it
+      st = BOOMR.requestStart("test2");
 
-			setTimeout(function() {
-				st.loaded();
-			}, 100);
-		}, 100);
-	}
+      setTimeout(function() {
+        st.loaded();
+      }, 100);
+    }, 100);
+  }
 });
 
 // click on an area 3x to trigger a rage click

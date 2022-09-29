@@ -8,34 +8,35 @@
 // This is a bug with Chrome ~51.0.
 //
 if (window.Element && window.Element.prototype) {
-	window.Element.prototype.foo = 1;
+  window.Element.prototype.foo = 1;
 }
 
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
-	instrument_xhr: true,
-	AutoXHR: {
-		xhrRequireChanges: false
-	},
-	onBoomerangLoaded: function() {
-		// start an XHR so we get MutationObserver listening
-		var xhr = new XMLHttpRequest();
-		xhr.open("GET", "/abc", true);
+  testAfterOnBeacon: 2,
+  instrument_xhr: true,
+  AutoXHR: {
+    xhrRequireChanges: false
+  },
+  onBoomerangLoaded: function() {
+    // start an XHR so we get MutationObserver listening
+    var xhr = new XMLHttpRequest();
 
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState !== 4) {
-				return;
-			}
+    xhr.open("GET", "/abc", true);
 
-			// NOTE: Don't create #foo here by createElement() as then it will have
-			// the proper prototype since it was created in this page's context.
-			// Using .innerHTML seems to trigger it being instantiated later
-			// in our MutationObserver.
-			document.getElementById("content").innerHTML = "<div id='foo'></div>";
-		};
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== 4) {
+        return;
+      }
 
-		xhr.send();
-	}
+      // NOTE: Don't create #foo here by createElement() as then it will have
+      // the proper prototype since it was created in this page's context.
+      // Using .innerHTML seems to trigger it being instantiated later
+      // in our MutationObserver.
+      document.getElementById("content").innerHTML = "<div id='foo'></div>";
+    };
+
+    xhr.send();
+  }
 });
 </script>
 <div id="content"></div>

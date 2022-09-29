@@ -5,12 +5,12 @@ The spa route change back to home is filtered and will trigger an xhr beacon ins
 <%= boomerangScript %>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 3,
-	Backbone: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 3,
+  Backbone: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <script src="../../vendor/jquery/dist/jquery.js"></script>
@@ -28,8 +28,9 @@ window.backbone_nav_routes = ["widgets/1", "24-route-filter.html"];
 
 // filter out the 2nd home nav
 var navs = 0;
+
 window.backbone_route_filter = function() {
-	return (++navs) <= 1;
+  return (++navs) <= 1;
 };
 </script>
 <script src="support/app.js"></script>

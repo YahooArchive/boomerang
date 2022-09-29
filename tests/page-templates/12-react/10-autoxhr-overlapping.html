@@ -15,32 +15,34 @@ window.imgs = [-1];
 
 <script type="text/javascript">
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
-	afterFirstBeacon: function() {
-		if (!BOOMR.plugins.AutoXHR) {
-			return;
-		}
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
 
-		//
-		// Overlap the two XHRs, which should create a single xhr beacon
-		//
-		setTimeout(function(){
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/delay?delay=2000&file=/pages/12-react/support/widgets.json&id=1&rnd=" + Math.random(), true);
-			xhr.send(null);
-		}, 0);
+    //
+    // Overlap the two XHRs, which should create a single xhr beacon
+    //
+    setTimeout(function(){
+      var xhr = new XMLHttpRequest();
 
-		setTimeout(function(){
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/delay?delay=4500&file=/pages/12-react/support/widgets.json&id=2&rnd=" + Math.random(), true);
-			xhr.send(null);
-		}, 500);
-	},
-	History: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+      xhr.open("GET", "/delay?delay=2000&file=/pages/12-react/support/widgets.json&id=1&rnd=" + Math.random(), true);
+      xhr.send(null);
+    }, 0);
+
+    setTimeout(function(){
+      var xhr = new XMLHttpRequest();
+
+      xhr.open("GET", "/delay?delay=4500&file=/pages/12-react/support/widgets.json&id=2&rnd=" + Math.random(), true);
+      xhr.send(null);
+    }, 500);
+  },
+  History: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 

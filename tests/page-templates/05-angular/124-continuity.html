@@ -14,20 +14,20 @@ window.angular_imgs = [2500];
 window.angular_nav_routes = ["/widgets/1", "124-continuity.html"];
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
-	Angular: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false,
-	Continuity: {
-		enabled: true
-	}
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 3 : 1,
+  Angular: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  Continuity: {
+    enabled: true
+  }
 });
 
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 
 </script>

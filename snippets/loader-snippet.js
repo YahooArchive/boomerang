@@ -1,203 +1,213 @@
 /* eslint-disable no-script-url */
 (function() {
-	// Boomerang Loader Snippet version 15
-	if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
-		return;
-	}
+  // Boomerang Loader Snippet version 15
+  if (window.BOOMR && (window.BOOMR.version || window.BOOMR.snippetExecuted)) {
+    return;
+  }
 
-	window.BOOMR = window.BOOMR || {};
-	window.BOOMR.snippetStart = new Date().getTime();
-	window.BOOMR.snippetExecuted = true;
-	window.BOOMR.snippetVersion = 15;
+  window.BOOMR = window.BOOMR || {};
+  window.BOOMR.snippetStart = new Date().getTime();
+  window.BOOMR.snippetExecuted = true;
+  window.BOOMR.snippetVersion = 15;
 
-	// NOTE: Set Boomerang URL here
-	window.BOOMR.url = "";
+  // NOTE: Set Boomerang URL here
+  window.BOOMR.url = "";
 
-	var // document.currentScript is supported in all browsers other than IE
-	    where = document.currentScript || document.getElementsByTagName("script")[0],
-	    // Parent element of the script we inject
-	    parentNode = where.parentNode,
-	    // Whether or not Preload method has worked
-	    promoted = false,
-	    // How long to wait for Preload to work before falling back to iframe method
-	    LOADER_TIMEOUT = 3000;
+  // document.currentScript is supported in all browsers other than IE
+  var where = document.currentScript || document.getElementsByTagName("script")[0],
+      // Parent element of the script we inject
+      parentNode = where.parentNode,
+      // Whether or not Preload method has worked
+      promoted = false,
+      // How long to wait for Preload to work before falling back to iframe method
+      LOADER_TIMEOUT = 3000;
 
-	/* BEGIN_TEST_CODE */
-	var prefix, suffix;
+  /* BEGIN_TEST_CODE */
+  var prefix, suffix;
 
-	if (window.BOOMR_script_delay) {
-		prefix = "/delay?delay=3000&file=build/";
-		suffix = "&rnd=" + Math.random();
-	}
-	else {
-		prefix = "../../build/";
-		suffix = "";
-	}
+  if (window.BOOMR_script_delay) {
+    prefix = "/delay?delay=3000&file=build/";
+    suffix = "&rnd=" + Math.random();
+  }
+  else {
+    prefix = "../../build/";
+    suffix = "";
+  }
 
-	if (/\/support\//.test(window.location.pathname)) {
-		prefix = prefix.replace("build/", "../build/");
-	}
+  if (/\/support\//.test(window.location.pathname)) {
+    prefix = prefix.replace("build/", "../build/");
+  }
 
-	window.BOOMR.url = prefix + (window.BOOMR_script_minified ? "boomerang-latest-debug.min.js" : "boomerang-latest-debug.js") + suffix;
-	/* END_TEST_CODE */
-	// Tells the browser to execute the Preloaded script by adding it to the DOM
-	function promote() {
-		if (promoted) {
-			return;
-		}
+  window.BOOMR.url = prefix +
+    (window.BOOMR_script_minified ? "boomerang-latest-debug.min.js" : "boomerang-latest-debug.js") +
+    suffix;
 
-		var script = document.createElement("script");
-		script.id = "boomr-scr-as";
-		script.src = window.BOOMR.url;
+  /* END_TEST_CODE */
+  // Tells the browser to execute the Preloaded script by adding it to the DOM
+  function promote() {
+    if (promoted) {
+      return;
+    }
 
-		// Not really needed since dynamic scripts are async by default and the script is already in cache at this point,
-		// but some naive parsers will see a missing async attribute and think we're not async
-		script.async = true;
+    var script = document.createElement("script");
 
-		parentNode.appendChild(script);
+    script.id = "boomr-scr-as";
+    script.src = window.BOOMR.url;
 
-		promoted = true;
-	}
+    // Not really needed since dynamic scripts are async by default and the script is already in cache at this point,
+    // but some naive parsers will see a missing async attribute and think we're not async
+    script.async = true;
 
-	// Non-blocking iframe loader (fallback for non-Preload scenarios) for all recent browsers.
-	// For IE 6/7/8, falls back to dynamic script node.
-	function iframeLoader(wasFallback) {
-		promoted = true;
+    parentNode.appendChild(script);
 
-		var dom, doc = document, bootstrap, iframe, iframeStyle, win = window;
+    promoted = true;
+  }
 
-		window.BOOMR.snippetMethod = wasFallback ? "if" : "i";
+  // Non-blocking iframe loader (fallback for non-Preload scenarios) for all recent browsers.
+  // For IE 6/7/8, falls back to dynamic script node.
+  function iframeLoader(wasFallback) {
+    promoted = true;
 
-		// Adds Boomerang within the iframe
-		bootstrap = function(parent, scriptId) {
-			var script = doc.createElement("script");
-			script.id = scriptId || "boomr-if-as";
-			script.src = window.BOOMR.url;
+    var dom,
+        doc = document,
+        bootstrap, iframe, iframeStyle,
+        win = window;
 
-			BOOMR_lstart = new Date().getTime();
+    window.BOOMR.snippetMethod = wasFallback ? "if" : "i";
 
-			parent = parent || doc.body;
-			parent.appendChild(script);
-		};
+    // Adds Boomerang within the iframe
+    bootstrap = function(parent, scriptId) {
+      var script = doc.createElement("script");
 
-		// For IE 6/7/8, we'll just load the script in the current frame:
-		// * IE 6/7 don't support 'about:blank' for an iframe src (it triggers warnings on secure sites)
-		// * IE 8 required a doc write call for it to work, which is bad practice
-		// This means loading on IE 6/7/8 may cause SPoF.
-		if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [678]\./)) {
-			window.BOOMR.snippetMethod = "s";
+      script.id = scriptId || "boomr-if-as";
+      script.src = window.BOOMR.url;
 
-			bootstrap(parentNode, "boomr-async");
-			return;
-		}
+      BOOMR_lstart = new Date().getTime();
 
-		// The rest of this function is for browsers that don't support Preload hints but will work with CSP & iframes
-		iframe = document.createElement("IFRAME");
+      parent = parent || doc.body;
+      parent.appendChild(script);
+    };
 
-		// An empty frame
-		iframe.src = "about:blank";
+    // For IE 6/7/8, we'll just load the script in the current frame:
+    // * IE 6/7 don't support 'about:blank' for an iframe src (it triggers warnings on secure sites)
+    // * IE 8 required a doc write call for it to work, which is bad practice
+    // This means loading on IE 6/7/8 may cause SPoF.
+    if (!window.addEventListener && window.attachEvent && navigator.userAgent.match(/MSIE [678]\./)) {
+      window.BOOMR.snippetMethod = "s";
 
-		// We set title and role appropriately to play nicely with screen readers and other assistive technologies
-		iframe.title = "";
-		iframe.role = "presentation";
+      bootstrap(parentNode, "boomr-async");
 
-		// Ensure we're not loaded lazily
-		iframe.loading = "eager";
+      return;
+    }
 
-		// Hide the iframe
-		iframeStyle = (iframe.frameElement || iframe).style;
-		iframeStyle.width = 0;
-		iframeStyle.height = 0;
-		iframeStyle.border = 0;
-		iframeStyle.display = "none";
+    // The rest of this function is for browsers that don't support Preload hints but will work with CSP & iframes
+    iframe = document.createElement("IFRAME");
 
-		// Append to the end of the current block
-		parentNode.appendChild(iframe);
+    // An empty frame
+    iframe.src = "about:blank";
 
-		// Try to get the iframe's document object
-		try {
-			win = iframe.contentWindow;
-			doc = win.document.open();
-		}
-		catch (e) {
-			// document.domain has been changed and we're on an old version of IE, so we got an access denied.
-			// Note: the only browsers that have this problem also do not have CSP support.
+    // We set title and role appropriately to play nicely with screen readers and other assistive technologies
+    iframe.title = "";
+    iframe.role = "presentation";
 
-			// Get document.domain of the parent window
-			dom = document.domain;
+    // Ensure we're not loaded lazily
+    iframe.loading = "eager";
 
-			// Set the src of the iframe to a JavaScript URL that will immediately set its document.domain to match the parent.
-			// This lets us access the iframe document long enough to inject our script.
-			// Our script may need to do more domain massaging later.
-			iframe.src = "javascript:var d=document.open();d.domain='" + dom + "';void 0;";
-			win = iframe.contentWindow;
+    // Hide the iframe
+    iframeStyle = (iframe.frameElement || iframe).style;
+    iframeStyle.width = 0;
+    iframeStyle.height = 0;
+    iframeStyle.border = 0;
+    iframeStyle.display = "none";
 
-			doc = win.document.open();
-		}
+    // Append to the end of the current block
+    parentNode.appendChild(iframe);
 
-		// document.domain hasn't changed, regular method should be OK
-		win._boomrl = function() {
-			bootstrap();
-		};
+    // Try to get the iframe's document object
+    try {
+      win = iframe.contentWindow;
+      doc = win.document.open();
+    }
+    catch (e) {
+      // document.domain has been changed and we're on an old version of IE, so we got an access denied.
+      // Note: the only browsers that have this problem also do not have CSP support.
 
-		if (win.addEventListener) {
-			win.addEventListener("load", win._boomrl, false);
-		}
-		else if (win.attachEvent) {
-			win.attachEvent("onload", win._boomrl);
-		}
+      // Get document.domain of the parent window
+      dom = document.domain;
 
-		// Finish the document
-		doc.close();
-	}
+      // Set the src of the iframe to a JavaScript URL that will immediately set its document.domain
+      // to match the parent.
+      // This lets us access the iframe document long enough to inject our script.
+      // Our script may need to do more domain massaging later.
+      iframe.src = "javascript:var d=document.open();d.domain='" + dom + "';void 0;";
+      win = iframe.contentWindow;
 
-	// See if Preload is supported or not
-	var link = document.createElement("link");
+      doc = win.document.open();
+    }
 
-	if (link.relList &&
-	    typeof link.relList.supports === "function" &&
-	    link.relList.supports("preload") &&
-	    ("as" in link)) {
-		window.BOOMR.snippetMethod = "p";
+    // document.domain hasn't changed, regular method should be OK
+    win._boomrl = function() {
+      bootstrap();
+    };
 
-		// Set attributes to trigger a Preload
-		link.href = window.BOOMR.url;
-		link.rel  = "preload";
-		link.as   = "script";
+    if (win.addEventListener) {
+      win.addEventListener("load", win._boomrl, false);
+    }
+    else if (win.attachEvent) {
+      win.attachEvent("onload", win._boomrl);
+    }
 
-		// Add our script tag if successful, fallback to iframe if not
-		link.addEventListener("load", promote);
-		link.addEventListener("error", function() {
-			iframeLoader(true);
-		});
+    // Finish the document
+    doc.close();
+  }
 
-		// Have a fallback in case Preload does nothing or is slow
-		setTimeout(function() {
-			if (!promoted) {
-				iframeLoader(true);
-			}
-		}, LOADER_TIMEOUT);
+  // See if Preload is supported or not
+  var link = document.createElement("link");
 
-		// Note the timestamp we started trying to Preload
-		BOOMR_lstart = new Date().getTime();
+  if (link.relList &&
+      typeof link.relList.supports === "function" &&
+      link.relList.supports("preload") &&
+      ("as" in link)) {
+    window.BOOMR.snippetMethod = "p";
 
-		// Append our link tag
-		parentNode.appendChild(link);
-	}
-	else {
-		// No Preload support, use iframe loader
-		iframeLoader(false);
-	}
+    // Set attributes to trigger a Preload
+    link.href = window.BOOMR.url;
+    link.rel  = "preload";
+    link.as   = "script";
 
-	// Save when the onload event happened, in case this is a non-NavigationTiming browser
-	function boomerangSaveLoadTime(e) {
-		window.BOOMR_onload = (e && e.timeStamp) || new Date().getTime();
-	}
+    // Add our script tag if successful, fallback to iframe if not
+    link.addEventListener("load", promote);
+    link.addEventListener("error", function() {
+      iframeLoader(true);
+    });
 
-	if (window.addEventListener) {
-		window.addEventListener("load", boomerangSaveLoadTime, false);
-	}
-	else if (window.attachEvent) {
-		window.attachEvent("onload", boomerangSaveLoadTime);
-	}
+    // Have a fallback in case Preload does nothing or is slow
+    setTimeout(function() {
+      if (!promoted) {
+        iframeLoader(true);
+      }
+    }, LOADER_TIMEOUT);
+
+    // Note the timestamp we started trying to Preload
+    BOOMR_lstart = new Date().getTime();
+
+    // Append our link tag
+    parentNode.appendChild(link);
+  }
+  else {
+    // No Preload support, use iframe loader
+    iframeLoader(false);
+  }
+
+  // Save when the onload event happened, in case this is a non-NavigationTiming browser
+  function boomerangSaveLoadTime(e) {
+    window.BOOMR_onload = (e && e.timeStamp) || new Date().getTime();
+  }
+
+  if (window.addEventListener) {
+    window.addEventListener("load", boomerangSaveLoadTime, false);
+  }
+  else if (window.attachEvent) {
+    window.attachEvent("onload", boomerangSaveLoadTime);
+  }
 })();

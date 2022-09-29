@@ -1,6 +1,6 @@
 <%= header %>
 <!--
-	Tests the IFrameDelay plugin
+  Tests the IFrameDelay plugin
 -->
 <iframe id="frame1" src="/delay?delay=200&file=/pages/26-iframedelay/support/delayed-pageready.html"></iframe>
 <iframe id="frame2" src="/delay?delay=100&file=/pages/26-iframedelay/support/delayed-pageready.html"></iframe>
@@ -9,12 +9,12 @@
 
 <script type="text/javascript">
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	IFrameDelay: {
-		enabled: true,
-		monitoredCount: 2
-	},
-	autorun: false
+  testAfterOnBeacon: true,
+  IFrameDelay: {
+    enabled: true,
+    monitoredCount: 2
+  },
+  autorun: false
 });
 </script>
 <%= footer %>

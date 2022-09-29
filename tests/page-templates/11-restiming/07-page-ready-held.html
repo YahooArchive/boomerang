@@ -8,53 +8,56 @@
 // 1. at onload, we'll fire an XHR
 // 2. when the XHR is complete, we'll switch to ready
 (function() {
-	var BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  var BOOMR = window.BOOMR || {};
 
-	var ready = false;
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	BOOMR.plugins.HoldBeacon = {
-		is_complete: function() {
-			return ready;
-		}
-	};
+  var ready = false;
 
-	function onLoad() {
-		// trigger 0.5s after onload
-		setTimeout(function() {
-			// send an xhr
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/assets/img.jpg");
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState !== 4) {
-					return;
-				}
+  BOOMR.plugins.HoldBeacon = {
+    is_complete: function() {
+      return ready;
+    }
+  };
 
-				ready = true;
+  function onLoad() {
+    // trigger 0.5s after onload
+    setTimeout(function() {
+      // send an xhr
+      var xhr = new XMLHttpRequest();
 
-				// add restiming to the beacon
-				BOOMR.plugins.ResourceTiming.addResourceTimingToBeacon();
+      xhr.open("GET", "/assets/img.jpg");
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) {
+          return;
+        }
 
-				// send the beacon
-				BOOMR.sendBeacon();
-			};
-			xhr.send(null);
-		}, 500);
-	}
+        ready = true;
 
-	if (window.addEventListener) {
-		window.addEventListener("load", onLoad, false);
-	}
-	else if (window.attachEvent) {
-		window.attachEvent("onLoad", onLoad);
-	}
+        // add restiming to the beacon
+        BOOMR.plugins.ResourceTiming.addResourceTimingToBeacon();
+
+        // send the beacon
+        BOOMR.sendBeacon();
+      };
+
+      xhr.send(null);
+    }, 500);
+  }
+
+  if (window.addEventListener) {
+    window.addEventListener("load", onLoad, false);
+  }
+  else if (window.attachEvent) {
+    window.attachEvent("onLoad", onLoad);
+  }
 })();
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	ResourceTiming: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  ResourceTiming: {
+    enabled: true
+  }
 });
 </script>
 <%= footer %>

@@ -6,12 +6,12 @@
 // it now, which will run BOOMR.init().
 //
 if (BOOMR.window && BOOMR.window.BOOMR_test_config) {
-	BOOMR.window.BOOMR_test.init(BOOMR.window.BOOMR_test_config);
+  BOOMR.window.BOOMR_test.init(BOOMR.window.BOOMR_test_config);
 
-	try {
-		delete BOOMR.window.BOOMR_test_config;
-	}
-	catch (e) {
-		// nop
-	}
+  try {
+    delete BOOMR.window.BOOMR_test_config;
+  }
+  catch (e) {
+    // nop
+  }
 }

@@ -14,22 +14,22 @@ window.angular_imgs = [2500];
 window.angular_nav_routes = ["/widgets/delay/1", "119-alwayssendxhr-function.html"];
 
 BOOMR_test.init({
-	testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
-	Angular: {
-		enabled: true
-	},
-	AutoXHR: {
-		alwaysSendXhr: function(url) {
-			return url.indexOf("widget.html") !== -1;
-		}
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 4 : 1,
+  Angular: {
+    enabled: true
+  },
+  AutoXHR: {
+    alwaysSendXhr: function(url) {
+      return url.indexOf("widget.html") !== -1;
+    }
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 
 /*global angular*/
 document.addEventListener("DOMContentLoaded", function() {
-	angular.bootstrap(document, ["app"]);
+  angular.bootstrap(document, ["app"]);
 });
 
 </script>

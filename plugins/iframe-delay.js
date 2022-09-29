@@ -44,299 +44,334 @@
  * @class BOOMR.plugins.IFrameDelay
  */
 (function() {
-	var w,
-	    MSG_RETRY_DELAY = 250;  // postMessage retry delay in ms
+  var w;
 
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
+  // postMessage retry delay in ms
+  var MSG_RETRY_DELAY = 250;
 
-	if (BOOMR.plugins.IFrameDelay) {
-		return;
-	}
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	w = BOOMR.window;
+  if (BOOMR.plugins.IFrameDelay) {
+    return;
+  }
 
-	/* BEGIN_DEBUG */
-	function debugLog(message) {
-		BOOMR.debug(
-			"(url: " + w.location.href + "): " + message,
-			"IFrameDelay");
-	}
-	/* END_DEBUG */
+  w = BOOMR.window;
 
-	var impl = {
-		initialized: false,
+  /* BEGIN_DEBUG */
+  function debugLog(message) {
+    BOOMR.debug(
+      "(url: " + w.location.href + "): " + message,
+      "IFrameDelay");
+  }
+  /* END_DEBUG */
 
-		/**
-		 * If true, send postMessage `boomrIframeLoading` and wait for the current
-		 * frame to send the beacon. When Boomerang sends a beacon, it will
-		 * also postMessage `boomrIframeLoaded`.
-		 */
-		registerParent: false,
+  var impl = {
+    initialized: false,
 
-		/**
-		 * If set, count down the amount of times `boomrIframeLoaded` has been sent
-		 */
-		monitoredCount: 0,
+    /**
+     * If true, send postMessage `boomrIframeLoading` and wait for the current
+     * frame to send the beacon. When Boomerang sends a beacon, it will
+     * also postMessage `boomrIframeLoaded`.
+     */
+    registerParent: false,
 
-		/**
-		 * Number of frames that went from `boomrIframeLoading` to `boomrIframeLoaded`
-		 */
-		finishedCount: 0,
+    /**
+     * If set, count down the amount of times `boomrIframeLoaded` has been sent
+     */
+    monitoredCount: 0,
 
-		/**
-		 * Number of registered child IFRAMEs currently waiting to finish
-		 */
-		runningCount: 0,
+    /**
+     * Number of frames that went from `boomrIframeLoading` to `boomrIframeLoaded`
+     */
+    finishedCount: 0,
 
-		/**
-		 * Array of child frame Page IDs
-		 */
-		runningFrames: {},
+    /**
+     * Number of registered child IFRAMEs currently waiting to finish
+     */
+    runningCount: 0,
 
-		loadingIntervalID: undefined,
-		loadedIntervalID: undefined,
+    /**
+     * Array of child frame Page IDs
+     */
+    runningFrames: {},
 
-		loadEnd: 0,  // load timestamp of slowest frame
+    /**
+     * Loading setInterval ID (used to know if one is set, and to clear later)
+     */
+    loadingIntervalID: undefined,
 
-		/**
-		 * postMessage names
-		 */
-		messages: {
-			start: "boomrIframeLoading",
-			done: "boomrIframeLoaded",
-			startACK: "boomrIframeLoadingACK",
-			doneACK: "boomrIframeLoadedACK"
-		},
+    /**
+     * Loaded setInterval ID (used to know if one is set, and to clear later)
+     */
+    loadedIntervalID: undefined,
 
-		/**
-		 * Parent window postMessage `onmessage` callback listening for messages
-		 * from the child IFRAMEs
-		 *
-		 * @param {Event} event postMessage Event
-		 */
-		onIFrameMessageAsParent: function(event) {
-			var data;
-			if (event &&
-			    event.data && typeof event.data === "string" && event.data.charAt(0) === "{" &&
-			    event.source) {
-				try {
-					data = JSON.parse(event.data);
-				}
-				catch (e) {
-					return;
-				}
+    /**
+     * load timestamp of slowest frame
+     */
+    loadEnd: 0,
 
-				if (data.msg === impl.messages.start) {
-					debugLog("Received start message from child IFrame");
+    /**
+     * postMessage names
+     */
+    messages: {
+      start: "boomrIframeLoading",
+      done: "boomrIframeLoaded",
+      startACK: "boomrIframeLoadingACK",
+      doneACK: "boomrIframeLoadedACK"
+    },
 
-					if (impl.runningFrames[data.pid]) {
-						// already got a start message from this frame
-						return;
-					}
+    /**
+     * Parent window postMessage `onmessage` callback listening for messages
+     * from the child IFRAMEs
+     *
+     * @param {Event} event postMessage Event
+     */
+    onIFrameMessageAsParent: function(event) {
+      var data;
 
-					// respond to the frame
-					event.source.postMessage(JSON.stringify({"msg": impl.messages.startACK}), event.origin);
+      if (event &&
+          event.data && typeof event.data === "string" && event.data.charAt(0) === "{" &&
+          event.source) {
+        try {
+          data = JSON.parse(event.data);
+        }
+        catch (e) {
+          return;
+        }
 
-					// track that we're monitoring this frame
-					impl.runningCount += 1;
-					impl.runningFrames[data.pid] = 1;
-				}
-				else if (data.msg === impl.messages.done) {
-					debugLog("Received done message from child IFrame");
+        if (data.msg === impl.messages.start) {
+          debugLog("Received start message from child IFrame");
 
-					// respond to the frame
-					event.source.postMessage(JSON.stringify({"msg": impl.messages.doneACK}), event.origin);
+          if (impl.runningFrames[data.pid]) {
+            // already got a start message from this frame
+            return;
+          }
 
-					// book-keeping
-					impl.runningCount -= 1;
-					impl.finishedCount += 1;
+          // respond to the frame
+          event.source.postMessage(JSON.stringify({"msg": impl.messages.startACK}), event.origin);
 
-					// increment our loadEnd if this is larger
-					if (data.loadEnd > impl.loadEnd) {
-						impl.loadEnd = data.loadEnd;
-					}
+          // track that we're monitoring this frame
+          impl.runningCount += 1;
+          impl.runningFrames[data.pid] = 1;
+        }
+        else if (data.msg === impl.messages.done) {
+          debugLog("Received done message from child IFrame");
 
-					// check if we're done!
-					impl.checkCompleteness();
-				}
-			}
-		},
+          // respond to the frame
+          event.source.postMessage(JSON.stringify({"msg": impl.messages.doneACK}), event.origin);
 
-		/**
-		 * Child IFRAME postMessage `onmessage` callback listening for messages
-		 * from parent window
-		 *
-		 * @param {Event} event postMessage Event
-		 */
-		onIFrameMessageAsChild: function(event) {
-			var data;
-			if (event &&
-			    event.data && typeof event.data === "string" && event.data.charAt(0) === "{" &&
-			    event.source) {
-				try {
-					data = JSON.parse(event.data);
-				}
-				catch (e) {
-					return;
-				}
+          // book-keeping
+          impl.runningCount -= 1;
+          impl.finishedCount += 1;
 
-				if (data.msg === impl.messages.startACK) {
-					debugLog("Received start message ACK from parent");
-					clearInterval(impl.loadingIntervalID);
-					impl.loadingIntervalID = undefined;
-				}
-				else if (data.msg === impl.messages.doneACK) {
-					debugLog("Received done message ACK from parent");
-					clearInterval(impl.loadedIntervalID);
-					impl.loadedIntervalID = undefined;
-				}
-			}
-		},
+          // increment our loadEnd if this is larger
+          if (data.loadEnd > impl.loadEnd) {
+            impl.loadEnd = data.loadEnd;
+          }
 
-		/**
-		 * If we are done with all our monitored frames we will tell
-		 * Boomerang that the page is ready and send out a beacon with
-		 * our information.
-		 */
-		checkCompleteness: function() {
-			if (impl.is_complete()) {
-				// Add time IFrameDelay was done running.
-				BOOMR.addVar("ifdl.done", BOOMR.now());
+          // check if we're done!
+          impl.checkCompleteness();
+        }
+      }
+    },
 
-				// Add number for finished/beaconed IFRAMEs.
-				BOOMR.addVar("ifdl.ct", impl.finishedCount);
+    /**
+     * Child IFRAME postMessage `onmessage` callback listening for messages
+     * from parent window
+     *
+     * @param {Event} event postMessage Event
+     */
+    onIFrameMessageAsChild: function(event) {
+      var data;
 
-				// Add number of "still" running IFRAMEs - used for diagnostics
-				// if we canceled waiting too long for the child page to send a
-				// beacon.
-				BOOMR.addVar("ifdl.r", impl.runningCount);
+      if (event &&
+          event.data && typeof event.data === "string" && event.data.charAt(0) === "{" &&
+          event.source) {
+        try {
+          data = JSON.parse(event.data);
+        }
+        catch (e) {
+          return;
+        }
 
-				// Add number of monitored IFRAMEs - if configuration did not
-				// dictate number of monitored IFRAMEs we should give this
-				// number here to tell how many boomerang saw.
-				BOOMR.addVar("ifdl.mon", impl.monitoredCount);
+        if (data.msg === impl.messages.startACK) {
+          debugLog("Received start message ACK from parent");
+          clearInterval(impl.loadingIntervalID);
+          impl.loadingIntervalID = undefined;
+        }
+        else if (data.msg === impl.messages.doneACK) {
+          debugLog("Received done message ACK from parent");
+          clearInterval(impl.loadedIntervalID);
+          impl.loadedIntervalID = undefined;
+        }
+      }
+    },
 
-				if (BOOMR.hasBrowserOnloadFired()) {
-					// if the iframe load time is later than the parent then use it
-					BOOMR.page_ready(impl.loadEnd > 0 ? impl.loadEnd : undefined);
-				}
-				else {
-					// if the parent onload hasn't fired yet, then we'll wait for
-					// it instead
-					BOOMR.attach_page_ready(function() {
-						BOOMR.page_ready(undefined, true);
-					});
-				}
-			}
-		},
+    /**
+     * If we are done with all our monitored frames we will tell
+     * Boomerang that the page is ready and send out a beacon with
+     * our information.
+     */
+    checkCompleteness: function() {
+      if (impl.is_complete()) {
+        // Add time IFrameDelay was done running.
+        BOOMR.addVar("ifdl.done", BOOMR.now());
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} True when the plugin is complete
-		 */
-		is_complete: function() {
-			return impl.enabled && !impl.registerParent ?
-				impl.finishedCount >= impl.monitoredCount && impl.runningCount === 0 :
-				true;
-		}
-	};
+        // Add number for finished/beaconed IFRAMEs.
+        BOOMR.addVar("ifdl.ct", impl.finishedCount);
 
-	BOOMR.plugins.IFrameDelay = {
-		/**
-		 * Initializes the plugin.
-		 *
-		 * @param {object} config Configuration
-		 * @param {boolean} [config.IFrameDelay.registerParent] Should be set to
-		 * `true` for child IFRAMEs.  If `true`, the parent frame will wait on
-		 * this child IFRAME.
-		 * @param {number} [config.IFrameDelay.monitoredCount] Should be set by
-		 * the parent frame to indiciate the number of child IFRAMEs it expects
-		 * to wait on.
-		 * @returns {@link BOOMR.plugins.IFrameDelay} The IFrameDelay plugin for chaining
-		 * @memberof BOOMR.plugins.IFrameDelay
-		 */
+        // Add number of "still" running IFRAMEs - used for diagnostics
+        // if we canceled waiting too long for the child page to send a
+        // beacon.
+        BOOMR.addVar("ifdl.r", impl.runningCount);
 
-		init: function(config) {
-			BOOMR.utils.pluginConfig(
-				impl,
-				config,
-				"IFrameDelay",
-				["enabled", "registerParent", "monitoredCount"]);
+        // Add number of monitored IFRAMEs - if configuration did not
+        // dictate number of monitored IFRAMEs we should give this
+        // number here to tell how many boomerang saw.
+        BOOMR.addVar("ifdl.mon", impl.monitoredCount);
 
-			if (impl.initialized) {
-				return this;
-			}
-			impl.initialized = true;
+        if (BOOMR.hasBrowserOnloadFired()) {
+          // if the iframe load time is later than the parent then use it
+          BOOMR.page_ready(impl.loadEnd > 0 ? impl.loadEnd : undefined);
+        }
+        else {
+          // if the parent onload hasn't fired yet, then we'll wait for
+          // it instead
+          BOOMR.attach_page_ready(function() {
+            BOOMR.page_ready(undefined, true);
+          });
+        }
+      }
+    },
 
-			// only run important bits if we're getting the actual configuration
-			if (this.is_supported()) {
-				if (impl.registerParent) {
-					debugLog("Running as Child. Found registerParent=true");
-					// listen on this window since it will be the source of postMessage calls
-					BOOMR.utils.addListener(window, "message", impl.onIFrameMessageAsChild);
-					function postStart() {
-						debugLog("Trying to notify parent window of load start");
-						w.parent.postMessage(JSON.stringify({"msg": impl.messages.start, "pid": BOOMR.pageId}), "*");
-					}
-					postStart();
-					// keep retrying until we get an ACK
-					impl.loadingIntervalID = setInterval(postStart, MSG_RETRY_DELAY);
-					BOOMR.subscribe("page_load_beacon", function(vars) {
-						var loadEnd;
-						if (vars && vars["rt.end"]) {
-							loadEnd = vars["rt.end"];
-						}
-						else {
-							loadEnd = BOOMR.now();
-						}
-						function postEnd() {
-							// make sure start message was sent first
-							if (!impl.loadingIntervalID) {
-								debugLog("Trying to notify parent window of load end");
-								w.parent.postMessage(JSON.stringify({"msg": impl.messages.done, "pid": BOOMR.pageId, "loadEnd": loadEnd}), "*");
-							}
-						}
-						postEnd();
-						// keep retrying until we get an ACK
-						impl.loadedIntervalID = setInterval(postEnd, MSG_RETRY_DELAY);
-					});
-				}
-				else if (!impl.registerParent && impl.monitoredCount && impl.monitoredCount > 0) {
-					debugLog("Running as Parent. Found monitoredCount=" + impl.monitoredCount + ", listening for messages from child windows");
-					BOOMR.utils.addListener(w, "message", impl.onIFrameMessageAsParent);
-				}
-				else {
-					debugLog("Missing configuration. Setting monitored, finished and running to 0 and closing this plugin");
-					impl.finishedCount = impl.monitoredCount = impl.runningCount = 0;
-					impl.enabled = false;
-				}
-			}
-			else {
-				impl.enabled = false;
-			}
-			return this;
-		},
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} True when the plugin is complete
+     */
+    is_complete: function() {
+      return impl.enabled && !impl.registerParent ?
+        impl.finishedCount >= impl.monitoredCount && impl.runningCount === 0 :
+        true;
+    }
+  };
 
-		/**
-		 * Whether or not this plugin is complete
-		 *
-		 * @returns {boolean} `true` if the plugin is complete
-		 * @memberof BOOMR.plugins.IFrameDelay
-		 */
-		is_complete: function() {
-			return impl.is_complete();
-		},
+  BOOMR.plugins.IFrameDelay = {
+    /**
+     * Initializes the plugin.
+     *
+     * @param {object} config Configuration
+     * @param {boolean} [config.IFrameDelay.registerParent] Should be set to
+     * `true` for child IFRAMEs.  If `true`, the parent frame will wait on
+     * this child IFRAME.
+     * @param {number} [config.IFrameDelay.monitoredCount] Should be set by
+     * the parent frame to indiciate the number of child IFRAMEs it expects
+     * to wait on.
+     * @returns {@link BOOMR.plugins.IFrameDelay} The IFrameDelay plugin for chaining
+     * @memberof BOOMR.plugins.IFrameDelay
+     */
+    init: function(config) {
+      BOOMR.utils.pluginConfig(
+        impl,
+        config,
+        "IFrameDelay",
+        ["enabled", "registerParent", "monitoredCount"]);
 
-		/**
-		 * Whether or not this plugin is supported
-		 *
-		 * @returns {boolean} `true` if the plugin has postMessage and JSON support.
-		 * @memberof BOOMR.plugins.IFrameDelay
-		 */
-		is_supported: function() {
-			return BOOMR.utils.hasPostMessageSupport() && window.JSON;
-		}
-	};
+      if (impl.initialized) {
+        return this;
+      }
+
+      impl.initialized = true;
+
+      // only run important bits if we're getting the actual configuration
+      if (this.is_supported()) {
+        if (impl.registerParent) {
+          debugLog("Running as Child. Found registerParent=true");
+
+          // listen on this window since it will be the source of postMessage calls
+          BOOMR.utils.addListener(window, "message", impl.onIFrameMessageAsChild);
+
+          function postStart() {
+            debugLog("Trying to notify parent window of load start");
+            w.parent.postMessage(JSON.stringify({"msg": impl.messages.start, "pid": BOOMR.pageId}), "*");
+          }
+
+          postStart();
+
+          // keep retrying until we get an ACK
+
+          impl.loadingIntervalID = setInterval(postStart, MSG_RETRY_DELAY);
+          BOOMR.subscribe("page_load_beacon", function(vars) {
+            var loadEnd;
+
+            if (vars && vars["rt.end"]) {
+              loadEnd = vars["rt.end"];
+            }
+            else {
+              loadEnd = BOOMR.now();
+            }
+
+            function postEnd() {
+              // make sure start message was sent first
+              if (!impl.loadingIntervalID) {
+                debugLog("Trying to notify parent window of load end");
+
+                w.parent.postMessage(JSON.stringify({
+                  "msg": impl.messages.done,
+                  "pid": BOOMR.pageId,
+                  "loadEnd": loadEnd
+                }), "*");
+              }
+            }
+
+            postEnd();
+
+            // keep retrying until we get an ACK
+            impl.loadedIntervalID = setInterval(postEnd, MSG_RETRY_DELAY);
+          });
+        }
+        else if (!impl.registerParent && impl.monitoredCount && impl.monitoredCount > 0) {
+          /* BEGIN_DEBUG */
+          debugLog("Running as Parent. Found monitoredCount=" +
+            impl.monitoredCount +
+            ", listening for messages from child windows");
+          /* END_DEBUG */
+
+          BOOMR.utils.addListener(w, "message", impl.onIFrameMessageAsParent);
+        }
+        else {
+          debugLog("Missing configuration. Setting monitored, finished and running to 0 and closing this plugin");
+
+          impl.finishedCount = impl.monitoredCount = impl.runningCount = 0;
+          impl.enabled = false;
+        }
+      }
+      else {
+        impl.enabled = false;
+      }
+
+      return this;
+    },
+
+    /**
+     * Whether or not this plugin is complete
+     *
+     * @returns {boolean} `true` if the plugin is complete
+     * @memberof BOOMR.plugins.IFrameDelay
+     */
+    is_complete: function() {
+      return impl.is_complete();
+    },
+
+    /**
+     * Whether or not this plugin is supported
+     *
+     * @returns {boolean} `true` if the plugin has postMessage and JSON support.
+     * @memberof BOOMR.plugins.IFrameDelay
+     */
+    is_supported: function() {
+      return BOOMR.utils.hasPostMessageSupport() && window.JSON;
+    }
+  };
 }());

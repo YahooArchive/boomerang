@@ -22,28 +22,28 @@ require("json5/lib/register");
  * @param {function} callback Callback with list of files
  */
 function getFiles(dir, nameMatch, callback) {
-	async.waterfall([
-		function(cb) {
-			fs.readdir(dir, function(err, matches) {
-				cb(err, matches);
-			});
-		},
-		function(matches, cb) {
-			var files = matches.map(function(match) {
-				return path.join(dir, match);
-			}).filter(function(match) {
-				// Don't run statSync on .#-files as they confuse node
-				if (!match.match("\.#")) {
-					return fs.statSync(match).isFile() &&
-						!match.endsWith(".swp") &&
-						!match.endsWith("~") &&
-						(nameMatch === "" || match.indexOf(nameMatch) !== -1);
-				}
-			});
+  async.waterfall([
+    function(cb) {
+      fs.readdir(dir, function(err, matches) {
+        cb(err, matches);
+      });
+    },
+    function(matches, cb) {
+      var files = matches.map(function(match) {
+        return path.join(dir, match);
+      }).filter(function(match) {
+        // Don't run statSync on .#-files as they confuse node
+        if (!match.match("\.#")) {
+          return fs.statSync(match).isFile() &&
+            !match.endsWith(".swp") &&
+            !match.endsWith("~") &&
+            (nameMatch === "" || match.indexOf(nameMatch) !== -1);
+        }
+      });
 
-			cb(null, files);
-		}
-	], callback);
+      cb(null, files);
+    }
+  ], callback);
 }
 
 /**
@@ -53,22 +53,22 @@ function getFiles(dir, nameMatch, callback) {
  * @param {function} callback Callback with list of directories
  */
 function getDirs(dir, callback) {
-	async.waterfall([
-		function(cb) {
-			fs.readdir(dir, function(err, matches) {
-				cb(err, matches);
-			});
-		},
-		function(matches, cb) {
-			var dirs = matches.map(function(match) {
-				return path.join(dir, match);
-			}).filter(function(match) {
-				return !fs.statSync(match).isFile();
-			});
+  async.waterfall([
+    function(cb) {
+      fs.readdir(dir, function(err, matches) {
+        cb(err, matches);
+      });
+    },
+    function(matches, cb) {
+      var dirs = matches.map(function(match) {
+        return path.join(dir, match);
+      }).filter(function(match) {
+        return !fs.statSync(match).isFile();
+      });
 
-			cb(null, dirs);
-		}
-	], callback);
+      cb(null, dirs);
+    }
+  ], callback);
 }
 
 /**
@@ -82,298 +82,302 @@ function getDirs(dir, callback) {
  * @returns {boolean} True if the test should be excluded
  */
 function shouldExcludeTest(testsData, includedPlugins, templateDir, testName) {
-	if (!testsData || !includedPlugins || includedPlugins.length === 0) {
-		// no exclusions, so don't exclude
-		return false;
-	}
+  if (!testsData || !includedPlugins || includedPlugins.length === 0) {
+    // no exclusions, so don't exclude
+    return false;
+  }
 
-	// plugins required for all tests in this directory
-	var requiredPlugins = (testsData.all && testsData.all.requires) || [];
+  // plugins required for all tests in this directory
+  var requiredPlugins = (testsData.all && testsData.all.requires) || [];
 
-	// plugins required for this test
-	if (testsData[testName] && testsData[testName].requires) {
-		requiredPlugins = requiredPlugins.concat(testsData[testName].requires);
-	}
+  // plugins required for this test
+  if (testsData[testName] && testsData[testName].requires) {
+    requiredPlugins = requiredPlugins.concat(testsData[testName].requires);
+  }
 
-	// make sure all required plugins are included in the build
-	for (var i = 0; i < requiredPlugins.length; i++) {
-		if (includedPlugins.indexOf(requiredPlugins[i]) === -1) {
-			// missing this required plugin
-			grunt.log.debug(templateDir + "/" + testName + " is missing " + requiredPlugins[i]);
-			return true;
-		}
-	}
+  // make sure all required plugins are included in the build
+  for (var i = 0; i < requiredPlugins.length; i++) {
+    if (includedPlugins.indexOf(requiredPlugins[i]) === -1) {
+      // missing this required plugin
+      grunt.log.debug(templateDir + "/" + testName + " is missing " + requiredPlugins[i]);
 
-	return false;
+      return true;
+    }
+  }
+
+  return false;
 }
-
 
 //
 // Exports
 //
 module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPagesDir, e2eDir, e2eJsonPath) {
-	//
-	// Inputs
-	//
-	var testsDir = __dirname;
-	testTemplatesDir = testTemplatesDir || path.join(testsDir, "page-templates");
-	testSnippetsDir = testSnippetsDir || path.join(testsDir, "page-template-snippets");
-	testPagesDir = testPagesDir || path.join(testsDir, "pages");
-	e2eDir = e2eDir || path.join(testsDir, "e2e");
-	e2eJsonPath = e2eJsonPath || path.join(e2eDir, "e2e.json");
+  //
+  // Inputs
+  //
+  var testsDir = __dirname;
 
-	//
-	// Determine if there are any tests to exclude (based on the build flavor)
-	//
+  testTemplatesDir = testTemplatesDir || path.join(testsDir, "page-templates");
+  testSnippetsDir = testSnippetsDir || path.join(testsDir, "page-template-snippets");
+  testPagesDir = testPagesDir || path.join(testsDir, "pages");
+  e2eDir = e2eDir || path.join(testsDir, "e2e");
+  e2eJsonPath = e2eJsonPath || path.join(e2eDir, "e2e.json");
 
-	// get all plugin definitions
-	var pluginsJson = grunt.file.readJSON("plugins.json");
+  //
+  // Determine if there are any tests to exclude (based on the build flavor)
+  //
 
-	// default build
-	var includedPlugins = pluginsJson.plugins;
+  // get all plugin definitions
+  var pluginsJson = grunt.file.readJSON("plugins.json");
 
-	// if it's a build flavor, use that plugins list instead
-	var buildFlavor = grunt.option("build-flavor");
-	if (buildFlavor) {
-		includedPlugins = pluginsJson.flavors[buildFlavor].plugins;
-	}
+  // default build
+  var includedPlugins = pluginsJson.plugins;
 
-	// simplify plugin to just file name without extension
-	includedPlugins = includedPlugins.map(function(plugin) {
-		return plugin.replace("plugins/", "").replace(".js", "");
-	});
+  // if it's a build flavor, use that plugins list instead
+  var buildFlavor = grunt.option("build-flavor");
 
-	//
-	// Domains for test purposes
-	//
-	var DEFAULT_TEST_MAIN_DOMAIN = "boomerang-test.local";
-	var DEFAULT_TEST_SECONDARY_DOMAIN = "boomerang-test2.local";
+  if (buildFlavor) {
+    includedPlugins = pluginsJson.flavors[buildFlavor].plugins;
+  }
 
-	var boomerangE2ETestDomain = grunt.option("main-domain") || DEFAULT_TEST_MAIN_DOMAIN;
-	var boomerangE2ESecondDomain = grunt.option("secondary-domain") || DEFAULT_TEST_SECONDARY_DOMAIN;
-	var boomerangE2ETestPort = grunt.option("test-port") || 4002;
-	var boomerangE2ETestScheme = grunt.option("test-scheme") || "http";
+  // simplify plugin to just file name without extension
+  includedPlugins = includedPlugins.map(function(plugin) {
+    return plugin.replace("plugins/", "").replace(".js", "");
+  });
 
-	//make grunt know this task is async.
-	var done = gruntTask.async();
+  //
+  // Domains for test purposes
+  //
+  var DEFAULT_TEST_MAIN_DOMAIN = "boomerang-test.local";
+  var DEFAULT_TEST_SECONDARY_DOMAIN = "boomerang-test2.local";
 
-	async.waterfall([
-		//
-		// First, load all static template variables
-		//
-		function(cb) {
-			grunt.log.writeln("Loaded static template variables...");
+  var boomerangE2ETestDomain = grunt.option("main-domain") || DEFAULT_TEST_MAIN_DOMAIN;
+  var boomerangE2ESecondDomain = grunt.option("secondary-domain") || DEFAULT_TEST_SECONDARY_DOMAIN;
+  var boomerangE2ETestPort = grunt.option("test-port") || 4002;
+  var boomerangE2ETestScheme = grunt.option("test-scheme") || "http";
 
-			var opts = {};
+  //make grunt know this task is async.
+  var done = gruntTask.async();
 
-			getFiles(testSnippetsDir, ".tpl", function(err, files) {
-				opts.snippetFiles = files;
-				cb(err, opts);
-			});
-		},
-		function(opts, cb) {
-			opts.vars = {
-				mainServer: boomerangE2ETestDomain,
-				secondaryServer: boomerangE2ESecondDomain,
-				testPort: boomerangE2ETestPort,
-				testScheme: boomerangE2ETestScheme
-			};
+  async.waterfall([
+    //
+    // First, load all static template variables
+    //
+    function(cb) {
+      grunt.log.writeln("Loaded static template variables...");
 
-			// Set all template vars to their file name
-			opts.snippetFiles.forEach(function(file) {
-				var snippetName = file.replace(testSnippetsDir + path.sep, "").replace(".tpl", "");
+      var opts = {};
 
-				grunt.log.ok(snippetName);
+      getFiles(testSnippetsDir, ".tpl", function(err, files) {
+        opts.snippetFiles = files;
+        cb(err, opts);
+      });
+    },
+    function(opts, cb) {
+      opts.vars = {
+        mainServer: boomerangE2ETestDomain,
+        secondaryServer: boomerangE2ESecondDomain,
+        testPort: boomerangE2ETestPort,
+        testScheme: boomerangE2ETestScheme
+      };
 
-				// load file
-				var fileContents = fs.readFileSync(file, "utf-8");
+      // Set all template vars to their file name
+      opts.snippetFiles.forEach(function(file) {
+        var snippetName = file.replace(testSnippetsDir + path.sep, "").replace(".tpl", "");
 
-				opts.vars[snippetName] = fileContents;
-			});
+        grunt.log.ok(snippetName);
 
-			cb(null, opts);
-		},
-		//
-		// Find all page-template directories
-		//
-		function(opts, cb) {
-			grunt.log.writeln("Rendering page templates");
+        // load file
+        var fileContents = fs.readFileSync(file, "utf-8");
 
-			getDirs(testTemplatesDir, function(err, dirs) {
-				opts.templateDirs = dirs;
-				cb(err, opts);
-			});
-		},
-		function(opts, cb) {
-			var rootIndexHtml = "";
-			var testDefinitions = [];
-			var rootIndexFile = path.join(testPagesDir, "index.html");
+        opts.vars[snippetName] = fileContents;
+      });
 
-			// Set all template vars to their file name
-			async.eachSeries(opts.templateDirs, function(dir, cb2) {
-				var templateDir = dir.replace(testTemplatesDir + path.sep, "");
-				var supportDir = path.join(testTemplatesDir, templateDir, "support");
+      cb(null, opts);
+    },
+    //
+    // Find all page-template directories
+    //
+    function(opts, cb) {
+      grunt.log.writeln("Rendering page templates");
 
-				//
-				// Test definitions
-				//
-				var testsDataFile = path.join(testTemplatesDir, templateDir, "tests.json5");
-				var testsData = {};
-				try {
-					if (grunt.file.exists(testsDataFile)) {
-						testsData = require(testsDataFile);
-					}
-				}
-				catch (e) {
-					// NOP, test file doesn't need to exist;
-				}
+      getDirs(testTemplatesDir, function(err, dirs) {
+        opts.templateDirs = dirs;
+        cb(err, opts);
+      });
+    },
+    function(opts, cb) {
+      var rootIndexHtml = "";
+      var testDefinitions = [];
+      var rootIndexFile = path.join(testPagesDir, "index.html");
 
-				rootIndexHtml += "<p><a href='" + templateDir + "/index.html'>" + templateDir + "</a></p>";
+      // Set all template vars to their file name
+      async.eachSeries(opts.templateDirs, function(dir, cb2) {
+        var templateDir = dir.replace(testTemplatesDir + path.sep, "");
+        var supportDir = path.join(testTemplatesDir, templateDir, "support");
 
-				// copy support files over
-				if (grunt.file.exists(supportDir)) {
-					getFiles(supportDir, "", function(err, files) {
-						if (err) {
-							return cb2(err);
-						}
+        //
+        // Test definitions
+        //
+        var testsDataFile = path.join(testTemplatesDir, templateDir, "tests.json5");
+        var testsData = {};
 
-						var supportDirDest = path.join(testPagesDir, templateDir, "support");
+        try {
+          if (grunt.file.exists(testsDataFile)) {
+            testsData = require(testsDataFile);
+          }
+        }
+        catch (e) {
+          // NOP, test file doesn't need to exist;
+        }
 
-						if (!grunt.file.exists(supportDirDest)) {
-							grunt.log.ok(supportDirDest);
-							grunt.file.mkdir(supportDirDest);
-						}
+        rootIndexHtml += "<p><a href='" + templateDir + "/index.html'>" + templateDir + "</a></p>";
 
-						files.forEach(function(file) {
-							var supportFileBasePath = file.replace(testTemplatesDir + path.sep, "");
-							var supportFileName = supportFileBasePath.replace(templateDir + path.sep, "").replace("support" + path.sep, "");
+        // copy support files over
+        if (grunt.file.exists(supportDir)) {
+          getFiles(supportDir, "", function(err, files) {
+            if (err) {
+              return cb2(err);
+            }
 
-							grunt.log.ok(supportFileBasePath);
+            var supportDirDest = path.join(testPagesDir, templateDir, "support");
 
-							if (supportFileName.endsWith("html")) {
-								// read contents
-								var contents = fs.readFileSync(file, "utf-8");
+            if (!grunt.file.exists(supportDirDest)) {
+              grunt.log.ok(supportDirDest);
+              grunt.file.mkdir(supportDirDest);
+            }
 
-								opts.vars.fileName = supportFileName;
+            files.forEach(function(file) {
+              var supportFileBasePath = file.replace(testTemplatesDir + path.sep, "");
+              var supportFileName = supportFileBasePath.replace(templateDir + path.sep, "").replace("support" + path.sep, "");
 
-								var rendered = grunt.template.process(contents, {
-									data: opts.vars
-								});
+              grunt.log.ok(supportFileBasePath);
 
-								// write
-								grunt.file.write(path.join(supportDirDest, supportFileName), rendered);
-							}
-							else {
-								grunt.file.copy(file, path.join(supportDirDest, supportFileName));
-							}
-						});
-					});
-				}
+              if (supportFileName.endsWith("html")) {
+                // read contents
+                var contents = fs.readFileSync(file, "utf-8");
 
-				// get all files for this dir
-				getFiles(dir, ".html", function(err, files) {
-					if (err) {
-						return cb2(err);
-					}
+                opts.vars.fileName = supportFileName;
 
-					var indexHtml = "";
-					var indexFile = path.join(testPagesDir, templateDir, "index.html");
-					var indexFileName = path.join(templateDir, "index.html");
+                var rendered = grunt.template.process(contents, {
+                  data: opts.vars
+                });
 
-					files.forEach(function(file) {
-						// template file
-						var templateFile = file.replace(testTemplatesDir + path.sep, "");
-						var templateFileName = templateFile.replace(templateDir + path.sep, "");
-						var templateFileDest = path.join(testPagesDir, templateFile);
+                // write
+                grunt.file.write(path.join(supportDirDest, supportFileName), rendered);
+              }
+              else {
+                grunt.file.copy(file, path.join(supportDirDest, supportFileName));
+              }
+            });
+          });
+        }
 
-						var testFile = templateFileName.replace(".html", "");
-						if (shouldExcludeTest(testsData, includedPlugins, templateDir, testFile)) {
-							grunt.log.ok("Skipping " + templateFile);
+        // get all files for this dir
+        getFiles(dir, ".html", function(err, files) {
+          if (err) {
+            return cb2(err);
+          }
 
-							return;
-						}
+          var indexHtml = "";
+          var indexFile = path.join(testPagesDir, templateDir, "index.html");
+          var indexFileName = path.join(templateDir, "index.html");
 
-						grunt.log.ok(templateFile);
+          files.forEach(function(file) {
+            // template file
+            var templateFile = file.replace(testTemplatesDir + path.sep, "");
+            var templateFileName = templateFile.replace(templateDir + path.sep, "");
+            var templateFileDest = path.join(testPagesDir, templateFile);
 
-						// javascript file
-						var jsFile = file.replace(".html", "") + ".js";
-						var jsFileName = jsFile.replace(testTemplatesDir + path.sep, "");
-						var jsFileDest = path.join(testPagesDir, jsFileName);
+            var testFile = templateFileName.replace(".html", "");
 
-						// read contents
-						var contents = fs.readFileSync(file, "utf-8");
+            if (shouldExcludeTest(testsData, includedPlugins, templateDir, testFile)) {
+              grunt.log.ok("Skipping " + templateFile);
 
-						opts.vars.fileName = templateFile;
+              return;
+            }
 
-						var rendered = grunt.template.process(contents, {
-							data: opts.vars
-						});
+            grunt.log.ok(templateFile);
 
-						// write
-						grunt.file.write(templateFileDest, rendered);
+            // javascript file
+            var jsFile = file.replace(".html", "") + ".js";
+            var jsFileName = jsFile.replace(testTemplatesDir + path.sep, "");
+            var jsFileDest = path.join(testPagesDir, jsFileName);
 
-						// skip '.headers' files
-						if (!templateFileName.endsWith("html")) {
-							return;
-						}
+            // read contents
+            var contents = fs.readFileSync(file, "utf-8");
 
-						// save to our test definitions
-						testDefinitions.push({
-							path: templateDir,
-							file: testFile
-						});
+            opts.vars.fileName = templateFile;
 
-						//
-						// Index.html
-						//
-						indexHtml += "<p><a href='" + templateFileName + "'>" + templateFileName + "</a></p>";
+            var rendered = grunt.template.process(contents, {
+              data: opts.vars
+            });
 
-						// only show IFRAMEs if there's not a ton of them
-						if (files.length <= 5) {
-							indexHtml += "<iframe src='" + templateFileName + "' style='width: 100%'></iframe>\n";
-						}
+            // write
+            grunt.file.write(templateFileDest, rendered);
 
-						// if the .js file exists, copy that too
-						if (grunt.file.exists(jsFile)) {
-							grunt.log.ok(jsFileName);
+            // skip '.headers' files
+            if (!templateFileName.endsWith("html")) {
+              return;
+            }
 
-							grunt.file.copy(jsFile, jsFileDest);
-						}
-					});
+            // save to our test definitions
+            testDefinitions.push({
+              path: templateDir,
+              file: testFile
+            });
 
-					grunt.log.ok(indexFileName);
-					grunt.file.write(indexFile, indexHtml);
+            //
+            // Index.html
+            //
+            indexHtml += "<p><a href='" + templateFileName + "'>" + templateFileName + "</a></p>";
 
-					cb2();
-				});
-			}, function(err) {
-				// write root index
-				grunt.log.ok("index.html");
-				grunt.file.write(rootIndexFile, rootIndexHtml);
-				var testConfiguration = {
-					server: {
-						main: boomerangE2ETestDomain,
-						second: boomerangE2ESecondDomain,
-						scheme: boomerangE2ETestScheme
-					},
-					ports: {
-						main: boomerangE2ETestPort,
-						second: boomerangE2ETestPort + 1
-					},
-					tests: testDefinitions
-				};
+            // only show IFRAMEs if there's not a ton of them
+            if (files.length <= 5) {
+              indexHtml += "<iframe src='" + templateFileName + "' style='width: 100%'></iframe>\n";
+            }
 
-				// test definitions
-				grunt.file.write(e2eJsonPath, JSON.stringify(testConfiguration, null, 2));
+            // if the .js file exists, copy that too
+            if (grunt.file.exists(jsFile)) {
+              grunt.log.ok(jsFileName);
 
-				cb(err, opts);
-			});
-		}
-	], function(err) {
-		if (err) {
-			console.log(err);
-		}
+              grunt.file.copy(jsFile, jsFileDest);
+            }
+          });
 
-		done();
-	});
+          grunt.log.ok(indexFileName);
+          grunt.file.write(indexFile, indexHtml);
+
+          cb2();
+        });
+      }, function(err) {
+        // write root index
+        grunt.log.ok("index.html");
+        grunt.file.write(rootIndexFile, rootIndexHtml);
+        var testConfiguration = {
+          server: {
+            main: boomerangE2ETestDomain,
+            second: boomerangE2ESecondDomain,
+            scheme: boomerangE2ETestScheme
+          },
+          ports: {
+            main: boomerangE2ETestPort,
+            second: boomerangE2ETestPort + 1
+          },
+          tests: testDefinitions
+        };
+
+        // test definitions
+        grunt.file.write(e2eJsonPath, JSON.stringify(testConfiguration, null, 2));
+
+        cb(err, opts);
+      });
+    }
+  ], function(err) {
+    if (err) {
+      console.log(err);
+    }
+
+    done();
+  });
 };

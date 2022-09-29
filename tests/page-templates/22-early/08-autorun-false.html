@@ -7,9 +7,9 @@ window.localStorage.removeItem("_boomr_" + "LOGN");
 
 // Force navigation to TYPE_NAVIGATE
 if (window.performance) {
-	window.performance.__defineGetter__("navigation", function() {
-		return {type: 0, redirectCount: 0};
-	});
+  window.performance.__defineGetter__("navigation", function() {
+    return {type: 0, redirectCount: 0};
+  });
 }
 </script>
 <%= boomerangSnippet %>
@@ -19,26 +19,26 @@ if (window.performance) {
 
 // simulate delayed config
 setTimeout(function() {
-	BOOMR_test.init({
-		testAfterOnBeacon: 1,
-		autorun: false,
-		"PageParams": {
-			"pageGroups": [
-				{
-					"type": "Regexp",
-					"parameter1": "/pages/",
-					"parameter2": "MYPAGEGROUP"
-				}
-			]
-		},
-		Early: {
-			enabled: true
-		}
-	});
+  BOOMR_test.init({
+    testAfterOnBeacon: 1,
+    autorun: false,
+    "PageParams": {
+      "pageGroups": [
+        {
+          "type": "Regexp",
+          "parameter1": "/pages/",
+          "parameter2": "MYPAGEGROUP"
+        }
+      ]
+    },
+    Early: {
+      enabled: true
+    }
+  });
 }, 200);
 
 setTimeout(function() {
-	BOOMR.page_ready();
+  BOOMR.page_ready();
 }, 2000);
 </script>
 <img src="/delay?delay=10&amp;file=/assets/img.jpg" style="width: 100px" />

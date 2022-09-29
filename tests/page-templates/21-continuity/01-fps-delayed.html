@@ -3,7 +3,7 @@
 // Force IFRAME for the delayed snippet, as otherwise the delay will be doubled
 // when the initial load timesout at 3000ms
 if (BOOMR_test.supportsLoaderIframe()) {
-	BOOMR_test.forceSnippetIframe();
+  BOOMR_test.forceSnippetIframe();
 }
 </script>
 <%= continuitySnippet %>
@@ -12,17 +12,17 @@ if (BOOMR_test.supportsLoaderIframe()) {
 <script>
 // wait so that rAF gets called at least once
 setTimeout(function() {
-	// loop for 300ms to trigger a long frame
-	BOOMR_test.busy(300);
+  // loop for 300ms to trigger a long frame
+  BOOMR_test.busy(300);
 }, 100);
 </script>
 <%= boomerangDelayedSnippet %>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Continuity: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true
+  }
 });
 </script>
 <%= footer %>

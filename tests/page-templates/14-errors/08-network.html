@@ -5,31 +5,32 @@
 var t = BOOMR_test;
 
 BOOMR_test.init({
-	testAfterOnBeacon: t.isFetchApiSupported() ? 2 : 1,
-	Errors: {
-		enabled: true,
-		monitorNetwork: true,
-		sendAfterOnload: true
-	},
-	instrument_xhr: true,
-	AutoXHR: { monitorFetch: true },
-	afterFirstBeacon: function() {
-		setTimeout(function() {
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/404?rnd=" + Math.random());
-			xhr.send(null);
+  testAfterOnBeacon: t.isFetchApiSupported() ? 2 : 1,
+  Errors: {
+    enabled: true,
+    monitorNetwork: true,
+    sendAfterOnload: true
+  },
+  instrument_xhr: true,
+  AutoXHR: { monitorFetch: true },
+  afterFirstBeacon: function() {
+    setTimeout(function() {
+      var xhr = new XMLHttpRequest();
 
-			if (!t.isFetchApiSupported()) {
-				return;
-			}
+      xhr.open("GET", "/404?rnd=" + Math.random());
+      xhr.send(null);
 
-			BOOMR.subscribe("beacon", function() {
-				setTimeout(function() {
-					fetch("/404?rnd=" + Math.random());
-				}, 100);
-			}, null, null, true);
-		}, 100);
-	}
+      if (!t.isFetchApiSupported()) {
+        return;
+      }
+
+      BOOMR.subscribe("beacon", function() {
+        setTimeout(function() {
+          fetch("/404?rnd=" + Math.random());
+        }, 100);
+      }, null, null, true);
+    }, 100);
+  }
 });
 </script>
 <%= footer %>

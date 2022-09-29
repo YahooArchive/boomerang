@@ -5,23 +5,27 @@
 <script>
 // make a really long beacon
 var url = "/blackhole?";
+
 for (var i = 0; i < 5000; i++) {
-	url += "a";
+  url += "a";
 }
+
 var img = new Image();
+
 img.src = url;
 
 var img2 = new Image();
+
 img2.src = "/blackhole?/foo/bar/baz";
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	ResourceTiming: {
-		enabled: true,
-		trimUrls: [
-			"/foo/"
-		]
-	}
+  testAfterOnBeacon: true,
+  ResourceTiming: {
+    enabled: true,
+    trimUrls: [
+      "/foo/"
+    ]
+  }
 });
 </script>
 <%= footer %>

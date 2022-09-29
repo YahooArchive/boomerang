@@ -5,7 +5,7 @@ var config = base.config;
 
 // Pre-Chromium Edge
 var capabilities = {
-	browserName: "MicrosoftEdge"
+  browserName: "MicrosoftEdge"
 };
 
 // capabilities in this file will take precedence

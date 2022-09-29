@@ -21,161 +21,174 @@
  *    - Does not check if before DOMContentLoaded.
  *    - Does not retry sending at prerender_to_visible event.
  *
+ * ## Beacon Parameters
+ *
+ * This plugin adds the following parameters to the beacon:
+ *
+ * * `early=1`: The Early beacon
+ *
  * @class BOOMR.plugins.Early
  */
 
 (function() {
-	BOOMR = window.BOOMR || {};
-	BOOMR.plugins = BOOMR.plugins || {};
-	if (BOOMR.plugins.Early) {
-		return;
-	}
+  BOOMR = window.BOOMR || {};
+  BOOMR.plugins = BOOMR.plugins || {};
 
-	/* BEGIN_DEBUG */
-	function debugLog(msg) {
-		BOOMR.debug(msg, "Early");
-	}
-	/* END_DEBUG */
+  if (BOOMR.plugins.Early) {
+    return;
+  }
 
-	var impl = {
-		initialized: false,
-		autorun: true,
-		earlyBeaconSent: false,  // early beacon has been sent
-		singlePageApp: false,
-		onConfigFired: false,
+  /* BEGIN_DEBUG */
+  function debugLog(msg) {
+    BOOMR.debug(msg, "Early");
+  }
+  /* END_DEBUG */
 
-		/**
-		 * Fired on spa_init event
-		 */
-		onSpaInit: function() {
-			// a new SPA route is starting, reset to allow an early beacon for this new navigation
-			this.earlyBeaconSent = false;
-		},
+  var impl = {
+    initialized: false,
+    autorun: true,
+    // early beacon has been sent
+    earlyBeaconSent: false,
+    singlePageApp: false,
+    onConfigFired: false,
 
-		/**
-		 * Fired on beacon event. Used to clear the vars we set on the beacon
-		 */
-		clearMetrics: function() {
-			BOOMR.removeVar("early");
-		},
+    /**
+     * Fired on spa_init event
+     */
+    onSpaInit: function() {
+      // a new SPA route is starting, reset to allow an early beacon for this new navigation
+      this.earlyBeaconSent = false;
+    },
 
-		/**
-		 * Send an early beacon
-		 *
-		 * @param {object} config
-		 * @param {string} edata Event data
-		 * @param {string} ename Event name: spa, spa_hard, onconfig or prerender_to_visible
-		 */
-		sendEarlyBeacon: function(edata, ename) {
-			var navigationType = 0,  // default to TYPE_NAVIGATE if it is not available
-			    d, p = BOOMR.getPerformance();
+    /**
+     * Fired on beacon event. Used to clear the vars we set on the beacon
+     */
+    clearMetrics: function() {
+      BOOMR.removeVar("early");
+    },
 
-			d = BOOMR.window && BOOMR.window.document;
-			// protect against undefined window/document
-			if (!d) {
-				return;
-			}
+    /**
+     * Send an early beacon
+     *
+     * @param {object} config
+     * @param {string} edata Event data
+     * @param {string} ename Event name: spa, spa_hard, onconfig or prerender_to_visible
+     */
+    sendEarlyBeacon: function(edata, ename) {
+      // default to TYPE_NAVIGATE if it is not available
+      var navigationType = 0,
+          d,
+          p = BOOMR.getPerformance();
 
-			if (ename === "onconfig") {
-				this.onConfigFired = true;
-			}
+      d = BOOMR.window && BOOMR.window.document;
 
-			if (p && p.navigation) {
-				navigationType = p.navigation.type;
-			}
+      // protect against undefined window/document
+      if (!d) {
+        return;
+      }
 
-			if (this.earlyBeaconSent ||
-			    // don't send if in prerender state
-			    BOOMR.visibilityState() === "prerender" ||
-			    // don't send if this navigation is TYPE_RELOAD or TYPE_BACK_FORWARD
-			    (navigationType === 1 || navigationType === 2) ||
-			    // for non-SPA, don't send if:
-			    (!this.singlePageApp &&
-			        // autorun is false
-			        (!this.autorun ||
-			        // prerender_to_visible fired but we don't have config yet
-			        (!this.onConfigFired && ename === "prerender_to_visible") ||
-			        // DOMContentLoaded hasn't occurred yet
-			        d.readyState === "loading" ||
-			        // onload has already fired
-			        BOOMR.hasBrowserOnloadFired())) ||
-			    // for SPA, only send on spa hard and soft events
-			    (this.singlePageApp && !BOOMR.utils.inArray(ename, BOOMR.constants.BEACON_TYPE_SPAS))) {
-				debugLog("Not sending early beacon");
-				return;
-			}
+      if (ename === "onconfig") {
+        this.onConfigFired = true;
+      }
 
-			this.earlyBeaconSent = true;
+      if (p && p.navigation) {
+        navigationType = p.navigation.type;
+      }
 
-			// NOTE: Early beacons (and the early flag) don't support singleBeacon
-			BOOMR.addVar("early", "1");
+      if (this.earlyBeaconSent ||
+          // don't send if in prerender state
+          BOOMR.visibilityState() === "prerender" ||
+          // don't send if this navigation is TYPE_RELOAD or TYPE_BACK_FORWARD
+          (navigationType === 1 || navigationType === 2) ||
+          // for non-SPA, don't send if:
+          (!this.singlePageApp &&
+              // autorun is false
+              (!this.autorun ||
+              // prerender_to_visible fired but we don't have config yet
+              (!this.onConfigFired && ename === "prerender_to_visible") ||
+              // DOMContentLoaded hasn't occurred yet
+              d.readyState === "loading" ||
+              // onload has already fired
+              BOOMR.hasBrowserOnloadFired())) ||
+          // for SPA, only send on spa hard and soft events
+          (this.singlePageApp && !BOOMR.utils.inArray(ename, BOOMR.constants.BEACON_TYPE_SPAS))) {
+        debugLog("Not sending early beacon");
 
-			if (edata && BOOMR.utils.inArray(edata.initiator, BOOMR.constants.BEACON_TYPE_SPAS)) {
-				BOOMR.addVar("http.initiator", edata.initiator);
-				BOOMR.addVar("rt.start", "manual");
-			}
+        return;
+      }
 
-			// let other plugins add data to the early beacon
-			BOOMR.fireEvent("before_early_beacon", edata);
+      this.earlyBeaconSent = true;
 
-			// send it!
-			debugLog("Sending early beacon");
-			BOOMR.sendBeacon();
-		}
-	};
+      // NOTE: Early beacons (and the early flag) don't support singleBeacon
+      BOOMR.addVar("early", "1");
 
-	BOOMR.plugins.Early = {
-		init: function(config) {
-			if (config.primary || impl.initialized) {
-				return this;
-			}
+      if (edata && BOOMR.utils.inArray(edata.initiator, BOOMR.constants.BEACON_TYPE_SPAS)) {
+        BOOMR.addVar("http.initiator", edata.initiator);
+        BOOMR.addVar("rt.start", "manual");
+      }
 
-			if (typeof config.autorun !== "undefined") {
-				impl.autorun = config.autorun;
-			}
+      // let other plugins add data to the early beacon
+      BOOMR.fireEvent("before_early_beacon", edata);
 
-			// Check to see if any of the SPAs were enabled
-			impl.singlePageApp = BOOMR.plugins.SPA && BOOMR.plugins.SPA.isSinglePageApp(config);
+      // send it!
+      debugLog("Sending early beacon");
+      BOOMR.sendBeacon();
+    }
+  };
 
-			BOOMR.registerEvent("before_early_beacon");
+  BOOMR.plugins.Early = {
+    init: function(config) {
+      if (config.primary || impl.initialized) {
+        return this;
+      }
 
-			// Hook onconfig to trigger early beacon logic for non-SPA.
-			BOOMR.subscribe("config", impl.sendEarlyBeacon, "onconfig", impl, true);
+      if (typeof config.autorun !== "undefined") {
+        impl.autorun = config.autorun;
+      }
 
-			// Hook dom_loaded to trigger early beacon logic for non-SPA.
-			BOOMR.subscribe("dom_loaded", impl.sendEarlyBeacon, "dom_loaded", impl, true);
+      // Check to see if any of the SPAs were enabled
+      impl.singlePageApp = BOOMR.plugins.SPA && BOOMR.plugins.SPA.isSinglePageApp(config);
 
-			// Hook spa_init to trigger early beacon logic for SPA.
-			BOOMR.subscribe("spa_init", impl.onSpaInit, null, impl);
+      BOOMR.registerEvent("before_early_beacon");
 
-			// If we were previously in prerender, the early beacon wouldn't have been sent.
-			// Hook prerender_to_visible to trigger early beacon logic, if onload already happened this will be a noop
-			BOOMR.subscribe("prerender_to_visible", impl.sendEarlyBeacon, "prerender_to_visible", impl, true);
+      // Hook onconfig to trigger early beacon logic for non-SPA.
+      BOOMR.subscribe("config", impl.sendEarlyBeacon, "onconfig", impl, true);
 
-			BOOMR.subscribe("beacon", impl.clearMetrics, null, impl);
+      // Hook dom_loaded to trigger early beacon logic for non-SPA.
+      BOOMR.subscribe("dom_loaded", impl.sendEarlyBeacon, "dom_loaded", impl, true);
 
-			// don't send early flag on unload beacons
-			BOOMR.subscribe("before_beacon", function(vars) {
-				if (typeof vars["rt.quit"] !== "undefined") {
-					impl.clearMetrics();
-				}
-			}, null, impl);
+      // Hook spa_init to trigger early beacon logic for SPA.
+      BOOMR.subscribe("spa_init", impl.onSpaInit, null, impl);
 
-			impl.initialized = true;
-			return this;
-		},
+      // If we were previously in prerender, the early beacon wouldn't have been sent.
+      // Hook prerender_to_visible to trigger early beacon logic, if onload already happened this will be a noop
+      BOOMR.subscribe("prerender_to_visible", impl.sendEarlyBeacon, "prerender_to_visible", impl, true);
 
-		is_complete: function() {
-			return true;
-		},
+      BOOMR.subscribe("beacon", impl.clearMetrics, null, impl);
 
-		// This plugin doesn't require any special browser functionality
-		is_supported: function() {
-			return impl.initialized;
-		},
+      // don't send early flag on unload beacons
+      BOOMR.subscribe("before_beacon", function(vars) {
+        if (typeof vars["rt.quit"] !== "undefined") {
+          impl.clearMetrics();
+        }
+      }, null, impl);
 
-		sendEarlyBeacon: function(edata, ename) {
-			impl.sendEarlyBeacon(edata, ename);
-		}
-	};
+      impl.initialized = true;
+
+      return this;
+    },
+
+    is_complete: function() {
+      return true;
+    },
+
+    // This plugin doesn't require any special browser functionality
+    is_supported: function() {
+      return impl.initialized;
+    },
+
+    sendEarlyBeacon: function(edata, ename) {
+      impl.sendEarlyBeacon(edata, ename);
+    }
+  };
 }());
