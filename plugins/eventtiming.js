@@ -107,7 +107,28 @@
 		"compositionstart": 17,
 		"compositionupdate": 18,
 		"compositionend": 19,
-		"contextmenu": 20
+		"contextmenu": 20,
+		"pointerover": 21,
+		"mouseover": 22,
+		"pointerenter": 23,
+		"auxclick": 24,
+		"beforeinput": 25,
+		"dragend": 26,
+		"dragenter": 27,
+		"dragleave": 28,
+		"dragover": 29,
+		"dragstart": 30,
+		"drop": 31,
+		"gotpointercapture": 32,
+		"input": 33,
+		"lostpointercapture": 34,
+		"mouseenter": 35,
+		"mouseleave": 36,
+		"mouseout": 37,
+		"pointercancel": 38,
+		"pointerleave": 39,
+		"pointerout": 40,
+		"touchcancel": 41
 	};
 
 	/**
@@ -202,7 +223,7 @@
 
 				for (i = 0; i < impl.entries.length; i++) {
 					compressed.push({
-						n: EVENT_TYPES[impl.entries[i].name] ?
+						n: typeof EVENT_TYPES[impl.entries[i].name] !== "undefined" ?
 						   EVENT_TYPES[impl.entries[i].name] : impl.entries[i].name,
 						s: Math.round(impl.entries[i].startTime).toString(36),
 						d: Math.round(impl.entries[i].duration).toString(36),
