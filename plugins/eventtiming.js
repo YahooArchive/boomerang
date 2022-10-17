@@ -222,19 +222,23 @@
         var compressed = [];
 
         for (i = 0; i < impl.entries.length; i++) {
-          compressed.push({
+          var entry = {
             n: typeof EVENT_TYPES[impl.entries[i].name] !== "undefined" ?
               EVENT_TYPES[impl.entries[i].name] : impl.entries[i].name,
             s: Math.round(impl.entries[i].startTime).toString(36),
             d: Math.round(impl.entries[i].duration).toString(36),
             p: Math.round(impl.entries[i].processingEnd -
-               impl.entries[i].processingStart).toString(36),
+              impl.entries[i].processingStart).toString(36),
             c: impl.entries[i].cancelable ? 1 : 0,
             fi: impl.entries[i].entryType === "first-input" ? 1 : undefined,
-            i: impl.entries[i].interactionId ?
-              impl.entries[i].interactionId.toString(36) :
-              undefined
-          });
+            i: impl.entries[i].interactionId ? impl.entries[i].interactionId.toString(36) : undefined
+          };
+
+          if (impl.entries[i].target) {
+            entry.t = BOOMR.utils.makeSelector(impl.entries[i].target);
+          }
+
+          compressed.push(entry);
         }
 
         BOOMR.addVar("et.e", BOOMR.utils.serializeForUrl(compressed), true);
