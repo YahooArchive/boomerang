@@ -570,6 +570,12 @@
     done();
   };
 
+  t.validateConsentInlinePluginState = function(done) {
+    assert.isTrue(BOOMR.plugins.ConsentInlinedPlugin.debug.wasPageReadyFired(), "ensure the Consent Inlined Plugin hooked on page ready");
+
+    done();
+  };
+
   t.canSetCookies = function() {
     var testCookieName = "test_cookie";
 
@@ -882,6 +888,19 @@
     }
 
     (testDegenerate || done || function(){})();
+  };
+
+  /**
+   * Checks if the ConsentInlinePlugin is in Opt-out state
+   */
+  t.isConsentConsentInlinePluginOptedOut = function() {
+    var consentPlugin = BOOMR.plugins.ConsentInlinedPlugin;
+
+    if (consentPlugin && consentPlugin.debug.isOptedOut()) {
+      return true;
+    }
+
+    return false;
   };
 
   /**

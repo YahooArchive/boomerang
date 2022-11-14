@@ -3,8 +3,13 @@
 
 describe("e2e/29-opt-out-opt-in/07-opt-in-after-previous-opt-out", function() {
   var tf = BOOMR.plugins.TestFramework;
+  var t = BOOMR_test;
 
   var beaconCountBeforeOptIn = tf.beaconCount();
+
+  it("Should pass Consent Inline Plugin validation", function(done) {
+    t.validateConsentInlinePluginState(done);
+  });
 
   it("[After Opt-out] Should have not sent beacons before visitor Opted In", function() {
     assert.isTrue(beaconCountBeforeOptIn === 0);

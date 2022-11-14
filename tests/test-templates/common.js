@@ -583,6 +583,10 @@ describe("common", function() {
   });
 
   it("AutoXHR: Should not have pending events", function(done) {
+    if (t.isConsentConsentInlinePluginOptedOut()) {
+      this.skip();
+    }
+
     t.ifAutoXHR(
       done,
       function() {

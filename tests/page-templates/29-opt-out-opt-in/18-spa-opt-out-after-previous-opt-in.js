@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* global BOOMR_test,assert */
 
-describe("e2e/29-opt-out-opt-in/06-opt-out-after-previous-opt-in", function() {
+describe("e2e/29-opt-out-opt-in/18-spa-opt-out-after-previous-opt-in", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;
 
@@ -18,6 +18,6 @@ describe("e2e/29-opt-out-opt-in/06-opt-out-after-previous-opt-in", function() {
   });
 
   it("[After Opt-out] Should have sent exactly 1 beacon because the rest were blocked because of Opt-out", function() {
-    assert.isTrue(tf.beaconCount() === 1);
+    assert.equal(tf.beaconCount(), 1);
   });
 });

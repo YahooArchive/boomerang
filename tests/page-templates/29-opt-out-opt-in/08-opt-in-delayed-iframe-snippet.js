@@ -3,8 +3,13 @@
 
 describe("e2e/29-opt-out-opt-in/08-opt-in-delayed-iframe-snippet", function() {
   var tf = BOOMR.plugins.TestFramework;
+  var t = BOOMR_test;
 
   var beaconCountBforeOptIn = tf.beaconCount();
+
+  it("Should pass Consent Inline Plugin validation", function(done) {
+    t.validateConsentInlinePluginState(done);
+  });
 
   it("[After Opt-out] Should have not sent beacons before visitor Opted In", function() {
     assert.isTrue(beaconCountBforeOptIn === 0);

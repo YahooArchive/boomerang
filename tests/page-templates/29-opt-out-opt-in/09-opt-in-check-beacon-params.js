@@ -5,11 +5,15 @@ describe("e2e/29-opt-out-opt-in/09-opt-in-check-beacon-params", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;
 
+  it("Should pass Consent Inline Plugin validation", function(done) {
+    t.validateConsentInlinePluginState(done);
+  });
+
   it("Should have cip.in and cip.v on first beacon", function() {
     var b = tf.beacons[0];
 
     assert.equal(b["cip.in"], "1");
-    assert.equal(b["cip.v"], "1");
+    assert.equal(b["cip.v"], "2");
   });
 
   it("Should NOT have cip.in and cip.v on second beacon", function() {

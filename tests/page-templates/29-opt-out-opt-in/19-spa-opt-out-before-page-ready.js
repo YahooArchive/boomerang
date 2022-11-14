@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* global BOOMR_test,assert */
 
-describe("e2e/29-opt-out-opt-in/06-opt-out-after-previous-opt-in", function() {
+describe("e2e/29-opt-out-opt-in/19-spa-opt-out-before-page-ready", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;
 
@@ -17,7 +17,7 @@ describe("e2e/29-opt-out-opt-in/06-opt-out-after-previous-opt-in", function() {
     assert.isTrue(document.cookie.indexOf("BOOMR_CONSENT=\"opted-in\"") === -1);
   });
 
-  it("[After Opt-out] Should have sent exactly 1 beacon because the rest were blocked because of Opt-out", function() {
-    assert.isTrue(tf.beaconCount() === 1);
+  it("[After Opt-out] Should have sent exactly 0 beacons because Opt-out before Boomerang was loaded.", function() {
+    assert.equal(tf.beaconCount(), 0);
   });
 });

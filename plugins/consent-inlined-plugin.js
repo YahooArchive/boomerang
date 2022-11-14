@@ -113,7 +113,7 @@
      * but it could be hard to keep track who is using which version of the plugin. We have
      * to do it this way because the plugin is not part of the final Boomerang bundle.
      */
-    v: "1",
+    v: "2",
 
     OPT_COOKIE: "BOOMR_CONSENT",
 
@@ -195,14 +195,20 @@
      * Callback when the page is ready
      */
     onPageReady: function() {
+      if (impl.firedPageReady) {
+        return;
+      }
+
       impl.firedPageReady = true;
 
       if (impl.deferredOptIn) {
         impl.optIn();
+        impl.deferredOptIn = false;
       }
 
       if (impl.deferredOptOut) {
         impl.optOut();
+        impl.deferredOptOut = false;
       }
     }
   };
@@ -253,6 +259,7 @@
       }
 
       b.subscribe("page_ready", impl.onPageReady, null, impl);
+      b.subscribe("spa_navigation", impl.onPageReady, null, impl);
 
       if (w.BOOMR_CONSENT_CONFIG.optInRequired) {
         if (b.utils.getCookie(impl.OPT_COOKIE) !== impl.OPT_IN_COOKIE_VAL) {
@@ -293,5 +300,37 @@
     is_complete: function() {
       return impl.complete;
     }
+
+    /* BEGIN_DEBUG */,
+    debug: {
+      wasPageReadyFired: function() {
+        return impl.firedPageReady;
+      },
+      getDeferredOptInFlag: function() {
+        return impl.deferredOptIn;
+      },
+      getDeferredOptOutFlag: function() {
+        return impl.deferredOptOut;
+      },
+      getRtCookieFromConfig: function() {
+        return impl.rtCookieFromConfig;
+      },
+      getBwCookieFromConfig: function() {
+        return impl.bwCookieFromConfig;
+      },
+      isOptedIn: function() {
+        if (w.BOOMR_CONSENT_CONFIG.optInRequired) {
+          if (document.cookie.indexOf(impl.OPT_COOKIE + "=\"" + impl.OPT_IN_COOKIE_VAL + "\"") !== -1) {
+            return true;
+          }
+        }
+
+        return false;
+      },
+      isOptedOut: function() {
+        return document.cookie.indexOf(impl.OPT_COOKIE + "=\"" + impl.OPT_OUT_COOKIE_VAL + "\"") !== -1;
+      }
+    }
+    /* END_DEBUG */
   };
 }(window));

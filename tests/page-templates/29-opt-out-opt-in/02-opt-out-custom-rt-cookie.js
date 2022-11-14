@@ -2,6 +2,12 @@
 /* global BOOMR_test,assert */
 
 describe("e2e/29-opt-out-opt-in/02-opt-out-custom-rt-cookie", function() {
+  var t = BOOMR_test;
+
+  it("Should pass Consent Inline Plugin validation", function(done) {
+    t.validateConsentInlinePluginState(done);
+  });
+
   it("[After Opt-out] Should not have CUSTOM RT cookie", function() {
     assert.isFalse(document.cookie.indexOf("CUSTOM=") !== -1);
   });
