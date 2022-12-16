@@ -18,7 +18,8 @@ var config = {
       useDotNotation: true,
       filePrefix: "e2e" + (process.env.BUILD_FLAVOR ? ("-" + process.env.BUILD_FLAVOR) : "")
     }));
-  }
+  },
+  jasmineNodeOpts: {defaultTimeoutInterval: 45000}
 };
 
 console.log(JSON.stringify(process.env));

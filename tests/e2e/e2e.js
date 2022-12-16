@@ -6,13 +6,12 @@
 //
 var chai = require("chai");
 var assert = chai.assert;
-var path = require("path");
 var grunt = require("grunt");
 
-var testsFile = path.join(__dirname, "e2e.json");
-var tests = require(testsFile).tests;
-var servers = require(testsFile).server;
-var ports = require(testsFile).ports;
+var testsFile = require("./e2e.json");
+var tests = testsFile.tests;
+var servers = testsFile.server;
+var ports = testsFile.ports;
 
 var disabledTests = require("./e2e.disabled.json");
 var buildFlavor = (grunt.option("build-flavor") || "") || process.env.BUILD_FLAVOR;

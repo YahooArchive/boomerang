@@ -33,20 +33,14 @@ module.exports = function(config) {
     autoWatch: false,
 
     frameworks: ["mocha"],
-    reporters: ["progress", "coverage", "tap"],
+    reporters: ["progress", "tap"],
     plugins: [
-      "karma-coverage",
       "karma-mocha",
 
       // reporters
       "karma-tap-reporter",
       "karma-mocha-reporter"
     ],
-
-    coverageReporter: {
-      type: "html",
-      dir: "coverage/"
-    },
 
     tapReporter: {
       outputFile: tapFileName

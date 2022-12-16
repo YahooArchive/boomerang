@@ -62,7 +62,7 @@ var DEFAULT_UGLIFY_BOOMERANGJS_OPTIONS = {
 
 var SAUCELABS_CONFIG = {
   username: process.env.CI_SAUCELABS_USERNAME,
-  key: function(){
+  key: function() {
     return process.env.CI_SAUCELABS_KEY;
   },
   build: process.env.CI_BUILD_NUMBER,
@@ -127,7 +127,7 @@ function getConfig() {
   // Determine source files:
   //  boomerang.js and plugins/*.js order
   //
-  var src = [ "boomerang.js" ];
+  var src = ["boomerang.js"];
 
   // default plugins
   var plugins = grunt.file.readJSON("plugins.json");
@@ -674,6 +674,23 @@ function getConfig() {
           }
         ]
       },
+      "coverage-e2e": {
+        files: [
+          {
+            src: [
+              "tests/pages/**/*",
+              "tests/e2e/**/*",
+              "tests/server/**/*",
+              "tests/vendor/**/*",
+              "tests/test-templates/**/*",
+              "tests/boomerang-test-framework.js",
+              "tests/boomerang-test-plugin.js"
+            ],
+            force: true,
+            dest: "tests/instrumented/"
+          }
+        ]
+      },
       "perf-baseline": {
         files: [
           {
@@ -879,7 +896,8 @@ function getConfig() {
         "tests/results/*.tap",
         "tests/results/*.xml",
         "tests/coverage/*",
-        "tests/pages/**/*"
+        "tests/pages/**/*",
+        "tests/instrumented/**/*"
       ],
       "spa-react-test-templates": [
         "tests/pages/12-react/support/app.js",
@@ -894,9 +912,6 @@ function getConfig() {
         singleRun: true,
         colors: true,
         configFile: "./tests/karma.config.js",
-        preprocessors: {
-          "./build/*.js": ["coverage"]
-        },
         basePath: "./",
         files: [
           // relative to tests/ dir
@@ -912,6 +927,10 @@ function getConfig() {
       },
       unit: {
         browsers: [DEFAULT_BROWSER]
+      },
+      coverage: {
+        browsers: [DEFAULT_BROWSER],
+        configFile: "./tests/karma.coverage.config.js"
       },
       all: {
         browsers: [
@@ -1051,7 +1070,41 @@ function getConfig() {
         keepAlive: true,
         command: "webdriver-manager start " + (webDriverVersions || "")
       },
-      e2e: {
+      e2e: {}
+    },
+    // Instrument code for e2e tests coverage
+    instrument: {
+      files: [
+        "tests/build/*.js"
+      ],
+      options: {
+        lazy: true,
+        basePath: "tests/instrumented"
+      }
+    },
+    protractor_coverage: {
+      options: {
+        noColor: false,
+        keepAlive: true,
+        coverageDir: "tests/instrumented/coverage"
+      },
+      ChromeHeadless: {
+        options: {
+          configFile: "tests/protractor-config/chromeheadless.js",
+          args: {
+            seleniumAddress: SELENIUM_ADDRESS,
+            specs: ["tests/instrumented/tests/e2e/e2e.js"],
+            baseUrl: E2E_BASE_URL
+          }
+        }
+      }
+    },
+    makeReport: {
+      src: "tests/instrumented/coverage/**/*.json",
+      options: {
+        type: "html",
+        dir: "tests/coverage/e2e",
+        print: "detail"
       }
     },
     express: {
@@ -1062,14 +1115,21 @@ function getConfig() {
       dev: {
         options: {
           script: "tests/server/app.js",
-          args: [ TEST_SCHEME || "http" ]
+          args: [TEST_SCHEME || "http"]
         }
       },
       secondary: {
         options: {
           script: "tests/server/app.js",
           port: (TEST_DEBUG_PORT + 1),
-          args: [ TEST_SCHEME || "http" ]
+          args: [TEST_SCHEME || "http"]
+        }
+      },
+      "coverage-e2e": {
+        options: {
+          script: "tests/instrumented/tests/server/app.js",
+          args: [TEST_SCHEME || "http"],
+          bases: ["tests/instrumented/tests/e2e", "tests/instrumented/tests/pages", "tests/instrumented/tests/server"]
         }
       },
       doc: {
@@ -1111,8 +1171,8 @@ function getConfig() {
           testname: "Boomerang E2E Tests",
           browsers: [{
             browserName: "internet explorer",
-            "version":     "11",
-            "platform":    "Windows 8.1"
+            "version": "11",
+            "platform": "Windows 8.1"
           }]
         }, SAUCELABS_CONFIG)
       }
@@ -1230,6 +1290,7 @@ module.exports = function() {
   grunt.loadNpmTasks("grunt-mkdir");
   grunt.loadNpmTasks("grunt-protractor-runner");
   grunt.loadNpmTasks("grunt-protractor-webdriver");
+  grunt.loadNpmTasks("grunt-protractor-coverage");
   grunt.loadNpmTasks("grunt-template");
   grunt.loadNpmTasks("grunt-saucelabs");
   grunt.loadNpmTasks("grunt-strip-code");
@@ -1237,6 +1298,7 @@ module.exports = function() {
   grunt.loadNpmTasks("grunt-jsdoc");
   grunt.loadNpmTasks("grunt-githash");
   grunt.loadNpmTasks("grunt-shell");
+  grunt.loadNpmTasks("grunt-istanbul");
 
   // tasks/*.js
   if (grunt.file.exists("tasks")) {
@@ -1390,7 +1452,25 @@ module.exports = function() {
     //
     "perf": ["build", "pages-builder-perf", "express:dev", "perf-tests"],
     "perf:baseline": ["build", "pages-builder-perf", "express:dev", "perf-tests", "copy:perf-baseline"],
-    "perf:compare": ["build", "pages-builder-perf", "express:dev", "perf-tests", "perf-compare"]
+    "perf:compare": ["build", "pages-builder-perf", "express:dev", "perf-tests", "perf-compare"],
+
+    //
+    // Coverage tasks
+    //
+    "test:unit:coverage": ["test:build", "build", "karma:coverage:ChromeHeadless"],
+
+    "test:e2e:coverage": [
+      "test:build",
+      "build",
+      "copy:coverage-e2e",
+      "instrument",
+      "express:coverage-e2e",
+      "protractor_webdriver",
+      "protractor_coverage:ChromeHeadless",
+      "makeReport:coverage-e2e"
+    ],
+
+    "test:coverage": ["test:unit:coverage", "test:e2e:coverage"]
   };
 
   // launch selenium if another address wasn't provided
