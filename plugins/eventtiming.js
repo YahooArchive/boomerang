@@ -564,6 +564,11 @@
        * @param {object} interactions Interactions map to use.
        */
       interactionToNextPaintData: function(interactions) {
+        if (typeof Object.values !== "function") {
+          // Object.values not supported, must be an older browser that doesn't support INP anyway
+          return null;
+        }
+
         // reverse-sort all durations
         var durations = Object.values(interactions || impl.interactions).sort(function(a, b) {
           return b.duration - a.duration;
