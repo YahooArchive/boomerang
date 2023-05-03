@@ -1,9 +1,3 @@
-* _Copyright (c) 2011, Yahoo! Inc.  All rights reserved._
-* _Copyright (c) 2011-2012, Log-Normal Inc.  All rights reserved._
-* _Copyright (c) 2012-2017 SOASTA, Inc. All rights reserved._
-* _Copyright (c) 2017-2019, Akamai Technologies, Inc. All rights reserved._
-* _Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms._
-
 **boomerang always comes back, except when it hits something.**
 
 # Summary
@@ -32,22 +26,22 @@ if `boomerang.js` is unavailable.
 # Features
 
 * Supports:
-     * IE 6+, Edge, all major versions of Firefox, Chrome, Opera, and Safari
-     * Desktop and mobile devices
+  * IE 6+, Edge, all major versions of Firefox, Chrome, Opera, and Safari
+  * Desktop and mobile devices
 * Captures (all optional):
-    * Page characteristics such as the URL and Referrer
-    * Overall page load times (via [NavigationTiming](https://www.w3.org/TR/navigation-timing/) if available)
-    * DNS, TCP, Request and Response timings (via [NavigationTiming](https://www.w3.org/TR/navigation-timing/))
-    * Browser characteristics such as screen size, orientation, memory usage, visibility state
-    * DOM characteristics such as the number of nodes, HTML length, number of images, scripts, etc
-    * [ResourceTiming](https://www.w3.org/TR/resource-timing-1/) data (to reconstruct the page's Waterfall)
-    * Bandwidth
-    * Mobile connection data
-    * DNS latency
-    * JavaScript Errors
-    * XMLHttpRequest instrumentation
-    * Third-Party analytics providers IDs
-    * Single Page App interactions
+  * Page characteristics such as the URL and Referrer
+  * Overall page load times (via [NavigationTiming](https://www.w3.org/TR/navigation-timing/) if available)
+  * DNS, TCP, Request and Response timings (via [NavigationTiming](https://www.w3.org/TR/navigation-timing/))
+  * Browser characteristics such as screen size, orientation, memory usage, visibility state
+  * DOM characteristics such as the number of nodes, HTML length, number of images, scripts, etc
+  * [ResourceTiming](https://www.w3.org/TR/resource-timing-1/) data (to reconstruct the page's Waterfall)
+  * Bandwidth
+  * Mobile connection data
+  * DNS latency
+  * JavaScript Errors
+  * XMLHttpRequest instrumentation
+  * Third-Party analytics providers IDs
+  * Single Page App interactions
 
 # Usage
 
@@ -56,6 +50,7 @@ boomerang can be included on your page in one of two ways: [synchronously](#sync
 The asynchronous method is recommended.
 
 <a name="synchronously"></a>
+
 ## The simple synchronous way
 
 ```html
@@ -86,6 +81,7 @@ BOOMR.init({
 ```
 
 <a name="asynchronously"></a>
+
 ## The faster, more involved, asynchronous way
 
 Loading boomerang asynchronously ensures that even if `boomerang.js` is
@@ -134,9 +130,10 @@ The former method could block your `onload` event (affecting the measured
 performance of your page), so the later method is recommended.
 
 <a name="asynchronously-document"></a>
+
 #### 3.1. Adding it to the main document
 
-Include the following code at the *top* of your HTML document:
+Include the following code at the _top_ of your HTML document:
 
 ```javascript
 <script>
@@ -163,6 +160,7 @@ blocking the `onload` event.
 If you don't want to block `onload` either, use the following IFRAME/Preload method:
 
 <a name="asynchronously-iframe"></a>
+
 #### 3.2. Adding it via an IFRAME/Preload
 
 The method described in 3.1 will still block `onload` on most browsers.
@@ -226,6 +224,7 @@ boomerang also fires the `onBeforeBoomerangBeacon` and `onBoomerangBeacon`
 events just before and during beaconing.
 
 <a name="installation"></a>
+
 # Installation
 
 There are several ways of including Boomerang in your project:
@@ -240,6 +239,7 @@ Once fetched, see [Building Boomerang](https://akamai.github.io/boomerang/tutori
 for more details on how to include the plugins you require.
 
 <a name="documentation"></a>
+
 # Documentation
 
 Documentation is in the `docs/` directory.  Boomerang documentation is
@@ -263,12 +263,12 @@ is at [developer.akamai.com/tools/boomerang/docs/](https://developer.akamai.com/
 
 Additional documentation:
 
-- [API Documentation](https://akamai.github.io/boomerang/): The `BOOMR` API
-- [Building Boomerang](https://akamai.github.io/boomerang/tutorial-building.html): How to build boomerang with plugins
-- [Contributing](https://akamai.github.io/boomerang/tutorial-contributing.html): Contributing to the open-source project
-- [Creating Plugins](https://akamai.github.io/boomerang/tutorial-creating-plugins.html): Creating a plugin
-- [Methodology](https://akamai.github.io/boomerang/tutorial-methodology.html): How boomerang works internally
-- [How-Tos](https://akamai.github.io/boomerang/tutorial-howtos.html): Short recipes on how to do a bunch of things with boomerang
+* [API Documentation](https://akamai.github.io/boomerang/): The `BOOMR` API
+* [Building Boomerang](https://akamai.github.io/boomerang/tutorial-building.html): How to build boomerang with plugins
+* [Contributing](https://akamai.github.io/boomerang/tutorial-contributing.html): Contributing to the open-source project
+* [Creating Plugins](https://akamai.github.io/boomerang/tutorial-creating-plugins.html): Creating a plugin
+* [Methodology](https://akamai.github.io/boomerang/tutorial-methodology.html): How boomerang works internally
+* [How-Tos](https://akamai.github.io/boomerang/tutorial-howtos.html): Short recipes on how to do a bunch of things with boomerang
 
 # Source code
 
@@ -302,3 +302,11 @@ Boomerang is brought to you by:
 * many independent contributors whose contributions are cemented in our git history
 
 To help out, please read our [contributing](https://akamai.github.io/boomerang/tutorial-contributing.html) page.
+
+# Copyright
+
+* _Copyright (c) 2011, Yahoo! Inc.  All rights reserved._
+* _Copyright (c) 2011-2012, Log-Normal Inc.  All rights reserved._
+* _Copyright (c) 2012-2017 SOASTA, Inc. All rights reserved._
+* _Copyright (c) 2017-2023, Akamai Technologies, Inc. All rights reserved._
+* _Copyrights licensed under the BSD License. See the accompanying LICENSE.txt file for terms._

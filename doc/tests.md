@@ -19,7 +19,7 @@ In addition, you should map the following two domains to `127.0.0.1`:
 
 e.g.
 
-```
+```text
 # /etc/hosts or C:\windows\system32\drivers\etc\hosts
 127.0.0.1 boomerang-test.local boomerang-test2.local
 ```
@@ -52,7 +52,7 @@ grunt test:debug
 Once the webserver has started, you should be able to visit the following URL
 in your browser:
 
-http://boomerang-test.local:4002/unit/
+[boomerang-test.local:4002/unit/](http://boomerang-test.local:4002/unit/)
 
 All Unit Test files are manually included via `tests/unit/index.html`.
 

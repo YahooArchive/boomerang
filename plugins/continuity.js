@@ -486,20 +486,28 @@
  *
  * If the user interacted with the page by the time the beacon was sent, the
  * Continuity plugin will also measure how long it took for the JavaScript
- * event handler to fire.
+ * event handler to fire.  This measurement is referred to as the First Input Delay (FID).
  *
  * This can give you an indication of the page being otherwise busy and unresponsive
  * to the user if the callback is delayed.
  *
  * This time (measured in milliseconds) is added to the beacon as `c.fid`.
  *
- * The polyfill for FirstInputDelay calculation from previous version of this plugin
- * has been updated to match the latest industry standards for FID. This polyfill now
- * evaluates click, mousedown, keydown, touchstart, pointerdown followed by pointerup
- * events as indicators for First Input Delay calculations.
- *
- * Note if the {@link BOOMR.plugins.EventTiming `EventTiming`} plugin is included,
+ * If the {@link BOOMR.plugins.EventTiming `EventTiming`} plugin is included,
  * this measurement is deferred to the First Input Delay calculated by that plugin.
+ * EventTiming is the most accurate way of measuring First Input Delay.
+ *
+ * If the {@link BOOMR.plugins.EventTiming `EventTiming`} plugin is not included, or the
+ * browser does not support the EventTiming API, this plugin contains a polyfill to measure
+ * FID based on the browser's interaction events: `click`, `mousedown`, `keydown`, `touchstart`,
+ * `pointerdown` followed by `pointerup`.  Measuring FID via a polyfill is less accurate than
+ * via EventTiming, and will generally result in higher FID values than EventTiming-based FID.
+ *
+ * Note: FID measurements are only gathered up to the point of the first Page Load beacon.  This
+ * may differ from the Chrome User Experience (CrUX) FID measurements, which are taken up to the
+ * point the page is unloaded.  This means boomerang's FID measurements are biased towards interactions
+ * that happened up to the Page Load event (which is likely a busy time for the browser).  It's likely
+ * that boomerang-based FID measurements will be higher than CrUX-based FID measurements as a result.
  *
  * ## Timelines
  *

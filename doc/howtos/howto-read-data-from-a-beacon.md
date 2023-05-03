@@ -80,7 +80,7 @@ incoming data.
 
 More references for preventing DoS attacks:
 
-* [learn-netowrking.com](http://learn-networking.com/network-security/how-to-prevent-denial-of-service-attacks)
+* [learn-networking.com](http://learn-networking.com/network-security/how-to-prevent-denial-of-service-attacks)
 * [wikipedia.org](http://en.wikipedia.org/wiki/Denial-of-service_attack)
 * [cert.org](http://www.cert.org/tech_tips/denial_of_service.html)
 
@@ -146,5 +146,4 @@ BOOMR.subscribe('beacon', function(beaconData) {
 ## References
 
 * [IPC Berlin 2010 talk on MySQL scaling via Philip Tellis](http://www.slideshare.net/bluesmoon/scaling-mysql-writes-through-partitioning-ipc-spring-edition)
-
 * [ConFoo 2010 talk on the statistics of web performance via Philip Tellis](http://www.slideshare.net/bluesmoon/index-3441823)

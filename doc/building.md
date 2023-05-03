@@ -4,6 +4,7 @@ Boomerang is split into the main framework (`boomerang.js`) and plugins (`plugin
 measurements of your site, you will want to include several plugins.
 
 <a name="choosing-plugins"></a>
+
 ## Choosing Plugins
 
 Each plugin lives on its own in the `plugins/` directory.  Plugins are split into
@@ -16,18 +17,18 @@ measurement.
 You can read about each plugin in its documentation.  Here is a basic description
 of each plugin:
 
-* {@link BOOMR.plugins.Angular} enables support for measuring AngularJS websites (now part of the {@link BOOMR.plugins.History} plugin)
+* {@link BOOMR.plugins.History BOOMR.plugins.Angular} enables support for measuring AngularJS websites (now part of the {@link BOOMR.plugins.History} plugin)
 * {@link BOOMR.plugins.AutoXHR} tracks `XMLHttpRequest`s and other in-page interactions
-* {@link BOOMR.plugins.Backbone} enables support for measuring Backbone.js websites (now part of the {@link BOOMR.plugins.History} plugin)
+* {@link BOOMR.plugins.History BOOMR.plugins.Backbone} enables support for measuring Backbone.js websites (now part of the {@link BOOMR.plugins.History} plugin)
 * {@link BOOMR.plugins.BW} measures HTTP bandwidth
 * {@link BOOMR.plugins.CACHE_RELOAD} forces the browser to update its cached copy of boomerang
 * {@link BOOMR.plugins.Clicks} tracks in-page clicks
 * {@link BOOMR.plugins.ConsentInlinedPlugin} allows for Opt-In and Opt-Out via user consent
-* {@link BOOMR.plugins.Continuty} measures user-experience metrics such as Time to Interactive, Cumulative Layout Shift, Rage Clicks, etc
+* {@link BOOMR.plugins.Continuity} measures user-experience metrics such as Time to Interactive, Cumulative Layout Shift, Rage Clicks, etc
 * {@link BOOMR.plugins.CT} tests whether a script was cached
 * {@link BOOMR.plugins.DNS} measures DNS latency
 * {@link BOOMR.plugins.Early} allows sending pre-Page Load beacons to ensure all page loads are tracked
-* {@link BOOMR.plugins.Ember} enables support for measuring Ember.js websites (now part of the {@link BOOMR.plugins.History} plugin)
+* {@link BOOMR.plugins.History BOOMR.plugins.Ember} enables support for measuring Ember.js websites (now part of the {@link BOOMR.plugins.History} plugin)
 * {@link BOOMR.plugins.Errors} adds JavaScript error tracking
 * {@link BOOMR.plugins.EventTiming} measures user input events via the EventTiming API such as First Input Delay (FID)
 * {@link BOOMR.plugins.GUID} adds a unique ID for each session
@@ -36,7 +37,6 @@ of each plugin:
 * {@link BOOMR.plugins.History} enables support for measuring React and other `window.history` websites
 * {@link BOOMR.plugins.Memory} captures browser memory metrics
 * {@link BOOMR.plugins.Mobile} captures mobile connection type
-* {@link BOOMR.plugins.MQ} adds a "method queue" API for Boomerang
 * {@link BOOMR.plugins.NavigationTiming} captures NavigationTiming data
 * {@link BOOMR.plugins.PaintTiming} captures paint events such as First Contentful Paint (FCP) and Largest Contentful Paint (LCP)
 * {@link BOOMR.plugins.ResourceTiming} captures ResoureTiming (waterfall) data
@@ -47,20 +47,23 @@ of each plugin:
 
 There are also a few utility plugins:
 
-* `plugins/compression.js` adds {@link BOOMR.utils.Compression} and is used by some plugins for compressing their data
+* {@link BOOMR.utils.Compression} is used by some plugins for compressing their data
+* {@link BOOMR_mq} adds a "method queue" API for Boomerang
 
 To monitor basic page load performance for a traditional website, we would recommend:
+
 * {@link BOOMR.plugins.RT}
 * {@link BOOMR.plugins.NavigationTiming} captures NavigationTiming data
 
 To monitor a Single Page App website, we would additionally recommend the following:
+
 * {@link BOOMR.plugins.AutoXHR}
 * {@link BOOMR.plugins.SPA}
 * {@link BOOMR.plugins.History}
 
 See the [build flavors](#build-flavors) section below for suggested ways of building Boomerang.
 
-## Including Boomerang on your site.
+## Including Boomerang on your site
 
 boomerang can be included on your page in one of two ways: [synchronously](#synchronously) or [asynchronously](#asynchronously).
 
@@ -71,6 +74,7 @@ to initialize Boomerang and all of its plugins.  See each plugin's documentation
 for the available configuration options.
 
 <a name="synchronously"></a>
+
 ## The simple synchronous way
 
 Simply include `boomerang.js` and any desired plugins as a `<script>` tag.
@@ -100,6 +104,7 @@ BOOMR.init({
 ```
 
 <a name="asynchronously"></a>
+
 ## The faster, more involved, asynchronous way
 
 Loading boomerang asynchronously ensures that even if `boomerang.js` is
@@ -174,7 +179,9 @@ Grunt build options:
 
 Boomerang follows [SemVer](http://semver.org/):
 
-    major.minor.revision
+```text
+major.minor.revision
+```
 
 For each build of Boomerang, the major build version is specified in `package.json` as
 `releaseVersion`.
@@ -197,7 +204,7 @@ These flavors are also defined in `plugins.json` under the `"flavors": {}` key.
 
 For example, here's a definition of the **"minimal"** build we recommend:
 
-```
+```json
 "minimal": {
     "comment": "Minimal recommended plugins",
     "revision": 10,

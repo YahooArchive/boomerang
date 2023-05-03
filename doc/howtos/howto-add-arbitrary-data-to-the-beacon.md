@@ -31,7 +31,7 @@ The beacon will include all variables that you add in the URL.  Both keys and
 values will be URI encoded.  Your beacon endpoint will need to understand
 the data.
 
-```
+```text
 http://yoursite.com/beacon/?t_done=500&ab_test=1&customer_id=123&...
 ```
 

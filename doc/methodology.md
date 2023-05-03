@@ -6,7 +6,7 @@ We define Page Load Time (PLT) or Round Trip Time (RTT) as the time taken from
 the user initiating a navigation to when that page is completely available for
 the user to interact with.
 
-Modern browsers support the [NavigationTiming]{@link http://www.w3.org/TR/navigation-timing/}
+Modern browsers support the [NavigationTiming](https://www.w3.org/TR/navigation-timing/)
 API, which provides high-resolution timestamps for each stage of the navigation.
 Boomerang uses the NavigationTiming API when available to measure Page Load performance.
 
@@ -17,20 +17,19 @@ loaded (`onload`).
 
 This is how Boomerang measures Page Load in older browsers:
 
-* On the current page (before the navigation), attach a callback to the
-    `window.onbeforeunload` event.
-    * When `onbeforeunload` fires, log the timestamp and store it into a session
-        cookie along with the URL of the current page.
+* On the current page (before the navigation), attach a callback to the `window.onbeforeunload` event.
+  * When `onbeforeunload` fires, log the timestamp and store it into a session
+    cookie along with the URL of the current page.
 * On the new page, attach a function to the `window.onload` event.
-    * When `onload` fires, log the timestamp.
-    * Look for the cookie where we set the start time and referrer
-    * Check the URL stored in the cookie with the `document.referrer` of the
-        current document.  If these two differ, it means that the user possibly
-        visited a third party page in between the two pages from our site and the measurement
-        is invalid, so we abort.
-    *  If the above rules pass, we pull the time out of the cookie and remove the
-        cookie.  We measure the difference in the two times and this is the
-        Page Load time for the current page.
+  * When `onload` fires, log the timestamp.
+  * Look for the cookie where we set the start time and referrer
+  * Check the URL stored in the cookie with the `document.referrer` of the
+    current document.  If these two differ, it means that the user possibly
+    visited a third party page in between the two pages from our site and the measurement
+    is invalid, so we abort.
+  * If the above rules pass, we pull the time out of the cookie and remove the
+    cookie.  We measure the difference in the two times and this is the
+    Page Load time for the current page.
 
 Note that in browsers that do not support NavigationTiming, Boomerang is unable
 to measure the Page Load time of the first navigation to a domain, since it is

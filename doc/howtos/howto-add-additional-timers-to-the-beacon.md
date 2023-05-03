@@ -19,7 +19,7 @@ by commas.
 
 Example beacon data:
 
-```
+```text
 t_other=header|1234,ads|500
 ```
 

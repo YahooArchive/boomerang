@@ -1,6 +1,6 @@
 /**
- * The EventTiming plugin collects interaction metrics exposed by the WICG
- * [Event Timing]{@link https://github.com/WICG/event-timing/} proposal.
+ * The EventTiming plugin collects interaction metrics exposed by the W3C
+ * [Event Timing]{@link https://github.com/w3c/event-timing} proposal.
  *
  * This plugin calculates metrics such as:
  * * **First Input Delay** (FID): For the first interaction on the page, how responsive was it?
@@ -74,7 +74,7 @@
  * * `et.inp.inc.e`: Incremental INP target element
  * * `et.inp.inc.t`: Incremental INP timestamp that the interaction occurred
  *
- * @see {@link https://github.com/WICG/event-timing/}
+ * @see {@link https://github.com/w3c/event-timing/}
  * @class BOOMR.plugins.EventTiming
  */
 (function() {
