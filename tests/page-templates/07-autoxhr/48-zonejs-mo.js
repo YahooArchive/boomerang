@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/07-autoxhr/48-zonejs-mo", function() {
   var t = BOOMR_test;

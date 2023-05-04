@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/14-errors/02-send-after-onload-enabled", function() {
   var tf = BOOMR.plugins.TestFramework;

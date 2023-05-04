@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,describe,it,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,describe,it,assert */
 
 describe("e2e/12-react/108-hard-nav-disable", function() {
   var tf = BOOMR.plugins.TestFramework;

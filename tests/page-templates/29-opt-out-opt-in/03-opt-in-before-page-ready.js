@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/29-opt-out-opt-in/03-opt-in-before-page-ready", function() {
   var tf = BOOMR.plugins.TestFramework;

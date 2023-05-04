@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/21-continuity/23-page-busy-partial", function() {
   var tf = BOOMR.plugins.TestFramework;

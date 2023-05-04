@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/06-bugs/92560", function() {
   function test(href, expected) {

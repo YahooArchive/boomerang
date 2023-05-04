@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/21-continuity/33-tti-hero-images-bg-image", function() {
   var tf = BOOMR.plugins.TestFramework;

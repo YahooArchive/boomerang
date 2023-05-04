@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/07-autoxhr/10-img-src-change", function() {
   var tf = BOOMR.plugins.TestFramework;

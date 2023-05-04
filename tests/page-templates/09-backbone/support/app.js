@@ -1,4 +1,4 @@
-/*global Backbone,$,Handlebars*/
+/* global Backbone,$,Handlebars */
 var app = window.app || {};
 
 app.TEMPLATES = {};

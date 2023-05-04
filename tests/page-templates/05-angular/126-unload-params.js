@@ -1,4 +1,4 @@
-/*eslint-env mocha*/
+/* eslint-env mocha */
 describe("e2e/05-angular/126-unload-params", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;

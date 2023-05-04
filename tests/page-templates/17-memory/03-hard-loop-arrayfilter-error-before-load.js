@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/17-memory/03-hard-loop-arrayfilter-error-before-load", function() {
   beforeEach(function() {

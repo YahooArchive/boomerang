@@ -113,7 +113,7 @@ BOOMR_start = new Date().getTime();
  * @param {string} domain Domain name as retrieved from page URL
  */
 function BOOMR_check_doc_domain(domain) {
-  /*eslint no-unused-vars:0*/
+  /* eslint no-unused-vars:0 */
   var test;
 
   /* BEGIN_DEBUG */

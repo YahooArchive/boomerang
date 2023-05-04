@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,t_visible*/
+/* eslint-env mocha */
+/* global BOOMR_test,t_visible */
 
 describe("e2e/22-early/02-prerender-onload-not-fired", function() {
   var tf = BOOMR.plugins.TestFramework;

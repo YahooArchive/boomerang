@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/12-react/101-hard-nav-onload-no-xhr", function() {
   var tf = BOOMR.plugins.TestFramework;

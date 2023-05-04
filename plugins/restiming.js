@@ -766,7 +766,7 @@
         // If this is a link, set its flags
         if (t.initiatorType === "link" && links[t.name]) {
           // split on ASCII whitespace
-          //eslint-disable-next-line no-loop-func
+          // eslint-disable-next-line no-loop-func
           BOOMR.utils.arrayFind(links[t.name].rel.split(/[\u0009\u000A\u000C\u000D\u0020]+/), function(rel) {
             // `rel`s are case insensitive
             rel = rel.toLowerCase();
@@ -1210,7 +1210,7 @@
    * @memberof BOOMR.plugins.ResourceTiming
    */
   function getCompressedResourceTiming(from, to) {
-    /*eslint no-script-url:0*/
+    /* eslint no-script-url:0 */
     var i, e,
         results = {},
         initiatorType, url, data;

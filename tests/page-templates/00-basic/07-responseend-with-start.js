@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/00-basic/07-responseend-with-start", function() {
   var t = BOOMR_test;

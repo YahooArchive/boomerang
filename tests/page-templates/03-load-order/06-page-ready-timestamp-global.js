@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/03-load-order/06-page-ready-timestamp-global", function() {
   var tf = BOOMR.plugins.TestFramework;

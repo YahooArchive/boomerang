@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/06-bugs/02-resstart-before-fetchstart", function() {
   var t = BOOMR_test;

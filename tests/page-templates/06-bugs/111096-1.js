@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/06-bugs/111096-1", function() {
   var tf = BOOMR.plugins.TestFramework;

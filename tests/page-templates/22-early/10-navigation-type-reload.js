@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/22-early/10-navigation-type-reload", function() {
   var tf = BOOMR.plugins.TestFramework;

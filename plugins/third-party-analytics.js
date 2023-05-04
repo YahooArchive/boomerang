@@ -39,7 +39,7 @@
  */
 /* eslint-enable max-len */
 
-/*eslint dot-notation:0*/
+/* eslint dot-notation:0 */
 (function() {
   BOOMR = window.BOOMR || {};
   BOOMR.plugins = BOOMR.plugins || {};

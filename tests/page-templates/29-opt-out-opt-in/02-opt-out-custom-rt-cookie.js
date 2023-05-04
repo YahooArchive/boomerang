@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/29-opt-out-opt-in/02-opt-out-custom-rt-cookie", function() {
   it("[After Opt-out] Should not have CUSTOM RT cookie", function() {

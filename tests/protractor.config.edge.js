@@ -1,5 +1,5 @@
-/*eslint-env node*/
-/*global jasmine*/
+/* eslint-env node */
+/* global jasmine */
 
 exports.config = {
   onPrepare: function() {

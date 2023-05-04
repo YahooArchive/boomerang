@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/30-same-site-cookie/01-none-in-current-window", function() {
   it("Created RT Cookie with SameSite=None", function() {

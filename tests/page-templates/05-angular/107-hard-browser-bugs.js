@@ -1,4 +1,4 @@
-/*eslint-env mocha*/
+/* eslint-env mocha */
 describe("e2e/05-angular/107-hard-browser-bugs", function() {
   var t = BOOMR_test;
   var tf = BOOMR.plugins.TestFramework;

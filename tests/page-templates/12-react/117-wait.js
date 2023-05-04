@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/12-react/117-wait", function() {
   var tf = BOOMR.plugins.TestFramework;

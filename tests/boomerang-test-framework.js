@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global _*/
+/* eslint-env mocha */
+/* global _ */
 
 //
 // BOOMR.plugins.TestFramework
@@ -1796,7 +1796,7 @@
   // This only works if the test framework is loaded before boomerang
   window.BOOMR_LOGN_always = false;
 
-  /*eslint-disable no-extend-native*/
+  /* eslint-disable no-extend-native */
   // Polyfill via https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
   if (!Function.prototype.bind) {
     Function.prototype.bind = function(oThis) {
@@ -1828,15 +1828,15 @@
   // Execute this here so we can harvest the value in common.js
   t.forceUserAgentDataPlatformUsage();
   t.forceUserAgentDataUsage();
-  /*eslint-enable no-extend-native*/
+  /* eslint-enable no-extend-native */
 }(window));
 
 /**
  * Adds support for FNV hashing algorithm (slightly modified) to Boomerang Test Framework.
  */
 window.BOOMR_test.hashString = (function() {
-  /*jslint bitwise: true */
-  /*global unescape*/
+  /* jslint bitwise: true */
+  /* global unescape */
 
   "use strict";
 

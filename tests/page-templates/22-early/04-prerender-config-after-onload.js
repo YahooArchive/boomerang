@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/22-early/04-prerender-config-after-onload", function() {
   var tf = BOOMR.plugins.TestFramework;

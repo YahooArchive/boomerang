@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/31-eventtiming/05-inp-just-fid.js", function() {
   var tf = BOOMR.plugins.TestFramework;

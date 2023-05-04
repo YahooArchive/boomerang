@@ -1,6 +1,6 @@
-/*eslint-env mocha*/
-/*eslint-disable no-loop-func*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* eslint-disable no-loop-func */
+/* global BOOMR_test,assert */
 
 describe("e2e/11-restiming/06-iframes", function() {
   var t = BOOMR_test;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/14-errors/44-unhandled-rejection", function() {
   var tf = BOOMR.plugins.TestFramework;
@@ -60,7 +60,7 @@ describe("e2e/14-errors/44-unhandled-rejection", function() {
       } }
     ];
 
-    /*eslint-disable no-loop-func */
+    /* eslint-disable no-loop-func */
     for (var n = 0; n < 5; n++) {
       (function(i) {
         describe("Beacon 1, Error " + (i + 1), function() {
@@ -165,6 +165,6 @@ describe("e2e/14-errors/44-unhandled-rejection", function() {
         });
       })(n);
     }
-    /*eslint-enable no-loop-func */
+    /* eslint-enable no-loop-func */
   }
 });

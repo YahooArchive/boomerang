@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 describe("e2e/05-angular/109-multiple-iframes", function() {
   var tf = BOOMR.plugins.TestFramework;

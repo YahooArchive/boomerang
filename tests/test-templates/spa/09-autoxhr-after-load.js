@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 BOOMR_test.templates.SPA = BOOMR_test.templates.SPA || {};
 BOOMR_test.templates.SPA["09-autoxhr-after-load"] = function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -667,7 +667,7 @@
     }
   };
 }));
-/*eslint-enable*/
+/* eslint-enable */
 
 /**
  * Boomerang Error plugin
@@ -2082,7 +2082,7 @@
                 // We could possibly check that the last error in our queue did not arrive via the global error handler
                 // and assume it was the same error but more testing will be required. We cannot compare the error
                 // message, since the message of the original error and the one that is provided here will be different
-                //in some cases.
+                // in some cases.
                 impl.send({
                   message: message,
                   fileName: fileName,

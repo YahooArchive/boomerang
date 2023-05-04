@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert,angular*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert,angular */
 
 describe("e2e/05-angular/100-angular-14-route-change", function() {
   // use tests from #4

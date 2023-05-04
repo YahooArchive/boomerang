@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/25-cookie/10-cookie-from-previous-nav-bad-referrer-non-nt", function() {
   var tf = BOOMR.plugins.TestFramework;

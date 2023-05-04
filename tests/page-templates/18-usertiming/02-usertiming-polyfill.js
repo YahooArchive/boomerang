@@ -1,6 +1,6 @@
 
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/18-usertiming/02-usertiming-polyfill", function() {
   var tf = BOOMR.plugins.TestFramework;

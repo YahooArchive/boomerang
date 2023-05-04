@@ -176,7 +176,7 @@ app.get("/*", function(req, res, next) {
 });
 
 // all static content follows afterwards
-/*eslint dot-notation:0*/
+/* eslint dot-notation:0 */
 
 // do not cache certain static resources
 app.use("/assets", express.static(path.join(wwwRoot, "/assets"), {

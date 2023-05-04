@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/07-autoxhr/51-concurrent-events", function() {
   var tf = BOOMR.plugins.TestFramework;

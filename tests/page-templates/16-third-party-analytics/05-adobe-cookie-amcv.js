@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/16-third-party-analytics/05-adobe-cookie-amcv", function() {
   var tf = BOOMR.plugins.TestFramework;

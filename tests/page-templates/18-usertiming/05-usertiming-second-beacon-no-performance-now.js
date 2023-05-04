@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/18-usertiming/05-usertiming-second-beacon-no-performance-now", function() {
   var t = BOOMR_test;

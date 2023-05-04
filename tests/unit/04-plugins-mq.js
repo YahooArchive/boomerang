@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 describe("BOOMR.plugins.mq", function() {
   var assert = chai.assert;

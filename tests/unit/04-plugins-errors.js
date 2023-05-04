@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 describe("BOOMR.plugins.Errors", function() {
   var assert = chai.assert;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/17-memory/07-onnonpageload", function() {
   var tf = BOOMR.plugins.TestFramework;

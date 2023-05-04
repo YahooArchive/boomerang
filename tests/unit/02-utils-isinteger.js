@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 /* Test cases from MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger#Examples
 Number.isInteger(0);         // true

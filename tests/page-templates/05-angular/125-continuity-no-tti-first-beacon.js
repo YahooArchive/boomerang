@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 describe("e2e/05-angular/125-continuity-no-tti-first-beacon.js", function() {
   var tf = BOOMR.plugins.TestFramework;

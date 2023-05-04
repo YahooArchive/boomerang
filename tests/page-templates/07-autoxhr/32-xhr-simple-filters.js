@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert,it,describe*/
+/* eslint-env mocha */
+/* global assert,it,describe */
 
 describe("e2e/07-autoxhr/32-xhr-simple-filters", function() {
   var t = BOOMR_test;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/19-navtiming/04-no-resend-after-complete", function() {
   var tf = BOOMR.plugins.TestFramework;

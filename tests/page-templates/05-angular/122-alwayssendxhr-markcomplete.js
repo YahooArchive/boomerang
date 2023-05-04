@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/05-angular/122-alwayssendxhr-markcomplete", function() {
   var tf = BOOMR.plugins.TestFramework;

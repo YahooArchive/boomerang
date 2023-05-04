@@ -1411,7 +1411,7 @@
       if (exisitingNodeSrcUrlChanged) {
         if (typeof node._bmr.listener === "function") {
           self.load_cb({target: node, type: "changed"});
-          //remove listeners
+          // remove listeners
           node.removeEventListener("load", node._bmr.listener);
           node.removeEventListener("error", node._bmr.listener);
           delete node._bmr.listener;

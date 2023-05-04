@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/00-basic/18-entropy-client-hints-supported", function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/25-cookie/11-cookie-session-reset", function() {
   var tf = BOOMR.plugins.TestFramework;

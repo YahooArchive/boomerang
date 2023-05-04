@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/25-cookie/13-cookie-from-previous-nav-click-different-non-nt", function() {
   var tf = BOOMR.plugins.TestFramework;

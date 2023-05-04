@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 describe("e2e/05-angular/118-spa-hard-xhr-spa-soft.js", function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("13-xhr-before-onload-alwayssendxhr", function() {
   var t = BOOMR_test;
@@ -61,9 +61,9 @@ describe("13-xhr-before-onload-alwayssendxhr", function() {
     assert.include(tf.beacons[1].t_other, "boomerang");
 
     if (t.isNavigationTimingSupported()) {
-      //these timers are never started, when we check to add them to beacon,
-      //because they don't have `start` on them, we check `cached_t_start` - which won't
-      //have a value becaus there's no nav timing
+      // these timers are never started, when we check to add them to beacon,
+      // because they don't have `start` on them, we check `cached_t_start` - which won't
+      // have a value becaus there's no nav timing
       assert.include(tf.beacons[1].t_other, "boomr_fb");
       assert.include(tf.beacons[1].t_other, "boomr_ld");
       assert.include(tf.beacons[1].t_other, "boomr_lat");

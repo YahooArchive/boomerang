@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/07-autoxhr/39-uninteresting-mo-followed-by-interesting", function() {
   var t = BOOMR_test;

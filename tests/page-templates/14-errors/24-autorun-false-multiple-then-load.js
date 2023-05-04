@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert,describe,it */
 
 describe("e2e/14-errors/24-autorun-false-multiple-then-load", function() {
   var tf = BOOMR.plugins.TestFramework;

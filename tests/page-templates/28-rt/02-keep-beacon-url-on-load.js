@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 describe("e2e/28-rt/02-keep-beacon-url-on-load", function() {
   var assert = chai.assert;

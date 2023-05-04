@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert,it,describe*/
+/* eslint-env mocha */
+/* global assert,it,describe */
 
 describe("e2e/07-autoxhr/35-hold-after-onload", function() {
   var t = BOOMR_test;

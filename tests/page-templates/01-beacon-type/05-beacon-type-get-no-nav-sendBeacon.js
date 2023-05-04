@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/01-beacon-type/05-beacon-type-get-no-nav-sendBeacon", function() {
   it("Should not send an beacon via navigator.sendBeacon when beacon type is GET", function() {

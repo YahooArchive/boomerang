@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 BOOMR_test.templates.SPA = BOOMR_test.templates.SPA || {};
 BOOMR_test.templates.SPA["23-hard-wait-for-onload"] = function() {
   var tf = BOOMR.plugins.TestFramework;

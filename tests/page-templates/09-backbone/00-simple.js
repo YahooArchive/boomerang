@@ -1,4 +1,4 @@
-/*eslint-env mocha*/
+/* eslint-env mocha */
 
 /*
 * This app uses a delayed angular.bootstrap (and no ng-app)

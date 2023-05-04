@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/12-react/118-wait-hard-nav", function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/25-cookie/01-cookie-deprecated", function() {
   var tf = BOOMR.plugins.TestFramework;

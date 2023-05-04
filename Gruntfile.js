@@ -69,6 +69,29 @@ var SAUCELABS_CONFIG = {
   tunneled: false
 };
 
+var LINT_TARGETS = [
+  "*.js",
+  "plugins/*.js",
+  "snippets/*.js",
+  "tasks/*.js",
+  "tests/*.js",
+  "tests/unit/*.js",
+  "tests/unit/*.html",
+  "tests/e2e/*.js",
+  "tests/server/*.js",
+  "tests/page-templates/**/*.js",
+  "tests/page-templates/**/*.html",
+  "tests/page-templates/**/*.js",
+  "tests/test-templates/**/*.js",
+  "!tests/page-templates/12-react/support/*",
+  // fails on snippet include
+  "!tests/page-templates/03-load-order/01-after-page-load.html",
+  // fails on snippet include
+  "!tests/page-templates/03-load-order/07-after-page-load-boomr-page-ready.html",
+  // parse error on snippet include
+  "!tests/page-templates/29-opt-out-opt-in/01-opt-in-origin-injected-loader-wrapper.html"
+];
+
 // Get WebDriver versions, allowing for a single argument or an array
 var webDriverVersions = grunt.option("webdriver-versions");
 
@@ -368,28 +391,13 @@ function getConfig() {
       }
     },
     eslint: {
-      target: [
-        "*.js",
-        "plugins/*.js",
-        "snippets/*.js",
-        "tasks/*.js",
-        "tests/*.js",
-        "tests/unit/*.js",
-        "tests/unit/*.html",
-        "tests/e2e/*.js",
-        "tests/server/*.js",
-        "tests/page-templates/**/*.js",
-        "tests/page-templates/**/*.html",
-        "tests/page-templates/**/*.js",
-        "tests/test-templates/**/*.js",
-        "!tests/page-templates/12-react/support/*",
-        // fails on snippet include
-        "!tests/page-templates/03-load-order/01-after-page-load.html",
-        // fails on snippet include
-        "!tests/page-templates/03-load-order/07-after-page-load-boomr-page-ready.html",
-        // parse error on snippet include
-        "!tests/page-templates/29-opt-out-opt-in/01-opt-in-origin-injected-loader-wrapper.html"
-      ]
+      target: LINT_TARGETS,
+      fix: {
+        options: {
+          fix: true
+        },
+        src: LINT_TARGETS
+      }
     },
     "string-replace": {
       all: {
@@ -1371,6 +1379,7 @@ module.exports = function() {
     // Lint
     //
     "lint": ["eslint"],
+    "lint:fix": ["eslint:fix"],
 
     //
     // Docs

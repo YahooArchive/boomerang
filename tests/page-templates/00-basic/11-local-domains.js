@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 /*
   Why is this test here?

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 function testSelector(nodes, nodeDict) {
   var nodeList = {};

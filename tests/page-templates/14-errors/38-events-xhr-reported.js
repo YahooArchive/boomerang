@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/14-errors/38-events-xhr-reported", function() {
   var tf = BOOMR.plugins.TestFramework;

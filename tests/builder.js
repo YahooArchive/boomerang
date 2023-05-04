@@ -1,4 +1,4 @@
-/*eslint-env node*/
+/* eslint-env node */
 //
 // Imports
 //
@@ -156,7 +156,7 @@ module.exports = function(gruntTask, testTemplatesDir, testSnippetsDir, testPage
   var boomerangE2ETestPort = grunt.option("test-port") || 4002;
   var boomerangE2ETestScheme = grunt.option("test-scheme") || "http";
 
-  //make grunt know this task is async.
+  // make grunt know this task is async.
   var done = gruntTask.async();
 
   async.waterfall([

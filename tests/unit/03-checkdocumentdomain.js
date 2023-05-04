@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 describe("BOOMR_check_doc_domain", function() {
   var assert = chai.assert;

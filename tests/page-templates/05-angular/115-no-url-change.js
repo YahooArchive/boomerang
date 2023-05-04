@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 describe("e2e/05-angular/115-no-url-change", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;

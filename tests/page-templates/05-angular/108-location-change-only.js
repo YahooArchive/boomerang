@@ -1,4 +1,4 @@
-/*eslint-env mocha*/
+/* eslint-env mocha */
 describe("e2e/05-angular/108-location-change-only", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;

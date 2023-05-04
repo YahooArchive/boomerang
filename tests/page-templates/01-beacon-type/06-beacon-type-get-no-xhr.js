@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/01-beacon-type/06-beacon-type-get-no-xhr", function() {
   it("Should not send an beacon via XHR when beacon type is GET", function() {

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it,assert*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it,assert */
 
 describe("e2e/07-autoxhr/42-fetch-api", function() {
   var tf = BOOMR.plugins.TestFramework;

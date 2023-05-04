@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/16-third-party-analytics/00-adobe-cookie-svi", function() {
   var tf = BOOMR.plugins.TestFramework;

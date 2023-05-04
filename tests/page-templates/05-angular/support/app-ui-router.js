@@ -1,4 +1,4 @@
-/*global angular*/
+/* global angular */
 angular.module("app", ["ngResource", "ui.router"])
   .factory("Widgets", ["$resource", function($resource) {
     // NOTE: Using absolute urls instead of relative URLs otherwise IE11 has problems

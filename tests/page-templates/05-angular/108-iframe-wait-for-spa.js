@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,assert,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,assert,describe,it */
 
 describe("e2e/05-angular/108-iframe-wait-for-spa", function() {
   var tf = BOOMR.plugins.TestFramework;

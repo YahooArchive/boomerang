@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert,BOOMR*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert,BOOMR */
 
 describe("e2e/06-bugs/99702", function() {
   var t = BOOMR_test;

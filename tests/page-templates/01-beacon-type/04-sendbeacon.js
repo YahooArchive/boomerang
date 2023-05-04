@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/01-beacon-type/04-send-beacon", function() {
   it("Should send an beacon via navigator.sendBeacon if it is available", function() {

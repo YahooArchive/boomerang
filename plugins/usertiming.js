@@ -1,4 +1,4 @@
-/*global UserTimingCompression*/
+/* global UserTimingCompression */
 /**
  * The UserTiming plugin to collect metrics from the W3C
  * [UserTiming]{@link http://www.w3.org/TR/user-timing/} API.

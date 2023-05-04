@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("08-alwayssendxhr-errors", function() {
   var t = BOOMR_test;

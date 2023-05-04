@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 describe("e2e/33-autoxhr-spa-startfromclick/19-click-img-click-xhr-img.js", function() {
   var tf = BOOMR.plugins.TestFramework;

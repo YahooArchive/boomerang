@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 describe("e2e/05-angular/116-autoxhr-xhrexcludes.js", function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/19-navtiming/03-onload-busy-loadedlate", function() {
   var tf = BOOMR.plugins.TestFramework;

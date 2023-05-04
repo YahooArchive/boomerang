@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 describe("e2e/12-react/103-hard-nav-onload-fired-no-xhr-boomr-delayed", function() {
   var tf = BOOMR.plugins.TestFramework;
   var t = BOOMR_test;

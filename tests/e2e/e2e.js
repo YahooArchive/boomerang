@@ -1,5 +1,5 @@
-/*eslint-env mocha,node*/
-/*global browser,by*/
+/* eslint-env mocha,node */
+/* global browser,by */
 
 //
 // Imports

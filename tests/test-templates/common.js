@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,assert */
 
 describe("common", function() {
   var t = BOOMR_test;
@@ -265,7 +265,7 @@ describe("common", function() {
         for (timer in early_timers) {
           if (early_timers.hasOwnProperty(timer)) {
             if (timer.indexOf("custom") === 0) {
-              //custom timers may get longer (eg. ResourceGroups matching several resources)
+              // custom timers may get longer (eg. ResourceGroups matching several resources)
               assert.operator(normal_timers[timer], ">=", early_timers[timer],
                 "t_other  " + timer + " " + normal_timers[timer] + " >= " +  early_timers[timer]);
             }
@@ -506,7 +506,7 @@ describe("common", function() {
         for (timer in timers) {
           if (timers.hasOwnProperty(timer)) {
             // TODO: this test reveals a bug, see Issue #626
-            //assert.isTrue(timers[timer] >= 0, prefix + "has a positive 't_other." + timer + "' timer");
+            // assert.isTrue(timers[timer] >= 0, prefix + "has a positive 't_other." + timer + "' timer");
             if (timers[timer] < 0) {
               return this.skip();
             }

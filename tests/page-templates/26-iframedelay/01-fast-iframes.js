@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert,BOOMR*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert,BOOMR */
 
 describe("e2e/26-iframedelay/01-fast-iframes", function() {
   var tf = BOOMR.plugins.TestFramework;

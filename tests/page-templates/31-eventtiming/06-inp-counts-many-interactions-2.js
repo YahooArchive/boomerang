@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/31-eventtiming/06-inp-counts-many-interactions-2", function() {
   var tf = BOOMR.plugins.TestFramework;

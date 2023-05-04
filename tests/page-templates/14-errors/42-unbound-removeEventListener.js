@@ -1,4 +1,4 @@
-/*eslint-env mocha*/
+/* eslint-env mocha */
 
 describe("e2e/14-errors/42-unbound-removeEventListener", function() {
   it("Should infer BOOMR.window as context for unbound removeEventListener calls", function(done) {

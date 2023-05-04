@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai,describe,it*/
+/* eslint-env mocha */
+/* global chai,describe,it */
 
 describe("BOOMR.plugins.AutoXHR.MutationHandler", function() {
   var assert = chai.assert;

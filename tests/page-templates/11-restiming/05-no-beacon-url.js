@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/11-restiming/05-no-beacon-url", function() {
   var t = BOOMR_test;

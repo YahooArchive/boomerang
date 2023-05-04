@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR,BOOMR_test,describe,it*/
+/* eslint-env mocha */
+/* global BOOMR,BOOMR_test,describe,it */
 
 describe("e2e/05-angular/120-alwayssendxhr-list.js", function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -2,9 +2,9 @@
 // Production steps of ECMA-262, Edition 5, 15.4.4.19
 // Reference: http://es5.github.io/#x15.4.4.19
 if (!Array.prototype.map) {
-  /*eslint-disable no-extend-native*/
+  /* eslint-disable no-extend-native */
   Array.prototype.map = function(callback, thisArg) {
-    /*eslint-enable no-extend-native*/
+    /* eslint-enable no-extend-native */
     var T, A, k;
 
     if (this === null) {

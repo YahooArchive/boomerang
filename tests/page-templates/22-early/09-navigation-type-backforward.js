@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/22-early/09-navigation-type-backforward", function() {
   var tf = BOOMR.plugins.TestFramework;

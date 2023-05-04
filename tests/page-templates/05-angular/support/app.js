@@ -1,4 +1,4 @@
-/*global angular*/
+/* global angular */
 var modules = ["ngResource"];
 
 if (!window.angular_no_route) {

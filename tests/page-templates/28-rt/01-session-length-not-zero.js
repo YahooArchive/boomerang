@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global chai*/
+/* eslint-env mocha */
+/* global chai */
 
 describe("e2e/28-rt/01-session-length-not-zero", function() {
   var assert = chai.assert;

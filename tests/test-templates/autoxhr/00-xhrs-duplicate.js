@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 BOOMR_test.templates.XHR = BOOMR_test.templates.XHR || {};
 BOOMR_test.templates.XHR["00-xhrs-duplicate"] = function() {
   var t = BOOMR_test;

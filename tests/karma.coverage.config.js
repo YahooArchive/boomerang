@@ -1,4 +1,4 @@
-/*eslint-env node*/
+/* eslint-env node */
 
 var baseConfig = require("./karma.config.js");
 

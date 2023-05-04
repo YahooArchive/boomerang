@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/27-loader-snippet/03-iframe-mode-forced", function() {
   var tf = BOOMR.plugins.TestFramework;

@@ -1,6 +1,6 @@
-/*eslint-env mocha*/
-/*global assert*/
-/*eslint no-loop-func:0*/
+/* eslint-env mocha */
+/* global assert */
+/* eslint no-loop-func:0 */
 
 describe("e2e/07-autoxhr/26-double-open", function() {
   var t = BOOMR_test;

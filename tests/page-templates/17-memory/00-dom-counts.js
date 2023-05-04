@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/17-memory/00-dom-counts", function() {
   var tf = BOOMR.plugins.TestFramework;

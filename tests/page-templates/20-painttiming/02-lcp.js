@@ -1,5 +1,5 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
 
 describe("e2e/20-painttiming/02-lcp", function() {
   var tf = BOOMR.plugins.TestFramework;
