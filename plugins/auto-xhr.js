@@ -90,7 +90,7 @@
  * BOOMR.init({
  *     AutoXHR: {
  *         alwaysSendXhr: [
- *             "domain.com",
+ *             "http://domain.com/url/to/match",
  *             /regexmatch/,
  *         ]
  *    }
@@ -1352,6 +1352,7 @@
 			// but does not return a string
 			url = node.src ||
 				(typeof node.getAttribute === "function" && node.getAttribute("xlink:href")) ||
+        (w.SVGAnimatedString && node.href instanceof w.SVGAnimatedString && node.href.baseVal) ||
 				node.href;
 
 			// we get called from src/href attribute changes but also from nodes being added
@@ -1374,7 +1375,7 @@
 			}
 
 			// no URL or javascript: or about: or data: URL, so no network activity
-			if (!url || url.match(/^(about:|javascript:|data:)/i)) {
+			if (!url || !url.match || url.match(/^(about:|javascript:|data:)/i)) {
 				return false;
 			}
 
