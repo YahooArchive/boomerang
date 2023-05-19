@@ -55,9 +55,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should have exposed LCP metric (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -71,9 +68,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should have exposed LCP metric src (pt.lcp.src) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -92,9 +86,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should have exposed LCP metric element (pt.lcp.el) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -111,9 +102,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should not have exposed LCP metric ID (pt.lcp.id) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -127,9 +115,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should have exposed LCP metric Pseudo-CSS Selector (pt.lcp.e) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -146,9 +131,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should not have exposed LCP metric src-set (pt.lcp.srcset) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -162,9 +144,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should not have exposed LCP metric sizes (pt.lcp.sizes) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }
@@ -178,9 +157,6 @@ describe("e2e/20-painttiming/02-lcp", function() {
   });
 
   it("Should not have exposed LCP metric size (pt.lcp.s) (if LargestContentfulPaint is supported and happened by load)", function() {
-    var observerWait,
-        that = this;
-
     if (!t.isLargestContentfulPaintSupported()) {
       return this.skip();
     }

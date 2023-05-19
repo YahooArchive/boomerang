@@ -87,6 +87,36 @@
     // Metrics that will be exported
     externalMetrics: {},
 
+    // the largest contentful paint at the moment
+    lcp: {
+      // render time
+      time: 0,
+
+      // tag name
+      el: "",
+
+      // src / href
+      src: "",
+
+      // element ID
+      id: "",
+
+      // pseudo-css selector
+      e: "",
+
+      // srcset attribute
+      srcset: "",
+
+      // sizes attribute
+      sizes: "",
+
+      // size
+      s: 0
+    },
+
+    // keeps track if onBeforeBeacon has sent lcp data once already
+    lcpDataSent: false,
+
     /**
      * Executed on `page_ready`, `xhr_load` and `before_unload`
      */
@@ -147,6 +177,63 @@
     },
 
     /**
+     * Performance Listener for adding Largest Contentful Paint
+     * to beacon data. Allows LCP to be added to both pageload and
+     * early beacons, while avoiding sending it on error beacons,
+     * or sending redundant LCPs.
+     */
+    onBeforeBeacon: function(data){
+      if (!BOOMR.isPageLoadBeacon(data)) {
+        // we don't want to send LCP data on beacons not related to page load
+        return;
+      }
+
+      if (impl.lcpDataSent) {
+        // prevents LCP data from being sent redundantly
+        return;
+      }
+
+      if (!impl.lcp.time) {
+        // time is used to check if LCP has been populated
+        return;
+      }
+
+      BOOMR.addVar("pt.lcp", Math.floor(impl.lcp.time), true);
+
+      if (impl.lcp.src) {
+        BOOMR.addVar("pt.lcp.src", impl.lcp.src, true);
+      }
+
+      if (impl.lcp.el) {
+        BOOMR.addVar("pt.lcp.el", impl.lcp.el, true);
+      }
+
+      if (impl.lcp.id) {
+        BOOMR.addVar("pt.lcp.id", impl.lcp.id, true);
+      }
+
+      if (impl.lcp.e) {
+        BOOMR.addVar("pt.lcp.e", impl.lcp.e, true);
+      }
+
+      if (impl.lcp.srcset) {
+        BOOMR.addVar("pt.lcp.srcset", impl.lcp.srcset, true);
+      }
+
+      if (impl.lcp.sizes) {
+        BOOMR.addVar("pt.lcp.sizes", impl.lcp.sizes, true);
+      }
+
+      if (impl.lcp.s) {
+        BOOMR.addVar("pt.lcp.s", impl.lcp.s, true);
+      }
+
+      if (!data.early) {
+        impl.lcpDataSent = true;
+      }
+    },
+
+    /**
      * Performance observer callback for LCP
      *
      * @param {PerformanceEntry[]} list Performance entries
@@ -164,40 +251,33 @@
       // LCP can change over time, so always take the latest value.  Use renderTime
       // if available (for same-origin resources or if they have Timing-Allow-Origin),
       // otherwise loadTime is the best we can get.
-      var lcpTime = lcp.renderTime || lcp.loadTime;
+      impl.lcp.time = lcp.renderTime || lcp.loadTime;
 
       // cache it for others who want to use it
-      impl.timingCache[lcp.entryType] = lcpTime;
+      impl.timingCache[lcp.entryType] = impl.lcp.time;
 
-      var lcpEl = "";
-      var lcpSrc = "";
-      var lcpId = "";
-      var lcpE = "";
-      var lcpSrcset = "";
-      var lcpSizes = "";
+      // size
+      impl.lcp.s = lcp.size ? lcp.size : 0;
 
       if (lcp.element) {
         // tag name
-        lcpEl = lcp.element.tagName;
+        impl.lcp.el = lcp.element.tagName;
 
         // src / href
-        lcpSrc = (lcp.element.href || lcp.element.src) || "";
+        impl.lcp.src = (lcp.element.href || lcp.element.src) || "";
 
         // element ID
-        lcpId = lcp.element.id || "";
+        impl.lcp.id = lcp.element.id || "";
 
         // Pseudo-CSS selector
-        lcpE = BOOMR.utils.makeSelector(lcp.element);
+        impl.lcp.e = BOOMR.utils.makeSelector(lcp.element);
 
         // srcset attribute
-        lcpSrcset = lcp.element.srcset || "";
+        impl.lcp.srcset = lcp.element.srcset || "";
 
         // sizes attribute
-        lcpSizes = lcp.element.sizes || "";
+        impl.lcp.sizes = lcp.element.sizes || "";
       }
-
-      // size
-      var lcpS = lcp.size ? lcp.size : 0;
 
       /* BEGIN_DEBUG */
       /**
@@ -205,78 +285,16 @@
 			 */
       impl.timingHistory[lcp.entryType] = impl.timingHistory[lcp.entryType] || [];
       impl.timingHistory[lcp.entryType].push({
-        time: lcpTime,
-        src: lcpSrc,
-        el: lcpEl,
-        id: lcpId,
-        e: lcpE,
-        srcset: lcpSrcset,
-        sizes: lcpSizes,
-        s: lcpS
+        time: impl.lcp.time,
+        src: impl.lcp.src,
+        el: impl.lcp.el,
+        id: impl.lcp.id,
+        e: impl.lcp.e,
+        srcset: impl.lcp.srcset,
+        sizes: impl.lcp.sizes,
+        s: impl.lcp.s
       });
       /* END_DEBUG */
-
-      BOOMR.addVar("pt.lcp", Math.floor(lcpTime), true);
-
-      if (lcpSrc) {
-        BOOMR.addVar("pt.lcp.src", lcpSrc, true);
-      }
-
-      if (lcpEl) {
-        BOOMR.addVar("pt.lcp.el", lcpEl, true);
-      }
-
-      if (lcpId) {
-        BOOMR.addVar("pt.lcp.id", lcpId, true);
-      }
-
-      if (lcpE) {
-        BOOMR.addVar("pt.lcp.e", lcpE, true);
-      }
-
-      if (lcpSrcset) {
-        BOOMR.addVar("pt.lcp.srcset", lcpSrcset, true);
-      }
-
-      if (lcpSizes) {
-        BOOMR.addVar("pt.lcp.sizes", lcpSizes, true);
-      }
-
-      if (lcpS) {
-        BOOMR.addVar("pt.lcp.s", lcpS, true);
-      }
-
-      impl.externalMetrics.lcp = function() {
-        return Math.floor(lcpTime);
-      };
-
-      impl.externalMetrics.lcpSrc = function() {
-        return lcpSrc;
-      };
-
-      impl.externalMetrics.lcpEl = function() {
-        return lcpEl;
-      };
-
-      impl.externalMetrics.lcpId = function() {
-        return lcpId;
-      };
-
-      impl.externalMetrics.lcpE = function() {
-        return lcpE;
-      };
-
-      impl.externalMetrics.lcpSrcset = function() {
-        return lcpSrcset;
-      };
-
-      impl.externalMetrics.lcpSizes = function() {
-        return lcpSizes;
-      };
-
-      impl.externalMetrics.lcpS = function() {
-        return lcpS;
-      };
     }
   };
 
@@ -313,6 +331,7 @@
         BOOMR.subscribe("page_ready", impl.done, "load", impl);
         BOOMR.subscribe("xhr_load", impl.done, "xhr", impl);
         BOOMR.subscribe("before_unload", impl.done, null, impl);
+        BOOMR.subscribe("before_beacon", impl.onBeforeBeacon, null, impl);
 
         // create a PO for LCP
         if (typeof BOOMR.window.PerformanceObserver === "function" &&
@@ -423,6 +442,32 @@
     /* END_DEBUG */
 
     // external metrics
-    metrics: impl.externalMetrics
+    metrics: {
+      lcp: function() {
+        return Math.floor(impl.lcp.time);
+      },
+      lcpSrc: function() {
+        return impl.lcp.src;
+      },
+      lcpEl: function() {
+        return impl.lcp.el;
+      },
+      lcpId: function() {
+        return impl.lcp.id;
+      },
+      lcpE: function() {
+        return impl.lcp.e;
+      },
+      lcpSrcset: function() {
+        return impl.lcp.srcset;
+      },
+      lcpSizes: function() {
+        return impl.lcp.sizes;
+      },
+      lcpS: function() {
+        return impl.lcp.s;
+      }
+    }
+
   };
 }());
