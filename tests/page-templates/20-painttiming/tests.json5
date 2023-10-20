@@ -1,0 +1,14 @@
+{
+    all: {
+        requires: ["painttiming"]
+    },
+    "04-lcp-error": {
+        requires: ["errors"]
+    },
+    "05-lcp-early": {
+        requires: ["early"]
+    },
+    "06-lcp-error-after-pageload": {
+        requires: ["errors"]
+    }
+}

@@ -1,0 +1,35 @@
+<%= header %>
+<script>
+/* eslint-disable no-unused-vars */
+window.BOOMR_CONSENT_CONFIG = {
+  enabled: true,
+  optInRequired: true
+};
+</script>
+<%= consentInlinePlugin %>
+<%= boomerangScript %>
+<script src="14-spa-opt-in-after-hard-nav.js" type="text/javascript"></script>
+
+<script>
+BOOMR_test.init({
+  site_domain: document.domain,
+  AutoXHR: {
+    spaStartFromClick: false
+  },
+  testAfterOnBeacon: 1,
+  History: {
+    enabled: true,
+    auto: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  onBoomerangLoaded: function() {
+    BOOMR.subscribe("spa_navigation", function() {
+      setTimeout(function() {
+        BOOMR_OPT_IN();
+      }, 100);
+    });
+  }
+});
+</script>
+<%= footer %>

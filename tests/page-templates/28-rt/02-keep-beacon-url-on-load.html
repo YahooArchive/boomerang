@@ -1,0 +1,33 @@
+<%= header %>
+<script>
+window.lastNav = +(new Date()) - 10000;
+
+// pretend this session had started previously
+BOOMR_test.setCookie({
+  si: "abc123-1234",
+  sl: (1).toString(36),
+  ss: (lastNav).toString(36),
+  tt: (1000).toString(36),
+  bcn: "/beacon",
+  dm: document.domain,
+  ld: (1000).toString(36),
+  cl: (2000).toString(36),
+  nu: "test.html",
+  z: 1
+});
+</script>
+<%= boomerangScript %>
+<script src="02-keep-beacon-url-on-load.js" type="text/javascript"></script>
+<script>
+// make sure we can set a cookie
+BOOMR.session.domain = document.domain;
+
+BOOMR_test.init({
+  testAfterOnBeacon: 1,
+  site_domain: document.domain,
+
+  // suggest /beacon2 but we should continue to use /beacon from the cookie
+  beacon_url: "/beacon2"
+});
+</script>
+<%= footer %>

@@ -1,0 +1,87 @@
+<%= header %>
+<span id="interaction-target"></span>
+<script>
+// polyfill / overwrite PO for testing
+window.PerformanceObserver = function(callback) {
+  window.POs = window.POs || {};
+
+  return {
+    entryTypes: undefined,
+    observe: function(config) {
+      this.type = config.type;
+      window.POs[this.type] = this;
+    },
+    trigger: function(data) {
+      callback(data);
+    }
+  };
+};
+
+// polyfill EventTiming
+window.PerformanceEventTiming = {};
+</script>
+<%= boomerangScript %>
+<script src="07-inp-after-page-load.js" type="text/javascript"></script>
+<script>
+BOOMR_test.init({
+  testAfterOnBeacon: 2,
+  EventTiming: {
+    enabled: true
+  },
+  afterFirstBeacon: function() {
+    // trigger some events
+    window.POs.event.trigger({
+      getEntries: function() {
+        return [
+          // worst interaction
+          generateEvent(1000, 1000, 3)
+        ];
+      }
+    });
+
+    // fake an unload
+    BOOMR.fireEvent("page_unload", {
+      type: "beforeunload"
+    });
+  }
+});
+
+var curStartTime = 1000;
+
+function generateEvent(processing, duration, interactionId) {
+  curStartTime += 10;
+
+  return {
+    name: "click",
+    entryType: "event",
+    startTime: curStartTime,
+    duration: duration,
+    processingStart: curStartTime,
+    processingEnd: curStartTime + processing,
+    cancelable: false,
+    interactionId: interactionId,
+    target: document.getElementById("interaction-target")
+  };
+}
+
+// trigger some events
+window.POs.event.trigger({
+  getEntries: function() {
+    return [
+      // a few non-interactions
+      generateEvent(10, 50, 0),
+      generateEvent(100, 100, 0),
+      generateEvent(10, 10, 0),
+
+      // an interaction
+      generateEvent(100, 100, 1),
+      generateEvent(10, 10, 1),
+      generateEvent(20, 20, 1),
+
+      // another interaction
+      generateEvent(50, 50, 2)
+    ];
+  }
+});
+</script>
+<%= footer %>

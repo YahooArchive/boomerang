@@ -1,0 +1,14 @@
+.bowerrc
+.editorconfig
+.eslintignore
+.eslintrc
+jsdoc.conf.json
+doc-template/
+images/
+tests/
+build/
+tasks/
+.settings/
+.project
+.github/
+docker/

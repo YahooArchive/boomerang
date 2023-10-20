@@ -1,0 +1,49 @@
+<%= header %>
+<%= boomerangScript %>
+<script src="56-svg-animated-string.js" type="text/javascript"></script>
+
+<!-- SVG to clone into the DOM later -->
+<svg xmlns="http://www.w3.org/2000/svg" style="width: 10px; height: 10px; transform: translate3d(0px, 0px, 0px);" id="svg-source">
+  <defs>
+    <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="></image>
+  </defs>
+</svg>
+
+<script>
+window.onerror = function() {
+  window.onerrorFired = true;
+};
+
+BOOMR_test.init({
+  testAfterOnBeacon: false,
+  afterFirstBeacon: function() {
+    if (!BOOMR.plugins.AutoXHR) {
+      return;
+    }
+
+    // first, start an XHR to trigger AutoXHR
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("GET", "/delay?delay=500&file=/pages/07-autoxhr/support/img.jpg?id=xhr&rnd=" + Math.random(), true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== 4) {
+        return;
+      }
+
+      // clone the SVG animated image and insert into the DOM
+      var svg = document.getElementById("svg-source").cloneNode(true);
+
+      document.body.appendChild(svg.getElementsByTagName("image")[0]);
+
+      // Run tests in 2 seconds to ensure XHR is ignored
+      setTimeout(BOOMR_test.runTests, 2000);
+    };
+
+    xhr.send(null);
+  },
+  instrument_xhr: true,
+  autorun: true
+});
+</script>
+
+<%= footer %>

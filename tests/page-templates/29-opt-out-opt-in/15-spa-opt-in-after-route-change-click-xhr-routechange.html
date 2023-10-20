@@ -1,0 +1,67 @@
+<%= header %>
+<script>
+/* eslint-disable no-unused-vars */
+window.BOOMR_CONSENT_CONFIG = {
+  enabled: true,
+  optInRequired: true
+};
+</script>
+<%= consentInlinePlugin %>
+<%= boomerangScript %>
+<script src="15-spa-opt-in-after-route-change-click-xhr-routechange.js" type="text/javascript"></script>
+
+<script>
+var testRunOnce = false;
+
+BOOMR_test.init({
+  site_domain: document.domain,
+  AutoXHR: {
+    spaStartFromClick: false
+  },
+  testAfterOnBeacon: BOOMR.plugins.AutoXHR ? 2 : 1,
+  History: {
+    enabled: true,
+    auto: true
+  },
+  instrument_xhr: true,
+  autorun: false,
+  onBoomerangLoaded: function() {
+    BOOMR.subscribe("spa_navigation", function() {
+      if (!BOOMR.plugins.AutoXHR) {
+        return;
+      }
+
+      // The "spa_navigation" event is run on hard and all subsequent soft navs.
+      // This would cause the test to run more than once then we will fall in an endless loop.
+      if (testRunOnce) {
+        return;
+      }
+
+      testRunOnce = true;
+
+      // 1. click
+      // 2. wait 30ms
+      // 3. XHR (2000ms)
+      // 4. oncomplete, route change <- beacon 1
+      // 5. wait 10ms
+      // 6. add IMG to DOM (2000ms)
+      // 7. Opt-in 500ms after the image was loaded
+      BOOMR_test.fireMouseEvent("mouseup");
+
+      setTimeout(function() {
+        BOOMR_test.xhrDelayed("xhr1", 2000, function() {
+          BOOMR_test.routeChangeRnd("newstate");
+
+          setTimeout(function() {
+            BOOMR_test.imgIntoDomDelayed("img1", 2000);
+            setTimeout(function() {
+              BOOMR_OPT_IN();
+            }, 2500);
+          }, 10);
+        });
+      }, 30);
+    });
+  }
+});
+</script>
+<%= footer %>

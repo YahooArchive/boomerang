@@ -1,0 +1,81 @@
+<%= header %>
+<!-- add an image so the screen is painted before Boomerang loads -->
+<img src="/delay?delay=100&amp;file=/assets/img.jpg&amp;id=100" style="width:100px;"/>
+<%= boomerangScript %>
+<img src="/delay?delay=3000&amp;file=/assets/img.jpg&amp;id=2000" style="width:1300px;"/>
+<img src="/delay?delay=2000&amp;file=/assets/img.jpg&amp;id=1000" style="width:800px;"/>
+<img src="/delay?delay=1000&amp;file=/assets/img.jpg&amp;id=500" style="width:400px;"/>
+<script src="43-cls-sources.js" type="text/javascript"></script>
+<script>
+
+BOOMR_test.init({
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true,
+    monitorLayoutShifts: true
+  }
+});
+
+var clsSourcesOnBeaconSend = [];
+var clsSources = [];
+var topIDOnBeaconSend = "";
+var topID = "";
+var topScore = 0;
+var observer;
+
+function onBeforeBeaconSend() {
+  clsSourcesOnBeaconSend = clsSources;
+  topIDOnBeaconSend = topID;
+  observer.disconnect();
+}
+
+window.BOOMR.subscribe("before_beacon", onBeforeBeaconSend, null, this);
+
+observer = new window.PerformanceObserver(function(list) {
+  var entries = list.getEntries();
+
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].hadRecentInput) {
+      continue;
+    }
+
+    var newClsSource = {};
+
+    newClsSource.value = parseFloat(entries[i].value.toFixed(3));
+    newClsSource.startTime = Math.round(entries[i].startTime);
+
+    var sources = entries[i].sources;
+    var sourceList = [];
+
+    for (var s = 0; s < sources.length; s++) {
+      var newSource = {selector: BOOMR.utils.makeSelector(sources[s].node)};
+
+      if (s === 0) {
+        var firstSelector = newSource.selector;
+      }
+
+      var prevRect = sources[s].previousRect;
+
+      newSource.previousRect = {"x": prevRect.x, "y": prevRect.y, "width": prevRect.width, "height": prevRect.height};
+      var currRect = sources[s].currentRect;
+
+      newSource.currentRect = {"x": currRect.x, "y": currRect.y, "width": currRect.width, "height": currRect.height};
+
+      sourceList.push(newSource);
+    }
+
+    newClsSource.sources = sourceList;
+    clsSources.push(newClsSource);
+
+    if (entries[i].value > topScore) {
+      topScore = entries[i].value;
+      topID = firstSelector;
+    }
+  }
+});
+
+observer.observe({ type: "layout-shift", buffered: true });
+
+</script>
+<script src="/delay?delay=2500&amp;file=/assets/blank.js"></script>
+<%= footer %>
