@@ -10,17 +10,18 @@
 <script src="21-constant-mutations.js" type="text/javascript"></script>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 1,
-	Backbone: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 1,
+  Backbone: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 setInterval(function() {
-	var node = document.createElement("span");
-	node.innerHTML = ".";
-	document.getElementById("content").appendChild(node);
+  var node = document.createElement("span");
+
+  node.innerHTML = ".";
+  document.getElementById("content").appendChild(node);
 }, 100);
 </script>
 <%= footer %>

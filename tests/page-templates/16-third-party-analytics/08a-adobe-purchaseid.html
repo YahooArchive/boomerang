@@ -5,17 +5,17 @@
 
 // polyfill for adobe analytics
 window.s = {
-	purchaseID: "purchaseid"
+  purchaseID: "purchaseid"
 };
 
 BOOMR_test.clearCookies();
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	TPAnalytics: {
-		enabled: true,
-		clientids: true
-	}
+  testAfterOnBeacon: true,
+  TPAnalytics: {
+    enabled: true,
+    clientids: true
+  }
 });
 </script>
 <%= footer %>

@@ -1,0 +1,60 @@
+<%= header %>
+<span id="interaction-target"></span>
+<script>
+// mock PerformanceObserver for testing EventTiming data
+BOOMR_test.mockPerformanceObserver();
+
+// polyfill EventTiming
+window.PerformanceEventTiming = {};
+</script>
+<%= boomerangScript %>
+<script src="02-inp.js" type="text/javascript"></script>
+<script>
+BOOMR_test.init({
+  testAfterOnBeacon: 2,
+  EventTiming: {
+    enabled: true
+  },
+  afterFirstBeacon: function() {
+    // fake an unload
+    BOOMR.fireEvent("page_unload", {
+      type: "beforeunload"
+    });
+  }
+});
+
+var curStartTime = Math.random() * 1000;
+
+function generateEvent(inputDelay, processing, duration, interactionId) {
+  curStartTime += Math.random() * 10;
+
+  return {
+    name: "click",
+    entryType: "event",
+    startTime: curStartTime,
+    duration: duration,
+    processingStart: inputDelay + curStartTime,
+    processingEnd: inputDelay + curStartTime + processing,
+    cancelable: false,
+    interactionId: interactionId,
+    target: document.getElementById("interaction-target")
+  };
+}
+
+// trigger some events
+BOOMR_test.fireMockPerformanceObserverEvent("event", [
+  // a few non-interactions
+  generateEvent(0, 10, 50, 0),
+  generateEvent(0, 100, 100, 0),
+  generateEvent(0, 10, 10, 0),
+
+  // an interaction
+  generateEvent(10, 100, 99.1, 1),
+  generateEvent(10, 10, 10.1, 1),
+  generateEvent(10, 20, 20.3, 1),
+
+  // another interaction
+  generateEvent(10, 50, 49.5, 2)
+]);
+</script>
+<%= footer %>

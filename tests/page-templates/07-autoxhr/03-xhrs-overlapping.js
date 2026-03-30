@@ -1,68 +1,141 @@
-/*eslint-env mocha*/
-/*global assert*/
+/* eslint-env mocha */
+/* global assert */
 
 describe("e2e/07-autoxhr/03-xhrs-overlapping", function() {
-	var t = BOOMR_test;
-	var tf = BOOMR.plugins.TestFramework;
+  var t = BOOMR_test;
+  var tf = BOOMR.plugins.TestFramework;
 
-	it("Should get 3 beacons: 1 onload, 2 xhr (XMLHttpRequest !== null)", function(done) {
-		this.timeout(10000);
-		t.ifAutoXHR(
-			done,
-			function() {
-				if (window.MutationObserver && typeof window.MutationObserver === "function") {
-					t.ensureBeaconCount(done, 2);
-				}
-				else {
-					t.ensureBeaconCount(done, 3);
-				}
-			});
-	});
+  it("Should get 3 beacons: 1 onload, 2 xhr (XMLHttpRequest !== null)", function(done) {
+    this.timeout(10000);
+    t.ifAutoXHR(
+      done,
+      function() {
+        t.ensureBeaconCount(done, 3);
+      },
+      this.skip.bind(this));
+  });
 
-	it("Should have the second beacon contain a time of around 100ms because the XHR is aborted after 100ms", function(done) {
-		this.timeout(10000);
-		t.ifAutoXHR(
-			done,
-			function() {
-				t.ensureBeaconCount(function() {
-					if (window.MutationObserver && typeof window.MutationObserver === "function") {
-						assert.closeTo(tf.beacons[1].t_done, 0, 100);
-						done();
-					}
-					else {
-						assert.closeTo(tf.beacons[1].t_done, 3000, 100);
-						done();
-					}
-				}, 2);
-			});
-	});
+  describe("Beacon 2", function() {
+    it("Should contain a time of close to 0ms when the XHR is aborted", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.closeTo(tf.beacons[1].t_done, 0, 50);
+          done();
+        },
+        this.skip.bind(this));
+    });
 
-	it("Should have the third beacon contain the URL of the second XHR", function(done) {
-		this.timeout(10000);
-		t.ifAutoXHR(
-			done,
-			function() {
-				t.ensureBeaconCount(function() {
-					if (window.MutationObserver && typeof window.MutationObserver === "function") {
-						assert.include(tf.beacons[1].u, "?2");
-						done();
-					}
-					else {
-						assert.include(tf.beacons[1].u, "?1");
-						done();
-					}
-				}, 2);
-			});
-	});
+    it("Should contain http.initiator = xhr", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.equal(tf.beacons[1]["http.initiator"], "xhr");
+          done();
+        },
+        this.skip.bind(this));
+    });
 
-	it("Should get 1 beacons: 1 onload, 0 xhr (XMLHttpRequest === null)", function(done) {
-		this.timeout(10000);
-		t.ifAutoXHR(
-			done,
-			undefined,
-			function() {
-				t.ensureBeaconCount(done, 1);
-			});
-	});
+    it("Should contain http.errno = -999", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.equal(tf.beacons[1]["http.errno"], -999);
+          done();
+        },
+        this.skip.bind(this));
+    });
 
+    it("Should contain pgu of the page", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.equal(tf.beacons[1].pgu, document.location.href);
+          done();
+        },
+        this.skip.bind(this));
+    });
+
+    it("Should contain u of the first XHR", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.include(tf.beacons[1].u, "boomerang-latest-debug.js?2");
+          done();
+        },
+        this.skip.bind(this));
+    });
+  });
+
+  describe("Beacon 3", function() {
+    it("Should contain a time of around 3,000ms when the XHR is aborted", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.closeTo(tf.beacons[2].t_done, 3000, 100);
+          done();
+        },
+        this.skip.bind(this));
+    });
+
+    it("Should contain http.initiator = xhr", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.equal(tf.beacons[2]["http.initiator"], "xhr");
+          done();
+        },
+        this.skip.bind(this));
+    });
+
+    it("Should contain http.errno = -999", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.equal(tf.beacons[2]["http.errno"], -999);
+          done();
+        },
+        this.skip.bind(this));
+    });
+
+    it("Should contain pgu of the page", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.equal(tf.beacons[2].pgu, document.location.href);
+          done();
+        },
+        this.skip.bind(this));
+    });
+
+    it("Should contain u of the first XHR", function(done) {
+      this.timeout(10000);
+      t.ifAutoXHR(
+        done,
+        function() {
+          assert.include(tf.beacons[2].u, "boomerang-latest-debug.js?1");
+          done();
+        },
+        this.skip.bind(this));
+    });
+  });
+
+  it("Should get 1 beacons: 1 onload, 0 xhr (XMLHttpRequest === null)", function(done) {
+    this.timeout(10000);
+    t.ifAutoXHR(
+      done,
+      this.skip.bind(this),
+      function() {
+        t.ensureBeaconCount(done, 1);
+      });
+  });
 });

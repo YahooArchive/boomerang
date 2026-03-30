@@ -8,14 +8,14 @@ var fs = require("fs");
 // Mime types
 //
 var mimeTypes = {
-	"html": "text/html",
-	"json": "application/json",
-	"jpeg": "image/jpeg",
-	"jpg": "image/jpeg",
-	"png": "image/png",
-	"js": "text/javascript",
-	"css": "text/css",
-	"xml": "text/xml"
+  "html": "text/html",
+  "json": "application/json",
+  "jpeg": "image/jpeg",
+  "jpg": "image/jpeg",
+  "png": "image/png",
+  "js": "text/javascript",
+  "css": "text/css",
+  "xml": "text/xml"
 };
 
 //
@@ -24,121 +24,137 @@ var mimeTypes = {
 var envFile = path.resolve(path.join(__dirname, "env.json"));
 
 if (!fs.existsSync(envFile)) {
-	throw new Error("Please create " + envFile + ". There's a env.json.sample in the same dir.");
+  throw new Error("Please create " + envFile + ". There's a env.json.sample in the same dir.");
 }
 
 // load JSON
 var env = require(envFile);
 
 var wwwRoot = env.www;
+
 if (wwwRoot.indexOf("/") !== 0) {
-	wwwRoot = path.join(__dirname, "..", "..", wwwRoot);
+  wwwRoot = path.join(__dirname, "..", "..", wwwRoot);
 }
 
 if (!fs.existsSync(wwwRoot)) {
-	wwwRoot = path.join(__dirname, "..");
+  wwwRoot = path.join(__dirname, "..");
 }
 
 // save previous 'delay' query param value
 var previousDelay = 0;
 
 module.exports = function(req, res) {
-	// keep query strings on files if requested that way
-	var url = req.url;
-	var querySplit = req.url.split(/\?/);
-	if (querySplit.length === 3) {
-		querySplit.pop();
-		url = querySplit.join("?");
-	}
+  // keep query strings on files if requested that way
+  var url = req.url;
+  var querySplit = req.url.split(/\?/);
 
-	var q = require("url").parse(url, true).query;
-	var delay = q.delay || 0;
-	var file = q.file;
-	var response = q.response;
-	var sendACAO = !(q.noACAO === "1"); // send by default
-	var sendTAO = (q.TAO === "1"); // don't send by default
-	var responseHeaders = q.headers;
-	var redir = q.redir;
+  if (querySplit.length === 3) {
+    querySplit.pop();
+    url = querySplit.join("?");
+  }
 
-	// if we get a '+' or '-' delay prefix, add/sub its value with the delay used on the
-	// previous request. This is usefull in cases where we need to hit the
-	// same url and query params for multiple requests with differing delay times.
-	if (typeof delay === "string" && delay) {
-		if (delay[0] === "+") {
-			delay = previousDelay + parseInt(delay.slice(1), 10);
-		}
-		else if (delay[0] === "-") {
-			delay = previousDelay - parseInt(delay.slice(1), 10);
-		}
-		else {
-			delay = parseInt(delay, 10);
-		}
-	}
+  var q = require("url").parse(url, true).query;
+  var delay = q.delay || 0;
+  var file = q.file;
+  var response = q.response;
+  var sendACAO = !(q.noACAO === "1"); // send by default
+  var sendTAO = (q.TAO === "1"); // don't send by default
+  var responseHeaders = q.headers;
+  var redir = q.redir;
 
-	delay = delay >= 0 ? delay : 0;
+  // if we get a '+' or '-' delay prefix, add/sub its value with the delay used on the
+  // previous request. This is usefull in cases where we need to hit the
+  // same url and query params for multiple requests with differing delay times.
+  if (typeof delay === "string" && delay) {
+    if (delay[0] === "+") {
+      delay = previousDelay + parseInt(delay.slice(1), 10);
+    }
+    else if (delay[0] === "-") {
+      delay = previousDelay - parseInt(delay.slice(1), 10);
+    }
+    else {
+      delay = parseInt(delay, 10);
+    }
+  }
 
-	previousDelay = delay;
+  delay = delay >= 0 ? delay : 0;
 
-	setTimeout(function() {
-		var headers = {};
+  previousDelay = delay;
 
-		if (redir) {
-			res.header("Cache-Control", "no-cache, no-store, must-revalidate");
-			res.header("Pragma", "no-cache");
-			res.header("Expires", 0);
+  setTimeout(function() {
+    var headers = {};
 
-			return res.redirect(302, file);
-		}
+    if (redir) {
+      res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.header("Pragma", "no-cache");
+      res.header("Expires", 0);
 
-		if (sendACAO) {
-			headers["Access-Control-Allow-Origin"] = "*";
-		}
+      return res.redirect(302, file);
+    }
 
-		if (sendTAO) {
-			headers["Timing-Allow-Origin"] = "*";
-		}
+    if (delay > 0) {
+      res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.header("Pragma", "no-cache");
+      res.header("Expires", 0);
+    }
 
-		if (responseHeaders) {
-			var responseHeadersObj = null;
-			try {
-				responseHeadersObj = JSON.parse(responseHeaders);
-			}
-			catch (e) {
-				// nop
-			}
+    if (sendACAO) {
+      headers["Access-Control-Allow-Origin"] = "*";
+    }
 
-			for (var headerName in responseHeadersObj) {
-				if (responseHeadersObj.hasOwnProperty(headerName) && responseHeadersObj[headerName]) {
-					headers[headerName] = responseHeadersObj[headerName];
-				}
-			}
-		}
+    if (sendTAO) {
+      headers["Timing-Allow-Origin"] = "*";
+    }
 
-		if (response) {
-			res.writeHead(200, headers);
-			return res.end(response);
-		}
+    if (responseHeaders) {
+      var responseHeadersObj = null;
 
-		var filePath = path.join(wwwRoot, file);
+      try {
+        responseHeadersObj = JSON.parse(responseHeaders);
+      }
+      catch (e) {
+        // nop
+      }
 
-		fs.exists(filePath, function(exists) {
-			if (!exists) {
-				return res.sendStatus(404);
-			}
+      for (var headerName in responseHeadersObj) {
+        if (responseHeadersObj.hasOwnProperty(headerName) && responseHeadersObj[headerName]) {
+          headers[headerName] = responseHeadersObj[headerName];
+        }
+      }
+    }
 
-			// determine MIME type
-			if (!headers["Content-Type"]) {
-				var mimeType = mimeTypes[path.extname(filePath).split(".")[1]];
+    if (response) {
+      res.writeHead(200, headers);
 
-				if (mimeType) {
-					headers["Content-Type"] = mimeType;
-				}
-			}
+      return res.end(response);
+    }
 
-			res.writeHead(200, headers);
+    var filePath = path.join(wwwRoot, file);
 
-			var fileStream = fs.createReadStream(filePath);
-			fileStream.pipe(res);
-		});
-	}, delay);
+    // ensure file requested is rooted to wwwRoot
+    if (filePath.indexOf(wwwRoot) !== 0) {
+      return res.sendStatus(404);
+    }
+
+    fs.exists(filePath, function(exists) {
+      if (!exists) {
+        return res.sendStatus(404);
+      }
+
+      // determine MIME type
+      if (!headers["Content-Type"]) {
+        var mimeType = mimeTypes[path.extname(filePath).split(".")[1]];
+
+        if (mimeType) {
+          headers["Content-Type"] = mimeType;
+        }
+      }
+
+      res.writeHead(200, headers);
+
+      var fileStream = fs.createReadStream(filePath);
+
+      fileStream.pipe(res);
+    });
+  }, delay);
 };

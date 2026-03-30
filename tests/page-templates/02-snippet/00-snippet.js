@@ -1,10 +1,10 @@
-/*eslint-env mocha*/
-/*global BOOMR_test*/
+/* eslint-env mocha */
+/* global BOOMR_test */
 
 describe("e2e/02-snippet/00-snippet", function() {
-	var t = BOOMR_test;
+  var t = BOOMR_test;
 
-	it("Should pass basic beacon validation", function(done) {
-		t.validateBeaconWasSent(done);
-	});
+  it("Should pass basic beacon validation", function(done) {
+    t.validateBeaconWasSent(done);
+  });
 });

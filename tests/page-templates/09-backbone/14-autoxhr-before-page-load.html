@@ -11,18 +11,19 @@
 window.backbone_imgs = [3000];
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Backbone: {
-		enabled: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: true,
+  Backbone: {
+    enabled: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 
 if (BOOMR.plugins.AutoXHR) {
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "support/widgets.json");
-	xhr.send(null);
+  var xhr = new XMLHttpRequest();
+
+  xhr.open("GET", "support/widgets.json");
+  xhr.send(null);
 }
 
 </script>

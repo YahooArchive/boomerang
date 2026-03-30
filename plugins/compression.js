@@ -1,264 +1,292 @@
+/**
+ * The `Compression` plugin adds common compression code that other plugins can use.
+ *
+ * For information on how to include this plugin, see the {@tutorial building} tutorial.
+ *
+ * ## Beacon Parameters
+ *
+ * This plugin adds no parameters to the beacon.
+ *
+ * @class BOOMR.utils.Compression
+ */
 (function() {
-	BOOMR = BOOMR || {};
-	if (BOOMR.utils && BOOMR.utils.Compression) {
-		return;
-	}
+  BOOMR = window.BOOMR || {};
+  BOOMR.utils = BOOMR.utils || {};
 
-	var self = BOOMR.utils.Compression = {};
+  if (BOOMR.utils && BOOMR.utils.Compression) {
+    return;
+  }
 
-	/**
-	 * Converts the structure to URL-friendly JSON
-	 * Adapted from https://github.com/Sage/jsurl
-	 * Changes:
-	 *  Formatting
-	 *  Removal of Array.map and Object.map for compat with IE 6-8
-	 *  Change of str[i] syntax to str.charAt(i) for compat with IE 6-7
-	 *
-	 * @param {object} v Object to convert
-	 *
-	 * @returns {string} URL-friendly JSON
-	 */
-	self.jsUrl = function jsUrl(v) {
-		/**
-		 * Encodes the specified string
-		 *
-		 * @param {string} s String
-		 *
-		 * @returns {string} Encoded string
-		 */
-		function encode(s) {
-			if (!/[^\w-.]/.test(s)) {
-				// if the string is only made up of alpha-numeric, underscore,
-				// dash or period, we can use it directly.
-				return s;
-			}
+  var self = BOOMR.utils.Compression = {};
 
-			// we need to escape other characters
-			s = s.replace(/[^\w-.]/g, function(ch) {
-				if (ch === "$") {
-					return "!";
-				}
+  /**
+   * Converts an object to URL-friendly JSON
+   *
+   * Adapted from https://github.com/Sage/jsurl
+   *
+   * Changes:
+   *  Formatting
+   *  Removal of Array.map and Object.map for compat with IE 6-8
+   *  Change of str[i] syntax to str.charAt(i) for compat with IE 6-7
+   *
+   * @param {object} v Object to convert
+   *
+   * @returns {string} URL-friendly JSON
+   * @memberof BOOMR.utils.Compression
+   */
+  self.jsUrl = function jsUrl(v) {
+    /**
+     * Encodes the specified string
+     *
+     * @param {string} s String
+     *
+     * @returns {string} Encoded string
+     */
+    function encode(s) {
+      if (!/[^\w-.]/.test(s)) {
+        // if the string is only made up of alpha-numeric, underscore,
+        // dash or period, we can use it directly.
+        return s;
+      }
 
-				// use the character code for this one
-				ch = ch.charCodeAt(0);
+      // we need to escape other characters
+      s = s.replace(/[^\w-.]/g, function(ch) {
+        if (ch === "$") {
+          return "!";
+        }
 
-				if (ch < 0x100) {
-					// if less than 256, use "*[2-char code]"
-					return "*" + ("00" + ch.toString(16)).slice(-2);
-				}
-				else {
-					// use "**[4-char code]"
-					return "**" + ("0000" + ch.toString(16)).slice(-4);
-				}
-			});
+        // use the character code for this one
+        ch = ch.charCodeAt(0);
 
-			return s;
-		}
+        if (ch < 0x100) {
+          // if less than 256, use "*[2-char code]"
+          return "*" + ("00" + ch.toString(16)).slice(-2);
+        }
+        else {
+          // use "**[4-char code]"
+          return "**" + ("0000" + ch.toString(16)).slice(-4);
+        }
+      });
 
-		var tmpAry = [];
+      return s;
+    }
 
-		switch (typeof v) {
-		case "number":
-			// for finite numbers, return "~[number]"
-			return isFinite(v) ? "~" + v : "~null";
+    var tmpAry = [];
 
-		case "string":
-			// "~'[encoded string]"
-			return "~'" + encode(v);
+    switch (typeof v) {
+    case "number":
+      // for finite numbers, return "~[number]"
+      return isFinite(v) ? "~" + v : "~null";
 
-		case "boolean":
-			// "~true" or "~false"
-			return "~" + v;
+    case "string":
+      // "~'[encoded string]"
+      return "~'" + encode(v);
 
-		case "object":
-			if (!v) {
-				return "~null";
-			}
+    case "boolean":
+      // "~true" or "~false"
+      return "~" + v;
 
-			if (BOOMR.utils.isArray(v)) {
-				// iterate instead of Array.map for compat
-				for (var i = 0; i < v.length; i++) {
-					if (i in v) {
-						tmpAry[i] = self.jsUrl(v[i]) || "~null";
-					}
-				}
+    case "object":
+      if (!v) {
+        return "~null";
+      }
 
-				return "~(" + (tmpAry.join("") || "~") + ")";
-			}
-			else {
-				// iterate instead of Object.map for compat
-				for (var key in v) {
-					if (v.hasOwnProperty(key)) {
-						var val = self.jsUrl(v[key]);
-						// skip undefined and functions
+      if (BOOMR.utils.isArray(v)) {
+        // iterate instead of Array.map for compat
+        for (var i = 0; i < v.length; i++) {
+          if (i in v) {
+            tmpAry[i] = self.jsUrl(v[i]) || "~null";
+          }
+        }
 
-						if (val) {
-							tmpAry.push(encode(key) + val);
-						}
-					}
-				}
+        return "~(" + (tmpAry.join("") || "~") + ")";
+      }
+      else {
+        // iterate instead of Object.map for compat
+        for (var key in v) {
+          if (v.hasOwnProperty(key)) {
+            var val = self.jsUrl(v[key]);
+            // skip undefined and functions
 
-				return "~(" + tmpAry.sort().join("~") + ")";
-			}
+            if (val) {
+              tmpAry.push(encode(key) + val);
+            }
+          }
+        }
 
-		default:
-			// function, undefined
-			return undefined;
-		}
-	};
+        return "~(" + tmpAry.sort().join("~") + ")";
+      }
 
-	/* BEGIN_DEBUG */
-	/**
-	 * JSURL reserved value map
-	 */
-	var JSURL_RESERVED = {
-		"true": true,
-		"false": false,
-		"null": null
-	};
+    default:
+      // function, undefined
+      return undefined;
+    }
+  };
 
-	/**
-	 * Converts from JSURL to JSON
-	 * Adapted from https://github.com/Sage/jsurl
-	 *
-	 * @param {string} s JSURL string
-	 *
-	 * @returns {object} Decompressed object
-	 */
-	self.jsUrlDecompress = function(s) {
-		if (typeof s !== "string") {
-			return s;
-		}
+  /* BEGIN_DEBUG */
+  /**
+   * JSURL reserved value map
+   *
+   * Work around uglifyJS minification that breaks in IE8 and quirks mode
+   */
+  var _true = "true",
+      _false = "false",
+      _null = "null";
+  var JSURL_RESERVED = {};
 
-		var i = 0;
-		var len = s.length;
+  JSURL_RESERVED[_true] = true;
+  JSURL_RESERVED[_false] = false;
+  JSURL_RESERVED[_null] = null;
 
-		/**
-		 * Eats the specified character, and throws an exception if another character
-		 * was found
-		 *
-		 * @param {string} expected Expected string
-		 */
-		function eat(expected) {
-			if (s.charAt(i) !== expected) {
-				throw new Error("bad JSURL syntax: expected " + expected + ", got " + (s && s.charAt(i)) +
-					" from:" + s +
-					" length:" + s.length.toString() +
-					" char at:" + s.charAt(i));
-			}
+  /**
+   * Converts from JSURL to JSON.
+   *
+   * Adapted from https://github.com/Sage/jsurl
+   *
+   * @param {string} s JSURL string
+   *
+   * @returns {object} Decompressed object
+   * @memberof BOOMR.utils.Compression
+   */
+  self.jsUrlDecompress = function(s) {
+    if (typeof s !== "string") {
+      return s;
+    }
 
-			i++;
-		}
+    var i = 0;
+    var len = s.length;
 
-		/**
-		 * Decodes the next value
-		 *
-		 * @returns {string} Next value
-		 */
-		function decode() {
-			var beg = i;
-			var ch;
-			var r = "";
+    /**
+     * Eats the specified character, and throws an exception if another character
+     * was found
+     *
+     * @param {string} expected Expected string
+     */
+    function eat(expected) {
+      if (s.charAt(i) !== expected) {
+        throw new Error("bad JSURL syntax: expected " + expected + ", got " + (s && s.charAt(i)) +
+          " from:" + s +
+          " length:" + s.length.toString() +
+          " char at:" + s.charAt(i));
+      }
 
-			// iterate until we reach the end of the string or "~" or ")"
-			while (i < len && (ch = s.charAt(i)) !== "~" && ch !== ")") {
-				switch (ch) {
-				case "*":
-					if (beg < i) {
-						r += s.substring(beg, i);
-					}
+      i++;
+    }
 
-					if (s.charAt(i + 1) === "*") {
-						// Unicode characters > 0xff (255), which are encoded as "**[4-digit code]"
-						r += String.fromCharCode(parseInt(s.substring(i + 2, i + 6), 16));
-						beg = (i += 6);
-					}
-					else {
-						// Unicode characters <= 0xff (255), which are encoded as "*[2-digit code]"
-						r += String.fromCharCode(parseInt(s.substring(i + 1, i + 3), 16));
-						beg = (i += 3);
-					}
-					break;
+    /**
+     * Decodes the next value
+     *
+     * @returns {string} Next value
+     */
+    function decode() {
+      var beg = i;
+      var ch;
+      var r = "";
 
-				case "!":
-					if (beg < i) {
-						r += s.substring(beg, i);
-					}
+      // iterate until we reach the end of the string or "~" or ")"
+      while (i < len && (ch = s.charAt(i)) !== "~" && ch !== ")") {
+        switch (ch) {
+        case "*":
+          if (beg < i) {
+            r += s.substring(beg, i);
+          }
 
-					r += "$";
-					beg = ++i;
-					break;
+          if (s.charAt(i + 1) === "*") {
+            // Unicode characters > 0xff (255), which are encoded as "**[4-digit code]"
+            r += String.fromCharCode(parseInt(s.substring(i + 2, i + 6), 16));
+            beg = (i += 6);
+          }
+          else {
+            // Unicode characters <= 0xff (255), which are encoded as "*[2-digit code]"
+            r += String.fromCharCode(parseInt(s.substring(i + 1, i + 3), 16));
+            beg = (i += 3);
+          }
 
-				default:
-					i++;
-				}
-			}
+          break;
 
-			return r + s.substring(beg, i);
-		}
+        case "!":
+          if (beg < i) {
+            r += s.substring(beg, i);
+          }
 
-		return (function parseOne() {
-			var result, ch, beg;
+          r += "$";
+          beg = ++i;
+          break;
 
-			eat("~");
+        default:
+          i++;
+        }
+      }
 
-			switch (ch = s.charAt(i)) {
-			case "(":
-				i++;
-				if (s.charAt(i) === "~") {
-					// this is an Array
-					result = [];
+      return r + s.substring(beg, i);
+    }
 
-					if (s.charAt(i + 1) === ")") {
-						i++;
-					}
-					else {
-						do {
-							result.push(parseOne());
-						} while (s.charAt(i) === "~");
-					}
-				}
-				else {
-					// this is an object
-					result = {};
+    return (function parseOne() {
+      var result, ch, beg;
 
-					if (s.charAt(i) !== ")") {
-						do {
-							var key = decode();
-							result[key] = parseOne();
-						} while (s.charAt(i) === "~" && ++i);
-					}
-				}
-				eat(")");
-				break;
+      eat("~");
 
-			case "'":
-				i++;
-				result = decode();
-				break;
+      switch (ch = s.charAt(i)) {
+      case "(":
+        i++;
 
-			default:
-				beg = i++;
-				while (i < len && /[^)~]/.test(s.charAt(i))) {
-					i++;
-				}
+        if (s.charAt(i) === "~") {
+          // this is an Array
+          result = [];
 
-				var sub = s.substring(beg, i);
+          if (s.charAt(i + 1) === ")") {
+            i++;
+          }
+          else {
+            do {
+              result.push(parseOne());
+            } while (s.charAt(i) === "~");
+          }
+        }
+        else {
+          // this is an object
+          result = {};
 
-				if (/[\d\-]/.test(ch)) {
-					result = parseFloat(sub);
-				}
-				else {
-					result = JSURL_RESERVED[sub];
+          if (s.charAt(i) !== ")") {
+            do {
+              var key = decode();
 
-					if (typeof result === "undefined") {
-						throw new Error("bad value keyword: " + sub);
-					}
-				}
-			}
+              result[key] = parseOne();
+            } while (s.charAt(i) === "~" && ++i);
+          }
+        }
 
-			return result;
-		}());
-	};
-	/* END_DEBUG */
+        eat(")");
+        break;
+
+      case "'":
+        i++;
+        result = decode();
+        break;
+
+      default:
+        beg = i++;
+
+        while (i < len && /[^)~]/.test(s.charAt(i))) {
+          i++;
+        }
+
+        var sub = s.substring(beg, i);
+
+        if (/[\d\-]/.test(ch)) {
+          result = parseFloat(sub);
+        }
+        else {
+          result = JSURL_RESERVED[sub];
+
+          if (typeof result === "undefined") {
+            throw new Error("bad value keyword: " + sub);
+          }
+        }
+      }
+
+      return result;
+    }());
+  };
+  /* END_DEBUG */
 }());

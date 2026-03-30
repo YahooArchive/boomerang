@@ -1,51 +1,70 @@
-/*eslint-env mocha*/
-/*global BOOMR_test,assert*/
+/* eslint-env mocha */
+/* global BOOMR_test,assert */
+
+// globals from this test
+Array.prototype.push.apply(BOOMR_test.addedGlobals, ["eventFired"]);
 
 describe("e2e/07-autoxhr/02-onclick", function() {
-	var t = BOOMR_test;
-	var tf = BOOMR.plugins.TestFramework;
-	it("Should have sent at least 2 beacons, 1x onload, 1x xhr", function(done) {
-		if (window.MutationObserver && typeof window.MutationObserver === "function") {
+  var t = BOOMR_test;
+  var tf = BOOMR.plugins.TestFramework;
 
-			t.ifAutoXHR(
-				done,
-				function() {
-					assert.lengthOf(tf.beacons, 2);
-					done();
-				}
-			);
-		}
-		else {
-			assert.lengthOf(tf.beacons, 1);
-			done();
-		}
-	});
+  it("Should have sent at 2 beacons, 1x onload, 1x xhr (if MutationObserver is supported)", function(done) {
+    this.timeout(10000);
 
-	it("Should get 2 beacons: 1st onload 2nd image fetch", function(done){
-		if (window.MutationObserver && typeof window.MutationObserver === "function") {
-			t.ifAutoXHR(
-				done,
-				function() {
-					assert.include(tf.beacons[0].u, "02-onclick.html");
-					done();
-				});
-		}
-		else {
-			done();
-		}
-	});
+    if (t.isMutationObserverSupported()) {
+      t.ifAutoXHR(
+        done,
+        function() {
+          t.ensureBeaconCount(done, 2);
+        },
+        this.skip.bind(this));
+    }
+    else {
+      this.skip();
+    }
+  });
 
-	it("Should have a second beacon with the image URL in it", function(done){
-		if (window.MutationObserver && typeof window.MutationObserver === "function") {
-			t.ifAutoXHR(
-				done,
-				function() {
-					assert.include(tf.beacons[1].u, "img.jpg");
-					done();
-				});
-		}
-		else {
-			done();
-		}
-	});
+  it("Should have sent 1 beacon, 1x onload, 0x xhr (if MutationObserver is not supported)", function(done) {
+    this.timeout(10000);
+
+    if (!t.isMutationObserverSupported()) {
+      t.ifAutoXHR(
+        done,
+        function() {
+          t.ensureBeaconCount(done, 1);
+        },
+        this.skip.bind(this));
+    }
+    else {
+      this.skip();
+    }
+  });
+
+  describe("Beacon 1", function() {
+    it("Should have the first beacon URL of the page as 'u'", function(){
+      assert.include(tf.beacons[0].u, "02-onclick.html");
+    });
+  });
+
+  describe("Beacon 2 (click)", function() {
+    var i = 1;
+
+    it("Should have the second beacon URL of the image as 'u' (if MutationObserver is supported)", function() {
+      if (BOOMR.plugins.AutoXHR && t.isMutationObserverSupported()) {
+        assert.include(tf.beacons[i].u, "img.jpg");
+      }
+      else {
+        this.skip();
+      }
+    });
+
+    it("Should have the second beacon http.initiator = 'click' (if MutationObserver is supported)", function() {
+      if (BOOMR.plugins.AutoXHR && t.isMutationObserverSupported()) {
+        assert.include(tf.beacons[i]["http.initiator"], "click");
+      }
+      else {
+        this.skip();
+      }
+    });
+  });
 });

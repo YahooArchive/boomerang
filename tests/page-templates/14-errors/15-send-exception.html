@@ -4,21 +4,21 @@
 <script src="../../vendor/json3/lib/json3.js"></script>
 <script>
 function errorFunction() {
-	try {
-		a.foo = 1;
-	}
-	catch (e) {
-		BOOMR.plugins.Errors.send(e);
-	}
-
+  try {
+    a.foo = 1;
+  }
+  catch (e) {
+    BOOMR.plugins.Errors.send(e);
+  }
 }
+
 errorFunction();
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	Errors: {
-		enabled: true
-	}
+  testAfterOnBeacon: true,
+  Errors: {
+    enabled: true
+  }
 });
 </script>
 <%= footer %>

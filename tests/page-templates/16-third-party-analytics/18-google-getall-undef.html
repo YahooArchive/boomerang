@@ -9,30 +9,31 @@ BOOMR_test.clearCookies();
 document.cookie = ["_ga=GA1.2.XXXXXXXXXX.YYYYYYYYYY", "path=/", "domain=" + location.hostname].join("; ");
 
 // polyfill for google analytics
-function FakeTracker() {};
+function FakeTracker() {}
+
 FakeTracker.prototype.get = function(key) {
-	if (key === "clientId") {
-		return "XXXXXXXXXX.YYYYYYYYYY";
-	}
+  if (key === "clientId") {
+    return "XXXXXXXXXX.YYYYYYYYYY";
+  }
 };
 
 // ga.get and ga.getAll won't provide the clientid, should fall back to cookie
 window.ga = function(cb) {
-	cb(
-		{
-			get: function() {
-				return undefined;
-			}
-		}
-	);
+  cb(
+    {
+      get: function() {
+        return undefined;
+      }
+    }
+  );
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	TPAnalytics: {
-		enabled: true,
-		clientids: true
-	}
+  testAfterOnBeacon: true,
+  TPAnalytics: {
+    enabled: true,
+    clientids: true
+  }
 });
 </script>
 <%= footer %>

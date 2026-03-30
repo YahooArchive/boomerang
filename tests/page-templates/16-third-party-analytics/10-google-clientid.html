@@ -5,21 +5,21 @@
 
 // polyfill for google analytics
 window.ga = function(cb) {
-	cb(
-		{
-			get: function() {
-				return "XXXXXXXXXX.YYYYYYYYYY";
-			}
-		}
-	);
+  cb(
+    {
+      get: function() {
+        return "XXXXXXXXXX.YYYYYYYYYY";
+      }
+    }
+  );
 };
 
 BOOMR_test.init({
-	testAfterOnBeacon: true,
-	TPAnalytics: {
-		enabled: true,
-		clientids: true
-	}
+  testAfterOnBeacon: true,
+  TPAnalytics: {
+    enabled: true,
+    clientids: true
+  }
 });
 </script>
 <%= footer %>

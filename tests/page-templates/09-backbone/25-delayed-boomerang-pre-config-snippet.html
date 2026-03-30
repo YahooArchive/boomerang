@@ -2,15 +2,15 @@
 <%= boomerangDelayedSnippet %>
 <script>
 BOOMR_test.init({
-	testAfterOnBeacon: 2,
-	Backbone: {
-		enabled: true
-	},
-	AutoXHR: {
-		alwaysSendXhr: true
-	},
-	instrument_xhr: true,
-	autorun: false
+  testAfterOnBeacon: 2,
+  Backbone: {
+    enabled: true
+  },
+  AutoXHR: {
+    alwaysSendXhr: true
+  },
+  instrument_xhr: true,
+  autorun: false
 });
 </script>
 <script src="../../vendor/jquery/dist/jquery.js"></script>
@@ -19,18 +19,20 @@ BOOMR_test.init({
 <div id="content"></div>
 <script type="text/javascript">
 // force some beacons to be sent right before the spa_hard beacon would send
-BOOMR = BOOMR || {};
+BOOMR = window.BOOMR || {};
+window.timestamp = new Date().getTime();
 BOOMR.xhr = {
-	stop: function(callback) {
-		callback({
-			timing: {
-				startTime: 1,
-				requestStart: 5,
-				responseEnd: 10
-			},
-			url: "http://foo.com/xhr/"
-		});
-	}
+  stop: function(callback) {
+    callback({
+      timing: {
+        requestStart: window.timestamp + 5,
+        responseStart: window.timestamp + 8,
+        responseEnd: window.timestamp + 10,
+        loadEventEnd: window.timestamp + 11
+      },
+      url: "http://foo.com/xhr/"
+    });
+  }
 };
 </script>
 <script src="support/app.js"></script>

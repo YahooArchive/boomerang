@@ -6,7 +6,7 @@ window.myevent = false;
 
 // subscribe before it's even registered
 BOOMR.subscribe("myevent", function(data) {
-	window.myevent = data;
+  window.myevent = data;
 });
 
 BOOMR.registerEvent("myevent");

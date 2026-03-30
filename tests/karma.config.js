@@ -1,33 +1,90 @@
-/*eslint-env node*/
+/* eslint-env node */
+
+var url = require("url");
+
 module.exports = function(config) {
-	config.set({
-		basePath: "./",
+  var remoteSelenium = false,
+      u, webdriverConfig;
 
-		port: 4000,
-		runnerPort: 4001,
-		logLevel: config.LOG_INFO,
+  var tapFileName = "results/unit" + (process.env.BUILD_FLAVOR ? ("-" + process.env.BUILD_FLAVOR) : "") + ".tap";
 
-		colors: true,
-		autoWatch: false,
+  if (config.SELENIUM_ADDRESS) {
+    remoteSelenium = true;
+    u = url.parse(config.SELENIUM_ADDRESS, true);
+    webdriverConfig = {
+      hostname: u.hostname,
+      port: u.port
+    };
 
-		frameworks: ["mocha"],
-		reporters: ["progress", "coverage", "tap"],
-		plugins: [
-			"karma-coverage",
-			"karma-mocha",
-			"karma-tap-reporter",
-			"karma-mocha-reporter",
-			"karma-phantomjs-launcher"
-		],
-		browsers: ["PhantomJS"],
+    if (u.auth) {
+      webdriverConfig.user = u.auth.split(":")[0];
+      webdriverConfig.pwd = u.auth.split(":")[1];
+    }
+  }
 
-		coverageReporter: {
-			type: "html",
-			dir: "coverage/"
-		},
+  config.set({
+    basePath: "./",
 
-		tapReporter: {
-			outputFile: "results/unit.tap"
-		}
-	});
+    port: 4000,
+
+    logLevel: config.LOG_INFO,
+
+    colors: true,
+    autoWatch: false,
+
+    frameworks: ["mocha"],
+    reporters: ["progress", "tap"],
+    plugins: [
+      "karma-mocha",
+
+      // reporters
+      "karma-tap-reporter",
+      "karma-mocha-reporter"
+    ],
+
+    tapReporter: {
+      outputFile: tapFileName
+    }
+  });
+
+  if (!remoteSelenium) {
+    config.runnerPort = 4001;
+
+    // launchers
+    config.plugins.push(
+      "karma-chrome-launcher",
+      "karma-firefox-launcher",
+      "karma-ie-launcher",
+      "karma-opera-launcher",
+      "karma-safari-launcher");
+  }
+  else {
+    // launchers
+    config.plugins.push("karma-webdriver-launcher");
+
+    config.set({
+      customLaunchers: {
+        "ChromeHeadless": {
+          base: "WebDriver",
+          config: webdriverConfig,
+          browserName: "chrome",
+          flags: ["--headless", "--disable-gpu", "--window-size=1024,768"],
+          platform: "ANY",
+          version: "ANY"
+        },
+        "FirefoxHeadless": {
+          base: "WebDriver",
+          config: webdriverConfig,
+          browserName: "firefox",
+          "moz:firefoxOptions": {
+            args: ["--headless"]
+          },
+          platform: "ANY",
+          version: "ANY"
+        }
+      },
+
+      browsers: ["ChromeHeadless", "FirefoxHeadless"]
+    });
+  }
 };
