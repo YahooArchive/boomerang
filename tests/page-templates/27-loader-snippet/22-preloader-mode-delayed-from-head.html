@@ -1,0 +1,14 @@
+<%= headOnly %>
+  <%= boomerangDelayedSnippet %>
+</head>
+<%= bodyStart %>
+<script>
+window.BOOMR_loader_timeout = 50;
+</script>
+<script src="22-preloader-mode-delayed-from-head.js" type="text/javascript"></script>
+<script>
+BOOMR_test.init({
+  testAfterOnBeacon: true
+});
+</script>
+<%= footer %>

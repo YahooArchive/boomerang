@@ -1,0 +1,73 @@
+<%= header %>
+<img src="/delay?delay=1000&amp;file=assets/img.jpg"/>
+<script src="48-tti-prerendered.js" type="text/javascript"></script>
+<script>
+// mock PerformanceObserver for testing LongTask data
+BOOMR_test.mockPerformanceObserver();
+
+// fake activationStart offset 5s
+BOOMR_test.fakeActivationStart(5000);
+
+// polyfill Long Tasks
+window.PerformanceLongTaskTiming = function() {};
+</script>
+<%= boomerangScript %>
+<script>
+BOOMR_test.init({
+  testAfterOnBeacon: true,
+  Continuity: {
+    enabled: true
+  }
+});
+
+BOOMR_test.fireMockPerformanceObserverEvent("longtask",
+  [
+    {
+      // should NOT be included
+      duration: 100,
+      entryType: "longtask",
+      startTime: 0,
+      attribution: []
+    },
+    {
+      // should NOT be included
+      duration: 1000,
+      entryType: "longtask",
+      startTime: 1000,
+      attribution: []
+    },
+    {
+      // should NOT be included
+      duration: 500,
+      entryType: "longtask",
+      startTime: 4000,
+      attribution: []
+    },
+    {
+      // SHOULD be included
+      // Only ~1000ms should be counted
+      duration: 2000,
+      entryType: "longtask",
+      startTime: 4000,
+      attribution: []
+    },
+    {
+      // SHOULD be included
+      // All 10ms should be counted
+      duration: 10,
+      entryType: "longtask",
+      startTime: 6000,
+      attribution: []
+    },
+    {
+      // SHOULD be included
+      // All 10ms should be counted
+      duration: 10,
+      entryType: "longtask",
+      startTime: 10000,
+      attribution: []
+    }
+  ]
+);
+</script>
+<%= footer %>

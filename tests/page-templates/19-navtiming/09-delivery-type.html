@@ -1,0 +1,11 @@
+<%= header %>
+<%= boomerangScript %>
+<script src="09-delivery-type.js" type="text/javascript"></script>
+<script>
+BOOMR_test.fakeNavigationEntryProperty("deliveryType", "cache");
+
+BOOMR_test.init({
+  testAfterOnBeacon: true
+});
+</script>
+<%= footer %>
