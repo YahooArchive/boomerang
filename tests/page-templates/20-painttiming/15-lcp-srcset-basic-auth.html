@@ -1,0 +1,18 @@
+<%= header %>
+<!-- add an image so the screen is painted before Boomerang loads -->
+<%= boomerangSnippet %>
+<img style="width:101px;" id="lcp-elem" crossOrigin="use-credentials" />
+<script src="15-lcp-srcset-basic-auth.js" type="text/javascript" sizes="(min-width: 1px) 2000px, 9999px"></script>
+<script>
+BOOMR_test.init({
+  PaintTiming: {
+    enabled: true
+  },
+  testAfterOnBeacon: true
+});
+document.getElementById("lcp-elem").srcset =
+  "//test:test@" + window.location.hostname + ":" + window.location.port + "/pages/20-painttiming/support/img.jpg?id=1w 1w," +
+  "//test:test@" + window.location.hostname + ":" + window.location.port + "/pages/20-painttiming/support/img.jpg?id=9999w 9999w";
+</script>
+<script src="/delay?delay=2500&amp;file=/assets/blank.js"></script>
+<%= footer %>

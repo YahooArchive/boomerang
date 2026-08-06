@@ -1,0 +1,25 @@
+<%= header %>
+<%= boomerangScript %>
+<script src="07-content-type.js" type="text/javascript"></script>
+<iframe id="boomer_test_frame" src="/delay?delay=1000&amp;redir=1&amp;file=/pages/19-navtiming/support/xhtml.html"></iframe>
+<script>
+(function() {
+  function onBeaconHandler(b) {
+    // give the frame's beacon to the base page's test framework
+    BOOMR.plugins.TestFramework.frameBeacon = b;
+
+    // now load the regular boomerang test
+    BOOMR_test.init({
+      testAfterOnBeacon: true
+    });
+  }
+
+  // get a beacon from the iframe first
+  var testFrame = document.getElementById("boomer_test_frame");
+
+  testFrame.onload = function() {
+    testFrame.contentWindow.BOOMR.subscribe("beacon", onBeaconHandler);
+  };
+}());
+</script>
+<%= footer %>

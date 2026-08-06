@@ -1,0 +1,53 @@
+<%= header %>
+<script>
+// mock PerformanceObserver for testing LCP data
+BOOMR_test.mockPerformanceObserver();
+
+// polyfill PaintTiming
+window.LargestContentfulPaint = function() {};
+</script>
+<img src="/assets/img.jpg"  style="width: 100px" id="img_id1" />
+<%= boomerangScript %>
+<script src="12-lcp-reset.js" type="text/javascript"></script>
+<script>
+BOOMR_test.init({
+  PaintTiming: {
+    enabled: true
+  },
+  testAfterOnBeacon: true
+});
+
+// fake first LCP event, where the IMG element is used
+BOOMR_test.fireMockPerformanceObserverEvent("largest-contentful-paint",
+  [
+    {
+      duration: 0,
+      element: document.getElementById("img_id1"),
+      entryType: "largest-contentful-paint",
+      loadTime: BOOMR.hrNow(),
+      renderTime: BOOMR.hrNow() + 20,
+      size: 3000,
+      startTime: BOOMR.hrNow() + 20,
+      url: document.URL + "/assets/img.jpg?1"
+    }
+  ]
+);
+
+// fake second LCP event, where there is no associated element or URL
+BOOMR_test.fireMockPerformanceObserverEvent("largest-contentful-paint",
+  [
+    {
+      duration: 0,
+      element: null,
+      entryType: "largest-contentful-paint",
+      loadTime: BOOMR.hrNow(),
+      renderTime: BOOMR.hrNow() + 20,
+      size: 3000,
+      startTime: BOOMR.hrNow() + 20,
+      url: null
+    }
+  ]
+);
+</script>
+<script src="/delay?delay=2500&amp;file=/assets/blank.js"></script>
+<%= footer %>

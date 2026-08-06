@@ -1,0 +1,50 @@
+<%= header %>
+<h1>13-prerendered-all-before-activation</h1>
+<script>
+// fake that it's being loaded while prerendering
+BOOMR_test.isPrerendering = true;
+
+// load as hidden
+BOOMR_test.visState = "hidden";
+
+Object.defineProperty(document, "prerendering", {
+  get: function() {
+    return BOOMR_test.isPrerendering;
+  }
+});
+</script>
+<%= boomerangScript %>
+<script src="13-prerendered-all-before-activation.js" type="text/javascript"></script>
+<script>
+BOOMR_test.fakeActivationStart(10000);
+
+// pretend the browser is in prerender
+BOOMR.visibilityState = function() {
+  return BOOMR_test.visState;
+};
+
+BOOMR_test.init({
+  testAfterOnBeacon: true
+});
+
+BOOMR.subscribe("beacon", function() {
+  if (document.prerendering) {
+    BOOMR_test.sentWhilePrerendering = true;
+  }
+});
+
+// all done fake-prerendering
+setTimeout(function() {
+  BOOMR_test.isPrerendering = false;
+  BOOMR_test.visState = "visible";
+
+  // create a fake prerenderingchange event
+  var evObj = document.createEvent("Event");
+
+  evObj.initEvent("prerenderingchange", true, false);
+
+  // dispatch!
+  document.dispatchEvent(evObj);
+}, 5000);
+</script>
+<%= footer %>

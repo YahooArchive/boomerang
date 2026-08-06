@@ -1,0 +1,13 @@
+{
+    "rules": {
+        //
+        // Overrides
+        //
+
+        // allow longer max-length
+        "max-len": ["error", 300],
+
+        // allow inline comments
+       "no-inline-comments": 0
+    }
+}

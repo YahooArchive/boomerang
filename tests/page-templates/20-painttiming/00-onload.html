@@ -1,0 +1,16 @@
+<%= header %>
+<!-- add an image so the screen is painted before Boomerang loads -->
+<img src="/assets/img.jpg" />
+<!-- add a delayed image so the boomerang's beacon is sent after the image loads -->
+<img src="/delay?delay=2000&amp;file=/assets/img.jpg&amp;id=2000" style="width:100px;"/>
+<%= boomerangSnippet %>
+<script src="00-onload.js" type="text/javascript"></script>
+<script>
+BOOMR_test.init({
+  PaintTiming: {
+    enabled: true
+  },
+  testAfterOnBeacon: true
+});
+</script>
+<%= footer %>

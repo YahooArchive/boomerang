@@ -1,0 +1,11 @@
+<%= header %>
+<%= boomerangScript %>
+<script src="08-critical-ch-restart.js" type="text/javascript"></script>
+<script>
+BOOMR_test.fakeNavigationEntryProperty("criticalCHRestart", 100);
+
+BOOMR_test.init({
+  testAfterOnBeacon: true
+});
+</script>
+<%= footer %>
